@@ -160,8 +160,8 @@ class ExaHTTPProcess(multiprocessing.Process):
         # Init common named pipes, not multiprocessing pipe magic
         read_fd, write_fd = os.pipe()
 
-        self.read_pipe = os.fdopen(read_fd, 'rb')
-        self.write_pipe = os.fdopen(write_fd, 'wb')
+        self.read_pipe = os.fdopen(read_fd, 'rb', 0)
+        self.write_pipe = os.fdopen(write_fd, 'wb', 0)
 
         if self.mode == 'import':
             self.server.set_pipe(self.read_pipe)

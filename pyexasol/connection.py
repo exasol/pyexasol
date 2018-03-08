@@ -26,7 +26,7 @@ class ExaConnection(object):
             , autocommit=constant.DEFAULT_AUTOCOMMIT
             , socket_timeout=constant.DEFAULT_SOCKET_TIMEOUT
             , query_timeout=constant.DEFAULT_QUERY_TIMEOUT
-            , compression=True
+            , compression=False
             , fetch_dict=False
             , fetch_mapper=None
             , fetch_size_bytes=None

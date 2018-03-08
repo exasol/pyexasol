@@ -16,6 +16,8 @@ C = pyexasol.connect(... , compression=True)
 
 Network is the main bottleneck in majority of cases. `compression` flag enables transparent zlib compression for all client-server communication, including common fetching and fast [HTTP transport](/docs/HTTP_TRANSPORT.md). It may improve overall performance by factor 4-8x.
 
+Disable `compression` if you transfer data within the same data center over fast network.
+
 ## Use HTTP transport for big volumes of data
 
 ```python

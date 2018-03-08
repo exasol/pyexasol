@@ -48,7 +48,7 @@ Opens new connection and returns `ExaConnection` object.
 | `user` | `sys` | Username |
 | `password` | `password` | Password |
 | `schema` | `ingres` | Open schema after connection (Default: `''`, no schema) |
-| `autocommit` | `True` | Autocommit mode after connection (Default: `True`) |
+| `autocommit` | `True` | Autocommit mode after connection (Default: `False`) |
 | `socket_timeout` | `10` | Socket timeout in seconds passed directly to websocket (Default: `10`) |
 | `query_timeout` | `0` | Maximum execution time of queries before automatic abort (Default: `0`, no timeout) |
 | `compresstion` | `True` | Use zlib compression both for WebSocket and HTTP transport (Default: `True`) |
