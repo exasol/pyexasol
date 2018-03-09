@@ -24,7 +24,7 @@ python examples/1_basic.py
 - [5_formatting.py](/examples/5_formatting.py) - SQL text [formatting](/docs/SQL_FORMATTING.md);
 - [6_pandas.py](/examples/6_pandas.py) - IMPORT / EXPORT to and from `pandas.DataFrame`;
 - [7_import_export.py](/examples/7_import_export.py) - other methods of IMPORT / EXPORT;
-- [8_transactions.py](/examples/8_transactions.py) - transaction management, autocommit;
+- [8_transaction.py](/examples/8_transaction.py) - transaction management, autocommit;
 - [9_exceptions.py](/examples/9_exceptions.py) - error handling, common errors;
 - [10_redundancy.py](/examples/10_redundancy.py) - connection redundancy, how driver handles missing nodes;
 - [11_edge_case.py](/examples/11_edge_case.py) - storing and fetching biggest and smallest values for data types available in Exasol;
