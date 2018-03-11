@@ -82,7 +82,7 @@ You should always use IMPORT even for relatively small data sets. Please conside
 
 PyEXASOL defaults to standard [`json`](https://docs.python.org/3/library/json.html) library for best compatibility. It is sufficient for majority of use-cases. However, if you are unhappy with HTTP transport and you wish to load large amounts of data using standard fetching, we highly recommend to try faster json-parsing libraries.
 
-#### json_lib=['rapidjson'](https://github.com/python-rapidjson/python-rapidjson)
+#### json_lib=[`rapidjson`](https://github.com/python-rapidjson/python-rapidjson)
 ```
 pip install python-rapidjson
 ```
