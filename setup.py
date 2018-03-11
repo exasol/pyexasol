@@ -44,4 +44,6 @@ Please read "Best practices" manual page to learn how to use PyEXASOL with maxim
         'websocket-client>=0.47.0',
         'rsa',
     ],
+
+    python_requires='>=3.6',
 )

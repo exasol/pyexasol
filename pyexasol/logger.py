@@ -18,9 +18,9 @@ class ExaLogger(object):
             self.fd = sys.stderr
         elif isinstance(log_target, pathlib.Path):
             if not log_target.is_dir():
-                raise ExaRuntimeError(self.connection, 'Not a directory: ' + log_target)
+                raise ExaRuntimeError(self.connection, 'Not a directory: ' + str(log_target))
 
-            self.fd = open(log_target / (self._get_ts() + '.log'), 'w')
+            self.fd = open(log_target / self._get_log_filename(), 'w')
 
         else:
             raise ExaRuntimeError(self.connection, 'Invalid log_target')
@@ -50,4 +50,7 @@ class ExaLogger(object):
         self.fd.write(f'{self._get_ts()} {message}\n')
 
     def _get_ts(self):
-        return datetime.datetime.now().strftime(constant.LOGGER_TIMESTAMP_FORMAT)
+        return datetime.datetime.now().strftime(constant.LOGGER_MESSAGE_TIMESTAMP_FORMAT)
+
+    def _get_log_filename(self):
+        return datetime.datetime.now().strftime(constant.LOGGER_FILENAME_TIMESTAMP_FORMAT) + '.log'

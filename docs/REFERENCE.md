@@ -51,17 +51,18 @@ Opens new connection and returns `ExaConnection` object.
 | `autocommit` | `True` | Autocommit mode after connection (Default: `False`) |
 | `socket_timeout` | `10` | Socket timeout in seconds passed directly to websocket (Default: `10`) |
 | `query_timeout` | `0` | Maximum execution time of queries before automatic abort (Default: `0`, no timeout) |
-| `compresstion` | `True` | Use zlib compression both for WebSocket and HTTP transport (Default: `True`) |
+| `compression` | `True` | Use zlib compression both for WebSocket and HTTP transport (Default: `True`) |
 | `fetch_dict` | `False` | Fetch result rows as dicts instead of tuples (Default: `False`) |
 | `fetch_mapper` | `pyexasol.exasol_mapper` | Use custom mapper function to convert Exasol values into Python objects during fetching (Default: `None`) |
-| `fetch_size_bytes` | `20 * 1024 * 1024` | Maximum size of data message during fetch operation in bytes (Default: 64Mb) |
+| `fetch_size_bytes` | `5 * 1024 * 1024` | Maximum size of data message for single fetch request in bytes (Default: 5Mb) |
 | `lower_ident` | `False` | Automatically lowercase all identifiers (table names, column names, etc.) returned from relevant functions (Default: `False`) |
 | `cls_statement` | `pyexasol.ExaStatement` | Overloaded ExaStatement class |
 | `cls_formatter` | `pyexasol.ExaFormatter` | Overloaded ExaFormatter class |
 | `cls_logger` | `pyexasol.ExaLogger` | Overloaded ExaLogger class |
+| `json_lib` | `rapidjson` | Supported values: [`rapidjson`](https://github.com/python-rapidjson/python-rapidjson), [`ujson`](https://github.com/esnme/ultrajson), [`json`](https://docs.python.org/3/library/json.html) (Default: `json`) |
 | `verbose_error` | `True` | Display additional information when error occurs (Default: `True`) |
 | `debug` | `False` | Output debug information for client-server communication and connection attempts to STDERR |
-| `logdir` | `/tmp/` | Store debug information into files in `logdir` instead of outputting it to STDERR |
+| `debug_logdir` | `/tmp/` | Store debug information into files in `debug_logdir` instead of outputting it to STDERR |
 
 ## ExaConnection
 

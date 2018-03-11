@@ -32,7 +32,7 @@ try:
         ORDER BY user_id 
         LIMIT 5
     """)
-except E.ExaSQLError as e:
+except E.ExaQueryError as e:
     print(e)
 
 
@@ -45,7 +45,7 @@ try:
         ORDER BY user_id
         LIMIT 5
     """)
-except E.ExaSQLError as e:
+except E.ExaQueryError as e:
     print(e)
 
 # Attempt to read from closed cursor

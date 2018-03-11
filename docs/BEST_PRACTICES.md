@@ -77,3 +77,21 @@ C.import_from_iterable(data_generator, 'table')
 Exasol keeps audit logs for all executed SQL statements. Passing data directly with SQL text bloats audit log, may expose sensitive information and has high overhead of serialization-deserialization.
 
 You should always use IMPORT even for relatively small data sets. Please consider [`import_from_iterable`](/docs/REFERENCE.md#import_from_iterable) function.
+
+## Consider faster JSON-parsing libraries
+
+PyEXASOL defaults to standard [`json`](https://docs.python.org/3/library/json.html) library for best compatibility. It is sufficient for majority of use-cases. However, if you are unhappy with HTTP transport and you wish to load large amounts of data using standard fetching, we highly recommend to try faster json-parsing libraries.
+
+#### json_lib=['rapidjson'](https://github.com/python-rapidjson/python-rapidjson)
+```
+pip install python-rapidjson
+```
+Rapidjson provides significant performance boost and it is well maintained by creators. PyEXASOL defaults to `number_mode=NM_NATIVE`. Exasol server wraps big decimals with quotes and returns as strings, so it should be a safe option.
+
+#### json_lib=[`ujson`](https://github.com/esnme/ultrajson)
+```
+pip install ujson
+```
+Ujson provides best performance in our internal tests, but it is abandoned by creators.
+
+You may try any other json library. All you need to do is to overload `_init_json()` method in `ExaConnection`.

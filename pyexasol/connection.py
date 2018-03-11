@@ -1,5 +1,4 @@
 import websocket
-import json
 import platform
 import getpass
 import time
@@ -10,7 +9,7 @@ from . import callback as cb
 from . import constant
 from . import utils
 
-from .exceptions import ExaSQLError, ExaRequestError, ExaCommunicationError, ExaRuntimeError
+from .exceptions import ExaQueryError, ExaQueryTimeoutError, ExaRequestError, ExaCommunicationError, ExaRuntimeError
 from .statement import ExaStatement
 from .logger import ExaLogger
 from .formatter import ExaFormatter
@@ -29,14 +28,15 @@ class ExaConnection(object):
             , compression=False
             , fetch_dict=False
             , fetch_mapper=None
-            , fetch_size_bytes=None
+            , fetch_size_bytes=constant.DEFAULT_FETCH_SIZE_BYTES
             , lower_ident=False
             , cls_statement=ExaStatement
             , cls_formatter=ExaFormatter
             , cls_logger=ExaLogger
+            , json_lib='json'
             , verbose_error=True
             , debug=False
-            , logdir=None):
+            , debug_logdir=None):
 
         self.dsn = dsn
         self.user = user
@@ -57,9 +57,11 @@ class ExaConnection(object):
         self.cls_formatter = cls_formatter
         self.cls_logger = cls_logger
 
+        self.json_lib = json_lib
+
         self.verbose_error = verbose_error
         self.debug = debug
-        self.logdir = logdir
+        self.debug_logdir = debug_logdir
 
         self.meta = {}
         self.attr = {}
@@ -73,6 +75,7 @@ class ExaConnection(object):
         self._init_logger()
         self._init_format()
         self._init_ws()
+        self._init_json()
 
         self.is_closed = False
         self.session_id = None
@@ -281,7 +284,7 @@ class ExaConnection(object):
         self.ws_req_count += 1
 
         # Build request
-        send_data = json.dumps(req)
+        send_data = self._json_encode(req)
         self._logger.log_json(f'WebSocket request #{self.ws_req_count}', req)
 
         # Send request, receive response
@@ -292,12 +295,12 @@ class ExaConnection(object):
             raise ExaCommunicationError(self, str(e))
 
         # Parse response
-        ret = json.loads(recv_data)
+        ret = self._json_decode(recv_data)
         self._logger.log_json(f'WebSocket response #{self.ws_req_count}', ret)
 
         self.ws_req_time = time.time() - start_ts
 
-        # Updated attributes can be returned from any request
+        # Updated attributes may be returned from any request
         if 'attributes' in ret:
             self.attr = {**self.attr, **ret['attributes']}
 
@@ -307,11 +310,21 @@ class ExaConnection(object):
         if ret['status'] == 'error':
             # Special treatment for "execute" command to prevent very long tracebacks in most common cases
             if req.get('command') == 'execute':
-                raise ExaSQLError(self, req['sqlText'], ret['exception']['sqlCode'], ret['exception']['text'])
+                if ret['exception']['sqlCode'] == 'R0001':
+                    cls_err = ExaQueryTimeoutError
+                else:
+                    cls_err = ExaQueryError
+
+                raise cls_err(self, req['sqlText'], ret['exception']['sqlCode'], ret['exception']['text'])
             else:
                 raise ExaRequestError(self, ret['exception']['sqlCode'], ret['exception']['text'])
 
     def _init_ws(self):
+        """
+        Init websocket connection
+        Connection redundancy is supported
+        Specific Exasol host is chosen for every connection attempt
+        """
         if hasattr(self, '_ws'):
             pass
 
@@ -342,20 +355,56 @@ class ExaConnection(object):
                     raise ExaCommunicationError(self, 'Could not connect to Exasol: ' + str(e))
 
     def _init_logger(self):
+        """
+        Init debug logger
+        """
         if hasattr(self, '_logger'):
             pass
 
         if self.debug is False:
             log_target = None
-        elif self.logdir is None:
+        elif self.debug_logdir is None:
             log_target = 'stderr'
-        else:
-            log_target = pathlib.Path(self.logdir)
+        elif isinstance(self.debug_logdir, str):
+            log_target = pathlib.Path(self.debug_logdir)
 
         self._logger = self.cls_logger(self, log_target)
 
     def _init_format(self):
+        """
+        Init SQL formatter
+        """
         if hasattr(self, 'format'):
             pass
 
         self.format = self.cls_formatter(self)
+
+    def _init_json(self):
+        """
+        Init json functions
+        Please overload it if you're unhappy with provided options
+        """
+
+        # rapidjson is well maintained library with acceptable performance, default choice
+        if self.json_lib == 'rapidjson':
+            import rapidjson
+
+            self._json_encode = lambda x: rapidjson.dumps(x, number_mode=rapidjson.NM_NATIVE)
+            self._json_decode = lambda x: rapidjson.loads(x, number_mode=rapidjson.NM_NATIVE)
+
+        # ujson provides best performance in our tests, but it is abandoned by maintainers
+        elif self.json_lib == 'ujson':
+            import ujson
+
+            self._json_encode = ujson.dumps
+            self._json_decode = ujson.loads
+
+        # json is native Python library, very safe choice, but slow
+        elif self.json_lib == 'json':
+            import json
+
+            self._json_encode = json.dumps
+            self._json_decode = json.loads
+
+        else:
+            raise ValueError(f'Unsupported json library [{self.json_lib}]')

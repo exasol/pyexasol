@@ -49,7 +49,7 @@ class ExaRequestError(ExaError):
         return params
 
 
-class ExaSQLError(ExaRequestError):
+class ExaQueryError(ExaRequestError):
     def __init__(self, connection, query, code, message):
         self.query = query
 
@@ -61,3 +61,7 @@ class ExaSQLError(ExaRequestError):
         params['query'] = self.query
 
         return params
+
+
+class ExaQueryTimeoutError(ExaQueryError):
+    pass
