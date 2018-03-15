@@ -11,7 +11,7 @@ class ExaError(Exception):
             'message': self.message,
             'dsn': self.connection.dsn,
             'user': self.connection.user,
-            'schema': self.connection.attr.get('currentSchema', ''),
+            'schema': self.connection.current_schema(),
         }
 
     def __str__(self):

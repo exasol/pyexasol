@@ -45,6 +45,10 @@ class ExaFormatter(string.Formatter):
         return str(val).replace('"', '""')
 
     @classmethod
+    def escape_like(cls, val):
+        return cls.escape(val).replace('\\', '\\\\').replace('%', '\%').replace('_', '\_')
+
+    @classmethod
     def quote(cls, val):
         if val is None:
             return 'NULL'

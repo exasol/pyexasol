@@ -7,6 +7,7 @@
   - [rollback()](#rollback)
   - [set_autocommit()](#set_autocommit)
   - [open_schema()](#open_schema)
+  - [current_schema()](#current_schema)
   - [export_to_file()](#export_to_file)
   - [export_to_list()](#export_to_list)
   - [export_to_pandas()](#export_to_pandas)
@@ -33,6 +34,7 @@
   - [format()](#format)
   - [escape()](#escape)
   - [escape_ident()](#escape_ident)
+  - [escape_like()](#escape_like)
   - [quote()](#quote)
   - [quote_ident()](#quote_ident)
   - [safe_ident()](#safe_ident)
@@ -60,6 +62,7 @@ Opens new connection and returns `ExaConnection` object.
 | `cls_statement` | `pyexasol.ExaStatement` | Overloaded `ExaStatement` class |
 | `cls_formatter` | `pyexasol.ExaFormatter` | Overloaded `ExaFormatter` class |
 | `cls_logger` | `pyexasol.ExaLogger` | Overloaded `ExaLogger` class |
+| `cls_extension` | `pyexasol.ExaExtension` | Overloaded `ExaExtension` class |
 | `json_lib` | `rapidjson` | Supported values: [`rapidjson`](https://github.com/python-rapidjson/python-rapidjson), [`ujson`](https://github.com/esnme/ultrajson), [`json`](https://docs.python.org/3/library/json.html) (Default: `json`) |
 | `verbose_error` | `True` | Display additional information when error occurs (Default: `True`) |
 | `debug` | `False` | Output debug information for client-server communication and connection attempts to STDERR |
@@ -98,6 +101,9 @@ Wrapper for `OPEN SCHEMA`
 | Argument | Example | Description |
 | --- | --- | --- |
 | `schema` | `ingres` | Schema name |
+
+### current_schema()
+Returns named of currently opened schema. Returns empty string if no schema was opened.
 
 ### export_to_file()
 Exports big amount of data from Exasol to file or file-like object using fast HTTP transport.
@@ -270,7 +276,7 @@ Closes result set handle if it was opened. You won't be able to fetch next chunk
 
 ## ExaFormatter
 
-`ExaFormatter` inherits standard Python `string.Formatter`. It itroduces set of placeholders to prevent SQL injections specifically in Exasol dynamic SQL queries. It also compltely disabled `format_spec` section of standard formatting since it has no use in context of SQL queries and may cause more harm than good.
+`ExaFormatter` inherits standard Python `string.Formatter`. It itroduces set of placeholders to prevent SQL injections specifically in Exasol dynamic SQL queries. It also completely disabled `format_spec` section of standard formatting since it has no use in context of SQL queries and may cause more harm than good.
 
 ### format()
 Formats SQL query using given arguments. Definition is the same as standard `format` function.
@@ -281,11 +287,14 @@ Accepts raw value. Converts it to `str` and replaces `'` (single-quote) with `''
 ### escape_ident()
 Accepts raw identifier. Converts it to `str` and replaces `"` (dobule-quote) with `""` (two double-quotes). May be useful on it's own when escaping small parts of big identifiers.
 
+### escape_like()
+Accepts raw value. Converts it to `str` and escapes for LIKE pattern value.
+
 ### quote()
-Accepts raw value. Converts it to `str`, escapes it using `escape()` and wraps in `'` (single-quote). This is the primary function to pass arbitary values to Exasol queries.
+Accepts raw value. Converts it to `str`, escapes it using `escape()` and wraps in `'` (single-quote). This is the primary function to pass arbitrary values to Exasol queries.
 
 ### quote_ident()
-Accepts raw identifier. Coverts it to `str`, escapes it using `escape_ident()` and wraps in `"` (double-quote). This is the primary function to pass arbitary identifiers to Exasol queries.
+Accepts raw identifier. Coverts it to `str`, escapes it using `escape_ident()` and wraps in `"` (double-quote). This is the primary function to pass arbitrary identifiers to Exasol queries.
 
 Also accepts tuple of raw identifiers, applies `quote_ident` to all of them and joins with `.` (dot). It may be useful when referencing to `(schema, table)` or `(schema, table, column_name)`.
 

@@ -13,6 +13,7 @@ from .exceptions import ExaQueryError, ExaQueryTimeoutError, ExaRequestError, Ex
 from .statement import ExaStatement
 from .logger import ExaLogger
 from .formatter import ExaFormatter
+from .ext import ExaExtension
 from .version import __version__
 
 
@@ -33,10 +34,35 @@ class ExaConnection(object):
             , cls_statement=ExaStatement
             , cls_formatter=ExaFormatter
             , cls_logger=ExaLogger
+            , cls_extension=ExaExtension
             , json_lib='json'
             , verbose_error=True
             , debug=False
             , debug_logdir=None):
+        """
+        Exasol connection object
+
+        :param dsn: Connection string, same format as standard JDBC / ODBC drivers (e.g. 10.10.127.1..11:8564)
+        :param user: Username
+        :param password: Password
+        :param schema: Open schema after connection (Default: '', no schema)
+        :param autocommit: Autocommit mode after connection (Default: True)
+        :param socket_timeout: Socket timeout in seconds passed directly to websocket (Default: 10)
+        :param query_timeout: Maximum execution time of queries before automatic abort (Default: 0, no timeout)
+        :param compression: Use zlib compression both for WebSocket and HTTP transport (Default: False)
+        :param fetch_dict: Fetch result rows as dicts instead of tuples (Default: False)
+        :param fetch_mapper: Use custom mapper function to convert Exasol values into Python objects during fetching (Default: None)
+        :param fetch_size_bytes: Maximum size of data message for single fetch request in bytes (Default: 5Mb)
+        :param lower_ident: Automatically lowercase all identifiers (table names, column names, etc.) returned from relevant functions (Default: False)
+        :param cls_statement: Overloaded ExaStatement class
+        :param cls_formatter: Overloaded ExaFormatter class
+        :param cls_logger: Overloaded ExaLogger class
+        :param cls_extension: Overloaded ExaExtension class
+        :param json_lib: Supported values: rapidjson, ujson, json (Default: json)
+        :param verbose_error: Display additional information when error occurs (Default: True)
+        :param debug: Output debug information for client-server communication and connection attempts to STDERR
+        :param debug_logdir: Store debug information into files in debug_logdir instead of outputting it to STDERR
+        """
 
         self.dsn = dsn
         self.user = user
@@ -56,6 +82,7 @@ class ExaConnection(object):
         self.cls_statement = cls_statement
         self.cls_formatter = cls_formatter
         self.cls_logger = cls_logger
+        self.cls_extension = cls_extension
 
         self.json_lib = json_lib
 
@@ -76,6 +103,7 @@ class ExaConnection(object):
         self._init_format()
         self._init_ws()
         self._init_json()
+        self._init_ext()
 
         self.is_closed = False
         self.session_id = None
@@ -84,16 +112,8 @@ class ExaConnection(object):
         self._get_attr()
 
     def execute(self, query, query_params=None):
-        if not isinstance(query, str):
-            raise ValueError("Query must be instance of str")
-
-        if self.is_closed:
-            raise ExaRuntimeError(self, "Cannot execute query, database connection was closed")
-
-        if query_params is not None:
-            query = self.format.format(query, **query_params)
-
-        self.last_stmt = self.cls_statement(self, query)
+        self.last_stmt = self._statement(query, query_params)
+        self.last_stmt._execute()
 
         return self.last_stmt
 
@@ -104,14 +124,22 @@ class ExaConnection(object):
         return self.execute('ROLLBACK')
 
     def set_autocommit(self, autocommit):
+        if not isinstance(autocommit, bool):
+            raise ValueError("Autocommit value must be boolean")
+
         self._set_attr({
             'autocommit': autocommit
         })
+
+        self.attr['autocommit'] = autocommit
 
     def open_schema(self, schema):
         self._set_attr({
             'currentSchema': self.format.safe_ident(schema)
         })
+
+    def current_schema(self):
+        return self.attr.get('currentSchema', '')
 
     def export_to_file(self, dst, query_or_table, query_params=None, export_params=None):
         return self.export_to_callback(cb.export_to_file, dst, query_or_table, query_params, None, export_params)
@@ -277,15 +305,28 @@ class ExaConnection(object):
             'attributes': new_attr,
         })
 
-        self.attr = {**self.attr, **new_attr}
+    def _statement(self, query, query_params=None):
+        if not isinstance(query, str):
+            raise ValueError("Query must be instance of str")
+
+        if self.is_closed:
+            raise ExaRuntimeError(self, "Database connection was closed")
+
+        if query_params is not None:
+            query = self.format.format(query, **query_params)
+
+        query = query.strip(' \n')
+
+        return self.cls_statement(self, query)
 
     def _req(self, req):
-        start_ts = time.time()
         self.ws_req_count += 1
 
         # Build request
         send_data = self._json_encode(req)
         self._logger.log_json(f'WebSocket request #{self.ws_req_count}', req)
+
+        start_ts = time.time()
 
         # Send request, receive response
         try:
@@ -294,11 +335,11 @@ class ExaConnection(object):
         except websocket.WebSocketException as e:
             raise ExaCommunicationError(self, str(e))
 
+        self.ws_req_time = time.time() - start_ts
+
         # Parse response
         ret = self._json_decode(recv_data)
         self._logger.log_json(f'WebSocket response #{self.ws_req_count}', ret)
-
-        self.ws_req_time = time.time() - start_ts
 
         # Updated attributes may be returned from any request
         if 'attributes' in ret:
@@ -408,3 +449,12 @@ class ExaConnection(object):
 
         else:
             raise ValueError(f'Unsupported json library [{self.json_lib}]')
+
+    def _init_ext(self):
+        """
+        Init extension functions
+        """
+        if hasattr(self, 'ext'):
+            pass
+
+        self.ext = self.cls_extension(self)

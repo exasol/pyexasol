@@ -7,10 +7,12 @@ from . import constant
 class ExaStatement(object):
     def __init__(self, connection, query):
         self.connection = connection
-        self.query = query.strip(' \n')
+        self.query = query
 
         self.fetch_dict = self.connection.fetch_dict
         self.fetch_mapper = self.connection.fetch_mapper
+        self.fetch_size_bytes = self.connection.fetch_size_bytes
+        self.lower_ident = self.connection.lower_ident
 
         self.data_zip = zip()
         self.col_names = []
@@ -26,11 +28,10 @@ class ExaStatement(object):
 
         self.result_type = None
         self.result_set_handle = None
+        self.statement_handle = None
 
         self.execution_time = 0
         self.is_closed = False
-
-        self._execute()
 
     def __iter__(self):
         return self
@@ -107,6 +108,12 @@ class ExaStatement(object):
 
             self.result_set_handle = None
 
+        if self.statement_handle:
+            self.connection._req({
+                'command': 'closePreparedStatement',
+                'statementHandle': self.statement_handle,
+            })
+
         self.is_closed = True
 
     def _execute(self):
@@ -127,7 +134,7 @@ class ExaStatement(object):
             elif 'data' in res['resultSet']:
                 self.data_zip = zip(*res['resultSet']['data'])
 
-            if self.connection.lower_ident:
+            if self.lower_ident:
                 self.col_names = [c['name'].lower() for c in res['resultSet']['columns']]
             else:
                 self.col_names = [c['name'] for c in res['resultSet']['columns']]
@@ -142,12 +149,34 @@ class ExaStatement(object):
         else:
             raise ExaRuntimeError(self.connection, f'Unknown resultType: {self.result_type}')
 
+    def _prepare(self):
+        ret = self.connection._req({
+            'command': 'createPreparedStatement',
+            'sqlText': self.query,
+        })
+
+        self.statement_handle = ret['responseData']['statementHandle']
+
+        res = ret['responseData']['results'][0]
+        self.result_type = res['resultType']
+
+        if self.result_type == 'resultSet':
+            if self.lower_ident:
+                self.col_names = [c['name'].lower() for c in res['resultSet']['columns']]
+            else:
+                self.col_names = [c['name'] for c in res['resultSet']['columns']]
+
+            self.col_types = [c['dataType'] for c in res['resultSet']['columns']]
+            self.num_columns = res['resultSet']['numColumns']
+        else:
+            raise ExaRuntimeError(self.connection, f'Unknown resultType: {self.result_type}')
+
     def _next_chunk(self):
         ret = self.connection._req({
             'command': 'fetch',
             'resultSetHandle': self.result_set_handle,
             'startPosition': self.pos_total,
-            'numBytes': self.connection.fetch_size_bytes,
+            'numBytes': self.fetch_size_bytes,
         })
 
         if 'data' in ret['responseData']:

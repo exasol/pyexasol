@@ -12,6 +12,7 @@ __all__ = [
     'ExaStatement',
     'ExaFormatter',
     'ExaLogger',
+    'ExaExtension',
 ]
 
 from .version import __version__
@@ -21,6 +22,7 @@ from .connection import ExaConnection
 from .statement import ExaStatement
 from .formatter import ExaFormatter
 from .logger import ExaLogger
+from .ext import ExaExtension
 from .mapper import exasol_mapper
 
 
@@ -45,5 +47,8 @@ def connect(**kwargs):
 
     if 'cls_logger' in kwargs and not issubclass(kwargs['cls_logger'], ExaLogger):
         raise ValueError(f"Class [{kwargs['cls_logger']} is not subclass of ExaLogger")
+
+    if 'cls_extension' in kwargs and not issubclass(kwargs['cls_extension'], ExaLogger):
+        raise ValueError(f"Class [{kwargs['cls_extension']} is not subclass of ExaExtension")
 
     return connection_cls(**kwargs)

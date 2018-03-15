@@ -96,5 +96,11 @@ CREATE OR REPLACE TABLE edge_case
 )
 """)
 
+C.execute("""
+CREATE OR REPLACE VIEW users_view
+AS
+SELECT * FROM users
+""")
+
 C.commit()
 print("Test data was prepared")
