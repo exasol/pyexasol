@@ -103,7 +103,7 @@ Wrapper for `OPEN SCHEMA`
 | `schema` | `ingres` | Schema name |
 
 ### current_schema()
-Returns named of currently opened schema. Returns empty string if no schema was opened.
+Returns name of currently opened schema. Returns empty string if no schema was opened.
 
 ### export_to_file()
 Exports big amount of data from Exasol to file or file-like object using fast HTTP transport.
