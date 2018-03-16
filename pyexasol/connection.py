@@ -38,7 +38,9 @@ class ExaConnection(object):
             , json_lib='json'
             , verbose_error=True
             , debug=False
-            , debug_logdir=None):
+            , debug_logdir=None
+            , subc_id=None
+            , subc_token=None):
         """
         Exasol connection object
 
@@ -90,6 +92,9 @@ class ExaConnection(object):
         self.debug = debug
         self.debug_logdir = debug_logdir
 
+        self.subc_id = subc_id
+        self.subc_token = subc_token
+
         self.meta = {}
         self.attr = {}
         self.last_stmt = None
@@ -108,8 +113,11 @@ class ExaConnection(object):
         self.is_closed = False
         self.session_id = None
 
-        self._connect()
-        self._get_attr()
+        if self.subc_token:
+            self._sub_connect()
+        else:
+            self._connect()
+            self._get_attr()
 
     def execute(self, query, query_params=None):
         self.last_stmt = self._statement(query, query_params)
@@ -160,7 +168,7 @@ class ExaConnection(object):
         return self.import_from_callback(cb.import_from_pandas, src, table, callback_params)
 
     def export_to_callback(self, callback, dst, query_or_table, query_params=None, callback_params=None, export_params=None):
-        from .http_transport import ExaSQLExportThread, ExaHTTPProcess
+        from .http_transport import ExaSQLExportThread, ExaHTTPProcess, HTTP_EXPORT
 
         if not callable(callback):
             raise ValueError('Callback argument is not callable')
@@ -175,13 +183,10 @@ class ExaConnection(object):
             query_or_table = self.format.format(**query_params)
 
         try:
-            http_proc = ExaHTTPProcess(self, 'export')
+            http_proc = ExaHTTPProcess(self.ws_host, self.ws_port, self.compression, HTTP_EXPORT)
             http_proc.start()
 
-            http_proc.server.server_close()
-            http_proc.write_pipe.close()
-
-            sql_thread = ExaSQLExportThread(self, http_proc, query_or_table, export_params)
+            sql_thread = ExaSQLExportThread(self, http_proc.get_proxy(), query_or_table, export_params)
             sql_thread.start()
 
             result = callback(http_proc.read_pipe, dst, **callback_params)
@@ -203,7 +208,7 @@ class ExaConnection(object):
             raise e
 
     def import_from_callback(self, callback, src, table, callback_params=None, import_params=None):
-        from .http_transport import ExaSQLImportThread, ExaHTTPProcess
+        from .http_transport import ExaSQLImportThread, ExaHTTPProcess, HTTP_IMPORT
 
         if callback_params is None:
             callback_params = {}
@@ -215,13 +220,10 @@ class ExaConnection(object):
             raise ValueError('Callback argument is not callable')
 
         try:
-            http_proc = ExaHTTPProcess(self, 'import')
+            http_proc = ExaHTTPProcess(self.ws_host, self.ws_port, self.compression, HTTP_IMPORT)
             http_proc.start()
 
-            http_proc.server.server_close()
-            http_proc.read_pipe.close()
-
-            sql_thread = ExaSQLImportThread(self, http_proc, table, import_params)
+            sql_thread = ExaSQLImportThread(self, http_proc.get_proxy(), table, import_params)
             sql_thread.start()
 
             result = callback(http_proc.write_pipe, src, **callback_params)
@@ -242,6 +244,20 @@ class ExaConnection(object):
 
             raise e
 
+    def export_parallel(self, http_proxy_list, query_or_table, query_params=None, export_params=None):
+        from .http_transport import ExaSQLExportThread
+
+        if export_params is None:
+            export_params = {}
+
+        if query_params is not None:
+            query_or_table = self.format.format(**query_params)
+
+        # There is no need to run separate thread here, all work is performed in child processes
+        # We simply reuse thread class to keep logic in one place
+        sql_thread = ExaSQLExportThread(self, http_proxy_list, query_or_table, export_params)
+        sql_thread.run_sql()
+
     def session_id(self):
         return self.session_id
 
@@ -250,6 +266,20 @@ class ExaConnection(object):
             raise ExaRuntimeError('Last statement not found')
 
         return self.last_stmt
+
+    def enter_parallel(self, num_parallel):
+        ret = self._req({
+            'command': 'enterParallel',
+            'numRequestedConnections': num_parallel
+        })
+
+        return ret['responseData']['token'], ret['responseData']['nodes']
+
+    def subc_open_handle(self, handle_id):
+        st = self._statement()
+        st._subc_handle(handle_id)
+
+        return st
 
     def close(self):
         if not self.is_closed:
@@ -287,10 +317,26 @@ class ExaConnection(object):
         if self.fetch_size_bytes is None:
             self.fetch_size_bytes = self.meta['maxDataMessageSize']
 
-        # All further communication is transparently compressed after login command
-        if self.compression:
-            self._ws_send = lambda x: self._ws.send_binary(zlib.compress(x.encode(), 1))
-            self._ws_recv = lambda: zlib.decompress(self._ws.recv())
+        self._init_ws_compression()
+
+    def _sub_connect(self):
+        ret = self._req({
+            'command': 'subLogin',
+            'protocolVersion': 1,
+        })
+
+        self.meta = self._req({
+            'username': self.user,
+            'password': utils.encrypt_password(ret['responseData']['publicKeyPem'], self.password),
+            'token': self.subc_token,
+        })['responseData']
+
+        self.session_id = str(self.meta['sessionId'])
+
+        if self.fetch_size_bytes is None:
+            self.fetch_size_bytes = self.meta['maxDataMessageSize']
+
+        self._init_ws_compression()
 
     def _get_attr(self):
         ret = self._req({
@@ -305,7 +351,7 @@ class ExaConnection(object):
             'attributes': new_attr,
         })
 
-    def _statement(self, query, query_params=None):
+    def _statement(self, query='', query_params=None):
         if not isinstance(query, str):
             raise ValueError("Query must be instance of str")
 
@@ -395,10 +441,13 @@ class ExaConnection(object):
                 if failed_attempts == len(host_port_list):
                     raise ExaCommunicationError(self, 'Could not connect to Exasol: ' + str(e))
 
+    def _init_ws_compression(self):
+        """ All further communication is transparently compressed after successful login or sublogin command """
+        if self.compression:
+            self._ws_send = lambda x: self._ws.send_binary(zlib.compress(x.encode(), 1))
+            self._ws_recv = lambda: zlib.decompress(self._ws.recv())
+
     def _init_logger(self):
-        """
-        Init debug logger
-        """
         if hasattr(self, '_logger'):
             pass
 
@@ -406,15 +455,12 @@ class ExaConnection(object):
             log_target = None
         elif self.debug_logdir is None:
             log_target = 'stderr'
-        elif isinstance(self.debug_logdir, str):
+        else:
             log_target = pathlib.Path(self.debug_logdir)
 
         self._logger = self.cls_logger(self, log_target)
 
     def _init_format(self):
-        """
-        Init SQL formatter
-        """
         if hasattr(self, 'format'):
             pass
 
@@ -451,9 +497,6 @@ class ExaConnection(object):
             raise ValueError(f'Unsupported json library [{self.json_lib}]')
 
     def _init_ext(self):
-        """
-        Init extension functions
-        """
         if hasattr(self, 'ext'):
             pass
 

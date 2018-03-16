@@ -123,7 +123,27 @@ class ExaStatement(object):
         })
 
         self.execution_time = self.connection.ws_req_time
+        self._init_result_set(ret)
 
+    def _prepare(self):
+        ret = self.connection._req({
+            'command': 'createPreparedStatement',
+            'sqlText': self.query,
+        })
+
+        self.statement_handle = ret['responseData']['statementHandle']
+        self._init_result_set(ret)
+
+    def _subc_handle(self, handle_id):
+        ret = self.connection._req({
+            'command': 'getResultSetHeader',
+            'resultSetHandles': [handle_id]
+        })
+
+        self.result_set_handle = handle_id
+        self._init_result_set(ret)
+
+    def _init_result_set(self, ret):
         res = ret['responseData']['results'][0]
 
         self.result_type = res['resultType']
@@ -146,28 +166,6 @@ class ExaStatement(object):
             self.num_rows_chunk = res['resultSet']['numRowsInMessage']
         elif self.result_type == 'rowCount':
             self.row_count = res['rowCount']
-        else:
-            raise ExaRuntimeError(self.connection, f'Unknown resultType: {self.result_type}')
-
-    def _prepare(self):
-        ret = self.connection._req({
-            'command': 'createPreparedStatement',
-            'sqlText': self.query,
-        })
-
-        self.statement_handle = ret['responseData']['statementHandle']
-
-        res = ret['responseData']['results'][0]
-        self.result_type = res['resultType']
-
-        if self.result_type == 'resultSet':
-            if self.lower_ident:
-                self.col_names = [c['name'].lower() for c in res['resultSet']['columns']]
-            else:
-                self.col_names = [c['name'] for c in res['resultSet']['columns']]
-
-            self.col_types = [c['dataType'] for c in res['resultSet']['columns']]
-            self.num_columns = res['resultSet']['numColumns']
         else:
             raise ExaRuntimeError(self.connection, f'Unknown resultType: {self.result_type}')
 

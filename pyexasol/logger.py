@@ -1,4 +1,3 @@
-import json
 import sys
 import datetime
 import pathlib
@@ -33,7 +32,7 @@ class ExaLogger(object):
         if self.fd is None:
             return
 
-        json_str = json.dumps(data, indent=4)
+        json_str = self.connection._json_encode(data, indent=4)
 
         if len(json_str) > constant.LOGGER_MAX_JSON_LENGTH:
             json_str = f'{json_str[0:constant.LOGGER_MAX_JSON_LENGTH]}\n------ TRUNCATED TOO LONG MESSAGE ------\n'
@@ -47,7 +46,12 @@ class ExaLogger(object):
         if self.fd is None:
             return
 
-        self.fd.write(f'{self._get_ts()} {message}\n')
+        if self.connection.subc_id:
+            prefix = f'[Subconnection #{self.connection.subc_id}] '
+        else:
+            prefix = ''
+
+        self.fd.write(f'{self._get_ts()} {prefix}{message}\n')
 
     def _get_ts(self):
         return datetime.datetime.now().strftime(constant.LOGGER_MESSAGE_TIMESTAMP_FORMAT)

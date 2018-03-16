@@ -10,14 +10,17 @@ from http.server import BaseHTTPRequestHandler
 
 from . import utils
 
+HTTP_EXPORT = 'export'
+HTTP_IMPORT = 'import'
+
 
 class ExaSQLThread(threading.Thread):
     """
     Thread class which re-throws any Exception to parent thread
     """
-    def __init__(self, connection, http_proc):
+    def __init__(self, connection, http_proxy):
         self.connection = connection
-        self.http_proc = http_proc
+        self.http_proxy = http_proxy if isinstance(http_proxy, list) else [http_proxy]
         self.exc = None
 
         super().__init__()
@@ -27,7 +30,6 @@ class ExaSQLThread(threading.Thread):
             self.run_sql()
         except BaseException as e:
             self.exc = e
-            self.http_proc.terminate()
 
     def run_sql(self):
         pass
@@ -38,17 +40,26 @@ class ExaSQLThread(threading.Thread):
         if self.exc:
             raise self.exc
 
+    def build_file_list(self):
+        files = list()
+        ext = '.csv.gz' if self.connection.compression else '.csv'
+
+        for i, proxy in enumerate(self.http_proxy):
+            files.append(f"FILE '{proxy}/{str(i).ljust(3, '0')}{ext}'")
+
+        return '\n'.join(files)
+
 
 class ExaSQLExportThread(ExaSQLThread):
     """
     Build and run IMPORT query into separate thread
     Main thread is busy outputting data in callbacks
     """
-    def __init__(self, connection, http_proc, query_or_table, export_params):
+    def __init__(self, connection, http_proxy, query_or_table, export_params):
         self.query_or_table = query_or_table
         self.params = export_params
 
-        super().__init__(connection, http_proc)
+        super().__init__(connection, http_proxy)
 
     def run_sql(self):
         if isinstance(self.query_or_table, tuple) or str(self.query_or_table).strip().find(' ') == -1:
@@ -57,13 +68,8 @@ class ExaSQLExportThread(ExaSQLThread):
             # New lines are mandatory to handle queries with single-line comments '--'
             export_source = f'(\n{self.query_or_table}\n)'
 
-        filename = utils.get_random_filename_for_http(self.connection.compression)
-
-        query = f"""
-            EXPORT {export_source}
-            INTO CSV AT 'http://{self.http_proc.server.proxy_host}:{self.http_proc.server.proxy_port}' 
-            FILE '{filename}'
-        """
+        query = f"EXPORT {export_source} INTO CSV AT 'http://'\n"
+        query += self.build_file_list()
 
         if self.params.get('delimit'):
             delimit = str(self.params['delimit']).upper()
@@ -103,14 +109,10 @@ class ExaSQLImportThread(ExaSQLThread):
         super().__init__(connection, http_proc)
 
     def run_sql(self):
-        filename = utils.get_random_filename_for_http(self.connection.compression)
         table_ident = self.connection.format.safe_ident(self.table)
 
-        query = f"""
-            IMPORT INTO {table_ident}
-            FROM CSV AT 'http://{self.http_proc.server.proxy_host}:{self.http_proc.server.proxy_port}' 
-            FILE '{filename}'
-        """
+        query = f"IMPORT INTO {table_ident} FROM CSV AT 'http://'\n"
+        query += self.build_file_list()
 
         if self.params.get('null'):
             query += '\nNULL ' + self.connection.format.quote(self.params['null'])
@@ -137,48 +139,64 @@ class ExaSQLImportThread(ExaSQLThread):
 
         self.connection.execute(query)
 
-        """
-        try:
-            self.connection.execute(query)
-        except ExaError as e:
-            self.http_proc.terminate()
-            raise e
-        """
-
 
 class ExaHTTPProcess(multiprocessing.Process):
     """
     HTTP communication and compression / decompression is offloaded to separate process
     It communicates with main process using pipes
     """
-    def __init__(self, connection, mode):
-        self.connection = connection
+    def __init__(self, host, port, compression, mode):
+        self.host = host
+        self.port = port
+        self.compression = compression
         self.mode = mode
+        self.server = None
 
-        self.server = ExaTCPServer((self.connection.ws_host, self.connection.ws_port), ExaHTTPRequestHandler)
-
-        # Init common named pipes, not multiprocessing pipe magic
+        # Init common named pipes for data transfer
+        # Strictly binary mode, no wrappers and no buffering
         read_fd, write_fd = os.pipe()
 
         self.read_pipe = os.fdopen(read_fd, 'rb', 0)
         self.write_pipe = os.fdopen(write_fd, 'wb', 0)
 
-        if self.mode == 'import':
-            self.server.set_pipe(self.read_pipe)
-        else:
-            self.server.set_pipe(self.write_pipe)
-
-        self.server.set_compression(self.connection.compression)
+        # Init multiprocessing private "magic" pipes for communication
+        # Used only to send (proxy_host, proxy_port) to main process without sharing TCPServer handle
+        self._proxy_read_pipe, self._proxy_write_pipe = multiprocessing.Pipe(False)
 
         super().__init__()
 
     def run(self):
-        if self.mode == 'import':
+        self.server = ExaTCPServer((self.host, self.port), ExaHTTPRequestHandler)
+        self._proxy_read_pipe.close()
+
+        self._proxy_write_pipe.send(f'{self.server.proxy_host}:{self.server.proxy_port}')
+        self._proxy_write_pipe.close()
+
+        if self.mode == HTTP_IMPORT:
+            self.server.set_pipe(self.read_pipe)
             self.write_pipe.close()
         else:
+            self.server.set_pipe(self.write_pipe)
             self.read_pipe.close()
 
+        self.server.set_compression(self.compression)
         self.server.handle_request()
+
+    def start(self):
+        super().start()
+
+        if self.mode == HTTP_IMPORT:
+            self.read_pipe.close()
+        else:
+            self.write_pipe.close()
+
+        self._proxy_write_pipe.close()
+
+    def get_proxy(self):
+        host_port = self._proxy_read_pipe.recv()
+        self._proxy_read_pipe.close()
+
+        return host_port
 
 
 class ExaTCPServer(TCPServer):
@@ -284,3 +302,37 @@ class ExaHTTPRequestHandler(BaseHTTPRequestHandler):
 
             self.wfile.write(data)
             self.wfile.flush()
+
+
+class ExaHTTPTransportWrapper(object):
+    def __init__(self, dsn, mode, compression=False):
+        host, port = utils.get_random_host_port_from_dsn(dsn)[0]
+
+        self.http_proc = ExaHTTPProcess(host, port, compression, mode)
+        self.http_proc.start()
+
+        self.proxy = self.http_proc.get_proxy()
+
+    def get_proxy(self):
+        return self.proxy
+
+    def export_to_callback(self, callback, dst, callback_params=None):
+        if not callable(callback):
+            raise ValueError('Callback argument is not callable')
+
+        if callback_params is None:
+            callback_params = {}
+
+        try:
+            result = callback(self.http_proc.read_pipe, dst, **callback_params)
+
+            self.http_proc.read_pipe.close()
+            self.http_proc.join()
+
+            return result
+        except Exception as e:
+            # Close HTTP Server if it is still running
+            if self.http_proc.is_alive():
+                self.http_proc.terminate()
+
+            raise e

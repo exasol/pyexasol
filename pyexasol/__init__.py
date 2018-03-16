@@ -13,6 +13,9 @@ __all__ = [
     'ExaFormatter',
     'ExaLogger',
     'ExaExtension',
+    'ExaHTTPTransportWrapper',
+    'HTTP_EXPORT',
+    'HTTP_IMPORT',
 ]
 
 from .version import __version__
@@ -24,6 +27,7 @@ from .formatter import ExaFormatter
 from .logger import ExaLogger
 from .ext import ExaExtension
 from .mapper import exasol_mapper
+from .http_transport import ExaHTTPTransportWrapper, HTTP_EXPORT, HTTP_IMPORT
 
 
 def connect(**kwargs):
@@ -48,7 +52,26 @@ def connect(**kwargs):
     if 'cls_logger' in kwargs and not issubclass(kwargs['cls_logger'], ExaLogger):
         raise ValueError(f"Class [{kwargs['cls_logger']} is not subclass of ExaLogger")
 
-    if 'cls_extension' in kwargs and not issubclass(kwargs['cls_extension'], ExaLogger):
+    if 'cls_extension' in kwargs and not issubclass(kwargs['cls_extension'], ExaExtension):
         raise ValueError(f"Class [{kwargs['cls_extension']} is not subclass of ExaExtension")
 
     return connection_cls(**kwargs)
+
+
+def http_transport(dsn, mode, compression=False):
+    """
+    Constructor of HTTP Transport wrapper objects for IMPORT / EXPORT parallelism
+
+    How to use this:
+    1) Parent process opens main connection to Exasol with .connect()
+    2) Parent process creates any number of child processes (possibly on remote host)
+    3) Every child process inits HTTP transport sub-connection with .http_transport()
+           and gets proxy "host:port" string using .get_proxy()
+    4) Every child process sends proxy string to parent process using any communication method
+    5) Parent process runs .export_parallel(), which executes EXPORT query in Exasol
+    6) Every child process receives chunk of data, process it and finish
+    7) Parent process waits for EXPORT query and child processes to finish
+
+    All child processes should run in parallel. It is not possible to run some processes first, than run some more.
+    """
+    return ExaHTTPTransportWrapper(dsn, mode, compression)
