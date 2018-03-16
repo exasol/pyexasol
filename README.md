@@ -12,8 +12,8 @@ PyEXASOL is native Python driver for [Exasol](https://www.exasol.com). It provid
 ## PyEXASOL main concepts
 
 - Based on [WebSocket client-server protocol](https://github.com/EXASOL/websocket-api/blob/master/WebsocketAPI.md);
-- Micro-optimized for minimum overhead;
-- Easy integration with pandas;
+- Optimized for minimum overhead;
+- Easy integration with pandas via HTTP transport;
 - Compression to reduce network bottleneck;
 
 
