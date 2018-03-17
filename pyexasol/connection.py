@@ -258,6 +258,17 @@ class ExaConnection(object):
         sql_thread = ExaSQLExportThread(self, http_proxy_list, query_or_table, export_params)
         sql_thread.run_sql()
 
+    def import_parallel(self, http_proxy_list, table, import_params=None):
+        from .http_transport import ExaSQLImportThread
+
+        if import_params is None:
+            import_params = {}
+
+        # There is no need to run separate thread here, all work is performed in child processes
+        # We simply reuse thread class to keep logic in one place
+        sql_thread = ExaSQLImportThread(self, http_proxy_list, table, import_params)
+        sql_thread.run_sql()
+
     def session_id(self):
         return self.session_id
 

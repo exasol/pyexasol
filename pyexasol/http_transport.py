@@ -45,7 +45,7 @@ class ExaSQLThread(threading.Thread):
         ext = '.csv.gz' if self.connection.compression else '.csv'
 
         for i, proxy in enumerate(self.http_proxy):
-            files.append(f"FILE '{proxy}/{str(i).ljust(3, '0')}{ext}'")
+            files.append(f"FILE '{proxy}/{str(i).rjust(3, '0')}{ext}'")
 
         return '\n'.join(files)
 
@@ -242,6 +242,7 @@ class ExaHTTPRequestHandler(BaseHTTPRequestHandler):
     GzipFile cannot be used for this request handler
     Data stream is not monolith gzip, but chunked gzip with \r\n between chunks
     """
+
     def log_message(self, format, *args): pass
 
     def do_PUT(self):
@@ -327,6 +328,27 @@ class ExaHTTPTransportWrapper(object):
             result = callback(self.http_proc.read_pipe, dst, **callback_params)
 
             self.http_proc.read_pipe.close()
+            self.http_proc.join()
+
+            return result
+        except Exception as e:
+            # Close HTTP Server if it is still running
+            if self.http_proc.is_alive():
+                self.http_proc.terminate()
+
+            raise e
+
+    def import_from_callback(self, callback, src, callback_params=None):
+        if not callable(callback):
+            raise ValueError('Callback argument is not callable')
+
+        if callback_params is None:
+            callback_params = {}
+
+        try:
+            result = callback(self.http_proc.write_pipe, src, **callback_params)
+
+            self.http_proc.write_pipe.close()
             self.http_proc.join()
 
             return result
