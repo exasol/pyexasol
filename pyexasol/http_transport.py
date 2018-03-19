@@ -21,15 +21,25 @@ class ExaSQLThread(threading.Thread):
     def __init__(self, connection, http_proxy):
         self.connection = connection
         self.http_proxy = http_proxy if isinstance(http_proxy, list) else [http_proxy]
+
+        self.http_proc = None
         self.exc = None
 
         super().__init__()
+
+    def set_http_proc(self, http_proc):
+        self.http_proc = http_proc
 
     def run(self):
         try:
             self.run_sql()
         except BaseException as e:
             self.exc = e
+
+            # In case of SQL error terminate HTTP server
+            # It closes other end of pipe and interrupts I/O in callback function in main thread
+            if self.http_proc is not None:
+                self.http_proc.terminate()
 
     def run_sql(self):
         pass

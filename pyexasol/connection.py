@@ -187,6 +187,7 @@ class ExaConnection(object):
             http_proc.start()
 
             sql_thread = ExaSQLExportThread(self, http_proc.get_proxy(), query_or_table, export_params)
+            sql_thread.set_http_proc(http_proc)
             sql_thread.start()
 
             result = callback(http_proc.read_pipe, dst, **callback_params)
@@ -224,6 +225,7 @@ class ExaConnection(object):
             http_proc.start()
 
             sql_thread = ExaSQLImportThread(self, http_proc.get_proxy(), table, import_params)
+            sql_thread.set_http_proc(http_proc)
             sql_thread.start()
 
             result = callback(http_proc.write_pipe, src, **callback_params)
