@@ -111,7 +111,6 @@ class ExaConnection(object):
         self._init_ext()
 
         self.is_closed = False
-        self.session_id = None
 
         if self.subc_token:
             self._sub_connect()
@@ -272,7 +271,7 @@ class ExaConnection(object):
         sql_thread.run_sql()
 
     def session_id(self):
-        return self.session_id
+        return str(self.meta.get('sessionId', ''))
 
     def last_statement(self):
         if self.last_stmt is None:
@@ -325,8 +324,6 @@ class ExaConnection(object):
             }
         })['responseData']
 
-        self.session_id = str(self.meta['sessionId'])
-
         if self.fetch_size_bytes is None:
             self.fetch_size_bytes = self.meta['maxDataMessageSize']
 
@@ -343,8 +340,6 @@ class ExaConnection(object):
             'password': utils.encrypt_password(ret['responseData']['publicKeyPem'], self.password),
             'token': self.subc_token,
         })['responseData']
-
-        self.session_id = str(self.meta['sessionId'])
 
         if self.fetch_size_bytes is None:
             self.fetch_size_bytes = self.meta['maxDataMessageSize']

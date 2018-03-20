@@ -57,7 +57,7 @@ class ExaQueryError(ExaRequestError):
 
     def get_params_for_print(self):
         params = super().get_params_for_print()
-        params['session_id'] = self.connection.session_id
+        params['session_id'] = self.connection.session_id()
         params['query'] = self.query
 
         return params
