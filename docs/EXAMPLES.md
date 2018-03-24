@@ -17,15 +17,17 @@ python examples/1_basic.py
 
 ## Examples
 
-- [1_basic.py](/examples/1_basic.py) - minimal code to create connection and run query;
-- [2_fetch_tuple.py](/examples/2_fetch_tuple.py) - all methods of fetching result set returing tuples;
-- [3_fetch_dict.py](/examples/3_fetch_dict.py) - all methods of fetching result set returing dictionaries;
-- [4_fetch_mapper.py](/examples/4_fetch_mapper.py) - adding custom data type mapper for fetching;
-- [5_formatting.py](/examples/5_formatting.py) - SQL text [formatting](/docs/SQL_FORMATTING.md);
-- [6_pandas.py](/examples/6_pandas.py) - IMPORT / EXPORT to and from `pandas.DataFrame`;
-- [7_import_export.py](/examples/7_import_export.py) - other methods of IMPORT / EXPORT;
-- [8_transaction.py](/examples/8_transaction.py) - transaction management, autocommit;
-- [9_exceptions.py](/examples/9_exceptions.py) - error handling, common errors;
+- [01_basic.py](/examples/01_basic.py) - minimal code to create connection and run query;
+- [02_fetch_tuple.py](/examples/02_fetch_tuple.py) - all methods of fetching result set returning tuples;
+- [03_fetch_dict.py](/examples/03_fetch_dict.py) - all methods of fetching result set returning dictionaries;
+- [04_fetch_mapper.py](/examples/04_fetch_mapper.py) - adding custom data type mapper for fetching;
+- [05_formatting.py](/examples/05_formatting.py) - SQL text [formatting](/docs/SQL_FORMATTING.md);
+- [06_pandas.py](/examples/06_pandas.py) - IMPORT / EXPORT to and from `pandas.DataFrame`;
+- [07_import_export.py](/examples/07_import_export.py) - other methods of IMPORT / EXPORT;
+- [08_transaction.py](/examples/08_transaction.py) - transaction management, autocommit;
+- [09_exceptions.py](/examples/09_exceptions.py) - error handling, common errors;
 - [10_redundancy.py](/examples/10_redundancy.py) - connection redundancy, how driver handles missing nodes;
 - [11_edge_case.py](/examples/11_edge_case.py) - storing and fetching biggest and smallest values for data types available in Exasol;
-- [12_db2_compat.py](/examples/12_db2_compat.py) - [DB-API 2.0 compatibility wrapper](/docs/DBAPI_COMPAT.md)
+- [12_db2_compat.py](/examples/12_db2_compat.py) - [DB-API 2.0 compatibility wrapper](/docs/DBAPI_COMPAT.md);
+- [13_ext.py](/examples/13_ext.py) - extension functions to help with common Exasol-related problems outside of pure database driver scope;
+- [14_parallel_export.py](/examples/14_parallel_export.py) - multi-process HTTP transport for export (experimental);

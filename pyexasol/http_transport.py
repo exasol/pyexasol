@@ -162,7 +162,7 @@ class ExaHTTPProcess(multiprocessing.Process):
         self.mode = mode
         self.server = None
 
-        # Init common named pipes for data transfer
+        # Init common OS pipes for data transfer
         # Strictly binary mode, no wrappers and no buffering
         read_fd, write_fd = os.pipe()
 
@@ -212,7 +212,8 @@ class ExaHTTPProcess(multiprocessing.Process):
 class ExaTCPServer(TCPServer):
     """
     This TCPServer is fake
-    Instead of listening for incoming connections it connects to Exasol
+    Instead of listening for incoming connections it connects to Exasol and uses proxy magic
+    It allows to bypass various connectivity problems (e.g. firewall)
     """
     def __init__(self, *args, **kwargs):
         self.proxy_host = None
@@ -256,66 +257,103 @@ class ExaHTTPRequestHandler(BaseHTTPRequestHandler):
     def log_message(self, format, *args): pass
 
     def do_PUT(self):
+        # Compressed data loop
         if self.server.compression:
-            d = zlib.decompressobj(wbits=16+zlib.MAX_WBITS)
+            d = zlib.decompressobj(wbits=16 + zlib.MAX_WBITS)
 
-        while True:
-            line = self.rfile.readline().strip()
+            while True:
+                data = self.read_chunk()
 
-            if len(line) == 0:
-                chunk_len = 0
-            else:
-                chunk_len = int(line, 16)
-
-            if chunk_len == 0:
-                if self.server.compression:
+                if data is None:
                     self.server.pipe.write(d.flush())
+                    break
 
-                self.server.pipe.close()
-                break
+                self.server.pipe.write(d.decompress(data))
 
-            data = self.rfile.read(chunk_len)
+        # Normal data loop
+        else:
+            while True:
+                data = self.read_chunk()
 
-            if self.server.compression:
-                data = d.decompress(data)
+                if data is None:
+                    break
 
-            self.server.pipe.write(data)
+                self.server.pipe.write(data)
 
-            if self.rfile.read(2) != b'\r\n':
-                self.server.pipe.close()
-                raise RuntimeError('Got wrong chunk delimiter in HTTP')
+        self.server.pipe.close()
 
         self.send_response(200, 'OK')
         self.end_headers()
 
-    def do_GET(self):
-        if self.server.compression:
-            c = zlib.compressobj(level=1, wbits=16+zlib.MAX_WBITS)
+    def read_chunk(self):
+        hex_length = self.rfile.readline().rstrip()
 
+        if len(hex_length) == 0:
+            chunk_len = 0
+        else:
+            chunk_len = int(hex_length, 16)
+
+        if chunk_len == 0:
+            return None
+
+        data = self.rfile.read(chunk_len)
+
+        if self.rfile.read(2) != b'\r\n':
+            raise RuntimeError('Got wrong chunk delimiter in HTTP')
+
+        return data
+
+    def do_GET(self):
         self.protocol_version = 'HTTP/1.1'
         self.send_response(200, 'OK')
         self.send_header('Content-type', 'application/octet-stream')
+        self.send_header('Transfer-Encoding', 'chunked')
         self.send_header('Connection', 'close')
         self.end_headers()
 
-        while True:
-            data = self.server.pipe.read(65535)
+        # Compressed data loop
+        if self.server.compression:
+            c = zlib.compressobj(level=1, wbits=16 + zlib.MAX_WBITS)
 
-            if data is None or len(data) == 0:
-                if self.server.compression:
-                    self.wfile.write(c.flush(zlib.Z_FINISH))
-                    self.wfile.flush()
+            while True:
+                data = self.server.pipe.read(65535)
 
-                break
+                if data is None or len(data) == 0:
+                    self.write_chunk(c.flush(zlib.Z_FINISH))
+                    self.write_chunk_finish()
+                    break
 
-            if self.server.compression:
-                data = c.compress(data)
+                self.write_chunk(c.compress(data))
 
-            self.wfile.write(data)
-            self.wfile.flush()
+        # Normal data loop
+        else:
+            while True:
+                data = self.server.pipe.read(65535)
+
+                if data is None or len(data) == 0:
+                    self.write_chunk_finish()
+                    break
+
+                self.write_chunk(data)
+
+    def write_chunk(self, data):
+        length = len(data)
+
+        if length > 0:
+            self.wfile.write(b'%x\r\n%b\r\n' % (length, data))
+
+    def write_chunk_finish(self):
+        self.wfile.write(b'0\r\n\r\n')
 
 
 class ExaHTTPTransportWrapper(object):
+    """
+    Start fake HTTP server, obtain proxy "host:port" string
+    Send it to parent process
+
+    Block into "export_to_callback()" or "import_from_callback()" call,
+    wait for incoming connection, process data, exit.
+    """
     def __init__(self, dsn, mode, compression=False):
         host, port = utils.get_random_host_port_from_dsn(dsn)[0]
 

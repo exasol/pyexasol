@@ -119,10 +119,12 @@ class ExaConnection(object):
             self._get_attr()
 
     def execute(self, query, query_params=None):
-        self.last_stmt = self._statement(query, query_params)
-        self.last_stmt._execute()
+        stmt = self._statement(query, query_params)
+        stmt._execute()
 
-        return self.last_stmt
+        self.last_stmt = stmt
+
+        return stmt
 
     def commit(self):
         return self.execute('COMMIT')
@@ -260,6 +262,13 @@ class ExaConnection(object):
         sql_thread.run_sql()
 
     def import_parallel(self, http_proxy_list, table, import_params=None):
+        """
+        This function is not working right now due to Exasol N+1 extra connection
+        to check random file, read first line and count the amount of columns in CSV.
+
+        Proxy magic cannot accept second connection and breaks with "Connection refused" error.
+        EXPORT is not affected by this problem.
+        """
         from .http_transport import ExaSQLImportThread
 
         if import_params is None:
