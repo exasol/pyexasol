@@ -316,7 +316,6 @@ class ExaHTTPRequestHandler(BaseHTTPRequestHandler):
         self.protocol_version = 'HTTP/1.1'
         self.send_response(200, 'OK')
         self.send_header('Content-type', 'application/octet-stream')
-        self.send_header('Transfer-Encoding', 'chunked')
         self.send_header('Connection', 'close')
         self.end_headers()
 
@@ -328,11 +327,10 @@ class ExaHTTPRequestHandler(BaseHTTPRequestHandler):
                 data = self.server.pipe.read(65535)
 
                 if data is None or len(data) == 0:
-                    self.write_chunk(c.flush(zlib.Z_FINISH))
-                    self.write_chunk_finish()
+                    self.wfile.write(c.flush(zlib.Z_FINISH))
                     break
 
-                self.write_chunk(c.compress(data))
+                self.wfile.write(c.compress(data))
 
         # Normal data loop
         else:
@@ -340,19 +338,9 @@ class ExaHTTPRequestHandler(BaseHTTPRequestHandler):
                 data = self.server.pipe.read(65535)
 
                 if data is None or len(data) == 0:
-                    self.write_chunk_finish()
                     break
 
-                self.write_chunk(data)
-
-    def write_chunk(self, data):
-        length = len(data)
-
-        if length > 0:
-            self.wfile.write(b'%x\r\n%b\r\n' % (length, data))
-
-    def write_chunk_finish(self):
-        self.wfile.write(b'0\r\n\r\n')
+                self.wfile.write(data)
 
 
 class ExaHTTPTransportWrapper(object):
