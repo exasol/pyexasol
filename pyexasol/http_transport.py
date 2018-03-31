@@ -18,10 +18,12 @@ class ExaSQLThread(threading.Thread):
     """
     Thread class which re-throws any Exception to parent thread
     """
-    def __init__(self, connection, http_proxy):
+    def __init__(self, connection, http_proxy, compression):
         self.connection = connection
         self.http_proxy = http_proxy if isinstance(http_proxy, list) else [http_proxy]
+        self.compression = compression
 
+        self.params = {}
         self.http_proc = None
         self.exc = None
 
@@ -52,10 +54,17 @@ class ExaSQLThread(threading.Thread):
 
     def build_file_list(self):
         files = list()
-        ext = '.csv.gz' if self.connection.compression else '.csv'
+
+        if 'format' in self.params:
+            if self.params['format'] not in ['gz', 'bz2', 'zip']:
+                raise ValueError(f"Unsupported compression format: {self.params['format']}")
+
+            ext = self.params['format']
+        else:
+            ext = 'gz' if self.compression else 'csv'
 
         for i, proxy in enumerate(self.http_proxy):
-            files.append(f"FILE '{proxy}/{str(i).rjust(3, '0')}{ext}'")
+            files.append(f"FILE '{proxy}/{str(i).rjust(3, '0')}.{ext}'")
 
         return '\n'.join(files)
 
@@ -65,11 +74,11 @@ class ExaSQLExportThread(ExaSQLThread):
     Build and run IMPORT query into separate thread
     Main thread is busy outputting data in callbacks
     """
-    def __init__(self, connection, http_proxy, query_or_table, export_params):
+    def __init__(self, connection, http_proxy, compression, query_or_table, export_params):
+        super().__init__(connection, http_proxy, compression)
+
         self.query_or_table = query_or_table
         self.params = export_params
-
-        super().__init__(connection, http_proxy)
 
     def run_sql(self):
         if isinstance(self.query_or_table, tuple) or str(self.query_or_table).strip().find(' ') == -1:
@@ -112,11 +121,11 @@ class ExaSQLImportThread(ExaSQLThread):
     Build and run EXPORT query into separate thread
     Main thread is busy parsing results in callbacks
     """
-    def __init__(self, connection, http_proc, table, import_params):
+    def __init__(self, connection, http_proc, compression, table, import_params):
+        super().__init__(connection, http_proc, compression)
+
         self.table = table
         self.params = import_params
-
-        super().__init__(connection, http_proc)
 
     def run_sql(self):
         table_ident = self.connection.format.safe_ident(self.table)

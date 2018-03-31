@@ -77,6 +77,7 @@ Please refer to Exasol User Manual to know more about `IMPORT` \ `EXPORT` parame
 | `with_column_names` | `True` | Add column names as first line, useful for Pandas |
 | `null` | `\N` | Custom `NULL` value |
 | `delimit` | `AUTO` | Delimiter mode: `AUTO`, `ALWAYS`, `NONE` |
+| `format` | `gz` | Import file or stream compressed with `gz`, `bzip2`, `zip` |
 
 ### export_params
 | Name | Example | Description |
@@ -87,6 +88,7 @@ Please refer to Exasol User Manual to know more about `IMPORT` \ `EXPORT` parame
 | `skip` | `1` | How many first rows to skip, useful for skipping header |
 | `null` | `\N` | Custom `NULL` value |
 | `trim` | `TRIM` | Trim mode: `TRIM`, `RTRIM`, `LTRIM` |
+| `format` | `gz` | Export file or stream compressed with `gz`, `bzip2`, `zip` |
 
 # How to write custom EXPORT \ IMPORT functions
 

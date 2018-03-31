@@ -32,3 +32,12 @@ printer.pprint(schemas)
 
 reserved_words = C.ext.get_reserved_words()
 printer.pprint(reserved_words)
+
+occupied_space = C.ext.get_disk_space_usage()
+printer.pprint(occupied_space)
+
+pd = C.ext.export_to_pandas_with_dtype("users")
+pd.info()
+
+pd = C.ext.export_to_pandas_with_dtype("payments")
+pd.info()

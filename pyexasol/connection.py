@@ -180,14 +180,19 @@ class ExaConnection(object):
         if export_params is None:
             export_params = {}
 
+        if 'format' in export_params:
+            compression = False
+        else:
+            compression = self.compression
+
         if query_params is not None:
-            query_or_table = self.format.format(**query_params)
+            query_or_table = self.format.format(query_or_table, **query_params)
 
         try:
-            http_proc = ExaHTTPProcess(self.ws_host, self.ws_port, self.compression, HTTP_EXPORT)
+            http_proc = ExaHTTPProcess(self.ws_host, self.ws_port, compression, HTTP_EXPORT)
             http_proc.start()
 
-            sql_thread = ExaSQLExportThread(self, http_proc.get_proxy(), query_or_table, export_params)
+            sql_thread = ExaSQLExportThread(self, http_proc.get_proxy(), compression, query_or_table, export_params)
             sql_thread.set_http_proc(http_proc)
             sql_thread.start()
 
@@ -218,14 +223,19 @@ class ExaConnection(object):
         if import_params is None:
             import_params = {}
 
+        if 'format' in import_params:
+            compression = False
+        else:
+            compression = self.compression
+
         if not callable(callback):
             raise ValueError('Callback argument is not callable')
 
         try:
-            http_proc = ExaHTTPProcess(self.ws_host, self.ws_port, self.compression, HTTP_IMPORT)
+            http_proc = ExaHTTPProcess(self.ws_host, self.ws_port, compression, HTTP_IMPORT)
             http_proc.start()
 
-            sql_thread = ExaSQLImportThread(self, http_proc.get_proxy(), table, import_params)
+            sql_thread = ExaSQLImportThread(self, http_proc.get_proxy(), compression, table, import_params)
             sql_thread.set_http_proc(http_proc)
             sql_thread.start()
 
@@ -253,12 +263,17 @@ class ExaConnection(object):
         if export_params is None:
             export_params = {}
 
+        if 'format' in export_params:
+            compression = False
+        else:
+            compression = self.compression
+
         if query_params is not None:
-            query_or_table = self.format.format(**query_params)
+            query_or_table = self.format.format(query_or_table, **query_params)
 
         # There is no need to run separate thread here, all work is performed in child processes
         # We simply reuse thread class to keep logic in one place
-        sql_thread = ExaSQLExportThread(self, http_proxy_list, query_or_table, export_params)
+        sql_thread = ExaSQLExportThread(self, http_proxy_list, compression, query_or_table, export_params)
         sql_thread.run_sql()
 
     def import_parallel(self, http_proxy_list, table, import_params=None):
@@ -274,9 +289,14 @@ class ExaConnection(object):
         if import_params is None:
             import_params = {}
 
+        if 'format' in import_params:
+            compression = False
+        else:
+            compression = self.compression
+
         # There is no need to run separate thread here, all work is performed in child processes
         # We simply reuse thread class to keep logic in one place
-        sql_thread = ExaSQLImportThread(self, http_proxy_list, table, import_params)
+        sql_thread = ExaSQLImportThread(self, http_proxy_list, compression, table, import_params)
         sql_thread.run_sql()
 
     def session_id(self):

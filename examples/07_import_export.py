@@ -85,3 +85,21 @@ def my_import_callback(pipe, src):
 C.import_from_callback(my_import_callback, res, 'users_copy')
 stmt = C.last_statement()
 print(f'IMPORTED {stmt.rowcount()} rows in {stmt.execution_time}s')
+
+# Export as gzipped file
+file = tempfile.TemporaryFile()
+
+C.export_to_file(file, 'users', export_params={'with_column_names': True, 'format': 'gz'})
+stmt = C.last_statement()
+print(f'EXPORTED {stmt.rowcount()} rows in {stmt.execution_time}s')
+
+file.seek(0)
+print(file.read(30))
+file.seek(0)
+
+# Import gzipped file
+C.import_from_file(file, 'users_copy', import_params={'skip': 1, 'format': 'gz'})
+stmt = C.last_statement()
+print(f'IMPORTED {stmt.rowcount()} rows in {stmt.execution_time}s')
+
+file.close()
