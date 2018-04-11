@@ -1,9 +1,14 @@
+import io
+import re
+
 from setuptools import setup
-from pyexasol.version import __version__
+
+with io.open('pyexasol/version.py', 'rt', encoding='utf8') as f:
+    version = re.search(r'__version__ = \'(.*?)\'', f.read()).group(1)
 
 setup(
     name='pyexasol',
-    version=__version__,
+    version=version,
     description='Exasol python driver with extra features',
     long_description="""
 Exasol python driver with low overhead, fast HTTP transport and compression.
