@@ -304,7 +304,7 @@ class ExaConnection(object):
 
     def last_statement(self):
         if self.last_stmt is None:
-            raise ExaRuntimeError('Last statement not found')
+            raise ExaRuntimeError(self, 'Last statement not found')
 
         return self.last_stmt
 
@@ -398,7 +398,7 @@ class ExaConnection(object):
         if query_params is not None:
             query = self.format.format(query, **query_params)
 
-        query = query.strip(' \n')
+        query = query.lstrip(' \n').rstrip(' \n;')
 
         return self.cls_statement(self, query)
 

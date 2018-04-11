@@ -85,7 +85,8 @@ class ExaSQLExportThread(ExaSQLThread):
             export_source = self.connection.format.safe_ident(self.query_or_table)
         else:
             # New lines are mandatory to handle queries with single-line comments '--'
-            export_source = f'(\n{self.query_or_table}\n)'
+            export_query = self.query_or_table.lstrip(" \n").rstrip(" \n;")
+            export_source = f'(\n{export_query}\n)'
 
         query = f"EXPORT {export_source} INTO CSV AT 'http://'\n"
         query += self.build_file_list()
