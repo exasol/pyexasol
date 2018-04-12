@@ -1,5 +1,9 @@
 from setuptools import setup
-from pyexasol.version import __version__
+import pathlib
+
+__version__ = None
+version_path = pathlib.Path(__file__).parent / 'pyexasol/version.py'
+exec(version_path.read_text())
 
 setup(
     name='pyexasol',
