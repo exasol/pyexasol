@@ -30,6 +30,9 @@ install:
     # install pyexasol
     - python setup.py develop
 
+    # install packages to run examples
+    - pip install "pandas>=0.22"
+
 script:
     - python examples/00_prepare.py
     - python examples/01_basic.py

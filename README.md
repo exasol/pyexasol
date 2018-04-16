@@ -27,6 +27,13 @@ PyEXASOL is native Python driver for [Exasol](https://www.exasol.com). It provid
 - rsa
 
 
+## Examples requirements
+
+To run the examples in the `examples` directory:
+
+- pandas >= 0.22
+
+
 ## Installation
 
 ```
