@@ -32,6 +32,6 @@ def exasol_mapper(val, data_type):
     elif data_type['type'] == 'TIMESTAMP':
         return datetime.datetime(int(val[0:4]), int(val[5:7]), int(val[8:10]),       # year, month, day
                                  int(val[11:13]), int(val[14:16]), int(val[17:19]),  # hour, minute, second
-                                 int(val[20:24]) * 1000 if len(val) > 20 else 0)     # millisecond (if available)
+                                 int(val[20:24]) if len(val) > 20 else 0)     # microseconds (if available)
     else:
         return val
