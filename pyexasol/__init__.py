@@ -30,7 +30,7 @@ from .mapper import exasol_mapper
 from .http_transport import ExaHTTPTransportWrapper, HTTP_EXPORT, HTTP_IMPORT
 
 
-def connect(**kwargs):
+def connect(**kwargs)->ExaConnection:
     """
     Constructor of connection objects
     Please see ExaConnection object for list of arguments
@@ -58,7 +58,7 @@ def connect(**kwargs):
     return connection_cls(**kwargs)
 
 
-def http_transport(dsn, mode, compression=False):
+def http_transport(dsn, mode, compression=False)->ExaHTTPTransportWrapper:
     """
     Constructor of HTTP Transport wrapper objects for IMPORT / EXPORT parallelism
 
