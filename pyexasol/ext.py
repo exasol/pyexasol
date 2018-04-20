@@ -197,6 +197,9 @@ class ExaExtension(object):
 
         row = self._execute(sql).fetchone()
 
+        if row is None:
+            return None
+
         row['occupied_size'] = int(row['occupied_size'])
         row['total_size'] = int(row['total_size'])
 
