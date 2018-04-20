@@ -50,7 +50,11 @@ def random_ts():
     return datetime.datetime.combine(date, time)
 
 
-C = E.connect(dsn=config.dsn, user=config.user, password=config.password, schema=config.schema, autocommit=False)
+C = E.connect(dsn=config.dsn, user=config.user, password=config.password, autocommit=False)
+
+# Create schema if not exist and make it default
+C.execute("CREATE SCHEMA IF NOT EXISTS {schema!i}", {'schema': config.schema})
+C.open_schema(config.schema)
 
 C.execute("""
     CREATE OR REPLACE TABLE users
