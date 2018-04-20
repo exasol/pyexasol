@@ -1,0 +1,51 @@
+language: python
+
+cache: pip
+
+python:
+    - 3.6
+
+sudo: required
+
+services:
+  - docker
+
+warnings_are_errors: false
+
+env:
+  global:
+    - EXAHOST="127.0.0.1:8563"
+
+before_install:
+    # test docker
+    - docker run --detach --name exasol --privileged -p 127.0.0.1:8563:8888 --stop-timeout 120 exasol/docker-db:latest
+
+install:
+    # sleep a bit to ensure that Docker is running (can be refactored to be more intelligent in future)
+    - sleep 120
+    - docker logs exasol
+    - docker exec -it exasol dwad_client list  # just for the log
+    - docker inspect exasol  # just for the log
+
+    # install pyexasol
+    - python setup.py develop
+
+    # install packages to run examples
+    - pip install "pandas>=0.22"
+
+script:
+    - python examples/00_prepare.py
+    - python examples/01_basic.py
+    - python examples/02_fetch_tuple.py
+    - python examples/03_fetch_dict.py
+    - python examples/04_fetch_mapper.py
+    - python examples/05_formatting.py
+    - python examples/06_pandas.py
+    - python examples/07_import_export.py
+    - python examples/08_transaction.py
+    - python examples/09_exceptions.py
+    - python examples/10_redundancy.py
+    - python examples/11_edge_case.py
+    - python examples/12_db2_compat.py
+    - python examples/13_ext.py
+    - python examples/14_parallel_export.py

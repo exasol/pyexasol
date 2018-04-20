@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/badoo/pyexasol.svg?branch=master)](https://travis-ci.org/expobrain/pyexasol)
+
 PyEXASOL is native Python driver for [Exasol](https://www.exasol.com). It provides special features to handle massive volumes of data commonly associated with this database.
 
 ## Quick links
@@ -23,6 +25,13 @@ PyEXASOL is native Python driver for [Exasol](https://www.exasol.com). It provid
 - Python >= 3.6
 - websocket-client >= 0.47
 - rsa
+
+
+## Examples requirements
+
+To run the examples in the `examples` directory:
+
+- pandas >= 0.22
 
 
 ## Installation
