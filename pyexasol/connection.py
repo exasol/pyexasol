@@ -118,7 +118,7 @@ class ExaConnection(object):
             self._connect()
             self._get_attr()
 
-    def execute(self, query, query_params=None):
+    def execute(self, query, query_params=None) -> ExaStatement:
         stmt = self._statement(query, query_params)
         stmt._execute()
 
@@ -302,7 +302,7 @@ class ExaConnection(object):
     def session_id(self):
         return str(self.meta.get('sessionId', ''))
 
-    def last_statement(self):
+    def last_statement(self) -> ExaStatement:
         if self.last_stmt is None:
             raise ExaRuntimeError(self, 'Last statement not found')
 
@@ -316,7 +316,7 @@ class ExaConnection(object):
 
         return ret['responseData']['token'], ret['responseData']['nodes']
 
-    def subc_open_handle(self, handle_id):
+    def subc_open_handle(self, handle_id) -> ExaStatement:
         st = self._statement()
         st._subc_handle(handle_id)
 
