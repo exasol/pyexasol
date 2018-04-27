@@ -346,7 +346,7 @@ Wrapper for [parallel HTTP transport](/docs/HTTP_TRANSPORT_PARALLEL.md) used by 
 
 ### ExaHTTPTransportWrapper.get_proxy()
 
-Returns proxy `host:port` string. Those strings should be passed from child processes to parent process and used as argument for [`execute_parallel()``](#execute_parallel) function.
+Returns proxy `host:port` string. Those strings should be passed from child processes to parent process and used as argument for [`execute_parallel()`](#execute_parallel) function.
 
 ### ExaHTTPTransportWrapper.export_to_callback()
 

@@ -6,7 +6,7 @@ It is possible to run [HTTP Transport](/docs/HTTP_TRANSPORT.md) in parallel. Wor
 
 1. Parent process opens main connection to Exasol and spawns multiple child processes.
 2. Each child process connects to individual Exasol node using [`http_transport()`](/docs/REFERENCE.md#http_transport) function, gets proxy `host:port` string and sends it to parent process.
-3. Parent process collects list of proxies from child processes and runs [`export_parallel()`](/docs/REFERNCE.md#export_parallel) function to execute SQL query.
+3. Parent process collects list of proxies from child processes and runs [`export_parallel()`](/docs/REFERENCE.md#export_parallel) function to execute SQL query.
 4. Each child process gets chunk of data from Exasol and executes callback function.
 5. Parent process waits for SQL query and child processes to finish.
 
@@ -17,6 +17,20 @@ Please note that PyEXASOL does not provide any specific way to send proxy string
 ## Example
 
 Please see [example_14](/examples/14_parallel_export.py).
+
+## Example of EXPORT query executed in Exasol
+
+This is how it looks from Exasol perspective.
+
+```sql
+EXPORT my_table INTO CSV AT 'http://'
+FILE '27.1.0.33:33601/000.csv'
+FILE '27.1.0.37:41733/001.csv'
+FILE '27.1.0.35:45014/002.csv'
+FILE '27.1.0.33:42071/003.csv'
+FILE '27.1.0.33:36669/004.csv'
+FILE '27.1.0.33:36794/005.csv';
+```
 
 ## Known problems and limitations
 
