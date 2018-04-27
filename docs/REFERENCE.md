@@ -1,6 +1,7 @@
 # Reference
 
 - [connect()](#connect)
+- [http_transport()](#http_transport)
 - [ExaConnection](#exaconnection)
   - [execute()](#execute)
   - [commit()](#commit)
@@ -12,6 +13,7 @@
   - [export_to_list()](#export_to_list)
   - [export_to_pandas()](#export_to_pandas)
   - [export_to_callback()](#export_to_callback)
+  - [export_parallel()](#export_parallel)
   - [import_from_file()](#import_from_file)
   - [import_from_iterable()](#import_from_iterable)
   - [import_from_pandas()](#import_from_pandas)
@@ -40,6 +42,9 @@
   - [safe_ident()](#safe_ident)
   - [safe_float()](#safe_float)
   - [safe_decimal()](#safe_decimal)
+- [ExaHTTPTransportWrapper](#exahttptransportwrapper)
+  - [get_proxy()](#exahttptransportwrapperget_proxy)
+  - [export_to_callback()](#exahttptransportwrapperexport_to_callback)
 
 ## connect()
 Opens new connection and returns `ExaConnection` object.
@@ -67,6 +72,15 @@ Opens new connection and returns `ExaConnection` object.
 | `verbose_error` | `True` | Display additional information when error occurs (Default: `True`) |
 | `debug` | `False` | Output debug information for client-server communication and connection attempts to STDERR |
 | `debug_logdir` | `/tmp/` | Store debug information into files in `debug_logdir` instead of outputting it to STDERR |
+
+## http_transport()
+Opens new HTTP connection and returns `ExaHTTPTransportWrapper` object. This function is part of [parallel HTTP transport API](/docs/HTTP_TRANSPORT_PARALLEL.md).
+
+| Argument | Example | Description |
+| --- | --- | --- |
+| `dsn` | `exasolpool1..5.mlan:8563` `10.10.127.1..11:8564` | Connection string, same format as standard JDBC / ODBC drivers |
+| `mode` | `pyexasol.HTTP_EXPORT` | Open connection for `pyexasol.HTTP_EXPORT` or `pyexasol.HTTP_IMPORT` |
+| `compression` | `True` | Use zlib compression for HTTP transport. Must be the same as `compression` of main connection. |
 
 ## ExaConnection
 
@@ -145,8 +159,21 @@ Exports big amount of data to user-defined callback function
 | `dst` | `anything` | (optional) Export destination for callback function |
 | `query_or_table` | `SELECT * FROM table` `table` `(schema, table)` | SQL query or table for export |
 | `query_params` | `{'table': 'users', 'col1':'bar'}` | (optional) Values for SQL query placeholders |
+| `export_params` | `{'with_column_names': True}` | (optional) Custom parameters for EXPORT query |
 
 Returns result of callback function
+
+### export_parallel()
+This function is part of [parallel HTTP transport API](/docs/HTTP_TRANSPORT_PARALLEL.md). It accepts list of proxy `host:port` strings obtained from all child processes and executes parallel export query. Parent process only monitors the execution if query itself. All actual work is performed in child processes.
+
+| Argument | Example | Description |
+| --- | --- | --- |
+| `http_proxy_list` | `['27.0.1.10:5362', '27.0.1.11:7262']` | List of proxy `host:port` strings |
+| `query_or_table` | `SELECT * FROM table` `table` `(schema, table)` | SQL query or table for export |
+| `query_params` | `{'table': 'users', 'col1':'bar'}` | (optional) Values for SQL query placeholders |
+| `export_params` | `{'with_column_names': True}` | (optional) Custom parameters for EXPORT query |
+
+Returns nothing on successful export. You may access `EXPORT` statement results using [`last_statement()`](#last_statement) function.
 
 ### import_from_file()
 Imports big amount of data from file or file-like object to Exasol. File must be opened in binary mode.
@@ -312,3 +339,22 @@ Accepts raw value. Converts it to `str` and validates it as float value for Exas
 
 ### safe_decimal()
 Accepts raw values. Converts it to `str` and validates it as decimal valie for Exasol. If value is not valid, throws `ValueError` exception.
+
+## ExaHTTPTransportWrapper
+
+Wrapper for [parallel HTTP transport](/docs/HTTP_TRANSPORT_PARALLEL.md) used by child processes.
+
+### ExaHTTPTransportWrapper.get_proxy()
+
+Returns proxy `host:port` string. Those strings should be passed from child processes to parent process and used as argument for [`execute_parallel()``](#execute_parallel) function.
+
+### ExaHTTPTransportWrapper.export_to_callback()
+
+Exports chunk of data to user-defined callback function. You may use exactly the same callbacks utilized by standard non-parallel [`export_to_callback()`](#export_to_callback) function.
+
+| Argument | Example | Description |
+| --- | --- | --- |
+| `callback` | `def my_callback(pipe, dst, **kwargs)` | Callback function |
+| `dst` | `anything` | (optional) Export destination for callback function |
+
+Returns result of callback function
