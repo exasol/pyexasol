@@ -1,6 +1,8 @@
 """
 Draft example 1
 Sub-connections for parallel reading of data in multiple processes
+
+This test can only work with multiple Exasol nodes and sufficient parallelism
 """
 
 import pyexasol as E

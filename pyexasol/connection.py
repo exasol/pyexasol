@@ -14,6 +14,7 @@ from .statement import ExaStatement
 from .logger import ExaLogger
 from .formatter import ExaFormatter
 from .ext import ExaExtension
+from .script_output import ExaScriptOutput
 from .version import __version__
 
 
@@ -39,6 +40,9 @@ class ExaConnection(object):
             , verbose_error=True
             , debug=False
             , debug_logdir=None
+            , udf_output_host=None
+            , udf_output_port=None
+            , udf_output_dir=None
             , subc_id=None
             , subc_token=None):
         """
@@ -64,6 +68,9 @@ class ExaConnection(object):
         :param verbose_error: Display additional information when error occurs (Default: True)
         :param debug: Output debug information for client-server communication and connection attempts to STDERR
         :param debug_logdir: Store debug information into files in debug_logdir instead of outputting it to STDERR
+        :param udf_output_host: Specific address to bind TCPServer for UDF script output (default: 0.0.0.0)
+        :param udf_output_port: Specific port to bind TCPServer for UDF script output (default: random port)
+        :param udf_output_dir: Directory to store captured UDF script output logs, split by <session_id>_<statement_id>/<vm_num>
         """
 
         self.dsn = dsn
@@ -92,6 +99,11 @@ class ExaConnection(object):
         self.debug = debug
         self.debug_logdir = debug_logdir
 
+        self.udf_output_host = udf_output_host
+        self.udf_output_port = udf_output_port
+        self.udf_output_dir = udf_output_dir
+        self.udf_output_count = 0
+
         self.subc_id = subc_id
         self.subc_token = subc_token
 
@@ -119,12 +131,41 @@ class ExaConnection(object):
             self._get_attr()
 
     def execute(self, query, query_params=None) -> ExaStatement:
+        """
+        Execute SQL query with optional query formatting parameters
+        Return ExaStatement object
+        """
         stmt = self._statement(query, query_params)
         stmt._execute()
 
         self.last_stmt = stmt
 
         return stmt
+
+    def execute_with_udf_output(self, query, query_params=None, output_dir=None) -> (ExaStatement, pathlib.Path):
+        """
+        Execute SQL query with UDF script, capture output
+        Return ExaStatement object and path to directory with output files
+        """
+        script_output = ExaScriptOutput(self.udf_output_host, self.udf_output_host)
+
+        if output_dir:
+            output_dir = pathlib.Path(output_dir)
+        else:
+            self.udf_output_count += 1
+            output_dir = utils.get_output_dir_for_statement(self.udf_output_dir, self.session_id(), self.udf_output_count)
+
+        address = script_output.init_script_mode(output_dir)
+        self.execute("ALTER SESSION SET SCRIPT_OUTPUT_ADDRESS = {address};", {'address': address})
+
+        try:
+            stmt = self.execute(query, query_params)
+            script_output.wait_script_mode()
+        except ExaQueryError:
+            script_output.terminate_script_mode()
+            raise
+
+        return stmt, output_dir
 
     def commit(self):
         return self.execute('COMMIT')

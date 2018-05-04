@@ -106,5 +106,30 @@ AS
 SELECT * FROM users
 """)
 
+C.execute("""
+CREATE OR REPLACE JAVA SET SCRIPT "ECHO_JAVA" ("str" VARCHAR(255) UTF8) RETURNS VARCHAR(255) UTF8 AS
+%jvmoption -Xms16m -Xmx128m -Xss512k;
+
+import java.util.Arrays;
+
+class ECHO_JAVA {
+	static String run(ExaMetadata exa, ExaIterator ctx) throws Exception {
+		System.out.println("VM_ID: " + exa.getVmId());
+		System.out.println("NODE_ID: " + exa.getNodeId());
+
+		System.out.println("This is custom STDOUT");
+		System.err.println("This is custom STDERR");
+
+		System.out.println("Total memory:" + Runtime.getRuntime().totalMemory() / 1024 / 1024 + "Mb");
+		System.out.println("Max memory:" + Runtime.getRuntime().maxMemory() / 1024 / 1024 + "Mb");
+
+		String[][] deepArray = new String[][] {{"John", "Mary"}, {"Alice", "Bob"}};
+		System.out.println(Arrays.deepToString(deepArray));
+
+		return ctx.getString(0);
+	}
+}
+""")
+
 C.commit()
 print("Test data was prepared")

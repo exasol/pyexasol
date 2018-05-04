@@ -31,7 +31,7 @@ schemas = C.ext.get_sys_schemas()
 printer.pprint(schemas)
 
 reserved_words = C.ext.get_reserved_words()
-printer.pprint(reserved_words)
+printer.pprint(reserved_words[0:5])
 
 occupied_space = C.ext.get_disk_space_usage()
 printer.pprint(occupied_space)

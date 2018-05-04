@@ -14,6 +14,7 @@ __all__ = [
     'ExaLogger',
     'ExaExtension',
     'ExaHTTPTransportWrapper',
+    'ExaScriptOutput',
     'HTTP_EXPORT',
     'HTTP_IMPORT',
 ]
@@ -28,6 +29,7 @@ from .logger import ExaLogger
 from .ext import ExaExtension
 from .mapper import exasol_mapper
 from .http_transport import ExaHTTPTransportWrapper, HTTP_EXPORT, HTTP_IMPORT
+from .script_output import ExaScriptOutput
 
 
 def connect(**kwargs) -> ExaConnection:

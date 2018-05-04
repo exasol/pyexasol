@@ -1,27 +1,26 @@
 import re
 import random
-import string
 import rsa
 import base64
+import pathlib
+import tempfile
 
 from . import constant
+
+
+def get_output_dir_for_statement(output_dir, session_id, stmt_id):
+    if output_dir is None:
+        output_dir = tempfile.gettempdir()
+
+    full_path = pathlib.Path(output_dir) / f'{session_id}_{stmt_id}'
+    full_path.mkdir(parents=True, exist_ok=True)
+
+    return full_path
 
 
 def encrypt_password(public_key_pem, password):
     pk = rsa.PublicKey.load_pkcs1(public_key_pem.encode())
     return base64.b64encode(rsa.encrypt(password.encode(), pk)).decode()
-
-
-def get_random_filename_for_http(compression):
-    """
-    Return fake file name to be used for Exasol tunneled EXPORT / IMPORT
-    """
-    filename = ''.join(random.choices(string.ascii_uppercase + string.digits, k=32)) + '.csv'
-
-    if compression:
-        filename += '.gz'
-
-    return filename
 
 
 def get_random_host_port_from_dsn(dsn):
