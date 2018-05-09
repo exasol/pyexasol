@@ -26,7 +26,7 @@ params = {
     'num_parallel': config['num_parallel'],
 }
 
-stmt, output_dir = C.execute_with_udf_output("SELECT wr.echo_java(profile_user_id) FROM {table_name!i} GROUP BY CEIL(RANDOM() * {num_parallel!d})", params)
+stmt, output_dir = C.execute_udf_output("SELECT wr.echo_java(profile_user_id) FROM {table_name!i} GROUP BY CEIL(RANDOM() * {num_parallel!d})", params)
 
 printer.pprint(stmt.fetchall())
 printer.pprint(sorted(list(output_dir.glob('*.log'))))

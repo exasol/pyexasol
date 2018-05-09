@@ -142,7 +142,7 @@ class ExaConnection(object):
 
         return stmt
 
-    def execute_with_udf_output(self, query, query_params=None, output_dir=None) -> (ExaStatement, pathlib.Path):
+    def execute_udf_output(self, query, query_params=None, output_dir=None) -> (ExaStatement, pathlib.Path):
         """
         Execute SQL query with UDF script, capture output
         Return ExaStatement object and path to directory with output files
