@@ -110,7 +110,7 @@ Execute SQL statement with optional formatting.
 Returns instance of `ExaStatement`
 
 ### execute_udf_output()
-Execute SQL statement with optional formatting. Capture [output](/docs/SCRIPTS_OUTPUT.md) of UDF scripts.
+Execute SQL statement with optional formatting. Capture [output](/docs/SCRIPT_OUTPUT.md) of UDF scripts.
 
 | Argument | Example | Description |
 | --- | --- | --- |
