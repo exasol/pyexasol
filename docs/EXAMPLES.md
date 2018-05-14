@@ -1,7 +1,7 @@
 ## Preparation
 Basic preparation steps are required to see examples in action.
 
-1. Install PyEXASOL with [optional dependencies](/docs/DEPENDENCIES.md)
+1. Install PyEXASOL with [optional dependencies](/docs/DEPENDENCIES.md).
 2. Download [PyEXASOL source code](https://github.com/badoo/pyexasol/archive/master.zip) and unzip it.
 3. Make sure Exasol is installed and dedicated schema for testing is created. You may use free [Exasol Community Edition](https://www.exasol.com/portal/display/DOWNLOAD/Free+Trial) for testing purposes.
 4. Go to "/examples/" directory and edit **\_config.py**. Input your Exasol credentials.
