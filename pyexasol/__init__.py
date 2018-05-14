@@ -60,7 +60,7 @@ def connect(**kwargs) -> ExaConnection:
     return connection_cls(**kwargs)
 
 
-def http_transport(dsn, mode, compression=False) -> ExaHTTPTransportWrapper:
+def http_transport(dsn, mode, compression=False, encryption=False) -> ExaHTTPTransportWrapper:
     """
     Constructor of HTTP Transport wrapper objects for IMPORT / EXPORT parallelism
 
@@ -76,4 +76,4 @@ def http_transport(dsn, mode, compression=False) -> ExaHTTPTransportWrapper:
 
     All child processes should run in parallel. It is not possible to run some processes first, than run some more.
     """
-    return ExaHTTPTransportWrapper(dsn, mode, compression)
+    return ExaHTTPTransportWrapper(dsn, mode, compression, encryption)

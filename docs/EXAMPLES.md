@@ -30,4 +30,5 @@ python examples/1_basic.py
 - [11_edge_case.py](/examples/11_edge_case.py) - storing and fetching biggest and smallest values for data types available in Exasol;
 - [12_db2_compat.py](/examples/12_db2_compat.py) - [DB-API 2.0 compatibility wrapper](/docs/DBAPI_COMPAT.md);
 - [13_ext.py](/examples/13_ext.py) - extension functions to help with common Exasol-related problems outside of pure database driver scope;
-- [14_parallel_export.py](/examples/14_parallel_export.py) - multi-process HTTP transport for export (experimental);
+- [14_parallel_export.py](/examples/14_parallel_export.py) - multi-process HTTP transport for export;
+- [15_encryption.py](/examples/15_encryption.py) - SSL-encrypted WebSocket connection and HTTP transport;

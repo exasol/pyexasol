@@ -27,11 +27,8 @@ install:
     - docker exec -it exasol dwad_client list  # just for the log
     - docker inspect exasol  # just for the log
 
-    # install pyexasol
-    - python setup.py develop
-
-    # install packages to run examples
-    - pip install "pandas>=0.22"
+    # install pyexasol with extras
+    - pip install -e .[pandas,encrypt]
 
 script:
     - python examples/00_prepare.py
@@ -49,3 +46,4 @@ script:
     - python examples/12_db2_compat.py
     - python examples/13_ext.py
     - python examples/14_parallel_export.py
+    - python examples/15_encryption.py

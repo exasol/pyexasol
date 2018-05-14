@@ -4,6 +4,7 @@ import getpass
 import time
 import pathlib
 import zlib
+import ssl
 
 from . import callback as cb
 from . import constant
@@ -28,6 +29,7 @@ class ExaConnection(object):
             , socket_timeout=constant.DEFAULT_SOCKET_TIMEOUT
             , query_timeout=constant.DEFAULT_QUERY_TIMEOUT
             , compression=False
+            , encryption=False
             , fetch_dict=False
             , fetch_mapper=None
             , fetch_size_bytes=constant.DEFAULT_FETCH_SIZE_BYTES
@@ -56,6 +58,7 @@ class ExaConnection(object):
         :param socket_timeout: Socket timeout in seconds passed directly to websocket (Default: 10)
         :param query_timeout: Maximum execution time of queries before automatic abort (Default: 0, no timeout)
         :param compression: Use zlib compression both for WebSocket and HTTP transport (Default: False)
+        :param encryption: Use SSL to encrypt client-server communications for WebSocket and HTTP transport (Default: False)
         :param fetch_dict: Fetch result rows as dicts instead of tuples (Default: False)
         :param fetch_mapper: Use custom mapper function to convert Exasol values into Python objects during fetching (Default: None)
         :param fetch_size_bytes: Maximum size of data message for single fetch request in bytes (Default: 5Mb)
@@ -82,6 +85,7 @@ class ExaConnection(object):
         self.socket_timeout = socket_timeout
         self.query_timeout = query_timeout
         self.compression = compression
+        self.encryption = encryption
 
         self.fetch_dict = fetch_dict
         self.fetch_mapper = fetch_mapper
@@ -230,7 +234,7 @@ class ExaConnection(object):
             query_or_table = self.format.format(query_or_table, **query_params)
 
         try:
-            http_proc = ExaHTTPProcess(self.ws_host, self.ws_port, compression, HTTP_EXPORT)
+            http_proc = ExaHTTPProcess(self.ws_host, self.ws_port, compression, self.encryption, HTTP_EXPORT)
             http_proc.start()
 
             sql_thread = ExaSQLExportThread(self, http_proc.get_proxy(), compression, query_or_table, export_params)
@@ -273,7 +277,7 @@ class ExaConnection(object):
             raise ValueError('Callback argument is not callable')
 
         try:
-            http_proc = ExaHTTPProcess(self.ws_host, self.ws_port, compression, HTTP_IMPORT)
+            http_proc = ExaHTTPProcess(self.ws_host, self.ws_port, compression, self.encryption, HTTP_IMPORT)
             http_proc.start()
 
             sql_thread = ExaSQLImportThread(self, http_proc.get_proxy(), compression, table, import_params)
@@ -488,7 +492,7 @@ class ExaConnection(object):
         """
         Init websocket connection
         Connection redundancy is supported
-        Specific Exasol host is chosen for every connection attempt
+        Specific Exasol host is randomly chosen for every connection attempt
         """
         if hasattr(self, '_ws'):
             pass
@@ -499,10 +503,7 @@ class ExaConnection(object):
         for i in host_port_list:
             try:
                 self._logger.log_message(f'Connection attempt [{i[0]}:{i[1]}]')
-
-                self._ws = websocket.create_connection(f'ws://{i[0]}:{i[1]}'
-                                                       , timeout=self.socket_timeout
-                                                       , skip_utf8_validation=True)
+                self._ws = self._ws_connect(i[0], i[1])
 
                 self.ws_host = i[0]
                 self.ws_port = i[1]
@@ -518,6 +519,24 @@ class ExaConnection(object):
 
                 if failed_attempts == len(host_port_list):
                     raise ExaCommunicationError(self, 'Could not connect to Exasol: ' + str(e))
+
+    def _ws_connect(self, host, port):
+        """ Open WebSocket connection """
+        prefix = 'ws://'
+        options = {
+            'timeout': self.socket_timeout,
+            'skip_utf8_validation': True,
+        }
+
+        if self.encryption:
+            prefix = 'wss://'
+
+            # Exasol does not check validity of certificates, so PyEXASOL follows this behaviour
+            options['sslopt'] = {
+                'cert_reqs': ssl.CERT_NONE
+            }
+
+        return websocket.create_connection(f'{prefix}{host}:{port}', **options)
 
     def _init_ws_compression(self):
         """ All further communication is transparently compressed after successful login or sublogin command """

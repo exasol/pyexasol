@@ -4,6 +4,7 @@ import rsa
 import base64
 import pathlib
 import tempfile
+import ssl
 
 from . import constant
 
@@ -51,3 +52,39 @@ def get_random_host_port_from_dsn(dsn):
     random.shuffle(res)
 
     return res
+
+
+def generate_adhoc_ssl_context():
+    """
+    Create temporary self-signed certificate for encrypted HTTP transport
+    Exasol does not check validity of certificates
+    """
+    from OpenSSL import crypto
+
+    k = crypto.PKey()
+    k.generate_key(crypto.TYPE_RSA, 2048)
+
+    cert = crypto.X509()
+    cert.set_serial_number(1)
+    cert.gmtime_adj_notBefore(0)
+    cert.gmtime_adj_notAfter(60 * 60 * 24 * 365)
+
+    cert.set_pubkey(k)
+    cert.sign(k, 'sha256')
+
+    cert_file = tempfile.NamedTemporaryFile()
+    cert_file.write(crypto.dump_certificate(crypto.FILETYPE_PEM, cert))
+    cert_file.flush()
+
+    key_file = tempfile.NamedTemporaryFile()
+    key_file.write(crypto.dump_privatekey(crypto.FILETYPE_PEM, k))
+    key_file.flush()
+
+    context = ssl.SSLContext()
+    context.verify_mode = ssl.CERT_NONE
+    context.load_cert_chain(certfile=cert_file.name, keyfile=key_file.name)
+
+    cert_file.close()
+    key_file.close()
+
+    return context

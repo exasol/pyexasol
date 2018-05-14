@@ -68,6 +68,12 @@ class ExaSQLThread(threading.Thread):
 
         return '\n'.join(files)
 
+    def get_prefix(self):
+        if self.connection.encryption:
+            return 'https://'
+        else:
+            return 'http://'
+
 
 class ExaSQLExportThread(ExaSQLThread):
     """
@@ -88,7 +94,7 @@ class ExaSQLExportThread(ExaSQLThread):
             export_query = self.query_or_table.lstrip(" \n").rstrip(" \n;")
             export_source = f'(\n{export_query}\n)'
 
-        query = f"EXPORT {export_source} INTO CSV AT 'http://'\n"
+        query = f"EXPORT {export_source} INTO CSV AT '{self.get_prefix()}'\n"
         query += self.build_file_list()
 
         if self.params.get('delimit'):
@@ -131,7 +137,7 @@ class ExaSQLImportThread(ExaSQLThread):
     def run_sql(self):
         table_ident = self.connection.format.safe_ident(self.table)
 
-        query = f"IMPORT INTO {table_ident} FROM CSV AT 'http://'\n"
+        query = f"IMPORT INTO {table_ident} FROM CSV AT '{self.get_prefix()}'\n"
         query += self.build_file_list()
 
         if self.params.get('null'):
@@ -165,10 +171,11 @@ class ExaHTTPProcess(multiprocessing.Process):
     HTTP communication and compression / decompression is offloaded to separate process
     It communicates with main process using pipes
     """
-    def __init__(self, host, port, compression, mode):
+    def __init__(self, host, port, compression, encryption, mode):
         self.host = host
         self.port = port
         self.compression = compression
+        self.encryption = encryption
         self.mode = mode
         self.server = None
 
@@ -186,7 +193,8 @@ class ExaHTTPProcess(multiprocessing.Process):
         super().__init__()
 
     def run(self):
-        self.server = ExaTCPServer((self.host, self.port), ExaHTTPRequestHandler)
+        self.server = ExaTCPServer((self.host, self.port), ExaHTTPRequestHandler
+                                   , compression=self.compression, encryption=self.encryption)
         self._proxy_read_pipe.close()
 
         self._proxy_write_pipe.send(f'{self.server.proxy_host}:{self.server.proxy_port}')
@@ -199,7 +207,6 @@ class ExaHTTPProcess(multiprocessing.Process):
             self.server.set_pipe(self.write_pipe)
             self.read_pipe.close()
 
-        self.server.set_compression(self.compression)
         self.server.handle_request()
 
     def start(self):
@@ -229,15 +236,14 @@ class ExaTCPServer(TCPServer):
         self.proxy_host = None
         self.proxy_port = None
         self.pipe = None
-        self.compression = False
+
+        self.compression = kwargs.pop('compression', False)
+        self.encryption = kwargs.pop('encryption', False)
 
         super().__init__(*args, **kwargs)
 
     def set_pipe(self, pipe):
         self.pipe = pipe
-
-    def set_compression(self, compression):
-        self.compression = compression
 
     def server_bind(self):
         """ Special Exasol packet to establish tunneling and return proxy host and port which can be used in query """
@@ -247,6 +253,10 @@ class ExaTCPServer(TCPServer):
 
         self.proxy_host = host.replace(b'\x00', b'').decode()
         self.proxy_port = port
+
+        if self.encryption:
+            context = utils.generate_adhoc_ssl_context()
+            self.socket = context.wrap_socket(self.socket, server_side=True, do_handshake_on_connect=False)
 
     def server_activate(self): pass
 
@@ -352,10 +362,10 @@ class ExaHTTPTransportWrapper(object):
     Block into "export_to_callback()" or "import_from_callback()" call,
     wait for incoming connection, process data, exit.
     """
-    def __init__(self, dsn, mode, compression=False):
+    def __init__(self, dsn, mode, compression=False, encryption=False):
         host, port = utils.get_random_host_port_from_dsn(dsn)[0]
 
-        self.http_proc = ExaHTTPProcess(host, port, compression, mode)
+        self.http_proc = ExaHTTPProcess(host, port, compression, encryption, mode)
         self.http_proc.start()
 
         self.proxy = self.http_proc.get_proxy()

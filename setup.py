@@ -50,5 +50,10 @@ Please read "Best practices" manual page to learn how to use PyEXASOL with maxim
         'rsa',
     ],
 
+    extras_require={
+        'pandas': ['pandas>=0.22'],
+        'encrypt': ['pyopenssl>=17.5.0']
+    },
+
     python_requires='>=3.6',
 )
