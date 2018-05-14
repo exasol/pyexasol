@@ -9,6 +9,7 @@ PyEXASOL is native Python driver for [Exasol](https://www.exasol.com). It provid
 - [SQL formatting](/docs/SQL_FORMATTING.md)
 - [HTTP Transport](/docs/HTTP_TRANSPORT.md)
 - [HTTP Transport (parallel, big data)](/docs/HTTP_TRANSPORT_PARALLEL.md)
+- [SSL encryption](/docs/ENCRYPTION.md)
 - [UDF scripts output](/docs/SCRIPT_OUTPUT.md)
 - [DB-API 2.0 compatibility](/docs/DBAPI_COMPAT.md)
 - [Examples](/docs/EXAMPLES.md)
@@ -31,8 +32,14 @@ PyEXASOL is native Python driver for [Exasol](https://www.exasol.com). It provid
 
 ## Installation
 
+Basic:
 ```
 pip install pyexasol
+```
+
+With [optional dependencies](/docs/DEPENDENCIES.md):
+```
+pip install pyexasol[pandas,encrypt]
 ```
 
 ## Basic usage

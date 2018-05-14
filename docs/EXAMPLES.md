@@ -1,18 +1,18 @@
 ## Preparation
 Basic preparation steps are required to see examples in action.
 
-1. [Install PyEXASOL](/README.md#installation)
+1. Install PyEXASOL with [optional dependencies](/docs/DEPENDENCIES.md)
 2. Download [PyEXASOL source code](https://github.com/badoo/pyexasol/archive/master.zip) and unzip it.
 3. Make sure Exasol is installed and dedicated schema for testing is created. You may use free [Exasol Community Edition](https://www.exasol.com/portal/display/DOWNLOAD/Free+Trial) for testing purposes.
 4. Go to "/examples/" directory and edit **\_config.py**. Input your Exasol credentials.
 5. Run script to prepare data set for testing:
 ```
-python examples/0_prepare.py
+python examples/00_prepare.py
 ```
 
 That's all. Now you may run examples in any order like common python scripts. E.g.:
 ```
-python examples/1_basic.py
+python examples/01_basic.py
 ```
 
 ## Examples
