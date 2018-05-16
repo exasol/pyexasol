@@ -28,7 +28,7 @@ install:
     - docker inspect exasol  # just for the log
 
     # install pyexasol with extras
-    - pip install -e .[pandas,encrypt]
+    - pip install -e .[pandas,encrypt,ujson,rapidjson]
 
 script:
     - python examples/00_prepare.py

@@ -32,3 +32,5 @@ python examples/01_basic.py
 - [13_ext.py](/examples/13_ext.py) - extension functions to help with common Exasol-related problems outside of pure database driver scope;
 - [14_parallel_export.py](/examples/14_parallel_export.py) - multi-process HTTP transport for export;
 - [15_encryption.py](/examples/15_encryption.py) - SSL-encrypted WebSocket connection and HTTP transport;
+- [16_ujson.py](/examples/16_ujson.py) - edge case example with `ujson`;
+- [17_rapidjson.py](/examples/17_rapidjson.py) - edge case example with `rapidjson`;

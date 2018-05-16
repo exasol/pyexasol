@@ -84,13 +84,13 @@ PyEXASOL defaults to standard [`json`](https://docs.python.org/3/library/json.ht
 
 #### json_lib=[`rapidjson`](https://github.com/python-rapidjson/python-rapidjson)
 ```
-pip install python-rapidjson
+pip install pyexasol[rapidjson]
 ```
 Rapidjson provides significant performance boost and it is well maintained by creators. PyEXASOL defaults to `number_mode=NM_NATIVE`. Exasol server wraps big decimals with quotes and returns as strings, so it should be a safe option.
 
 #### json_lib=[`ujson`](https://github.com/esnme/ultrajson)
 ```
-pip install ujson
+pip install pyexasol[ujson]
 ```
 Ujson provides best performance in our internal tests, but it is abandoned by creators.
 
