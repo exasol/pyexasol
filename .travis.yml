@@ -47,3 +47,5 @@ script:
     - python examples/13_ext.py
     - python examples/14_parallel_export.py
     - python examples/15_encryption.py
+    - python examples/16_ujson.py
+    - python examples/17_rapidjson.py
