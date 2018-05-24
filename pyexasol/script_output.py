@@ -133,16 +133,15 @@ class ExaScriptOutputHandler(socketserver.StreamRequestHandler):
 class ExaScriptOutputDebugModeHandler(ExaScriptOutputHandler):
     def handle(self):
         if self.server.connected_clients == 1:
-            print('\n-------- NEW STATEMENT --------')
-            dst = sys.stdout.buffer
+            print('\n-------- NEW STATEMENT --------', flush=True)
+            # Read and flush line-by-line, show log to user as soon as possible
+
+            for line in self.rfile:
+                sys.stdout.buffer.write(line)
+                sys.stdout.buffer.flush()
         else:
             dst = open(os.devnull, 'wb')
-
-        shutil.copyfileobj(self.rfile, dst)
-
-        if dst == sys.stdout.buffer:
-            dst.flush()
-        else:
+            shutil.copyfileobj(self.rfile, dst)
             dst.close()
 
 

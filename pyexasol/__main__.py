@@ -24,7 +24,7 @@ if args.command == 'script_debug':
     obj = ExaScriptOutput(args.host, args.port)
 
     output_address = obj.init_debug_mode()
-    print(f"ALTER SESSION SET SCRIPT_OUTPUT_ADDRESS = '{output_address}';")
+    print(f"ALTER SESSION SET SCRIPT_OUTPUT_ADDRESS = '{output_address}';", flush=True)
 
     obj.wait_debug_mode()
 elif args.command == 'version':
