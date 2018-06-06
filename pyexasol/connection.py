@@ -45,6 +45,8 @@ class ExaConnection(object):
             , udf_output_host=None
             , udf_output_port=None
             , udf_output_dir=None
+            , client_name=None
+            , client_version=None
             , subc_id=None
             , subc_token=None):
         """
@@ -107,6 +109,9 @@ class ExaConnection(object):
         self.udf_output_port = udf_output_port
         self.udf_output_dir = udf_output_dir
         self.udf_output_count = 0
+
+        self.client_name = client_name
+        self.client_version = client_version
 
         self.subc_id = subc_id
         self.subc_token = subc_token
@@ -384,10 +389,10 @@ class ExaConnection(object):
         self.meta = self._req({
             'username': self.user,
             'password': utils.encrypt_password(ret['responseData']['publicKeyPem'], self.password),
-            'driverName': constant.DRIVER_NAME,
-            'clientName': constant.CLIENT_NAME,
-            'clientVersion': __version__,
-            'clientOs': f'{platform.system()} {platform.release()} {platform.version()}',
+            'driverName': f'{constant.DRIVER_NAME} {__version__}',
+            'clientName': self.client_name if self.client_name else constant.DRIVER_NAME,
+            'clientVersion': self.client_version if self.client_version else __version__,
+            'clientOs': platform.platform(),
             'clientOsUsername': getpass.getuser(),
             'clientRuntime': f'Python {platform.python_version()}',
             'useCompression': self.compression,

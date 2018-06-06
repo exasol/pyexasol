@@ -49,3 +49,4 @@ script:
     - python examples/15_encryption.py
     - python examples/16_ujson.py
     - python examples/17_rapidjson.py
+    - python examples/18_session_params.py

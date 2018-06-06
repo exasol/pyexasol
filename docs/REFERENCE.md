@@ -86,6 +86,8 @@ Opens new connection and returns `ExaConnection` object.
 | `udf_output_host` | `0.0.0.0` | Specific IPv4 address to bind TCP server for script output (Default: `0.0.0.0`) |
 | `udf_output_port` | `5555` | Port to bind TCP server for script output (Default: random port) |
 | `udf_output_dir` | `/tmp` | Path or path-like object pointing to directory for script output log files (Default: `tempfile.gettempdir()`) |
+| `client_name` | `MyClient` | Custom name of client application displayed in Exasol sessions tables (Default: `PyEXASOL`) |
+| `client_version` | `1.0.0` | Custom version of client application (Default: `pyexasol.__version__`) |
 
 ## http_transport()
 Opens new HTTP connection and returns `ExaHTTPTransportWrapper` object. This function is part of [parallel HTTP transport API](/docs/HTTP_TRANSPORT_PARALLEL.md).
