@@ -15,6 +15,7 @@ __all__ = [
     'ExaExtension',
     'ExaHTTPTransportWrapper',
     'ExaScriptOutput',
+    'ExaLocalConfig',
     'HTTP_EXPORT',
     'HTTP_IMPORT',
 ]
@@ -25,6 +26,7 @@ from .exceptions import ExaError, ExaCommunicationError, ExaRuntimeError, ExaReq
 from .connection import ExaConnection
 from .statement import ExaStatement
 from .formatter import ExaFormatter
+from .local_config import ExaLocalConfig
 from .logger import ExaLogger
 from .ext import ExaExtension
 from .mapper import exasol_mapper
@@ -46,18 +48,39 @@ def connect(**kwargs) -> ExaConnection:
         connection_cls = ExaConnection
 
     if 'cls_statement' in kwargs and not issubclass(kwargs['cls_statement'], ExaStatement):
-        raise ValueError(f"Class [{kwargs['cls_statement']} is not subclass of ExaStatement")
+        raise ValueError(f"Class [{kwargs['cls_statement']}] is not subclass of ExaStatement")
 
     if 'cls_formatter' in kwargs and not issubclass(kwargs['cls_formatter'], ExaFormatter):
-        raise ValueError(f"Class [{kwargs['cls_formatter']} is not subclass of ExaFormatter")
+        raise ValueError(f"Class [{kwargs['cls_formatter']}] is not subclass of ExaFormatter")
 
     if 'cls_logger' in kwargs and not issubclass(kwargs['cls_logger'], ExaLogger):
-        raise ValueError(f"Class [{kwargs['cls_logger']} is not subclass of ExaLogger")
+        raise ValueError(f"Class [{kwargs['cls_logger']}] is not subclass of ExaLogger")
 
     if 'cls_extension' in kwargs and not issubclass(kwargs['cls_extension'], ExaExtension):
-        raise ValueError(f"Class [{kwargs['cls_extension']} is not subclass of ExaExtension")
+        raise ValueError(f"Class [{kwargs['cls_extension']}] is not subclass of ExaExtension")
 
     return connection_cls(**kwargs)
+
+
+def connect_local_config(config_section, config_path=None, cls_local_config=ExaLocalConfig, **kwargs) -> ExaConnection:
+    """
+    Constructor of connection objects based on local config file
+    Default config path is ~/.pyexasol.ini
+
+    Extra arguments override values from config
+
+    :param config_section: Name of config section (required!)
+    :param config_path: Custom path to local config file
+    :param cls_local_config: Overloaded ExaLocalConfig class
+    :param kwargs: Arguments for "connect()" function
+    """
+    if not issubclass(cls_local_config, ExaLocalConfig):
+        raise ValueError(f"Class [{cls_local_config}] is not subclass of ExaLocalConfig")
+
+    conf = cls_local_config(config_path)
+    conf_args = conf.get_args(config_section)
+
+    return connect(**{**conf_args, **kwargs})
 
 
 def http_transport(dsn, mode, compression=False, encryption=False) -> ExaHTTPTransportWrapper:

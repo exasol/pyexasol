@@ -50,3 +50,4 @@ script:
     - python examples/16_ujson.py
     - python examples/17_rapidjson.py
     - python examples/18_session_params.py
+    - python examples/19_local_config.py

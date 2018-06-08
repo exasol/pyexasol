@@ -76,6 +76,8 @@ class ExaConnection(object):
         :param udf_output_host: Specific address to bind TCPServer for UDF script output (default: 0.0.0.0)
         :param udf_output_port: Specific port to bind TCPServer for UDF script output (default: random port)
         :param udf_output_dir: Directory to store captured UDF script output logs, split by <session_id>_<statement_id>/<vm_num>
+        :param client_name: Custom name of client application displayed in Exasol sessions tables (Default: PyEXASOL)
+        :param client_version: Custom version of client application (Default: pyexasol.__version__)
         """
 
         self.dsn = dsn

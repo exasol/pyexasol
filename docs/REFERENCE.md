@@ -1,6 +1,7 @@
 # Reference
 
 - [connect()](#connect)
+- [connect_local_config()](#connect_local_config)
 - [http_transport()](#http_transport)
 - [ExaConnection](#exaconnection)
   - [execute()](#execute)
@@ -88,6 +89,16 @@ Opens new connection and returns `ExaConnection` object.
 | `udf_output_dir` | `/tmp` | Path or path-like object pointing to directory for script output log files (Default: `tempfile.gettempdir()`) |
 | `client_name` | `MyClient` | Custom name of client application displayed in Exasol sessions tables (Default: `PyEXASOL`) |
 | `client_version` | `1.0.0` | Custom version of client application (Default: `pyexasol.__version__`) |
+
+## connect_local_config()
+Opens new connection and returns `ExaConnection` object. It uses local .ini file (usually `~/.pyexasol.ini`) to read credentials and connection parameters.
+
+| Argument | Example | Description |
+| --- | --- | --- |
+| `config_section` | `my_exasol` | Name of section in config file |
+| `config_path` | `/etc/pyexasol.ini` | Path to config file (Default: `~/.pyexasol.ini`) |
+| `cls_local_config` | `pyexasol.ExaLocalConfig` | Overloaded `ExaLocalConfig` |
+| `**kwargs` | - | All other arguments from [`connect`](#connect) method; `**kwargs` override values from config file |
 
 ## http_transport()
 Opens new HTTP connection and returns `ExaHTTPTransportWrapper` object. This function is part of [parallel HTTP transport API](/docs/HTTP_TRANSPORT_PARALLEL.md).
