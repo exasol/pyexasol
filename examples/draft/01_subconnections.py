@@ -58,9 +58,7 @@ i = 0
 for node in nodes:
     i += 1
 
-    dsn = f'nexasol{int(node[7:9]) - 29}.mlan:{int(node[-5:])}'
-
-    proc = SelectProc(i, dsn, token, st.result_set_handle)
+    proc = SelectProc(i, node, token, st.result_set_handle)
     pool.append(proc)
     proc.start()
 

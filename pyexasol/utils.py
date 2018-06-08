@@ -4,6 +4,7 @@ import rsa
 import base64
 import pathlib
 import tempfile
+import socket
 import ssl
 
 from . import constant
@@ -52,6 +53,10 @@ def get_random_host_port_from_dsn(dsn):
     random.shuffle(res)
 
     return res
+
+
+def get_host_ip_for_enter_parallel(ws_host):
+    return socket.gethostbyname(ws_host)
 
 
 def generate_adhoc_ssl_context():

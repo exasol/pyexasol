@@ -361,6 +361,7 @@ class ExaConnection(object):
     def enter_parallel(self, num_parallel):
         ret = self._req({
             'command': 'enterParallel',
+            'hostIp': utils.get_host_ip_for_enter_parallel(self.ws_host),
             'numRequestedConnections': num_parallel
         })
 
