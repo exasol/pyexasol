@@ -1,5 +1,7 @@
 # Reference
 
+This page contains complete reference of PyEXASOL public API.
+
 - [connect()](#connect)
 - [connect_local_config()](#connect_local_config)
 - [http_transport()](#http_transport)
@@ -91,7 +93,7 @@ Opens new connection and returns `ExaConnection` object.
 | `client_version` | `1.0.0` | Custom version of client application (Default: `pyexasol.__version__`) |
 
 ## connect_local_config()
-Opens new connection and returns `ExaConnection` object. It uses local .ini file (usually `~/.pyexasol.ini`) to read credentials and connection parameters.
+Opens new connection and returns `ExaConnection` object. It uses local .ini file (usually `~/.pyexasol.ini`) to read credentials and connection parameters. Please read [local config](/docs/LOCAL_CONFIG.md) page for more details.
 
 | Argument | Example | Description |
 | --- | --- | --- |

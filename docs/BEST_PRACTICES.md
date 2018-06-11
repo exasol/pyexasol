@@ -8,7 +8,7 @@ If you want to use Python for actual data processing, consider [Exasol eUDF Scri
 
 If you absolutely have to move big amounts of data to and from Exasol (e.g. for Jupiter Notebook), please keep reading.
 
-## Set `compression=True`
+## Consider setting `compression=True`
 
 ```python
 C = pyexasol.connect(... , compression=True)
@@ -16,7 +16,7 @@ C = pyexasol.connect(... , compression=True)
 
 Network is the main bottleneck in majority of cases. `compression` flag enables transparent zlib compression for all client-server communication, including common fetching and fast [HTTP transport](/docs/HTTP_TRANSPORT.md). It may improve overall performance by factor 4-8x.
 
-Disable `compression` if you transfer data within the same data center over fast network.
+Enable compression for local laptops connecting to Exasol over wireless network. Disable `compression` if you transfer data within the same data center over fast network.
 
 ## Use HTTP transport for big volumes of data
 
@@ -28,20 +28,20 @@ C.import_from_pandas(pd, 'table')
 C.import_from_file('my_file.csv', 'table')
 ```
 
-It is okay to use common fetching for small datasets up to 1M of records.
+It is okay to use common fetching for small data sets up to 1M of records.
 
 For anything bigger than that you should always consider [HTTP transport](/docs/HTTP_TRANSPORT.md) (`export_*` and `import_*` functions). Internally it uses native `IMPORT` and `EXPORT` commands and transfers data using common CSV format. Most of Big Data tool and libraries are capable of parsing CSV using fast C implementation.
 
-The best way to achive good performance in Python is to avoid Python structures altogether. You may stream raw data directly from Exasol to external tools using pipes opened in binary mode.
+The best way to achieve good performance in Python is to avoid creation of Python objects altogether. You may stream raw data directly from Exasol to external tools using pipes opened in binary mode.
 
 ## Prefer iterator syntax to fetch result sets rather than `fetch*` functions
 
 Iterator is very easy to use, and it has low memory footprint.
 
 ```python
-st = C.execute('SELECT * FROM table')
+stmt = C.execute('SELECT * FROM table')
 
-for row in st:
+for row in stmt:
     print(row)
 ```
 
@@ -59,9 +59,9 @@ myexasol4:8563
 myexasol5:8563
 ```
 
-PyEXASOL tries to connect to random node from this list. If it fails, it tries to connect to another random node. The main benefits of this approacha are following:
+PyEXASOL tries to connect to random node from this list. If it fails, it tries to connect to another random node. The main benefits of this approach are:
 
-- Multiple connections are evenely distributed across the whole cluster;
+- Multiple connections are evenly distributed across the whole cluster;
 - If one or more nodes are down, but the cluster is still operational due to redundancy, users will be able to connect using PyEXASOL without any problems or random error messages;
 
 ## Never use INSERT statement to insert raw values in SQL, always use IMPORT instead

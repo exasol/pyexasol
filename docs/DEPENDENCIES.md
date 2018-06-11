@@ -1,4 +1,4 @@
-## Dependencies
+## Core dependencies
 
 - Exasol >= 6
 - Python >= 3.6

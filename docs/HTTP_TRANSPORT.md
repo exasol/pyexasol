@@ -2,13 +2,13 @@
 
 The main purpose of HTTP transport is to reduce massive fetching overhead associated with large data sets (1M+ rows). It uses native Exasol commands `EXPORT` and `IMPORT` specifically designed to move large amounts of data. Data is transferred using CSV format with optional compression.
 
-This is a powerful tool which allows to bypass Python structures altogether and dramatically increase performance.
+This is a powerful tool which allows to bypass creation of Python objects altogether and dramatically increase performance.
 
-PyEXASOL offloads HTTP communication and decompression into separate process using [multiprocessing](https://docs.python.org/3/library/multiprocessing.html) module. Main process only deals with [pipe](https://docs.python.org/3/library/os.html#os.pipe) opened in binary mode.
+PyEXASOL offloads HTTP communication and decompression to separate process using [multiprocessing](https://docs.python.org/3/library/multiprocessing.html) module. Main process only reads or writes to [pipe](https://docs.python.org/3/library/os.html#os.pipe) opened in binary mode.
 
 You may specify custom `callback` function to read or write from pipe and to apply any custom logic you need. You may specify `callback_params` to pass additional parameters to `callback` function (e.g. options for pandas).
 
-You may also specify `import_param` or `export_params` to alter `IMPORT` or `EXPORT` query and modify the data stream.
+You may also specify `import_params` or `export_params` to alter `IMPORT` or `EXPORT` query and modify the data stream.
 
 # Pre-defined functions
 
@@ -66,7 +66,7 @@ C.export_to_file('my_file.csv', "users")
 
 # Parameters
 
-Please refer to Exasol User Manual to know more about `IMPORT` \ `EXPORT` parameters.
+Please refer to Exasol User Manual to know more about `IMPORT` / `EXPORT` parameters.
 
 ### import_params
 | Name | Example | Description |
@@ -104,7 +104,7 @@ def export_to_list(pipe, dst, **kwargs):
 
     return [row for row in reader]
     
-# Run EXPORT and pass pipe to callback function
+# Run EXPORT using defined callback function
 C.export_to_callback(export_to_list, None, 'my_table')
 ```
 
@@ -119,6 +119,6 @@ def import_from_pandas(pipe, src, **kwargs):
     wrapped_pipe = io.TextIOWrapper(pipe, newline='\n')
     return src.to_csv(wrapped_pipe, header=False, index=False, quoting=csv.QUOTE_NONNUMERIC, **kwargs)
 
-# Run IMPORT and pass pipe to callback function
+# Run IMPORT using defined callback function
 C.export_from_callback(import_from_pandas, df, 'my_table')
 ```

@@ -1,18 +1,24 @@
 [![Build Status](https://travis-ci.org/badoo/pyexasol.svg?branch=master)](https://travis-ci.org/badoo/pyexasol)
 
-PyEXASOL is native Python driver for [Exasol](https://www.exasol.com). It provides special features to handle massive volumes of data commonly associated with this database.
+PyEXASOL is custom Python driver for [Exasol](https://www.exasol.com) created in [Badoo](https://badoo.com/team/). It helps us to handle massive volumes of data commonly associated with this database.
+
+You may expect at least ~3-10x performance improvement over existing ODBC / JDBC solutions in single process scenario involving pandas. It is possible to split data set across multiple processes and multiple servers to improve performance even further.
+
 
 ## Quick links
-- [Installation](#installation)
+- [Getting started](#getting_started)
 - [Reference](/docs/REFERENCE.md)
+- [Examples](/docs/EXAMPLES.md)
 - [Best practices](/docs/BEST_PRACTICES.md)
+- [Local config (.ini file)](/docs/LOCAL_CONFIG.md)
 - [SQL formatting](/docs/SQL_FORMATTING.md)
 - [HTTP Transport](/docs/HTTP_TRANSPORT.md)
-- [HTTP Transport (parallel, big data)](/docs/HTTP_TRANSPORT_PARALLEL.md)
+- [HTTP Transport (multiprocessing)](/docs/HTTP_TRANSPORT_PARALLEL.md)
 - [SSL encryption](/docs/ENCRYPTION.md)
 - [UDF scripts output](/docs/SCRIPT_OUTPUT.md)
 - [DB-API 2.0 compatibility](/docs/DBAPI_COMPAT.md)
-- [Examples](/docs/EXAMPLES.md)
+- [Optional dependencies](/docs/DEPENDENCIES.md)
+
 
 ## PyEXASOL main concepts
 
@@ -26,49 +32,51 @@ PyEXASOL is native Python driver for [Exasol](https://www.exasol.com). It provid
 
 - Exasol >= 6
 - Python >= 3.6
-- websocket-client >= 0.47
-- rsa
 
 
-## Installation
+## Getting started
 
-Basic:
+Install PyEXASOL:
 ```
-pip install pyexasol
+pip install pyexasol[pandas]
 ```
 
-With [optional dependencies](/docs/DEPENDENCIES.md):
-```
-pip install pyexasol[pandas,encrypt]
-```
-
-## Basic usage
-
+Run basic query:
 ```python
 import pyexasol
 
-C = pyexasol.connect(dsn='host:port', user='sys', password='exasol')
+C = pyexasol.connect(dsn='<host:port>', user='sys', password='exasol')
 
-st = C.execute("SELECT * FROM schema.table LIMIT 10")
-for row in st:
+stmt = C.execute("SELECT * FROM EXA_ALL_USERS")
+
+for row in stmt:
     print(row)
 ```
 
-## Read data into Pandas
-
+Load data into `pandas.DataFrame`:
 ```python
 import pyexasol
 
-C = E.connect(dsn='host:port', user='sys', password='exasol', compression=True)
+C = pyexasol.connect(dsn='<host:port>', user='sys', password='exasol', compression=True)
 
-data_frame = C.export_to_pandas("SELECT * FROM users")
-print(data_frame.head())
+df = C.export_to_pandas("SELECT * FROM EXA_ALL_USERS")
+print(df.head())
+```
+
+You may set up [local config](/docs/LOCAL_CONFIG.md) to store your personal Exasol credentials and connection options:
+```python
+import pyexasol
+
+C = pyexasol.connect_local_config('my_config')
+
+stmt = C.execute("SELECT CURRENT_TIMESTAMP")
+print(stmt.fetchone())
 ```
 
 ## Future plans
 - ~~Parallel HTTP transport~~ (done)
 - ~~UDF scripts output~~ (done)
-- Sub-connections
+- Sub-connections (waiting for proper release of Exasol 6.0.9+)
 
 ## Created by
 Vitaly Markov, 2018
