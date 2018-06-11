@@ -2,13 +2,13 @@
 
 The main purpose of HTTP transport is to reduce massive fetching overhead associated with large data sets (1M+ rows). It uses native Exasol commands `EXPORT` and `IMPORT` specifically designed to move large amounts of data. Data is transferred using CSV format with optional compression.
 
-This is a powerful tool which allows to bypass creation of Python objects altogether and dramatically increase performance.
+This is a powerful tool which helps to bypass creation of Python objects altogether and dramatically increase performance.
 
 PyEXASOL offloads HTTP communication and decompression to separate process using [multiprocessing](https://docs.python.org/3/library/multiprocessing.html) module. Main process only reads or writes to [pipe](https://docs.python.org/3/library/os.html#os.pipe) opened in binary mode.
 
 You may specify custom `callback` function to read or write from pipe and to apply any custom logic you need. You may specify `callback_params` to pass additional parameters to `callback` function (e.g. options for pandas).
 
-You may also specify `import_params` or `export_params` to alter `IMPORT` or `EXPORT` query and modify the data stream.
+You may also specify `import_params` or `export_params` to alter `IMPORT` or `EXPORT` query and modify data stream.
 
 # Pre-defined functions
 
@@ -92,7 +92,7 @@ Please refer to Exasol User Manual to know more about `IMPORT` / `EXPORT` parame
 
 # How to write custom EXPORT \ IMPORT functions
 
-Full collection of pre-defined callback functions is available in `callback.py` module.
+Full collection of pre-defined callback functions is available in [`callback.py`](/pyexasol/callback.py) module.
 
 Example of callback exporting into basic Python list.
 

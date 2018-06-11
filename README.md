@@ -6,7 +6,7 @@ You may expect at least ~3-10x performance improvement over existing ODBC / JDBC
 
 
 ## Quick links
-- [Getting started](#getting_started)
+- [Getting started](#getting-started)
 - [Reference](/docs/REFERENCE.md)
 - [Examples](/docs/EXAMPLES.md)
 - [Best practices](/docs/BEST_PRACTICES.md)
