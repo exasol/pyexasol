@@ -80,6 +80,15 @@ CREATE OR REPLACE TABLE payments
 )
 """)
 
+C.execute("""
+CREATE OR REPLACE TABLE parallel_import
+(
+    user_id         DECIMAL(18,0),
+    user_name       VARCHAR(255),
+    shard_id        DECIMAL(18,0)
+)
+""")
+
 C.execute("CREATE OR REPLACE TABLE users_copy LIKE users")
 C.execute("CREATE OR REPLACE TABLE payments_copy LIKE payments")
 

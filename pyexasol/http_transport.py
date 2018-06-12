@@ -63,16 +63,15 @@ class ExaSQLThread(threading.Thread):
         else:
             ext = 'gz' if self.compression else 'csv'
 
+        if self.connection.encryption:
+            prefix = 'https://'
+        else:
+            prefix = 'http://'
+
         for i, proxy in enumerate(self.http_proxy):
-            files.append(f"FILE '{proxy}/{str(i).rjust(3, '0')}.{ext}'")
+            files.append(f"AT '{prefix}{proxy}' FILE '{str(i).rjust(3, '0')}.{ext}'")
 
         return '\n'.join(files)
-
-    def get_prefix(self):
-        if self.connection.encryption:
-            return 'https://'
-        else:
-            return 'http://'
 
 
 class ExaSQLExportThread(ExaSQLThread):
@@ -94,7 +93,7 @@ class ExaSQLExportThread(ExaSQLThread):
             export_query = self.query_or_table.lstrip(" \n").rstrip(" \n;")
             export_source = f'(\n{export_query}\n)'
 
-        query = f"EXPORT {export_source} INTO CSV AT '{self.get_prefix()}'\n"
+        query = f"EXPORT {export_source} INTO CSV\n"
         query += self.build_file_list()
 
         if self.params.get('delimit'):
@@ -137,7 +136,7 @@ class ExaSQLImportThread(ExaSQLThread):
     def run_sql(self):
         table_ident = self.connection.format.safe_ident(self.table)
 
-        query = f"IMPORT INTO {table_ident} FROM CSV AT '{self.get_prefix()}'\n"
+        query = f"IMPORT INTO {table_ident} FROM CSV\n"
         query += self.build_file_list()
 
         if self.params.get('null'):

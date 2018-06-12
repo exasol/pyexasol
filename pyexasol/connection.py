@@ -310,6 +310,11 @@ class ExaConnection(object):
             raise e
 
     def export_parallel(self, http_proxy_list, query_or_table, query_params=None, export_params=None):
+        """
+        Init HTTP transport in child processes first using pyexasol.http_transport()
+        Get proxy strings from each child process
+        Pass proxy strings to parent process and use it for export_parallel() call
+        """
         from .http_transport import ExaSQLExportThread
 
         if export_params is None:
@@ -330,11 +335,9 @@ class ExaConnection(object):
 
     def import_parallel(self, http_proxy_list, table, import_params=None):
         """
-        This function is not working right now due to Exasol N+1 extra connection
-        to check random file, read first line and count the amount of columns in CSV.
-
-        Proxy magic cannot accept second connection and breaks with "Connection refused" error.
-        EXPORT is not affected by this problem.
+        Init HTTP transport in child processes first using pyexasol.http_transport()
+        Get proxy strings from each child process
+        Pass proxy strings to parent process and use it for import_parallel() call
         """
         from .http_transport import ExaSQLImportThread
 

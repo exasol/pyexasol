@@ -36,3 +36,4 @@ python examples/01_basic.py
 - [17_rapidjson.py](/examples/17_rapidjson.py) - edge case example with `rapidjson`;
 - [18_session_params.py](/examples/18_session_params.py) - passing custom session parameters `client_name`, `client_version`;
 - [19_local_config.py](/examples/19_local_config.py) - connect using local config file;
+- [20_parallel_import.py](/examples/20_parallel_import.py) - multi-process HTTP transport for import;

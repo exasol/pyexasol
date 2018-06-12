@@ -22,6 +22,7 @@ This page contains complete reference of PyEXASOL public API.
   - [import_from_iterable()](#import_from_iterable)
   - [import_from_pandas()](#import_from_pandas)
   - [import_from_callback()](#import_from_callback)
+  - [import_parallel()](#import_parallel)
   - [session_id()](#session_id)
   - [last_statement()](#last_statement)
   - [close()](#exaconnectionclose)
@@ -205,7 +206,7 @@ Exports big amount of data to user-defined callback function
 Returns result of callback function
 
 ### export_parallel()
-This function is part of [parallel HTTP transport API](/docs/HTTP_TRANSPORT_PARALLEL.md). It accepts list of proxy `host:port` strings obtained from all child processes and executes parallel export query. Parent process only monitors the execution if query itself. All actual work is performed in child processes.
+This function is part of [parallel HTTP transport API](/docs/HTTP_TRANSPORT_PARALLEL.md). It accepts list of proxy `host:port` strings obtained from all child processes and executes parallel export query. Parent process only monitors the execution of query itself. All actual work is performed in child processes.
 
 | Argument | Example | Description |
 | --- | --- | --- |
@@ -251,6 +252,17 @@ Imports big amount of data from user-defined callback function to Exasol.
 | `table` | `my_table` `(my_schema, my_table)` | Destination table for IMPORT |
 | `callback_params` | `{'a': 'b'}` | (optional) Dict with additional parameters for callback function |
 | `import_params` | `{'column_separator': ','}` | (optional) Custom parameters for IMPORT query |
+
+### import_parallel()
+This function is part of [parallel HTTP transport API](/docs/HTTP_TRANSPORT_PARALLEL.md). It accepts list of proxy `host:port` strings obtained from all child processes and executes parallel import query. Parent process only monitors the execution of query itself. All actual work is performed in child processes.
+
+| Argument | Example | Description |
+| --- | --- | --- |
+| `http_proxy_list` | `['27.0.1.10:5362', '27.0.1.11:7262']` | List of proxy `host:port` strings |
+| `table` | `table` `(schema, table)` | Destination table for import |
+| `import_params` | `{'column_separator': ','}` | (optional) Custom parameters for IMPORT query |
+
+Returns nothing on successful export. You may access `IMPORT` statement results using [`last_statement()`](#last_statement) function.
 
 ### session_id()
 Returns `SESSION_ID` of current session.

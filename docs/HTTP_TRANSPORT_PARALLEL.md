@@ -7,7 +7,7 @@ It is possible to run [HTTP Transport](/docs/HTTP_TRANSPORT.md) in parallel. Wor
 1. Parent process opens main connection to Exasol and spawns multiple child processes.
 2. Each child process connects to individual Exasol node using [`http_transport()`](/docs/REFERENCE.md#http_transport) function, gets proxy `host:port` string and sends it to parent process.
 3. Parent process collects list of proxies from child processes and runs [`export_parallel()`](/docs/REFERENCE.md#export_parallel) function to execute SQL query.
-4. Each child process gets chunk of data from Exasol and executes callback function.
+4. Each child process executes callback function and gets or sends chunk of data from or to Exasol.
 5. Parent process waits for SQL query and child processes to finish.
 
 ![Parallel export](/docs/img/parallel_export.png)
@@ -16,22 +16,25 @@ Please note that PyEXASOL does not provide any specific way to send proxy string
 
 ## Example
 
-Please see [example_14](/examples/14_parallel_export.py).
+Please see [example_14](/examples/14_parallel_export.py) for EXPORT.
+Please see [example_20](/examples/20_parallel_import.py) for IMPORT.
 
 ## Example of EXPORT query executed in Exasol
 
 This is how it looks from Exasol perspective.
 
 ```sql
-EXPORT my_table INTO CSV AT 'http://'
-FILE '27.1.0.33:33601/000.csv'
-FILE '27.1.0.37:41733/001.csv'
-FILE '27.1.0.35:45014/002.csv'
-FILE '27.1.0.33:42071/003.csv'
-FILE '27.1.0.33:36669/004.csv'
-FILE '27.1.0.33:36794/005.csv';
+EXPORT my_table INTO CSV
+AT 'http://27.1.0.33:33601' FILE '000.csv'
+AT 'http://27.1.0.37:41733' FILE '001.csv'
+AT 'http://27.1.0.35:45014' FILE '002.csv'
+AT 'http://27.1.0.33:42071' FILE '003.csv'
+AT 'http://27.1.0.33:36669' FILE '004.csv'
+AT 'http://27.1.0.33:36794' FILE '005.csv'
 ```
 
 ## Known problems and limitations
 
-- Parallel `IMPORT` is not fully supported right now due to Exasol "N+1 connection" problem described in [`IDEA-370`](https://www.exasol.com/support/browse/IDEA-370) and [`EXA-17055`](https://www.exasol.com/support/browse/EXA-17055). It is possible to make it work using multiple hacks, but code becomes very ugly. Please let me know if you really need it and feel free to upvote relevant issues in Exasol tracker.
+- ~~Parallel `IMPORT` is not fully supported right now due to Exasol "N+1 connection" problem described in [`IDEA-370`](https://www.exasol.com/support/browse/IDEA-370) and [`EXA-17055`](https://www.exasol.com/support/browse/EXA-17055). It is possible to make it work using multiple hacks, but code becomes very ugly. Please let me know if you really need it and feel free to upvote relevant issues in Exasol tracker.~~
+
+IMPORT problem was resolved starting from PyEXASOL 0.3.20. Please upgrade PyEXASOL to take full advantage of this feature.

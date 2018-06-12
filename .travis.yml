@@ -51,3 +51,4 @@ script:
     - python examples/17_rapidjson.py
     - python examples/18_session_params.py
     - python examples/19_local_config.py
+    - python examples/20_parallel_import.py
