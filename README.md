@@ -4,6 +4,15 @@ PyEXASOL is custom Python driver for [Exasol](https://www.exasol.com) created in
 
 You may expect at least ~3-10x performance improvement over existing ODBC / JDBC solutions in single process scenario involving pandas. It is possible to split data set across multiple processes and multiple servers to improve performance even further.
 
+## Important notice regarding to Pandas 0.23.1
+
+Pandas maintainers merged CSV-breaking changes in `0.23.1` release. Many people and projects are affected in different ways.
+
+Please go back to `0.22.*` or `0.23.0` until this problem is fixed by next pandas version.
+
+```
+pip install pandas==0.23.0
+```
 
 ## Quick links
 - [Getting started](#getting-started)
