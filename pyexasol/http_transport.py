@@ -1,9 +1,9 @@
 import struct
 import zlib
-import os
+import sys
 
 import threading
-import multiprocessing
+import subprocess
 
 from socketserver import TCPServer
 from http.server import BaseHTTPRequestHandler
@@ -165,9 +165,9 @@ class ExaSQLImportThread(ExaSQLThread):
         self.connection.execute(query)
 
 
-class ExaHTTPProcess(multiprocessing.Process):
+class ExaHTTPProcess(object):
     """
-    HTTP communication and compression / decompression is offloaded to separate process
+    HTTP communication and compression / decompression is offloaded to sub-process
     It communicates with main process using pipes
     """
     def __init__(self, host, port, compression, encryption, mode):
@@ -176,53 +176,68 @@ class ExaHTTPProcess(multiprocessing.Process):
         self.compression = compression
         self.encryption = encryption
         self.mode = mode
+
         self.server = None
+        self.proxy = None
+        self.proc = None
 
-        # Init common OS pipes for data transfer
-        # Strictly binary mode, no wrappers and no buffering
-        read_fd, write_fd = os.pipe()
-
-        self.read_pipe = os.fdopen(read_fd, 'rb', 0)
-        self.write_pipe = os.fdopen(write_fd, 'wb', 0)
-
-        # Init multiprocessing private "magic" pipes for communication
-        # Used only to send (proxy_host, proxy_port) to main process without sharing TCPServer handle
-        self._proxy_read_pipe, self._proxy_write_pipe = multiprocessing.Pipe(False)
-
-        super().__init__()
-
-    def run(self):
-        self.server = ExaTCPServer((self.host, self.port), ExaHTTPRequestHandler
-                                   , compression=self.compression, encryption=self.encryption)
-        self._proxy_read_pipe.close()
-
-        self._proxy_write_pipe.send(f'{self.server.proxy_host}:{self.server.proxy_port}')
-        self._proxy_write_pipe.close()
-
-        if self.mode == HTTP_IMPORT:
-            self.server.set_pipe(self.read_pipe)
-            self.write_pipe.close()
-        else:
-            self.server.set_pipe(self.write_pipe)
-            self.read_pipe.close()
-
-        self.server.handle_request()
+        self.read_pipe = None
+        self.write_pipe = None
 
     def start(self):
-        super().start()
+        args = [sys.executable, '-m', 'pyexasol', 'http']
+
+        args.append('--host')
+        args.append(self.host)
+
+        args.append('--port')
+        args.append(str(self.port))
+
+        args.append('--mode')
+        args.append(self.mode)
+
+        if self.compression:
+            args.append('--compression')
+
+        if self.encryption:
+            args.append('--encryption')
+
+        self.proc = subprocess.Popen(args, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=sys.stderr)
+        self.proxy = self.proc.stdout.readline().decode().rstrip('\n')
+
+        self.read_pipe = self.proc.stdout
+        self.write_pipe = self.proc.stdin
+
+    def init_server(self):
+        self.server = ExaTCPServer((self.host, self.port), ExaHTTPRequestHandler
+                                   , compression=self.compression, encryption=self.encryption)
 
         if self.mode == HTTP_IMPORT:
-            self.read_pipe.close()
+            self.server.set_pipe(sys.stdin.buffer)
         else:
-            self.write_pipe.close()
+            self.server.set_pipe(sys.stdout.buffer)
 
-        self._proxy_write_pipe.close()
+    def join(self):
+        self.read_pipe.close()
+        self.write_pipe.close()
+
+        code = self.proc.wait()
+
+        if code != 0:
+            raise RuntimeError(f"HTTP transport process finished with exitcode: {code}")
+
+    def terminate(self):
+        self.proc.terminate()
 
     def get_proxy(self):
-        host_port = self._proxy_read_pipe.recv()
-        self._proxy_read_pipe.close()
+        return self.proxy
 
-        return host_port
+    def send_proxy(self):
+        print(f'{self.server.proxy_host}:{self.server.proxy_port}', flush=True)
+
+    def handle_request(self):
+        self.server.handle_request()
+        self.server.server_close()
 
 
 class ExaTCPServer(TCPServer):
@@ -388,8 +403,7 @@ class ExaHTTPTransportWrapper(object):
             return result
         except Exception as e:
             # Close HTTP Server if it is still running
-            if self.http_proc.is_alive():
-                self.http_proc.terminate()
+            self.http_proc.terminate()
 
             raise e
 
@@ -409,7 +423,6 @@ class ExaHTTPTransportWrapper(object):
             return result
         except Exception as e:
             # Close HTTP Server if it is still running
-            if self.http_proc.is_alive():
-                self.http_proc.terminate()
+            self.http_proc.terminate()
 
             raise e

@@ -257,7 +257,7 @@ class ExaConnection(object):
             return result
         except Exception as e:
             # Close HTTP Server if it is still running
-            if 'http_proc' in locals() and http_proc.is_alive():
+            if 'http_proc' in locals():
                 http_proc.terminate()
 
             # Give higher priority to SQL thread exception
@@ -300,7 +300,7 @@ class ExaConnection(object):
             return result
         except Exception as e:
             # Close HTTP Server if it is still running
-            if 'http_proc' in locals() and http_proc.is_alive():
+            if 'http_proc' in locals():
                 http_proc.terminate()
 
             # Give higher priority to SQL thread exception
