@@ -227,13 +227,18 @@ class ExaHTTPProcess(object):
             raise RuntimeError(f"HTTP transport process finished with exitcode: {code}")
 
     def terminate(self):
-        self.proc.terminate()
+        if self.proc:
+            self.proc.terminate()
 
     def get_proxy(self):
+        if self.proxy is None:
+            raise RuntimeError("Proxy 'host:port' string is not available")
+
         return self.proxy
 
     def send_proxy(self):
-        print(f'{self.server.proxy_host}:{self.server.proxy_port}', flush=True)
+        sys.stdout.buffer.write(f'{self.server.proxy_host}:{self.server.proxy_port}\n'.encode())
+        sys.stdout.buffer.flush()
 
     def handle_request(self):
         self.server.handle_request()
