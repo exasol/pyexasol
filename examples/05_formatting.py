@@ -21,6 +21,7 @@ params = {
     'user_rating': '0.5',
     'user_score': 1e1,
     'is_female': 'TRUE',
+    'user_statuses': ['active', 'passive', 'suspended'],
     'limit': 10
 }
 
@@ -31,6 +32,7 @@ query = """
     WHERE u.user_rating >= {user_rating!d}
         AND u.user_score > {user_score!f}
         AND u.is_female IS {is_female!r}
+        AND u.status In ({user_statuses})
     GROUP BY 1,2,3
     ORDER BY 4 DESC
     LIMIT {limit!d}
