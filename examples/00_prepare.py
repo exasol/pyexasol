@@ -12,7 +12,7 @@ import string
 import decimal
 
 bool_values = [True, False]
-
+user_statuses = ['ACTIVE', 'PENDING', 'SUSPENDED', 'DISABLED']
 
 def users_generator():
     for i in range(10000):
@@ -22,7 +22,8 @@ def users_generator():
                random_ts(),
                random.choice(bool_values),
                decimal.Decimal(random.randint(0, 100)) / 100,
-               None if random.randint(0, 10) == 10 else random.randint(0, 10000) / 100
+               None if random.randint(0, 10) == 10 else random.randint(0, 10000) / 100,
+               random.choice(user_statuses)
               )
 
 
@@ -65,7 +66,8 @@ C.execute("""
         last_visit_ts   TIMESTAMP,
         is_female       BOOLEAN,
         user_rating     DECIMAL(10,5),
-        user_score      DOUBLE
+        user_score      DOUBLE,
+        users_status    VARCHAR(50)
     )
 """)
 
