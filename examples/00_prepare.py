@@ -67,7 +67,7 @@ C.execute("""
         is_female       BOOLEAN,
         user_rating     DECIMAL(10,5),
         user_score      DOUBLE,
-        users_status    VARCHAR(50)
+        status          VARCHAR(50)
     )
 """)
 

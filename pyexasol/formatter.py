@@ -19,7 +19,7 @@ class ExaFormatter(string.Formatter):
             'r': str
         }
 
-        self.default_conversion = self.quote
+        self.default_conversion = 's'
 
     def format_field(self, value, format_spec):
         if format_spec != '':
@@ -28,17 +28,18 @@ class ExaFormatter(string.Formatter):
         return value
 
     def convert_field(self, value, conversion):
+        if conversion is None:
+            conversion = self.default_conversion
+
+        if conversion not in self.conversions:
+            raise ValueError(f"Unknown conversion {conversion}")
+
         if isinstance(value, list):
             if not value:
                 raise ValueError("Trying to format an empty list")
-            return ', '.join([self.convert_field(v, conversion) for v in value])
-        if conversion is None:
-            return self.default_conversion(value)
-
-        if conversion in self.conversions:
+            return ', '.join([self.conversions[conversion](v) for v in value])
+        else:
             return self.conversions[conversion](value)
-
-        raise ValueError("Unknown conversion specifier {0!s}".format(conversion))
 
     @classmethod
     def escape(cls, val):
