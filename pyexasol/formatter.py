@@ -28,6 +28,10 @@ class ExaFormatter(string.Formatter):
         return value
 
     def convert_field(self, value, conversion):
+        if isinstance(value, list):
+            if not value:
+                raise ValueError("Trying to format an empty list")
+            return ', '.join([self.convert_field(v, conversion) for v in value])
         if conversion is None:
             return self.default_conversion(value)
 
