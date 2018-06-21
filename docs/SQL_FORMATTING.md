@@ -33,6 +33,8 @@ quote_ident('my_schema', 'my_table', 'my_column')
 >>> "my_schema"."my_table"."my_column"
 ```
 
+For all `list`-typed values each element will be converted independently and joined into final string using `, ` (comma and space). You may use it to pass multiple values to `IN ()` and `NOT IN ()` expressions.
+
 ## Complete example
 
 ```python
@@ -45,6 +47,8 @@ params = {
     'user_rating': '0.5',
     'user_score': 1e1,
     'is_female': 'TRUE',
+    'user_statuses': ['ACTIVE', 'PASSIVE', 'SUSPENDED'],
+    'exclude_user_score': [10, 20],
     'limit': 10
 }
 
@@ -55,6 +59,8 @@ query = """
     WHERE u.user_rating >= {user_rating!d}
         AND u.user_score > {user_score!f}
         AND u.is_female IS {is_female!r}
+        AND u.status IN ({user_statuses})
+        AND u.user_rating NOT IN ({exclude_user_score!d})
     GROUP BY 1,2,3
     ORDER BY 4 DESC
     LIMIT {limit!d}
@@ -72,6 +78,8 @@ FROM users u
 WHERE u.user_rating >= 0.5
     AND u.user_score > 10.0
     AND u.is_female IS TRUE
+    AND u.status IN ('ACTIVE', 'PASSIVE', 'SUSPENDED')
+    AND u.user_rating NOT IN (10, 20)
 GROUP BY 1,2,3
 ORDER BY 4 DESC
 LIMIT 10

@@ -47,28 +47,31 @@ class ImportProc(multiprocessing.Process):
         http.import_from_callback(cb.import_from_pandas, pd)
 
 
-pool_size = 5
-pool = list()
-proxy_list = list()
+# This condition is required for 'spawn' multiprocessing implementation (Windows)
+# Feel free to skip it for POSIX operating systems
+if __name__ == '__main__':
+    pool_size = 5
+    pool = list()
+    proxy_list = list()
 
-C = E.connect(dsn=config.dsn, user=config.user, password=config.password, schema=config.schema)
+    C = E.connect(dsn=config.dsn, user=config.user, password=config.password, schema=config.schema)
 
-C.execute('TRUNCATE TABLE parallel_import')
+    C.execute('TRUNCATE TABLE parallel_import')
 
-for i in range(pool_size):
-    proc = ImportProc(i)
-    proc.start()
+    for i in range(pool_size):
+        proc = ImportProc(i)
+        proc.start()
 
-    proxy_list.append(proc.get_proxy())
-    pool.append(proc)
+        proxy_list.append(proc.get_proxy())
+        pool.append(proc)
 
-printer.pprint(pool)
-printer.pprint(proxy_list)
+    printer.pprint(pool)
+    printer.pprint(proxy_list)
 
-C.import_parallel(proxy_list, 'parallel_import')
+    C.import_parallel(proxy_list, 'parallel_import')
 
-stmt = C.last_statement()
-print(f'IMPORTED {stmt.rowcount()} rows in {stmt.execution_time}s')
+    stmt = C.last_statement()
+    print(f'IMPORTED {stmt.rowcount()} rows in {stmt.execution_time}s')
 
-for i in range(pool_size):
-    pool[i].join()
+    for i in range(pool_size):
+        pool[i].join()

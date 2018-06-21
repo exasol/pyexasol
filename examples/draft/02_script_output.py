@@ -30,3 +30,5 @@ stmt, output_dir = C.execute_udf_output("SELECT wr.echo_java(profile_user_id) FR
 
 printer.pprint(stmt.fetchall())
 printer.pprint(sorted(list(output_dir.glob('*.log'))))
+
+print(list(output_dir.glob('*.log'))[0].read_text())

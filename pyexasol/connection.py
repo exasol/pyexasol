@@ -15,7 +15,7 @@ from .statement import ExaStatement
 from .logger import ExaLogger
 from .formatter import ExaFormatter
 from .ext import ExaExtension
-from .script_output import ExaScriptOutput
+from .script_output import ExaScriptOutputProcess
 from .version import __version__
 
 
@@ -158,22 +158,23 @@ class ExaConnection(object):
         Execute SQL query with UDF script, capture output
         Return ExaStatement object and path to directory with output files
         """
-        script_output = ExaScriptOutput(self.udf_output_host, self.udf_output_host)
-
         if output_dir:
             output_dir = pathlib.Path(output_dir)
         else:
             self.udf_output_count += 1
             output_dir = utils.get_output_dir_for_statement(self.udf_output_dir, self.session_id(), self.udf_output_count)
 
-        address = script_output.init_script_mode(output_dir)
-        self.execute("ALTER SESSION SET SCRIPT_OUTPUT_ADDRESS = {address};", {'address': address})
+        script_output = ExaScriptOutputProcess(self.udf_output_host, self.udf_output_host, output_dir)
+        script_output.start()
+
+        address = script_output.get_output_address()
+        self.execute("ALTER SESSION SET SCRIPT_OUTPUT_ADDRESS = {address}", {'address': address})
 
         try:
             stmt = self.execute(query, query_params)
-            script_output.wait_script_mode()
+            script_output.join()
         except ExaQueryError:
-            script_output.terminate_script_mode()
+            script_output.terminate()
             raise
 
         return stmt, output_dir

@@ -19,9 +19,15 @@ subp.add_argument('--compression', default=False, help='Enable compression', act
 subp.add_argument('--encryption', default=False, help='Enable encryption', action='store_true')
 
 
-subp = subparsers.add_parser('script_debug', help='Run script output server for debugging')
-subp.add_argument('--host', default=None, help='Specific address to bind TCPServer (default: 0.0.0.0)')
-subp.add_argument('--port', default=None, help='Specific port to bind TCPServer (default: random port)')
+subp = subparsers.add_parser('script_output', help='Run script output server and capture output of ALL VMs')
+subp.add_argument('--host', default='0.0.0.0', help='Specific address to bind TCPServer (default: 0.0.0.0)')
+subp.add_argument('--port', default=0, help='Specific port to bind TCPServer (default: random port)', type=int)
+subp.add_argument('--output_dir', help='Directory to write enumerated log files, one file per VM')
+
+
+subp = subparsers.add_parser('script_debug', help='Run script output server for debugging and display output of ONE VM')
+subp.add_argument('--host', default='0.0.0.0', help='Specific address to bind TCPServer (default: 0.0.0.0)')
+subp.add_argument('--port', default=0, help='Specific port to bind TCPServer (default: random port)', type=int)
 
 subp = subparsers.add_parser('version', help='Show PyEXASOL version')
 
@@ -36,15 +42,26 @@ if args.command == 'http':
     obj.send_proxy()
     obj.handle_request()
 
+elif args.command == 'script_output':
+    from .script_output import ExaScriptOutputProcess
+
+    obj = ExaScriptOutputProcess(args.host, args.port, args.output_dir)
+    obj.init_server_script_mode()
+
+    obj.send_output_address()
+    obj.handle_requests_script_mode()
+
 elif args.command == 'script_debug':
-    from .script_output import ExaScriptOutput
+    from .script_output import ExaScriptOutputProcess
 
-    obj = ExaScriptOutput(args.host, args.port)
-    output_address = obj.init_debug_mode()
+    obj = ExaScriptOutputProcess(args.host, args.port)
+    obj.init_server_debug_mode()
 
+    output_address = obj.get_output_address()
     print(f"ALTER SESSION SET SCRIPT_OUTPUT_ADDRESS = '{output_address}';", flush=True)
 
-    obj.wait_debug_mode()
+    obj.handle_requests_debug_mode()
+
 elif args.command == 'version':
     from .version import __version__
     print(f'PyEXASOL {__version__}')

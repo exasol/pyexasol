@@ -185,16 +185,12 @@ class ExaHTTPProcess(object):
         self.write_pipe = None
 
     def start(self):
-        args = [sys.executable, '-m', 'pyexasol', 'http']
-
-        args.append('--host')
-        args.append(self.host)
-
-        args.append('--port')
-        args.append(str(self.port))
-
-        args.append('--mode')
-        args.append(self.mode)
+        args = [sys.executable,
+                '-m', 'pyexasol', 'http',
+                '--host', self.host,
+                '--port', str(self.port),
+                '--mode', self.mode,
+                ]
 
         if self.compression:
             args.append('--compression')

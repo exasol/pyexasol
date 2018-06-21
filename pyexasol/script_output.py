@@ -33,24 +33,60 @@ import socketserver
 import sys
 import os
 import shutil
-import multiprocessing
+import subprocess
 import pathlib
 
 
-class ExaScriptOutput(object):
-    def __init__(self, server_host=None, server_port=None):
-        self.server_host = str(server_host) if server_host else '0.0.0.0'
-        self.server_port = int(server_port) if server_port else 0
+class ExaScriptOutputProcess(object):
+    def __init__(self, host, port, output_dir=None):
+        self.host = host
+        self.port = port
+        self.output_dir = output_dir
 
         self.server = None
+        self.output_address = None
+
         self.proc = None
 
-    def init_debug_mode(self):
-        self.server = ExaScriptOutputServer((self.server_host, self.server_port), ExaScriptOutputDebugModeHandler)
-        return self.server.get_output_address()
+    def start(self):
+        args = [sys.executable,
+                '-m', 'pyexasol', 'script_output',
+                '--output_dir', self.output_dir,
+                ]
 
-    def wait_debug_mode(self):
-        # Stop server with Ctrl + C
+        if self.host:
+            args.append('--host')
+            args.append(self.host)
+
+        if self.port:
+            args.append('--port')
+            args.append(str(self.port))
+
+        self.proc = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=sys.stderr)
+        self.output_address = self.proc.stdout.readline().decode().rstrip('\n')
+
+        self.proc.stdout.close()
+
+    def init_server_script_mode(self):
+        output_dir = pathlib.Path(self.output_dir)
+
+        if not output_dir.is_dir():
+            raise ValueError(f"Output_dir does not exist or not a directory: {output_dir}")
+
+        self.server = ExaScriptOutputServer((self.host, self.port), ExaScriptOutputScriptModeHandler)
+        self.server.output_dir = output_dir
+
+    def handle_requests_script_mode(self):
+        # Server is stopped by shutdown() call in handler after closing last connection
+        self.server.serve_forever()
+        self.server.server_close()
+
+    def init_server_debug_mode(self):
+        self.server = ExaScriptOutputServer((self.host, self.port), ExaScriptOutputDebugModeHandler)
+        self.output_address = self.server.get_output_address()
+
+    def handle_requests_debug_mode(self):
+        # Stop server with SIGTERM (Ctrl + C, etc.)
         try:
             self.server.serve_forever()
         except KeyboardInterrupt:
@@ -58,53 +94,25 @@ class ExaScriptOutput(object):
 
         self.server.server_close()
 
-    def init_script_mode(self, output_dir):
-        output_dir = pathlib.Path(output_dir)
+    def send_output_address(self):
+        sys.stdout.buffer.write(f'{self.server.get_output_address()}\n'.encode())
+        sys.stdout.buffer.flush()
 
-        if not output_dir.is_dir():
-            raise ValueError(f"Output_dir does not exist or not a directory: {output_dir}")
+    def get_output_address(self):
+        if self.output_address is None:
+            raise RuntimeError("Script output address 'host:port' is not available")
 
-        self.proc = ExaScriptOutputProcess(self.server_host, self.server_port, output_dir)
-        self.proc.start()
+        return self.output_address
 
-        output_address = self.proc.read_pipe.recv()
+    def join(self):
+        code = self.proc.wait()
 
-        self.proc.write_pipe.close()
-        self.proc.read_pipe.close()
+        if code != 0:
+            raise RuntimeError(f"Script output server process finished with exitcode: {code}")
 
-        return output_address
-
-    def wait_script_mode(self):
-        self.proc.join()
-
-        if self.proc.exitcode != 0:
-            raise RuntimeError(f"Output server process was terminated with exitcode: {self.proc.exitcode}")
-
-    def terminate_script_mode(self):
-        self.proc.terminate()
-
-
-class ExaScriptOutputProcess(multiprocessing.Process):
-    def __init__(self, server_host, server_port, output_dir):
-        self.server_host = server_host
-        self.server_port = server_port
-        self.output_dir = output_dir
-
-        self.read_pipe, self.write_pipe = multiprocessing.Pipe(False)
-        super().__init__()
-
-    def run(self):
-        self.read_pipe.close()
-
-        server = ExaScriptOutputServer((self.server_host, self.server_port), ExaScriptOutputScriptModeHandler)
-        server.output_dir = self.output_dir
-
-        self.write_pipe.send(server.get_output_address())
-        self.write_pipe.close()
-
-        # Stopped inside handler, after closing last connection
-        server.serve_forever()
-        server.server_close()
+    def terminate(self):
+        if self.proc:
+            self.proc.terminate()
 
 
 class ExaScriptOutputServer(socketserver.ThreadingMixIn, socketserver.TCPServer):
@@ -114,6 +122,8 @@ class ExaScriptOutputServer(socketserver.ThreadingMixIn, socketserver.TCPServer)
     # Stop all sub-threads immediately
     daemon_threads = True
     allow_reuse_address = True
+
+    output_dir = None
 
     def get_output_address(self):
         return f"{socket.getfqdn()}:{self.socket.getsockname()[1]}"
@@ -134,8 +144,8 @@ class ExaScriptOutputDebugModeHandler(ExaScriptOutputHandler):
     def handle(self):
         if self.server.connected_clients == 1:
             print('\n-------- NEW STATEMENT --------', flush=True)
-            # Read and flush line-by-line, show log to user as soon as possible
 
+            # Read and flush line-by-line, show log to user as soon as possible
             for line in self.rfile:
                 sys.stdout.buffer.write(line)
                 sys.stdout.buffer.flush()
@@ -156,5 +166,6 @@ class ExaScriptOutputScriptModeHandler(ExaScriptOutputHandler):
     def finish(self):
         super().finish()
 
+        # No more opened connections? -> Shutdown server
         if self.server.connected_clients == 0:
             self.server.shutdown()
