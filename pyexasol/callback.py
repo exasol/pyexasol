@@ -27,7 +27,7 @@ def export_to_list(pipe, dst, **kwargs):
     """
     Basic example how to export CSV stream into basic list of tuples
     """
-    wrapped_pipe = io.TextIOWrapper(pipe, newline='\n')
+    wrapped_pipe = io.TextIOWrapper(pipe, newline='\n', encoding='utf-8')
     reader = csv.reader(wrapped_pipe, lineterminator='\n', **kwargs)
 
     return [row for row in reader]
@@ -47,7 +47,7 @@ def export_to_file(pipe, dst):
     Basic example how to export into file or file-like object opened in binary mode
     """
     if not hasattr(dst, 'write'):
-        dst = open(dst, 'w+b')
+        dst = open(dst, 'wb')
 
     shutil.copyfileobj(pipe, dst, 65535)
 
@@ -59,7 +59,7 @@ def import_from_iterable(pipe, src, **kwargs):
     if not hasattr(src, '__iter__'):
         raise ValueError('Data source is not iterable')
 
-    wrapped_pipe = io.TextIOWrapper(pipe, newline='\n')
+    wrapped_pipe = io.TextIOWrapper(pipe, newline='\n', encoding='utf-8')
     writer = csv.writer(wrapped_pipe, lineterminator='\n', quoting=csv.QUOTE_NONNUMERIC, **kwargs)
 
     for row in src:
@@ -78,7 +78,7 @@ def import_from_pandas(pipe, src, **kwargs):
 
     # Pandas insists on outputting CSV as text
     # I could not find a good way to override it
-    wrapped_pipe = io.TextIOWrapper(pipe, newline='\n')
+    wrapped_pipe = io.TextIOWrapper(pipe, newline='\n', encoding='utf-8')
 
     return src.to_csv(wrapped_pipe, header=False, index=False, quoting=csv.QUOTE_NONNUMERIC, **kwargs)
 

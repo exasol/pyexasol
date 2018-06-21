@@ -158,7 +158,7 @@ class ExaScriptOutputDebugModeHandler(ExaScriptOutputHandler):
 class ExaScriptOutputScriptModeHandler(ExaScriptOutputHandler):
     def handle(self):
         path = self.server.output_dir / (str(self.server.total_clients).rjust(5, '0') + '.log')
-        dst = open(path, 'w+b')
+        dst = open(path, 'wb')
 
         shutil.copyfileobj(self.rfile, dst)
         dst.close()

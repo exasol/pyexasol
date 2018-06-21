@@ -77,19 +77,20 @@ def generate_adhoc_ssl_context():
     cert.set_pubkey(k)
     cert.sign(k, 'sha256')
 
-    cert_file = tempfile.NamedTemporaryFile()
-    cert_file.write(crypto.dump_certificate(crypto.FILETYPE_PEM, cert))
-    cert_file.flush()
+    # TemporaryDirectory is used instead of NamedTemporaryFile for compatibility with Windows
+    with tempfile.TemporaryDirectory(prefix='pyexasol_ssl_') as tempdir:
+        tempdir = pathlib.Path(tempdir)
 
-    key_file = tempfile.NamedTemporaryFile()
-    key_file.write(crypto.dump_privatekey(crypto.FILETYPE_PEM, k))
-    key_file.flush()
+        cert_file = open(tempdir / 'cert', 'wb')
+        cert_file.write(crypto.dump_certificate(crypto.FILETYPE_PEM, cert))
+        cert_file.close()
 
-    context = ssl.SSLContext()
-    context.verify_mode = ssl.CERT_NONE
-    context.load_cert_chain(certfile=cert_file.name, keyfile=key_file.name)
+        key_file = open(tempdir / 'key', 'wb')
+        key_file.write(crypto.dump_privatekey(crypto.FILETYPE_PEM, k))
+        key_file.close()
 
-    cert_file.close()
-    key_file.close()
+        context = ssl.SSLContext()
+        context.verify_mode = ssl.CERT_NONE
+        context.load_cert_chain(certfile=cert_file.name, keyfile=key_file.name)
 
-    return context
+        return context

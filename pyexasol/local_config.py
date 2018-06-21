@@ -37,7 +37,7 @@ class ExaLocalConfig(object):
             raise RuntimeError(f"PyEXASOL config file [{self.path}] not found")
 
         self.parser = configparser.ConfigParser()
-        self.parser.read(self.path)
+        self.parser.read(self.path, encoding='utf-8')
 
     def get_args(self, section):
         args = dict()
