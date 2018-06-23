@@ -32,7 +32,7 @@ class ImportProc(multiprocessing.Process):
     def run(self):
         self.read_pipe.close()
 
-        http = E.http_transport(config.dsn, E.HTTP_IMPORT)
+        http = E.http_transport(self.shard_id, config.dsn, E.HTTP_IMPORT)
         self.write_pipe.send(http.get_proxy())
         self.write_pipe.close()
 

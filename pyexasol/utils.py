@@ -25,10 +25,11 @@ def encrypt_password(public_key_pem, password):
     return base64.b64encode(rsa.encrypt(password.encode(), pk)).decode()
 
 
-def get_random_host_port_from_dsn(dsn):
+def get_host_port_list_from_dsn(dsn, shuffle=False):
     """
-    Parse dsn, unpack it and return hosts in random order
-    Random must happen here, otherwise people may put unbalanced load on Exasol nodes
+    Parse dsn, expand it and resolve all IP addresses
+    Return list of host:port tuples in natural order (default) or in randomly shuffled order
+    Random is useful to guarantee good distribution of workload across all nodes
     """
     idx = dsn.find(':')
 
@@ -38,21 +39,38 @@ def get_random_host_port_from_dsn(dsn):
     else:
         port = constant.DEFAULT_PORT
 
-    res = []
+    result = []
     regexp = re.compile(r'^(.+?)(\d+)\.\.(\d+)(.*)$')
 
-    for part in dsn.split(','):
-        match = regexp.search(part)
+    for host in dsn.split(','):
+        match = regexp.search(host)
 
         if match:
-            for i in range(int(match.group(2)), int(match.group(3))):
-                res.append((match.group(1) + str(i) + match.group(4), port))
+            for i in range(int(match.group(2)), int(match.group(3)) + 1):
+                host = match.group(1) + str(i) + match.group(4)
+                result.extend(get_host_port_ip_address_list(host, port))
         else:
-            res.append((part, port))
+            result.append(get_host_port_ip_address_list(host, port))
 
-    random.shuffle(res)
+    if shuffle:
+        random.shuffle(result)
+    else:
+        result.sort()
 
-    return res
+    return result
+
+
+def get_host_port_ip_address_list(host, port):
+    """
+
+    """
+    hostname, aliaslist, ipaddrlist = socket.gethostbyname_ex(host)
+    result = list()
+
+    for ipaddr in ipaddrlist:
+        result.append((ipaddr, port))
+
+    return result
 
 
 def get_host_ip_for_enter_parallel(ws_host):

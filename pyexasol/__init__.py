@@ -81,7 +81,7 @@ def connect_local_config(config_section, config_path=None, cls_local_config=ExaL
     return connect(**{**conf_args, **kwargs})
 
 
-def http_transport(dsn, mode, compression=False, encryption=False) -> ExaHTTPTransportWrapper:
+def http_transport(shard_id, dsn, mode, compression=False, encryption=False) -> ExaHTTPTransportWrapper:
     """
     Constructor of HTTP Transport wrapper objects for IMPORT / EXPORT parallelism
 
@@ -97,4 +97,4 @@ def http_transport(dsn, mode, compression=False, encryption=False) -> ExaHTTPTra
 
     All child processes should run in parallel. It is not possible to run some processes first, than run some more.
     """
-    return ExaHTTPTransportWrapper(dsn, mode, compression, encryption)
+    return ExaHTTPTransportWrapper(shard_id, dsn, mode, compression, encryption)

@@ -509,7 +509,7 @@ class ExaConnection(object):
         if hasattr(self, '_ws'):
             pass
 
-        host_port_list = utils.get_random_host_port_from_dsn(self.dsn)
+        host_port_list = utils.get_host_port_list_from_dsn(self.dsn, shuffle=True)
         failed_attempts = 0
 
         for i in host_port_list:

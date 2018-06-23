@@ -108,6 +108,7 @@ Opens new HTTP connection and returns `ExaHTTPTransportWrapper` object. This fun
 
 | Argument | Example | Description |
 | --- | --- | --- |
+| `shard_id` | `0` `1` `2` | Monotonically increasing ID of the child process, required for load balancing of connections to Exasol nodes |
 | `dsn` | `exasolpool1..5.mlan:8563` `10.10.127.1..11:8564` | Connection string, same format as standard JDBC / ODBC drivers |
 | `mode` | `pyexasol.HTTP_EXPORT` | Open connection for `pyexasol.HTTP_EXPORT` or `pyexasol.HTTP_IMPORT` |
 | `compression` | `True` | Use zlib compression for HTTP transport, must be the same as `compression` of main connection (Default: `False`) |

@@ -377,8 +377,9 @@ class ExaHTTPTransportWrapper(object):
     Block into "export_to_callback()" or "import_from_callback()" call,
     wait for incoming connection, process data, exit.
     """
-    def __init__(self, dsn, mode, compression=False, encryption=False):
-        host, port = utils.get_random_host_port_from_dsn(dsn)[0]
+    def __init__(self, shard_id, dsn, mode, compression=False, encryption=False):
+        host_port_list = utils.get_host_port_list_from_dsn(dsn, shuffle=False)
+        host, port = host_port_list[int(shard_id) % len(host_port_list)]
 
         self.http_proc = ExaHTTPProcess(host, port, compression, encryption, mode)
         self.http_proc.start()
