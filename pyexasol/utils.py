@@ -50,7 +50,7 @@ def get_host_port_list_from_dsn(dsn, shuffle=False):
                 host = match.group(1) + str(i) + match.group(4)
                 result.extend(get_host_port_ip_address_list(host, port))
         else:
-            result.append(get_host_port_ip_address_list(host, port))
+            result.extend(get_host_port_ip_address_list(host, port))
 
     if shuffle:
         random.shuffle(result)
