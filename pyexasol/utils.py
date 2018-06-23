@@ -61,9 +61,6 @@ def get_host_port_list_from_dsn(dsn, shuffle=False):
 
 
 def get_host_port_ip_address_list(host, port):
-    """
-
-    """
     hostname, aliaslist, ipaddrlist = socket.gethostbyname_ex(host)
     result = list()
 
