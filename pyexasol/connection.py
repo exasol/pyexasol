@@ -512,7 +512,7 @@ class ExaConnection(object):
         try:
             host_port_list = utils.get_host_port_list_from_dsn(self.dsn, shuffle=True)
         except OSError as err:
-            raise ExaCommunicationError(self, f'Could not resolve IP address list from DSN: {err}')
+            raise ExaCommunicationError(self, f'Could not resolve IP address list from DSN [{self.dsn}], error: {err}')
 
         failed_attempts = 0
 
