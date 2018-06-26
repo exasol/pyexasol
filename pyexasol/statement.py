@@ -30,6 +30,10 @@ class ExaStatement(object):
         self.result_set_handle = None
         self.statement_handle = None
 
+        # This index may not match STMT_ID in system tables due to automatically executed queries (e.g. autocommit)
+        self.connection.stmt_count += 1
+        self.stmt_idx = self.connection.stmt_count
+
         self.execution_time = 0
         self.is_closed = False
 
@@ -184,3 +188,6 @@ class ExaStatement(object):
 
         self.num_rows_chunk = ret['responseData']['numRows']
         self.pos_chunk = 0
+
+    def __repr__(self):
+        return f'<{self.__class__.__name__} (session_id="{self.connection.session_id()}" stmt_idx="{self.stmt_idx}")>'

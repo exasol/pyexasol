@@ -432,3 +432,6 @@ class ExaHTTPTransportWrapper(object):
             self.http_proc.terminate()
 
             raise e
+
+    def __repr__(self):
+        return f'<{self.__class__.__name__} (proxy="{self.proxy}")>'

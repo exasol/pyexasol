@@ -121,6 +121,7 @@ class ExaConnection(object):
         self.meta = {}
         self.attr = {}
         self.last_stmt = None
+        self.stmt_count = 0
 
         self.ws_host = None
         self.ws_port = None
@@ -614,3 +615,6 @@ class ExaConnection(object):
             pass
 
         self.ext = self.cls_extension(self)
+
+    def __repr__(self):
+        return f'<{self.__class__.__name__} (session_id="{self.session_id()}" dsn="{self.dsn}" user="{self.user}")>'
