@@ -200,7 +200,7 @@ class ExaHTTPProcess(object):
 
         # Ipython notebook may override standard sys.stderr and mess with subprocess module logic
         # We use sys.__stderr__ as workaround
-        self.proc = subprocess.Popen(args, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=sys.__stderr__.fileno())
+        self.proc = subprocess.Popen(args, stdin=subprocess.PIPE, stdout=subprocess.PIPE)
         self.proxy = self.proc.stdout.readline().decode().rstrip('\n')
 
         self.read_pipe = self.proc.stdout

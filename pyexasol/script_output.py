@@ -64,7 +64,7 @@ class ExaScriptOutputProcess(object):
 
         # Ipython notebook may override standard sys.stderr and mess with subprocess module logic
         # We use sys.__stderr__ as workaround
-        self.proc = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=sys.__stderr__.fileno())
+        self.proc = subprocess.Popen(args, stdout=subprocess.PIPE)
         self.output_address = self.proc.stdout.readline().decode().rstrip('\n')
 
         self.proc.stdout.close()
