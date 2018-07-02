@@ -66,6 +66,15 @@ try:
 except E.ExaRuntimeError as e:
     print(e)
 
+# Attempt to run SELECT with duplicate column names
+try:
+    stmt = C.execute("""
+        SELECT 1, 1, 2 AS user_id, 3 AS user_id
+        FROM dual
+    """)
+except E.ExaRuntimeError as e:
+    print(e)
+
 # Attempt to run query on closed connection
 C.close()
 

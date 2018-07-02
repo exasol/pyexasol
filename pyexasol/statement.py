@@ -1,4 +1,5 @@
 import itertools
+import collections
 
 from .exceptions import ExaRuntimeError
 from . import constant
@@ -168,6 +169,8 @@ class ExaStatement(object):
             self.num_columns = res['resultSet']['numColumns']
             self.num_rows_total = res['resultSet']['numRows']
             self.num_rows_chunk = res['resultSet']['numRowsInMessage']
+
+            self._check_duplicate_col_names()
         elif self.result_type == 'rowCount':
             self.row_count = res['rowCount']
         else:
@@ -188,6 +191,16 @@ class ExaStatement(object):
 
         self.num_rows_chunk = ret['responseData']['numRows']
         self.pos_chunk = 0
+
+    def _check_duplicate_col_names(self):
+        """
+        Exasol allows duplicate names in result sets, but it leads to various problems related to dictionaries
+        PyEXASOL adds additional check to prevent such problems and to allow safe .columns() and fetch_dict=True
+        """
+        duplicate_col_names = [k for (k, v) in collections.Counter(self.col_names).items() if v > 1]
+
+        if duplicate_col_names:
+            raise ExaRuntimeError(self.connection, f'Duplicate column names in result set: {", ".join(duplicate_col_names)}')
 
     def __repr__(self):
         return f'<{self.__class__.__name__} (session_id="{self.connection.session_id()}" stmt_idx="{self.stmt_idx}")>'
