@@ -20,6 +20,8 @@ Please see [example_14](/examples/14_parallel_export.py) for EXPORT.
 
 Please see [example_20](/examples/20_parallel_import.py) for IMPORT.
 
+Please see [example_21](/examples/21_parallel_export_import.py) for EXPORT followed by IMPORT in the same child processes.
+
 ## Example of EXPORT query executed in Exasol
 
 This is how it looks from Exasol perspective.
