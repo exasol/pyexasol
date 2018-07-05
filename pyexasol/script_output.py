@@ -51,7 +51,7 @@ class ExaScriptOutputProcess(object):
     def start(self):
         args = [sys.executable,
                 '-m', 'pyexasol', 'script_output',
-                '--output_dir', self.output_dir,
+                '--output-dir', self.output_dir,
                 ]
 
         if self.host:

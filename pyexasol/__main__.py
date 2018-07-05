@@ -22,7 +22,7 @@ subp.add_argument('--encryption', default=False, help='Enable encryption', actio
 subp = subparsers.add_parser('script_output', help='Run script output server and capture output of ALL VMs')
 subp.add_argument('--host', default='0.0.0.0', help='Specific address to bind TCPServer (default: 0.0.0.0)')
 subp.add_argument('--port', default=0, help='Specific port to bind TCPServer (default: random port)', type=int)
-subp.add_argument('--output_dir', help='Directory to write enumerated log files, one file per VM')
+subp.add_argument('--output-dir', help='Directory to write enumerated log files, one file per VM')
 
 
 subp = subparsers.add_parser('script_debug', help='Run script output server for debugging and display output of ONE VM')
