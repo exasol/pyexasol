@@ -85,7 +85,7 @@ print(stmt.fetchone())
 ## Future plans
 - ~~Parallel HTTP transport~~ (done)
 - ~~UDF scripts output~~ (done)
-- Sub-connections (waiting for proper release of Exasol 6.0.9+)
+- ~~Sub-connections~~ (no good reason to use this feature, parallel HTTP transport is better)
 
 ## Created by
 Vitaly Markov, 2018

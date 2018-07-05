@@ -46,12 +46,7 @@ class ExaLogger(object):
         if self.fd is None:
             return
 
-        if self.connection.subc_id:
-            prefix = f'[Subconnection #{self.connection.subc_id}] '
-        else:
-            prefix = ''
-
-        self.fd.write(f'{self._get_ts()} {prefix}{message}\n')
+        self.fd.write(f'{self._get_ts()} {message}\n')
         self.fd.flush()
 
     def _get_ts(self):

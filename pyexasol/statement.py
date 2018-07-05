@@ -139,15 +139,6 @@ class ExaStatement(object):
         self.statement_handle = ret['responseData']['statementHandle']
         self._init_result_set(ret)
 
-    def _subc_handle(self, handle_id):
-        ret = self.connection._req({
-            'command': 'getResultSetHeader',
-            'resultSetHandles': [handle_id]
-        })
-
-        self.result_set_handle = handle_id
-        self._init_result_set(ret)
-
     def _init_result_set(self, ret):
         res = ret['responseData']['results'][0]
 

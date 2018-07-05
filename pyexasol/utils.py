@@ -70,10 +70,6 @@ def get_host_port_ip_address_list(host, port):
     return result
 
 
-def get_host_ip_for_enter_parallel(ws_host):
-    return socket.gethostbyname(ws_host)
-
-
 def generate_adhoc_ssl_context():
     """
     Create temporary self-signed certificate for encrypted HTTP transport

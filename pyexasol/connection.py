@@ -46,9 +46,7 @@ class ExaConnection(object):
             , udf_output_port=None
             , udf_output_dir=None
             , client_name=None
-            , client_version=None
-            , subc_id=None
-            , subc_token=None):
+            , client_version=None):
         """
         Exasol connection object
 
@@ -115,13 +113,11 @@ class ExaConnection(object):
         self.client_name = client_name
         self.client_version = client_version
 
-        self.subc_id = subc_id
-        self.subc_token = subc_token
-
         self.meta = {}
         self.attr = {}
         self.last_stmt = None
         self.stmt_count = 0
+        self.is_closed = False
 
         self.ws_host = None
         self.ws_port = None
@@ -134,13 +130,8 @@ class ExaConnection(object):
         self._init_json()
         self._init_ext()
 
-        self.is_closed = False
-
-        if self.subc_token:
-            self._sub_connect()
-        else:
-            self._connect()
-            self._get_attr()
+        self._connect()
+        self._get_attr()
 
     def execute(self, query, query_params=None) -> ExaStatement:
         """
@@ -365,21 +356,6 @@ class ExaConnection(object):
 
         return self.last_stmt
 
-    def enter_parallel(self, num_parallel):
-        ret = self._req({
-            'command': 'enterParallel',
-            'hostIp': utils.get_host_ip_for_enter_parallel(self.ws_host),
-            'numRequestedConnections': num_parallel
-        })
-
-        return ret['responseData']['token'], ret['responseData']['nodes']
-
-    def subc_open_handle(self, handle_id) -> ExaStatement:
-        st = self._statement()
-        st._subc_handle(handle_id)
-
-        return st
-
     def close(self):
         if not self.is_closed:
             self._req({
@@ -409,23 +385,6 @@ class ExaConnection(object):
                 'autocommit': self.autocommit,
                 'queryTimeout': self.query_timeout,
             }
-        })['responseData']
-
-        if self.fetch_size_bytes is None:
-            self.fetch_size_bytes = self.meta['maxDataMessageSize']
-
-        self._init_ws_compression()
-
-    def _sub_connect(self):
-        ret = self._req({
-            'command': 'subLogin',
-            'protocolVersion': 1,
-        })
-
-        self.meta = self._req({
-            'username': self.user,
-            'password': utils.encrypt_password(ret['responseData']['publicKeyPem'], self.password),
-            'token': self.subc_token,
         })['responseData']
 
         if self.fetch_size_bytes is None:
