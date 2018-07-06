@@ -2,9 +2,12 @@ language: python
 
 cache: pip
 
-python:
-    - 3.6
-    - 3.7-dev
+matrix:
+    include:
+        -   python: 3.6
+        -   python: 3.7
+            sudo: required
+            dist: xenial
 
 sudo: required
 
