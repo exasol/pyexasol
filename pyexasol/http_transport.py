@@ -239,7 +239,11 @@ class ExaHTTPProcess(object):
         sys.stdout.buffer.flush()
 
     def handle_request(self):
-        self.server.handle_request()
+        # Wait for exactly one connection
+        while self.server.total_clients == 0:
+            self.server.handle_request()
+            utils.check_orphaned()
+
         self.server.server_close()
 
 
@@ -249,6 +253,8 @@ class ExaTCPServer(TCPServer):
     Instead of listening for incoming connections it connects to Exasol and uses proxy magic
     It allows to bypass various connectivity problems (e.g. firewall)
     """
+    timeout = 5
+
     def __init__(self, *args, **kwargs):
         self.proxy_host = None
         self.proxy_port = None
@@ -256,6 +262,8 @@ class ExaTCPServer(TCPServer):
 
         self.compression = kwargs.pop('compression', False)
         self.encryption = kwargs.pop('encryption', False)
+
+        self.total_clients = 0
 
         super().__init__(*args, **kwargs)
 
@@ -292,6 +300,10 @@ class ExaHTTPRequestHandler(BaseHTTPRequestHandler):
     """
 
     def log_message(self, format, *args): pass
+
+    def setup(self):
+        super().setup()
+        self.server.total_clients += 1
 
     def do_PUT(self):
         # Compressed data loop

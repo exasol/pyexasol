@@ -36,6 +36,8 @@ import shutil
 import subprocess
 import pathlib
 
+from . import utils
+
 
 class ExaScriptOutputProcess(object):
     def __init__(self, host, port, output_dir=None):
@@ -129,6 +131,9 @@ class ExaScriptOutputServer(socketserver.ThreadingMixIn, socketserver.TCPServer)
 
     def get_output_address(self):
         return f"{socket.getfqdn()}:{self.socket.getsockname()[1]}"
+
+    def service_actions(self):
+        utils.check_orphaned()
 
 
 class ExaScriptOutputHandler(socketserver.StreamRequestHandler):
