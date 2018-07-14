@@ -57,3 +57,4 @@ script:
     - python examples/19_local_config.py
     - python examples/20_parallel_import.py
     - python examples/21_parallel_export_import.py
+    - python examples/22_profiling.py

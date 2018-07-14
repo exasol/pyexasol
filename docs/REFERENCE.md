@@ -59,6 +59,7 @@ This page contains complete reference of PyEXASOL public API.
   - [get_sys_schemas()](#get_sys_schemas)
   - [get_reserved_words()](#get_reserved_words)
   - [get_disk_space_usage()](#get_disk_space_usage)
+  - [explain_last()](#explain_last)
 
 ## connect()
 Opens new connection and returns `ExaConnection` object.
@@ -489,3 +490,22 @@ This function returns dictionary with 4 keys:
 | `free_size` | How much space is available (in bytes) |
 | `total_size` | occupied_size + free_size |
 | `occupied_size_percent` | Percentage of occupied disk space (0-100%) |
+
+### explain_last()
+
+Profile (EXPLAIN) last executed query. Example: [22_profiling](/examples/22_profiling.py)
+
+| Argument | Example | Description |
+| --- | --- | --- |
+| `details` | `True` | (optional) return additional details |
+
+- `details=False` returns AVG or MAX values for all Exasol nodes.
+- `details=True` returns separate rows for each individual Exasol node (column `iproc`).
+
+Details are useful to detect bad data distribution and imbalanced execution across multiple nodes.
+
+`COMMIT`, `ROLLBACK` and `FLUSH STATISTICS` queries are ignored.
+
+If you want to see real values of CPU, MEM, HDD, NET columns, please enable Exasol profiling first with: `ALTER SESSION SET PROFILE = 'ON';`
+
+Please refer to Exasol User Manuals for explanations about profiling columns.

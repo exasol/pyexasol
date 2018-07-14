@@ -37,4 +37,5 @@ python examples/01_basic.py
 - [18_session_params.py](/examples/18_session_params.py) - passing custom session parameters `client_name`, `client_version`;
 - [19_local_config.py](/examples/19_local_config.py) - connect using local config file;
 - [20_parallel_import.py](/examples/20_parallel_import.py) - multi-process HTTP transport for import;
-- [21_parallel_export_import.py](/examples/21_parallel_import.py) - multi-process HTTP transport for export followed by import;
+- [21_parallel_export_import.py](/examples/21_parallel_export_import.py) - multi-process HTTP transport for export followed by import;
+- [22_profiling.py](/examples/22_profiling.py) - last query profiling;

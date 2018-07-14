@@ -273,6 +273,63 @@ class ExaExtension(object):
 
         return self.connection.export_to_callback(callback, None, query_or_table, None, params)
 
+    def explain_last(self, details=False):
+        """
+        Returns profiling information for last executed query
+
+        details=False returns AVG or MAX values for all Exasol nodes
+        details=True returns separate rows for each individual Exasol node (column "iproc")
+
+        Details are useful to detect bad data distribution and imbalanced execution
+
+        COMMIT, ROLLBACK and FLUSH STATISTICS are ignored
+
+        If you want to see real values of CPU, MEM, HDD, NET columns, please enable Exasol profiling first with:
+        ALTER SESSION SET PROFILE = 'ON';
+        """
+        self._execute('FLUSH STATISTICS')
+
+        sql = """
+            SELECT part_id /* PyEXASOL EXPLAIN */
+                {iproc_col!r}
+                , part_name
+                , part_info
+                , object_schema
+                , object_name
+                , object_rows
+                , in_rows
+                , out_rows
+                , duration
+                , start_time
+                , stop_time
+                , cpu
+                , mem_peak
+                , temp_db_ram_peak
+                , persistent_peak
+                , hdd_read
+                , hdd_write
+                , net
+                , remarks
+            FROM {table_name!q}
+            WHERE session_id=CURRENT_SESSION
+                AND stmt_id = (
+                    SELECT max(stmt_id) AS last_stmt_id
+                    FROM "$EXA_STATS_AUDIT_SQL"
+                    WHERE session_id=CURRENT_SESSION
+                        AND command_id NOT IN (44, 45, 1017)
+                        AND sql_text NOT LIKE '%/* PyEXASOL EXPLAIN */%'
+                )
+            ORDER BY {order_by!r}
+        """
+
+        params = {
+            'iproc_col': ', iproc' if details else '',
+            'table_name': '$EXA_PROFILE_DETAILS_LAST_DAY' if details else '$EXA_PROFILE_LAST_DAY',
+            'order_by': 'part_id ASC, iproc ASC' if details else 'part_id ASC',
+        }
+
+        return self._execute(sql, params).fetchall()
+
     def _execute(self, query, query_params=None):
         st = self.connection._statement(query, query_params)
 
