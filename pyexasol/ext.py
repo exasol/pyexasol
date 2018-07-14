@@ -276,6 +276,7 @@ class ExaExtension(object):
     def explain_last(self, details=False):
         """
         Returns profiling information for last executed query
+        "Auditing" must be enabled in Exasol instance options
 
         details=False returns AVG or MAX values for all Exasol nodes
         details=True returns separate rows for each individual Exasol node (column "iproc")
