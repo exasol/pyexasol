@@ -7,6 +7,7 @@ import tempfile
 import socket
 import ssl
 import os
+import sys
 
 from . import constant
 
@@ -111,10 +112,10 @@ def generate_adhoc_ssl_context():
 def check_orphaned():
     """
     Raise exception if current process is "orphaned" (parent process is dead)
-    It is useful to stop PyEXASOL HTTP servers from being stuck in process list when parent process was killed
+    It is useful to stop PyEXASOL HTTP servers from being stuck in process list after parent process was killed
 
-    Currently it works only for Unix
+    Currently it works only for POSIX OS
     Please let me know if you know a good way to detect orphans on Windows
     """
-    if os.getppid() == 1:
+    if sys.platform != "win32" and os.getppid() == 1:
         raise RuntimeError("Current process is orphaned, ppid=1")
