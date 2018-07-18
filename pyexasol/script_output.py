@@ -64,8 +64,6 @@ class ExaScriptOutputProcess(object):
             args.append('--port')
             args.append(str(self.port))
 
-        # Ipython notebook may override standard sys.stderr and mess with subprocess module logic
-        # We use sys.__stderr__ as workaround
         self.proc = subprocess.Popen(args, stdout=subprocess.PIPE)
         self.output_address = self.proc.stdout.readline().decode().rstrip('\n')
 
