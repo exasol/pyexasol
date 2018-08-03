@@ -40,10 +40,11 @@ from . import utils
 
 
 class ExaScriptOutputProcess(object):
-    def __init__(self, host, port, output_dir=None):
+    def __init__(self, host, port, output_dir=None, initial_ppid=None):
         self.host = host
         self.port = port
         self.output_dir = output_dir
+        self.initial_ppid = initial_ppid
 
         self.server = None
         self.output_address = None
@@ -54,6 +55,7 @@ class ExaScriptOutputProcess(object):
         args = [sys.executable,
                 '-m', 'pyexasol', 'script_output',
                 '--output-dir', self.output_dir,
+                '--ppid', str(utils.get_pid())
                 ]
 
         if self.host:
@@ -77,6 +79,7 @@ class ExaScriptOutputProcess(object):
 
         self.server = ExaScriptOutputServer((self.host, self.port), ExaScriptOutputScriptModeHandler)
         self.server.output_dir = output_dir
+        self.server.initial_ppid = self.initial_ppid
 
     def handle_requests_script_mode(self):
         # Server is stopped by shutdown() call in handler after closing last connection
@@ -126,12 +129,13 @@ class ExaScriptOutputServer(socketserver.ThreadingMixIn, socketserver.TCPServer)
     allow_reuse_address = True
 
     output_dir = None
+    initial_ppid = None
 
     def get_output_address(self):
         return f"{socket.getfqdn()}:{self.socket.getsockname()[1]}"
 
     def service_actions(self):
-        utils.check_orphaned()
+        utils.check_orphaned(self.initial_ppid)
 
 
 class ExaScriptOutputHandler(socketserver.StreamRequestHandler):

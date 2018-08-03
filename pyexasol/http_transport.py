@@ -170,12 +170,13 @@ class ExaHTTPProcess(object):
     HTTP communication and compression / decompression is offloaded to sub-process
     It communicates with main process using pipes
     """
-    def __init__(self, host, port, compression, encryption, mode):
+    def __init__(self, host, port, compression, encryption, mode, initial_ppid=None):
         self.host = host
         self.port = port
         self.compression = compression
         self.encryption = encryption
         self.mode = mode
+        self.initial_ppid = initial_ppid
 
         self.server = None
         self.proxy = None
@@ -190,6 +191,7 @@ class ExaHTTPProcess(object):
                 '--host', self.host,
                 '--port', str(self.port),
                 '--mode', self.mode,
+                '--ppid', str(utils.get_pid())
                 ]
 
         if self.compression:
@@ -240,7 +242,7 @@ class ExaHTTPProcess(object):
         # Wait for exactly one connection
         while self.server.total_clients == 0:
             self.server.handle_request()
-            utils.check_orphaned()
+            utils.check_orphaned(self.initial_ppid)
 
         self.server.server_close()
 
