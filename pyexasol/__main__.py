@@ -38,7 +38,7 @@ args = parser.parse_args()
 if args.command == 'http':
     from .http_transport import ExaHTTPProcess
 
-    obj = ExaHTTPProcess(args.host, args.port, args.compression, args.encryption, args.mode)
+    obj = ExaHTTPProcess(args.host, args.port, args.compression, args.encryption, args.mode, args.ppid)
     obj.init_server()
 
     obj.send_proxy()
