@@ -424,7 +424,7 @@ class ExaConnection(object):
 
         # Build request
         send_data = self._json_encode(req)
-        self._logger.log_json(f'WebSocket request #{self.ws_req_count}', req)
+        self._logger.debug_json(f'WebSocket request #{self.ws_req_count}', req)
 
         start_ts = time.time()
 
@@ -439,7 +439,7 @@ class ExaConnection(object):
 
         # Parse response
         ret = self._json_decode(recv_data)
-        self._logger.log_json(f'WebSocket response #{self.ws_req_count}', ret)
+        self._logger.debug_json(f'WebSocket response #{self.ws_req_count}', ret)
 
         # Updated attributes may be returned from any request
         if 'attributes' in ret:
@@ -478,7 +478,7 @@ class ExaConnection(object):
 
         for i in host_port_list:
             try:
-                self._logger.log_message(f'Connection attempt [{i[0]}:{i[1]}]')
+                self._logger.debug(f'Connection attempt [{i[0]}:{i[1]}]')
                 self._ws = self._ws_connect(i[0], i[1])
 
                 self.ws_host = i[0]
@@ -489,7 +489,7 @@ class ExaConnection(object):
 
                 return
             except Exception as e:
-                self._logger.log_message(f'Failed to connect [{i[0]}:{i[1]}]')
+                self._logger.debug(f'Failed to connect [{i[0]}:{i[1]}]')
 
                 failed_attempts += 1
 
@@ -524,14 +524,9 @@ class ExaConnection(object):
         if hasattr(self, '_logger'):
             pass
 
-        if self.debug is False:
-            log_target = None
-        elif self.debug_logdir is None:
-            log_target = 'stderr'
-        else:
-            log_target = pathlib.Path(self.debug_logdir)
-
-        self._logger = self.cls_logger(self, log_target)
+        self._logger = self.cls_logger(self, constant.DRIVER_NAME)
+        self._logger.setLevel('DEBUG' if self.debug else 'WARNING')
+        self._logger.add_default_handler()
 
     def _init_format(self):
         if hasattr(self, 'format'):
