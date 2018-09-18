@@ -91,6 +91,20 @@ CREATE OR REPLACE TABLE parallel_import
 )
 """)
 
+C.execute("""
+CREATE OR REPLACE TABLE tab1
+(
+    id      DECIMAL(9,0)
+)
+""")
+
+C.execute("""
+CREATE OR REPLACE TABLE tab2
+(
+    id      DECIMAL(9,0)
+)
+""")
+
 C.execute("CREATE OR REPLACE TABLE users_copy LIKE users")
 C.execute("CREATE OR REPLACE TABLE payments_copy LIKE payments")
 
