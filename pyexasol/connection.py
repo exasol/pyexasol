@@ -26,7 +26,7 @@ class ExaConnection(object):
             , password=None
             , schema=''
             , autocommit=constant.DEFAULT_AUTOCOMMIT
-            , snapshot_transaction=False
+            , snapshot_transactions=False
             , socket_timeout=constant.DEFAULT_SOCKET_TIMEOUT
             , query_timeout=constant.DEFAULT_QUERY_TIMEOUT
             , compression=False
@@ -55,8 +55,8 @@ class ExaConnection(object):
         :param user: Username
         :param password: Password
         :param schema: Open schema after connection (Default: '', no schema)
-        :param autocommit: Autocommit mode after connection (Default: True)
-        :param snapshot_transaction: Snapshot transaction mode after connection (Default: False)
+        :param autocommit: Enable autocommit on connection (Default: True)
+        :param snapshot_transactions: Enable snapshot transactions on connection (Default: False)
         :param socket_timeout: Socket timeout in seconds passed directly to websocket (Default: 10)
         :param query_timeout: Maximum execution time of queries before automatic abort (Default: 0, no timeout)
         :param compression: Use zlib compression both for WebSocket and HTTP transport (Default: False)
@@ -85,7 +85,7 @@ class ExaConnection(object):
         self.password = password
         self.schema = schema
         self.autocommit = autocommit
-        self.snapshot_transaction = snapshot_transaction
+        self.snapshot_transactions = snapshot_transactions
 
         self.socket_timeout = socket_timeout
         self.query_timeout = query_timeout
@@ -189,23 +189,6 @@ class ExaConnection(object):
         })
 
         self.attr['autocommit'] = val
-
-    def set_snapshot_transaction(self, val):
-        """
-        Snapshot transactions return last table snapshot instead of locking on read operations
-        It is mainly intended for large meta-data requests to system views (tables, columns, object sizes)
-
-        More details about locks might be found here: https://www.exasol.com/support/browse/SOL-214
-        Please make sure to set snapshot transaction mode BEFORE starting next transaction (before autocommit=off)
-        """
-        if not isinstance(val, bool):
-            raise ValueError("Snapshot transaction value must be boolean")
-
-        self._set_attr({
-            'snapshotTransactionsEnabled': val
-        })
-
-        self.attr['snapshotTransactionsEnabled'] = val
 
     def open_schema(self, schema):
         self._set_attr({
@@ -404,7 +387,7 @@ class ExaConnection(object):
                 'currentSchema': str(self.schema),
                 'autocommit': self.autocommit,
                 'queryTimeout': self.query_timeout,
-                'snapshotTransactionsEnabled': self.snapshot_transaction,
+                'snapshotTransactionsEnabled': self.snapshot_transactions,
             }
         })['responseData']
 

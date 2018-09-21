@@ -58,4 +58,4 @@ script:
     - python examples/20_parallel_import.py
     - python examples/21_parallel_export_import.py
     - python examples/22_profiling.py
-    - python examples/23_snapshot_transaction.py
+    - python examples/23_snapshot_transactions.py

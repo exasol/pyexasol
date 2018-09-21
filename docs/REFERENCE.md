@@ -11,7 +11,6 @@ This page contains complete reference of PyEXASOL public API.
   - [commit()](#commit)
   - [rollback()](#rollback)
   - [set_autocommit()](#set_autocommit)
-  - [set_snapshot_transaction()](#set_snapshot_transaction)
   - [open_schema()](#open_schema)
   - [current_schema()](#current_schema)
   - [export_to_file()](#export_to_file)
@@ -71,8 +70,8 @@ Opens new connection and returns `ExaConnection` object.
 | `user` | `sys` | Username |
 | `password` | `password` | Password |
 | `schema` | `ingres` | Open schema after connection (Default: `''`, no schema) |
-| `autocommit` | `True` | Autocommit mode after connection (Default: `True`) |
-| `snapshot_transaction` | `False` | Snapshot transaction mode after connection, [more details](#set_snapshot_transaction) (Default: `False`) |
+| `autocommit` | `True` | Enable autocommit on connection (Default: `True`) |
+| `snapshot_transactions` | `False` | Enable [snapshot transactions](/docs/SNAPSHOT_TRANSACTIONS.md) on connection (Default: `False`) |
 | `socket_timeout` | `10` | Socket timeout in seconds passed directly to websocket (Default: `10`) |
 | `query_timeout` | `0` | Maximum execution time of queries before automatic abort (Default: `0`, no timeout) |
 | `compression` | `True` | Use zlib compression both for WebSocket and HTTP transport (Default: `False`) |
@@ -156,15 +155,6 @@ Autocommit is `True` by default because Exasol has to commit indexes and statist
 | Argument | Example | Description |
 | --- | --- | --- |
 | `val` | `False` | Autocommit mode |
-
-### set_snapshot_transaction()
-Set `True` to enable snapshot transactions. In this mode Exasol returns last snapshot of table instead of locking in `WAIT FOR COMMIT` state. It may help with some [locking scenarios](https://www.exasol.com/support/browse/SOL-214). It must be enabled during connection or before start of new transaction.
-
-This mode was primarily designed for ExaPlus and other SQL clients to avoid locks during meta-data requests (tables, columns, object sizes). Please be careful when using this feature to access normal tables. Please contact customer support if you have any doubts.
-
-| Argument | Example | Description |
-| --- | --- | --- |
-| `val` | `True` | Snapshot transaction mode |
 
 ### open_schema()
 Wrapper for `OPEN SCHEMA`

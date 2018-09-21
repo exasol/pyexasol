@@ -73,10 +73,6 @@ stmt = C.execute("SELECT CURRENT_TIMESTAMP")
 print(stmt.fetchone())
 ```
 
-## Future plans
-- ~~Parallel HTTP transport~~ (done)
-- ~~UDF scripts output~~ (done)
-- ~~Sub-connections~~ (no good reason to use this feature, parallel HTTP transport is better)
 
 ## Created by
 Vitaly Markov, 2018
