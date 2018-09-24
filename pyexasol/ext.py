@@ -276,14 +276,12 @@ class ExaExtension(object):
     def explain_last(self, details=False):
         """
         Returns profiling information for last executed query
-        "Auditing" must be enabled in Exasol instance options
+        This function should be called immediately after execute()
 
         details=False returns AVG or MAX values for all Exasol nodes
         details=True returns separate rows for each individual Exasol node (column "iproc")
 
         Details are useful to detect bad data distribution and imbalanced execution
-
-        COMMIT, ROLLBACK and FLUSH STATISTICS are ignored
 
         If you want to see real values of CPU, MEM, HDD, NET columns, please enable Exasol profiling first with:
         ALTER SESSION SET PROFILE = 'ON';
@@ -291,7 +289,7 @@ class ExaExtension(object):
         self._execute('FLUSH STATISTICS')
 
         sql = """
-            SELECT part_id /* PyEXASOL EXPLAIN */
+            SELECT part_id /* PyEXASOL explain_last */
                 {iproc_col!r}
                 , part_name
                 , part_info
@@ -306,20 +304,13 @@ class ExaExtension(object):
                 , cpu
                 , mem_peak
                 , temp_db_ram_peak
-                , persistent_peak
                 , hdd_read
                 , hdd_write
                 , net
                 , remarks
             FROM {table_name!q}
             WHERE session_id=CURRENT_SESSION
-                AND stmt_id = (
-                    SELECT max(stmt_id) AS last_stmt_id
-                    FROM "$EXA_STATS_AUDIT_SQL"
-                    WHERE session_id=CURRENT_SESSION
-                        AND command_id NOT IN (44, 45, 1017)
-                        AND sql_text NOT LIKE '%/* PyEXASOL EXPLAIN */%'
-                )
+                AND stmt_id = CURRENT_STATEMENT - {stmt_offset!d}
             ORDER BY {order_by!r}
         """
 
@@ -327,6 +318,7 @@ class ExaExtension(object):
             'iproc_col': ', iproc' if details else '',
             'table_name': '$EXA_PROFILE_DETAILS_LAST_DAY' if details else '$EXA_PROFILE_LAST_DAY',
             'order_by': 'part_id ASC, iproc ASC' if details else 'part_id ASC',
+            'stmt_offset': 4 if self.connection.attr['autocommit'] else 2,
         }
 
         return self._execute(sql, params).fetchall()

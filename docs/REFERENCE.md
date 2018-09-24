@@ -50,6 +50,7 @@ This page contains complete reference of PyEXASOL public API.
 - [ExaHTTPTransportWrapper](#exahttptransportwrapper)
   - [get_proxy()](#exahttptransportwrapperget_proxy)
   - [export_to_callback()](#exahttptransportwrapperexport_to_callback)
+  - [import_from_callback()](#exahttptransportwrapperimport_from_callback)
 - [ExaExtension](#exaextension)
   - [get_columns()](#get_columns)
   - [get_columns_sql()](#get_columns_sql)
@@ -211,7 +212,7 @@ Exports big amount of data to user-defined callback function
 Returns result of callback function
 
 ### export_parallel()
-This function is part of [parallel HTTP transport API](/docs/HTTP_TRANSPORT_PARALLEL.md). It accepts list of proxy `host:port` strings obtained from all child processes and executes parallel export query. Parent process only monitors the execution of query itself. All actual work is performed in child processes.
+This function is part of [parallel HTTP transport API](/docs/HTTP_TRANSPORT_PARALLEL.md). It accepts list of proxy `host:port` strings obtained from all child processes and executes parallel export query. Parent process only monitors the execution of query. All actual work is performed in child processes.
 
 | Argument | Example | Description |
 | --- | --- | --- |
@@ -259,7 +260,7 @@ Imports big amount of data from user-defined callback function to Exasol.
 | `import_params` | `{'column_separator': ','}` | (optional) Custom parameters for IMPORT query |
 
 ### import_parallel()
-This function is part of [parallel HTTP transport API](/docs/HTTP_TRANSPORT_PARALLEL.md). It accepts list of proxy `host:port` strings obtained from all child processes and executes parallel import query. Parent process only monitors the execution of query itself. All actual work is performed in child processes.
+This function is part of [parallel HTTP transport API](/docs/HTTP_TRANSPORT_PARALLEL.md). It accepts list of proxy `host:port` strings obtained from all child processes and executes parallel import query. Parent process only monitors the execution of query. All actual work is performed in child processes.
 
 | Argument | Example | Description |
 | --- | --- | --- |
@@ -404,22 +405,35 @@ Wrapper for [parallel HTTP transport](/docs/HTTP_TRANSPORT_PARALLEL.md) used by 
 
 ### ExaHTTPTransportWrapper.get_proxy()
 
-Returns proxy `host:port` string. Those strings should be passed from child processes to parent process and used as argument for [`execute_parallel()`](#execute_parallel) function.
+Returns proxy `host:port` string. Those strings should be passed from child processes to parent process and used as argument for [`export_parallel()`](#export_parallel) and [`import_parallel()`](#import_parallel) functions.
 
 ### ExaHTTPTransportWrapper.export_to_callback()
 
-Exports chunk of data to user-defined callback function. You may use exactly the same callbacks utilized by standard non-parallel [`export_to_callback()`](#export_to_callback) function.
+Exports chunk of data using callback function. You may use exactly the same callbacks utilized by standard non-parallel [`export_to_callback()`](#export_to_callback) function.
 
 | Argument | Example | Description |
 | --- | --- | --- |
 | `callback` | `def my_callback(pipe, dst, **kwargs)` | Callback function |
 | `dst` | `anything` | (optional) Export destination for callback function |
+| `callback_params` | `{'a': 'b'}` | (optional) Dict with additional parameters for callback function |
+
+Returns result of callback function
+
+### ExaHTTPTransportWrapper.import_from_callback()
+
+Import chunk of data using callback function. You may use exactly the same callbacks utilized by standard non-parallel [`import_from_callback()`](#import_from_callback) function.
+
+| Argument | Example | Description |
+| --- | --- | --- |
+| `callback` | `def my_callback(pipe, dst, **kwargs)` | Callback function |
+| `src` | `anything` | (optional) Import source for callback function |
+| `callback_params` | `{'a': 'b'}` | (optional) Dict with additional parameters for callback function |
 
 Returns result of callback function
 
 ## ExaExtension
 
-This class provides additional capabilities to solve common Exasol-related problems going beyond the scope of simple SQL driver. You should call `ExaConnection.ext` property in order to use those functions.
+This class provides additional capabilities to solve common Exasol-related problems which are normally out of scope of simple SQL driver. You should call `ExaConnection.ext` property in order to use those functions.
 
 For example:
 ```python
