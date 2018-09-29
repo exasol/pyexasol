@@ -14,8 +14,10 @@ PyEXASOL provides such TCP server for your convenience. It can work in two diffe
 
 ### DEBUG MODE
 Debug mode is useful for manual debugging during UDF script development.
-Accepts connections from all VM's, but displays output of first connected VM only.
-Runs forever until stopped by user.
+
+Connections are accepted from all VM's. Output of first connection is displayed. Outputs of other connections are discarded.
+
+Server runs forever until stopped by user.
 
 How to use it:
 
@@ -30,8 +32,10 @@ python -m pyexasol script_debug
 
 ### SCRIPT MODE
 Script mode is useful for production usage and during last stages of development.
-Accepts connections from all VM's and stores output of each VM into separate log file.
-Runs for one SQL statement only and stops automatically.
+
+Connections are accepted from all VM's. Output of each VM is stored into separate log file.
+
+Server runs for single SQL statement and stops automatically.
 
 How to use it:
 1. (optional) Create base directory for UDF script logs and set it using `udf_output_dir` connection option.

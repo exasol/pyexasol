@@ -132,7 +132,7 @@ class ExaScriptOutputServer(socketserver.ThreadingMixIn, socketserver.TCPServer)
     initial_ppid = None
 
     def get_output_address(self):
-        return f"{socket.getfqdn()}:{self.socket.getsockname()[1]}"
+        return f"{socket.gethostbyname(socket.getfqdn())}:{self.socket.getsockname()[1]}"
 
     def service_actions(self):
         utils.check_orphaned(self.initial_ppid)
