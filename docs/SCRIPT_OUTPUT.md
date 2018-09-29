@@ -34,20 +34,20 @@ Accepts connections from all VM's and stores output of each VM into separate log
 Runs for one SQL statement only and stops automatically.
 
 How to use it:
-1. Create base directory for UDF script logs.
+1. (optional) Create base directory for UDF script logs and set it using `udf_output_dir` connection option.
 2. Execute query with UDF script using function [`execute_udf_output()`](/docs/REFERENCE.md#execute_udf_output).
-3. Read and process files from directory path returned by function.
+3. Read and process files returned by function.
 
 Example:
 ```python
-stmt, output_dir = C.execute_udf_output("SELECT my_script(user_id) FROM table")
+stmt, log_files = C.execute_udf_output("SELECT my_script(user_id) FROM table")
 
 printer.pprint(stmt.fetchall())
-printer.pprint(sorted(list(output_dir.glob('*.log'))))
+printer.pprint(log_files[0].read_text())
 
 ```
 
-You are responsible for deletion of old log files.
+You are responsible for deletion of log files.
 
 ## Connectivity problem
 

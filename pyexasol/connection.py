@@ -148,16 +148,16 @@ class ExaConnection(object):
 
         return stmt
 
-    def execute_udf_output(self, query, query_params=None, output_dir=None) -> (ExaStatement, pathlib.Path):
+    def execute_udf_output(self, query, query_params=None) -> (ExaStatement, [pathlib.Path]):
         """
         Execute SQL query with UDF script, capture output
-        Return ExaStatement object and path to directory with output files
+        Return ExaStatement object and list of Path-objects for script output log files
+
+        Exasol should be able to open connection to the host where current script is running
         """
-        if output_dir:
-            output_dir = pathlib.Path(output_dir)
-        else:
-            self.udf_output_count += 1
-            output_dir = utils.get_output_dir_for_statement(self.udf_output_dir, self.session_id(), self.udf_output_count)
+
+        self.udf_output_count += 1
+        output_dir = utils.get_output_dir_for_statement(self.udf_output_dir, self.session_id(), self.udf_output_count)
 
         script_output = ExaScriptOutputProcess(self.udf_output_host, self.udf_output_host, output_dir)
         script_output.start()
@@ -172,7 +172,7 @@ class ExaConnection(object):
             script_output.terminate()
             raise
 
-        return stmt, output_dir
+        return stmt, sorted(list(output_dir.glob('*.log')))
 
     def commit(self):
         return self.execute('COMMIT')

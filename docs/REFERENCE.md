@@ -138,15 +138,16 @@ Execute SQL statement with optional formatting. Capture [output](/docs/SCRIPT_OU
 | --- | --- | --- |
 | `query` | `SELECT * FROM {table:i} WHERE col1={col1}` | SQL query text, possibly with placeholders |
 | `query_params` | `{'table': 'users', 'col1':'bar'}` | (optional) Values for placeholders |
-| `output_dir` | `/tmp` | (optional) Custom path for script output log files |
 
-Returns tuple with instance of `ExaStatement` and `Path` object pointing to directory with output files.
+Returns tuple with instance of `ExaStatement` and `Path` object pointing to script output log files.
+
+Exasol should be able to open connection to the host where current script is running. It is usually OK in the same data center, but it is normally not working if you try to run this function on local laptop.
 
 ### commit()
-Wrapper for database `COMMIT`
+Wrapper for query `COMMIT`
 
 ### rollback()
-Wrapper for database `ROLLBACK`
+Wrapper for query `ROLLBACK`
 
 ### set_autocommit()
 Set `False` to execute following statements in transaction. Set `True` to get back to automatic COMMIT after each statement.

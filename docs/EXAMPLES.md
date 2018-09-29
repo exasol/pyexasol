@@ -40,3 +40,4 @@ python examples/01_basic.py
 - [21_parallel_export_import.py](/examples/21_parallel_export_import.py) - multi-process HTTP transport for export followed by import;
 - [22_profiling.py](/examples/22_profiling.py) - last query profiling;
 - [23_snapshot_transactions.py](/examples/23_snapshot_transactions.py) - snapshot transactions mode, which may help with metadata locking problems;
+- [24_script_output.py](/examples/24_script_output.py) - run query with UDF script and capture output (may not work on local laptop);
