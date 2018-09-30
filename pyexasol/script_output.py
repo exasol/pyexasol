@@ -132,7 +132,6 @@ class ExaScriptOutputServer(socketserver.ThreadingMixIn, socketserver.TCPServer)
     initial_ppid = None
 
     def get_output_address(self):
-        sys.stderr.write(self.socket.getsockname()[0])
         return f"{socket.gethostbyname(socket.getfqdn())}:{self.socket.getsockname()[1]}"
 
     def service_actions(self):
