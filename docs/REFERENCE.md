@@ -139,7 +139,7 @@ Execute SQL statement with optional formatting. Capture [output](/docs/SCRIPT_OU
 | `query` | `SELECT * FROM {table:i} WHERE col1={col1}` | SQL query text, possibly with placeholders |
 | `query_params` | `{'table': 'users', 'col1':'bar'}` | (optional) Values for placeholders |
 
-Returns tuple with instance of `ExaStatement` and `Path` object pointing to script output log files.
+Returns tuple with two elements: (1) instance of `ExaStatement` and (2) list of `Path` objects for script output log files.
 
 Exasol should be able to open connection to the host where current script is running. It is usually OK in the same data center, but it is normally not working if you try to run this function on local laptop.
 
