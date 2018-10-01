@@ -69,7 +69,7 @@ Opens new connection and returns `ExaConnection` object.
 | --- | --- | --- |
 | `dsn` | `exasolpool1..5.mlan:8563` `10.10.127.1..11:8564` | Connection string, same format as standard JDBC / ODBC drivers |
 | `user` | `sys` | Username |
-| `password` | `password` | Password |
+| `password` | `exasol` | Password |
 | `schema` | `ingres` | Open schema after connection (Default: `''`, no schema) |
 | `autocommit` | `True` | Enable autocommit on connection (Default: `True`) |
 | `snapshot_transactions` | `False` | Enable [snapshot transactions](/docs/SNAPSHOT_TRANSACTIONS.md) on connection (Default: `False`) |
@@ -135,7 +135,7 @@ Execute SQL statement with optional formatting. Capture [output](/docs/SCRIPT_OU
 
 Returns tuple with two elements: (1) instance of `ExaStatement` and (2) list of `Path` objects for script output log files.
 
-Exasol should be able to open connection to the host where current script is running. It is usually OK in the same data center, but it is normally not working if you try to run this function on local laptop.
+Exasol should be able to open connection to the host where current script is running. It is usually OK in the same data centre, but it is normally not working if you try to run this function on local laptop.
 
 ### commit()
 Wrapper for query `COMMIT`
@@ -271,10 +271,10 @@ Returns `SESSION_ID` of current session.
 ### last_statement()
 Get last `ExaStatement` object. May be useful while working with `export_*` and `import_*` functions normally returning result of callback function instead of statement object.
 
-Returns instance of `ExaStatement`
+Returns instance of `ExaStatement`.
 
 ### ExaConnection.close()
-Closes connection to database
+Closes connection to database.
 
 
 ## ExaStatement
@@ -363,10 +363,10 @@ Closes result set handle if it was opened. You won't be able to fetch next chunk
 Formats SQL query using given arguments. Definition is the same as standard `format` function.
 
 ### escape()
-Accepts raw value. Converts it to `str` and replaces `'` (single-quote) with `''` (two single-quotes). May be useful on it's own when escaping small parts of bigger values.
+Accepts raw value. Converts it to `str` and replaces `'` (single-quote) with `''` (two single-quotes). May be useful on its own when escaping small parts of bigger values.
 
 ### escape_ident()
-Accepts raw identifier. Converts it to `str` and replaces `"` (double-quote) with `""` (two double-quotes). May be useful on it's own when escaping small parts of big identifiers.
+Accepts raw identifier. Converts it to `str` and replaces `"` (double-quote) with `""` (two double-quotes). May be useful on its own when escaping small parts of big identifiers.
 
 ### escape_like()
 Accepts raw value. Converts it to `str` and escapes for LIKE pattern value.
@@ -377,14 +377,14 @@ Accepts raw value. Converts it to `str`, escapes it using `escape()` and wraps i
 ### quote_ident()
 Accepts raw identifier. Coverts it to `str`, escapes it using `escape_ident()` and wraps in `"` (double-quote). This is the primary function to pass arbitrary identifiers to Exasol queries.
 
-Also accepts tuple of raw identifiers, applies `quote_ident` to all of them and joins with `.` (dot). It may be useful when referencing to `(schema, table)` or `(schema, table, column_name)`.
+Also, accepts tuple of raw identifiers, applies `quote_ident` to all of them and joins with `.` (dot). It may be useful when referencing to `(schema, table)` or `(schema, table, column_name)`.
 
 Please note that identifiers in Exasol are upper-cased by default. If you pass lower-cased identifier into this function, Exasol will try to find object with lower-cased name and may fail. Please consider using `safe_ident()` function if want more convenience.
 
 ### safe_ident()
 Accepts raw identifier. Converts it to `str` and validates it. Then puts it into SQL query without any quotting. If passed values is not a valid identifier (e.g. contains spaces), throws `ValueError` exception.
 
-Also accepts tuple of raw identifiers, validates all of them and joins with `.` (dot).
+Also, accepts tuple of raw identifiers, validates all of them and joins with `.` (dot).
 
 It is the convenient version of `quote_ident` with softer approach to lower-cased identifiers.
 

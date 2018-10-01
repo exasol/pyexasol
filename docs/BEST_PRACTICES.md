@@ -14,9 +14,9 @@ If you absolutely have to move big amounts of data to and from Exasol (e.g. for 
 C = pyexasol.connect(... , compression=True)
 ```
 
-Network is the main bottleneck in majority of cases. `compression` flag enables transparent zlib compression for all client-server communication, including common fetching and fast [HTTP transport](/docs/HTTP_TRANSPORT.md). It may improve overall performance by factor 4-8x.
+Network is the main bottleneck in majority of cases. `Compression` flag enables transparent zlib compression for all client-server communication, including common fetching and fast [HTTP transport](/docs/HTTP_TRANSPORT.md). It may improve overall performance by factor 4-8x.
 
-Enable compression for local laptops connecting to Exasol over wireless network. Disable `compression` if you transfer data within the same data center over fast network.
+Enable compression for local laptops connecting to Exasol over wireless network. Disable `compression` if you transfer data within the same data centre over fast network.
 
 ## Use HTTP transport for big volumes of data
 
@@ -80,7 +80,7 @@ You should always use IMPORT even for relatively small data sets. Please conside
 
 ## Consider faster JSON-parsing libraries
 
-PyEXASOL defaults to standard [`json`](https://docs.python.org/3/library/json.html) library for best compatibility. It is sufficient for majority of use-cases. However, if you are unhappy with HTTP transport and you wish to load large amounts of data using standard fetching, we highly recommend to try faster json-parsing libraries.
+PyEXASOL defaults to standard [`json`](https://docs.python.org/3/library/json.html) library for best compatibility. It is sufficient for majority of use-cases. However, if you are unhappy with HTTP transport and you wish to load large amounts of data using standard fetching, we highly recommend trying faster JSON libraries.
 
 #### json_lib=[`rapidjson`](https://github.com/python-rapidjson/python-rapidjson)
 ```
@@ -92,6 +92,6 @@ Rapidjson provides significant performance boost and it is well maintained by cr
 ```
 pip install pyexasol[ujson]
 ```
-Ujson provides best performance in our internal tests, but it is abandoned by creators.
+Ujson provides the best performance in our internal tests, but it is abandoned by creators.
 
 You may try any other json library. All you need to do is to overload `_init_json()` method in `ExaConnection`.

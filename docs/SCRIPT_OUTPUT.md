@@ -1,8 +1,8 @@
 # UDF script output
 
-Exasol allows to capture combined output (STDOUT + STDERR) of UDF scripts. It is very helpful for debugging and to extract additional statistics from scripts running in production.
+Exasol allows capturing combined output (STDOUT + STDERR) of UDF scripts. It is very helpful for debugging and to extract additional statistics from scripts running in production.
 
-In order to use this feature, user has to run TCP server and provide it's address via session parameters. For example:
+In order to use this feature, user has to run TCP server and provide address via session parameters. For example:
 
 ```sql
 ALTER SESSION SET SCRIPT_OUTPUT_ADDRESS = 'myserver:16442';

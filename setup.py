@@ -15,7 +15,7 @@ Exasol python driver with low overhead, fast HTTP transport and compression.
 Main features
 ------
 
--  Based on WebSocket client-server protocol;
+-  Based on WebSocket protocol;
 -  Optimized for minimum overhead;
 -  Easy integration with pandas via HTTP transport;
 -  Compression to reduce network bottleneck;

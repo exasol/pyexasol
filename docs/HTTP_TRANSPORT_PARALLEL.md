@@ -14,13 +14,11 @@ It is possible to run [HTTP Transport](/docs/HTTP_TRANSPORT.md) in parallel. Wor
 
 Please note that PyEXASOL does not provide any specific way to send proxy strings from child processes to parent process. You are free to choose your own way of inter-process communication. For example, you may use [multiprocessing.Pipe](https://docs.python.org/3/library/multiprocessing.html?highlight=Pipes#exchanging-objects-between-processes).
 
-## Example
+## Examples
 
-Please see [example_14](/examples/14_parallel_export.py) for EXPORT.
-
-Please see [example_20](/examples/20_parallel_import.py) for IMPORT.
-
-Please see [example_21](/examples/21_parallel_export_import.py) for EXPORT followed by IMPORT in the same child processes.
+- [example_14](/examples/14_parallel_export.py) for EXPORT;
+- [example_20](/examples/20_parallel_import.py) for IMPORT;
+- [example_21](/examples/21_parallel_export_import.py) for EXPORT followed by IMPORT using the same child processes;
 
 ## Example of EXPORT query executed in Exasol
 

@@ -2,7 +2,7 @@
 
 PyEXASOL is custom Python driver for [Exasol](https://www.exasol.com) created in [Badoo](https://badoo.com/team/). It helps us to handle massive volumes of data commonly associated with this database.
 
-You may expect significant performance improvement over existing ODBC / JDBC solutions in single process scenario involving pandas. It is also possible to split data set across multiple processes and multiple servers to achieve linear scalability. With PyEXASOL you are not limited by single CPU core.
+You may expect significant performance improvement over existing ODBC / JDBC solutions in single process scenario involving pandas. It is also possible to split data set across multiple processes and servers to achieve linear scalability. With PyEXASOL you are not limited by single CPU core.
 
 
 ## Quick links
@@ -22,7 +22,7 @@ You may expect significant performance improvement over existing ODBC / JDBC sol
 
 ## PyEXASOL main concepts
 
-- Based on [WebSocket client-server protocol](https://github.com/EXASOL/websocket-api/blob/master/WebsocketAPI.md);
+- Based on [WebSocket protocol](https://github.com/EXASOL/websocket-api/blob/master/WebsocketAPI.md);
 - Optimized for minimum overhead;
 - Easy integration with pandas via HTTP transport;
 - Compression to reduce network bottleneck;
