@@ -14,6 +14,7 @@ import decimal
 bool_values = [True, False]
 user_statuses = ['ACTIVE', 'PENDING', 'SUSPENDED', 'DISABLED']
 
+
 def users_generator():
     for i in range(10000):
         yield (i,

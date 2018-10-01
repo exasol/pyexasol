@@ -176,8 +176,6 @@ class ExaConnection(object):
             'autocommit': val
         })
 
-        self.attr['autocommit'] = val
-
     def open_schema(self, schema):
         self.set_attr({
             'currentSchema': self.format.safe_ident(schema)
@@ -367,6 +365,9 @@ class ExaConnection(object):
             'command': 'setAttributes',
             'attributes': new_attr,
         })
+
+        # At this moment setAttributes response is inconsistent, so we have to fully refresh after every call
+        self.get_attr()
 
     def req(self, req):
         """ Run WebSocket request synchronously """
