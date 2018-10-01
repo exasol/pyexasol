@@ -14,7 +14,7 @@ C = pyexasol.db2.connect(dsn=config.dsn, user=config.user, password=config.passw
 cur = C.cursor()
 
 # Fetch tuples row-by-row as iterator
-cur.executemany("SELECT * FROM users ORDER BY user_id LIMIT 5")
+cur.execute("SELECT * FROM users ORDER BY user_id LIMIT 5")
 
 while True:
     row = cur.fetchone()
