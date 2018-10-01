@@ -75,7 +75,7 @@ class ExaFormatter(string.Formatter):
         val = str(val)
 
         if not cls.safe_ident_regexp.match(val):
-            raise ValueError(f'Value [{val}] is not safe identifier')
+            raise ValueError(f'Value [{val}] is not a safe identifier')
 
         return val
 
@@ -87,7 +87,7 @@ class ExaFormatter(string.Formatter):
         val = str(val)
 
         if not cls.safe_float_regexp.match(val):
-            raise ValueError(f'Value [{val}] is not safe number')
+            raise ValueError(f'Value [{val}] is not a safe number')
 
         return val
 
@@ -99,6 +99,6 @@ class ExaFormatter(string.Formatter):
         val = str(val)
 
         if not cls.safe_decimal_regexp.match(val):
-            raise ValueError(f'Value [{val}] is not safe integer')
+            raise ValueError(f'Value [{val}] is not a safe integer')
 
         return val

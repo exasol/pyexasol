@@ -7,7 +7,7 @@ import configparser
 import tempfile
 import pathlib
 
-import pyexasol as E
+import pyexasol
 import _config as config
 
 import pprint
@@ -37,7 +37,7 @@ with tempfile.TemporaryDirectory() as tempdir:
     handle.close()
 
     # Open connection using config file
-    C = E.connect_local_config('test1', config_path=handle.name)
+    C = pyexasol.connect_local_config('test1', config_path=handle.name)
 
     # Basic query
     stmt = C.execute("SELECT * FROM users ORDER BY user_id LIMIT 5")

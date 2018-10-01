@@ -6,14 +6,14 @@ from . import constant
 
 
 class ExaStatement(object):
-    def __init__(self, connection, query):
+    def __init__(self, connection, query, query_params=None, prepare=False, **options):
         self.connection = connection
-        self.query = query
+        self.query = self._format_query(query, query_params)
 
-        self.fetch_dict = self.connection.fetch_dict
-        self.fetch_mapper = self.connection.fetch_mapper
-        self.fetch_size_bytes = self.connection.fetch_size_bytes
-        self.lower_ident = self.connection.lower_ident
+        self.fetch_dict = options.get('fetch_dict', self.connection.fetch_dict)
+        self.fetch_mapper = options.get('fetch_mapper', self.connection.fetch_mapper)
+        self.fetch_size_bytes = options.get('fetch_size_bytes', self.connection.fetch_size_bytes)
+        self.lower_ident = options.get('lower_ident', self.connection.lower_ident)
 
         self.data_zip = zip()
         self.col_names = []
@@ -37,6 +37,14 @@ class ExaStatement(object):
 
         self.execution_time = 0
         self.is_closed = False
+
+        if self.connection.is_closed:
+            raise ExaRuntimeError(self.connection, "Exasol connection was closed")
+
+        if prepare:
+            self._prepare()
+        else:
+            self._execute()
 
     def __iter__(self):
         return self
@@ -106,23 +114,29 @@ class ExaStatement(object):
 
     def close(self):
         if self.result_set_handle:
-            self.connection._req({
+            self.connection.req({
                 'command': 'closeResultSet',
                 'resultSetHandles': [self.result_set_handle]
             })
 
-            self.result_set_handle = None
-
         if self.statement_handle:
-            self.connection._req({
+            self.connection.req({
                 'command': 'closePreparedStatement',
                 'statementHandle': self.statement_handle,
             })
 
         self.is_closed = True
 
+    def _format_query(self, query, query_params):
+        query = str(query)
+
+        if query_params is not None:
+            query = self.connection.format.format(query, **query_params)
+
+        return query.lstrip(' \n').rstrip(' \n;')
+
     def _execute(self):
-        ret = self.connection._req({
+        ret = self.connection.req({
             'command': 'execute',
             'sqlText': self.query,
         })
@@ -131,7 +145,7 @@ class ExaStatement(object):
         self._init_result_set(ret)
 
     def _prepare(self):
-        ret = self.connection._req({
+        ret = self.connection.req({
             'command': 'createPreparedStatement',
             'sqlText': self.query,
         })
@@ -168,7 +182,7 @@ class ExaStatement(object):
             raise ExaRuntimeError(self.connection, f'Unknown resultType: {self.result_type}')
 
     def _next_chunk(self):
-        ret = self.connection._req({
+        ret = self.connection.req({
             'command': 'fetch',
             'resultSetHandle': self.result_set_handle,
             'startPosition': self.pos_total,

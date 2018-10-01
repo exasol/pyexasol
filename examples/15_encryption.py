@@ -4,14 +4,14 @@ Connection with SSL encryption enabled
 It works both for WebSocket communication (wss://) and HTTP(S) Transport
 """
 
-import pyexasol as E
+import pyexasol
 import _config as config
 
 import pprint
 printer = pprint.PrettyPrinter(indent=4, width=140)
 
-# Basic connect
-C = E.connect(dsn=config.dsn, user=config.user, password=config.password, schema=config.schema, encryption=True)
+# Connect with encryption
+C = pyexasol.connect(dsn=config.dsn, user=config.user, password=config.password, schema=config.schema, encryption=True)
 
 # Basic query
 stmt = C.execute("SELECT * FROM users ORDER BY user_id LIMIT 5")

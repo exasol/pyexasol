@@ -3,11 +3,11 @@ Example 8
 Transactions
 """
 
-import pyexasol as E
+import pyexasol
 import _config as config
 
 # Connect with autocommit OFF
-C = E.connect(dsn=config.dsn, user=config.user, password=config.password, schema=config.schema, autocommit=False)
+C = pyexasol.connect(dsn=config.dsn, user=config.user, password=config.password, schema=config.schema, autocommit=False)
 
 # Another way to change autocommit after connection
 C.set_autocommit(False)

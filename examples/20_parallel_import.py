@@ -3,7 +3,7 @@ Example 20
 Parallel import from multiple independent processes
 """
 
-import pyexasol as E
+import pyexasol
 import _config as config
 
 import multiprocessing
@@ -32,7 +32,7 @@ class ImportProc(multiprocessing.Process):
     def run(self):
         self.read_pipe.close()
 
-        http = E.http_transport(self.shard_id, config.dsn, E.HTTP_IMPORT)
+        http = pyexasol.http_transport(self.shard_id, config.dsn, pyexasol.HTTP_IMPORT)
         self.write_pipe.send(http.get_proxy())
         self.write_pipe.close()
 
@@ -54,7 +54,7 @@ if __name__ == '__main__':
     pool = list()
     proxy_list = list()
 
-    C = E.connect(dsn=config.dsn, user=config.user, password=config.password, schema=config.schema)
+    C = pyexasol.connect(dsn=config.dsn, user=config.user, password=config.password, schema=config.schema)
 
     C.execute('TRUNCATE TABLE parallel_import')
 

@@ -3,7 +3,7 @@ Example 22
 Profiling with and without details
 """
 
-import pyexasol as E
+import pyexasol
 import _config as config
 
 import json
@@ -12,7 +12,7 @@ import sys
 import pprint
 printer = pprint.PrettyPrinter(indent=4, width=140)
 
-C = E.connect(dsn=config.dsn, user=config.user, password=config.password, schema=config.schema)
+C = pyexasol.connect(dsn=config.dsn, user=config.user, password=config.password, schema=config.schema)
 
 C.execute("ALTER SESSION SET QUERY_CACHE = 'OFF'")
 C.execute("ALTER SESSION SET PROFILE = 'ON'")

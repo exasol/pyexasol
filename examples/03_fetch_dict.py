@@ -3,14 +3,14 @@ Example 3
 Fetching data as dictionaries
 """
 
-import pyexasol as E
+import pyexasol
 import _config as config
 
 import pprint
 printer = pprint.PrettyPrinter(indent=4, width=140)
 
 # Basic connect (default mapper)
-C = E.connect(dsn=config.dsn, user=config.user, password=config.password, schema=config.schema, fetch_dict=True)
+C = pyexasol.connect(dsn=config.dsn, user=config.user, password=config.password, schema=config.schema, fetch_dict=True)
 
 # Fetch tuples row-by-row as iterator
 stmt = C.execute("SELECT * FROM users ORDER BY user_id LIMIT 5")

@@ -1,6 +1,8 @@
 
 __all__ = [
     'connect',
+    'connect_local_config',
+    'http_transport',
     'exasol_mapper',
     'ExaError',
     'ExaCommunicationError',
@@ -35,32 +37,12 @@ from .http_transport import ExaHTTPTransportWrapper, HTTP_EXPORT, HTTP_IMPORT
 def connect(**kwargs) -> ExaConnection:
     """
     Constructor of connection objects
-    Please see ExaConnection object for list of arguments
+    Please check ExaConnection object for list of arguments
     """
-    if 'cls_connection' in kwargs:
-        connection_cls = kwargs['cls_connection']
-
-        if not issubclass(connection_cls, ExaConnection):
-            raise ValueError(f"Class [{kwargs['cls_connection']}] is not subclass of ExaConnection")
-    else:
-        connection_cls = ExaConnection
-
-    if 'cls_statement' in kwargs and not issubclass(kwargs['cls_statement'], ExaStatement):
-        raise ValueError(f"Class [{kwargs['cls_statement']}] is not subclass of ExaStatement")
-
-    if 'cls_formatter' in kwargs and not issubclass(kwargs['cls_formatter'], ExaFormatter):
-        raise ValueError(f"Class [{kwargs['cls_formatter']}] is not subclass of ExaFormatter")
-
-    if 'cls_logger' in kwargs and not issubclass(kwargs['cls_logger'], ExaLogger):
-        raise ValueError(f"Class [{kwargs['cls_logger']}] is not subclass of ExaLogger")
-
-    if 'cls_extension' in kwargs and not issubclass(kwargs['cls_extension'], ExaExtension):
-        raise ValueError(f"Class [{kwargs['cls_extension']}] is not subclass of ExaExtension")
-
-    return connection_cls(**kwargs)
+    return ExaConnection(**kwargs)
 
 
-def connect_local_config(config_section, config_path=None, cls_local_config=ExaLocalConfig, **kwargs) -> ExaConnection:
+def connect_local_config(config_section, config_path=None, **kwargs) -> ExaConnection:
     """
     Constructor of connection objects based on local config file
     Default config path is ~/.pyexasol.ini
@@ -69,13 +51,10 @@ def connect_local_config(config_section, config_path=None, cls_local_config=ExaL
 
     :param config_section: Name of config section (required!)
     :param config_path: Custom path to local config file
-    :param cls_local_config: Overloaded ExaLocalConfig class
     :param kwargs: Arguments for "connect()" function
     """
-    if not issubclass(cls_local_config, ExaLocalConfig):
-        raise ValueError(f"Class [{cls_local_config}] is not subclass of ExaLocalConfig")
 
-    conf = cls_local_config(config_path)
+    conf = ExaLocalConfig(config_path)
     conf_args = conf.get_args(config_section)
 
     return connect(**{**conf_args, **kwargs})

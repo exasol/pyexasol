@@ -15,6 +15,7 @@ class ExaLocalConfig(object):
 
     arg_types = {
         'autocommit': bool,
+        'snapshot_transactions': bool,
         'socket_timeout': int,
         'query_timeout': int,
         'compression': bool,

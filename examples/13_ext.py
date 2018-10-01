@@ -3,14 +3,14 @@ Example 13
 Extension functions
 """
 
-import pyexasol as E
+import pyexasol
 import _config as config
 
 import pprint
 printer = pprint.PrettyPrinter(indent=4, width=140)
 
 # Basic connect
-C = E.connect(dsn=config.dsn, user=config.user, password=config.password, schema=config.schema, lower_ident=True)
+C = pyexasol.connect(dsn=config.dsn, user=config.user, password=config.password, schema=config.schema, lower_ident=True)
 
 cols = C.ext.get_columns('users')
 printer.pprint(cols)

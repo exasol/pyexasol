@@ -13,15 +13,15 @@ CHAR         -> str
 <others>     -> str
 """
 
-import pyexasol as E
+import pyexasol
 import _config as config
 
 import pprint
 printer = pprint.PrettyPrinter(indent=4, width=180)
 
 # Basic connect (custom mapper
-C = E.connect(dsn=config.dsn, user=config.user, password=config.password, schema=config.schema,
-              fetch_mapper=E.exasol_mapper)
+C = pyexasol.connect(dsn=config.dsn, user=config.user, password=config.password, schema=config.schema,
+                     fetch_mapper=pyexasol.exasol_mapper)
 
 # Fetch objects
 stmt = C.execute("SELECT * FROM users ORDER BY user_id LIMIT 5")

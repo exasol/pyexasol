@@ -5,51 +5,31 @@ Export and import from Exasol to Pandas DataFrames
 Please make sure you enable compression for office wifi!
 """
 
-import pyexasol as E
+import pyexasol
 import _config as config
 
 # Connect with compression enabled
-C = E.connect(dsn=config.dsn, user=config.user, password=config.password, schema=config.schema,
-              compression=True)
+C = pyexasol.connect(dsn=config.dsn, user=config.user, password=config.password, schema=config.schema,
+                     compression=True)
 
-C.execute("TRUNCATE TABLE users_copy")
+C.execute('TRUNCATE TABLE users_copy')
 
-# Export from query
-pd = C.export_to_pandas("SELECT * FROM users")
-stmt = C.last_statement()
-print(f'EXPORTED {stmt.rowcount()} rows in {stmt.execution_time}s WITH compression')
-
-# Import back to another table
-C.import_from_pandas(pd, 'users_copy')
-stmt = C.last_statement()
-print(f'IMPORTED {stmt.rowcount()} rows in {stmt.execution_time}s WITH compression')
-
-# Export from table name
+# Export from Exasol table into pandas.DataFrame
 pd = C.export_to_pandas('users')
+pd.info()
+
 stmt = C.last_statement()
-print(f'EXPORTED {stmt.rowcount()} rows in {stmt.execution_time}s WITH compression')
+print(f'EXPORTED {stmt.rowcount()} rows in {stmt.execution_time}s')
 
-C.close()
-
-# Same test without compression
-C = E.connect(dsn=config.dsn, user=config.user, password=config.password, schema=config.schema,
-              compression=False)
-
-C.execute("TRUNCATE TABLE users_copy")
-
-# Export from query
-pd = C.export_to_pandas("SELECT * FROM users")
-stmt = C.last_statement()
-print(f'EXPORTED {stmt.rowcount()} rows in {stmt.execution_time}s WITHOUT compression')
-
-# Import back to another table
+# Import from pandas DataFrame into Exasol table
 C.import_from_pandas(pd, 'users_copy')
-stmt = C.last_statement()
-print(f'IMPORTED {stmt.rowcount()} rows in {stmt.execution_time}s WITHOUT compression')
 
-# Export from table name
-pd = C.export_to_pandas('users')
 stmt = C.last_statement()
-print(f'EXPORTED {stmt.rowcount()} rows in {stmt.execution_time}s WITHOUT compression')
+print(f'IMPORTED {stmt.rowcount()} rows in {stmt.execution_time}s')
 
-C.close()
+# Export from SQL query
+pd = C.export_to_pandas('SELECT user_id, user_name FROM users WHERE user_id >= 5000')
+pd.info()
+
+stmt = C.last_statement()
+print(f'EXPORTED {stmt.rowcount()} rows in {stmt.execution_time}s')

@@ -81,11 +81,6 @@ Opens new connection and returns `ExaConnection` object.
 | `fetch_mapper` | `pyexasol.exasol_mapper` | Use custom mapper function to convert Exasol values into Python objects during fetching (Default: `None`) |
 | `fetch_size_bytes` | `5 * 1024 * 1024` | Maximum size of data message for single fetch request in bytes (Default: 5Mb) |
 | `lower_ident` | `False` | Automatically lowercase all identifiers (table names, column names, etc.) returned from relevant functions (Default: `False`) |
-| `cls_connection` | `pyexasol.ExaConnection` | Overloaded `ExaConnection` class |
-| `cls_statement` | `pyexasol.ExaStatement` | Overloaded `ExaStatement` class |
-| `cls_formatter` | `pyexasol.ExaFormatter` | Overloaded `ExaFormatter` class |
-| `cls_logger` | `pyexasol.ExaLogger` | Overloaded `ExaLogger` class |
-| `cls_extension` | `pyexasol.ExaExtension` | Overloaded `ExaExtension` class |
 | `json_lib` | `rapidjson` | Supported values: [`rapidjson`](https://github.com/python-rapidjson/python-rapidjson), [`ujson`](https://github.com/esnme/ultrajson), [`json`](https://docs.python.org/3/library/json.html) (Default: `json`) |
 | `verbose_error` | `True` | Display additional information when error occurs (Default: `True`) |
 | `debug` | `False` | Output debug information for client-server communication and connection attempts to STDERR |
@@ -103,7 +98,6 @@ Opens new connection and returns `ExaConnection` object. It uses local .ini file
 | --- | --- | --- |
 | `config_section` | `my_exasol` | Name of section in config file |
 | `config_path` | `/etc/pyexasol.ini` | Path to config file (Default: `~/.pyexasol.ini`) |
-| `cls_local_config` | `pyexasol.ExaLocalConfig` | Overloaded `ExaLocalConfig` |
 | `**kwargs` | - | All other arguments from [`connect`](#connect) method; `**kwargs` override values from config file |
 
 ## http_transport()
@@ -291,7 +285,7 @@ Object of this class executes and helps to fetch result set of single Exasol SQL
 
 `ExaStatement` may use custom data-type mapper during fetching (set `fetch_mapper=<func>` in connection options). Mapper function accepts two arguments (raw `value` and `dataType` object) and returns custom object or value.
 
-`ExaStatement` fetches big result sets in chunks. The size of chunk may be adjusted (set `fetch_size_bytes=<int>` in connection options). Bigger chunks generally benefit from better compression and increase overall performance.
+`ExaStatement` fetches big result sets in chunks. The size of chunk may be adjusted (set `fetch_size_bytes=<int>` in connection options).
 
 ### \_\_iter\_\_()
 The best way to fetch result set of statement is to use iterator:

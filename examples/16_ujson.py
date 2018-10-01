@@ -3,7 +3,7 @@ Example 16
 Edge case example with "ujson"
 """
 
-import pyexasol as E
+import pyexasol
 import _config as config
 
 import decimal
@@ -12,7 +12,7 @@ import pprint
 printer = pprint.PrettyPrinter(indent=4, width=140)
 
 # Basic connect
-C = E.connect(dsn=config.dsn, user=config.user, password=config.password, schema=config.schema, json_lib='ujson')
+C = pyexasol.connect(dsn=config.dsn, user=config.user, password=config.password, schema=config.schema, json_lib='ujson')
 
 edge_cases = [
     # Biggest values
@@ -66,7 +66,7 @@ printer.pprint(stmt.fetchall())
 
 
 # Same actions with "exasol_mapper"
-C.fetch_mapper = E.exasol_mapper
+C.fetch_mapper = pyexasol.exasol_mapper
 C.execute('TRUNCATE TABLE edge_case')
 
 # Insert (test formatting)

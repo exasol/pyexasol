@@ -5,14 +5,14 @@ Script output server
 Exasol should be able to open connection to the host where current script is running
 """
 
-import pyexasol as E
+import pyexasol
 import _config as config
 
 import pprint
 printer = pprint.PrettyPrinter(indent=4, width=140)
 
-C = E.connect(dsn=config.dsn, user=config.user, password=config.password, schema=config.schema
-              , query_timeout=10)
+C = pyexasol.connect(dsn=config.dsn, user=config.user, password=config.password, schema=config.schema,
+                     query_timeout=5)
 
 stmt, log_files = C.execute_udf_output("""
     SELECT echo_java(user_id)

@@ -3,7 +3,7 @@ Example 0
 Prepare tables and data for other examples
 """
 
-import pyexasol as E
+import pyexasol
 import _config as config
 
 import datetime
@@ -51,7 +51,7 @@ def random_ts():
     return datetime.datetime.combine(date, time)
 
 
-C = E.connect(dsn=config.dsn, user=config.user, password=config.password, autocommit=False)
+C = pyexasol.connect(dsn=config.dsn, user=config.user, password=config.password, autocommit=False)
 
 # Create schema if not exist and make it default
 C.execute("CREATE SCHEMA IF NOT EXISTS {schema!i}", {'schema': config.schema})

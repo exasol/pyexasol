@@ -2,7 +2,6 @@ import websocket
 import platform
 import getpass
 import time
-import pathlib
 import zlib
 import ssl
 
@@ -20,6 +19,11 @@ from .version import __version__
 
 
 class ExaConnection(object):
+    cls_statement = ExaStatement
+    cls_formatter = ExaFormatter
+    cls_logger = ExaLogger
+    cls_extension = ExaExtension
+
     def __init__(self
             , dsn=None
             , user=None
@@ -35,10 +39,6 @@ class ExaConnection(object):
             , fetch_mapper=None
             , fetch_size_bytes=constant.DEFAULT_FETCH_SIZE_BYTES
             , lower_ident=False
-            , cls_statement=ExaStatement
-            , cls_formatter=ExaFormatter
-            , cls_logger=ExaLogger
-            , cls_extension=ExaExtension
             , json_lib='json'
             , verbose_error=True
             , debug=False
@@ -65,10 +65,6 @@ class ExaConnection(object):
         :param fetch_mapper: Use custom mapper function to convert Exasol values into Python objects during fetching (Default: None)
         :param fetch_size_bytes: Maximum size of data message for single fetch request in bytes (Default: 5Mb)
         :param lower_ident: Automatically lowercase all identifiers (table names, column names, etc.) returned from relevant functions (Default: False)
-        :param cls_statement: Overloaded ExaStatement class
-        :param cls_formatter: Overloaded ExaFormatter class
-        :param cls_logger: Overloaded ExaLogger class
-        :param cls_extension: Overloaded ExaExtension class
         :param json_lib: Supported values: rapidjson, ujson, json (Default: json)
         :param verbose_error: Display additional information when error occurs (Default: True)
         :param debug: Output debug information for client-server communication and connection attempts to STDERR
@@ -96,11 +92,6 @@ class ExaConnection(object):
         self.fetch_mapper = fetch_mapper
         self.fetch_size_bytes = fetch_size_bytes
         self.lower_ident = lower_ident
-
-        self.cls_statement = cls_statement
-        self.cls_formatter = cls_formatter
-        self.cls_logger = cls_logger
-        self.cls_extension = cls_extension
 
         self.json_lib = json_lib
 
@@ -133,22 +124,19 @@ class ExaConnection(object):
         self._init_json()
         self._init_ext()
 
-        self._connect()
-        self._get_attr()
+        self._login()
+        self.get_attr()
 
     def execute(self, query, query_params=None) -> ExaStatement:
         """
         Execute SQL query with optional query formatting parameters
         Return ExaStatement object
         """
-        stmt = self._statement(query, query_params)
-        stmt._execute()
+        self.last_stmt = self.cls_statement(self, query, query_params)
 
-        self.last_stmt = stmt
+        return self.last_stmt
 
-        return stmt
-
-    def execute_udf_output(self, query, query_params=None) -> (ExaStatement, [pathlib.Path]):
+    def execute_udf_output(self, query, query_params=None):
         """
         Execute SQL query with UDF script, capture output
         Return ExaStatement object and list of Path-objects for script output log files
@@ -184,14 +172,14 @@ class ExaConnection(object):
         if not isinstance(val, bool):
             raise ValueError("Autocommit value must be boolean")
 
-        self._set_attr({
+        self.set_attr({
             'autocommit': val
         })
 
         self.attr['autocommit'] = val
 
     def open_schema(self, schema):
-        self._set_attr({
+        self.set_attr({
             'currentSchema': self.format.safe_ident(schema)
         })
 
@@ -361,78 +349,36 @@ class ExaConnection(object):
 
     def close(self):
         if not self.is_closed:
-            self._req({
+            self.req({
                 'command': 'disconnect',
             })
 
             self.is_closed = True
 
-    def _connect(self):
-        ret = self._req({
-            'command': 'login',
-            'protocolVersion': 1,
-        })
-
-        self.meta = self._req({
-            'username': self.user,
-            'password': utils.encrypt_password(ret['responseData']['publicKeyPem'], self.password),
-            'driverName': f'{constant.DRIVER_NAME} {__version__}',
-            'clientName': self.client_name if self.client_name else constant.DRIVER_NAME,
-            'clientVersion': self.client_version if self.client_version else __version__,
-            'clientOs': platform.platform(),
-            'clientOsUsername': getpass.getuser(),
-            'clientRuntime': f'Python {platform.python_version()}',
-            'useCompression': self.compression,
-            'attributes': {
-                'currentSchema': str(self.schema),
-                'autocommit': self.autocommit,
-                'queryTimeout': self.query_timeout,
-                'snapshotTransactionsEnabled': self.snapshot_transactions,
-            }
-        })['responseData']
-
-        if self.fetch_size_bytes is None:
-            self.fetch_size_bytes = self.meta['maxDataMessageSize']
-
-        self._init_ws_compression()
-
-    def _get_attr(self):
-        ret = self._req({
+    def get_attr(self):
+        ret = self.req({
             'command': 'getAttributes',
         })
 
         self.attr = ret['attributes']
 
-    def _set_attr(self, new_attr):
-        self._req({
+    def set_attr(self, new_attr):
+        self.req({
             'command': 'setAttributes',
             'attributes': new_attr,
         })
 
-    def _statement(self, query='', query_params=None):
-        if not isinstance(query, str):
-            raise ValueError("Query must be instance of str")
-
-        if self.is_closed:
-            raise ExaRuntimeError(self, "Database connection was closed")
-
-        if query_params is not None:
-            query = self.format.format(query, **query_params)
-
-        query = query.lstrip(' \n').rstrip(' \n;')
-
-        return self.cls_statement(self, query)
-
-    def _req(self, req):
+    def req(self, req):
+        """ Run WebSocket request synchronously """
         self.ws_req_count += 1
 
         # Build request
         send_data = self._json_encode(req)
-        self._logger.debug_json(f'WebSocket request #{self.ws_req_count}', req)
+        self.logger.debug_json(f'WebSocket request #{self.ws_req_count}', req)
 
         start_ts = time.time()
 
-        # Send request, receive response
+        # Send request, wait for response
         try:
             self._ws_send(send_data)
             recv_data = self._ws_recv()
@@ -443,7 +389,7 @@ class ExaConnection(object):
 
         # Parse response
         ret = self._json_decode(recv_data)
-        self._logger.debug_json(f'WebSocket response #{self.ws_req_count}', ret)
+        self.logger.debug_json(f'WebSocket response #{self.ws_req_count}', ret)
 
         # Updated attributes may be returned from any request
         if 'attributes' in ret:
@@ -464,11 +410,39 @@ class ExaConnection(object):
             else:
                 raise ExaRequestError(self, ret['exception']['sqlCode'], ret['exception']['text'])
 
+    def _login(self):
+        ret = self.req({
+            'command': 'login',
+            'protocolVersion': 1,
+        })
+
+        self.meta = self.req({
+            'username': self.user,
+            'password': utils.encrypt_password(ret['responseData']['publicKeyPem'], self.password),
+            'driverName': f'{constant.DRIVER_NAME} {__version__}',
+            'clientName': self.client_name if self.client_name else constant.DRIVER_NAME,
+            'clientVersion': self.client_version if self.client_version else __version__,
+            'clientOs': platform.platform(),
+            'clientOsUsername': getpass.getuser(),
+            'clientRuntime': f'Python {platform.python_version()}',
+            'useCompression': self.compression,
+            'attributes': {
+                'currentSchema': str(self.schema),
+                'autocommit': self.autocommit,
+                'queryTimeout': self.query_timeout,
+                'snapshotTransactionsEnabled': self.snapshot_transactions,
+            }
+        })['responseData']
+
+        if self.compression:
+            self._ws_send = lambda x: self._ws.send_binary(zlib.compress(x.encode(), 1))
+            self._ws_recv = lambda: zlib.decompress(self._ws.recv())
+
     def _init_ws(self):
         """
         Init websocket connection
         Connection redundancy is supported
-        Specific Exasol host is randomly chosen for every connection attempt
+        Specific Exasol host is randomly selected for every connection attempt
         """
         if hasattr(self, '_ws'):
             pass
@@ -482,7 +456,7 @@ class ExaConnection(object):
 
         for i in host_port_list:
             try:
-                self._logger.debug(f'Connection attempt [{i[0]}:{i[1]}]')
+                self.logger.debug(f'Connection attempt [{i[0]}:{i[1]}]')
                 self._ws = self._ws_connect(i[0], i[1])
 
                 self.ws_host = i[0]
@@ -493,7 +467,7 @@ class ExaConnection(object):
 
                 return
             except Exception as e:
-                self._logger.debug(f'Failed to connect [{i[0]}:{i[1]}]')
+                self.logger.debug(f'Failed to connect [{i[0]}:{i[1]}]')
 
                 failed_attempts += 1
 
@@ -518,19 +492,13 @@ class ExaConnection(object):
 
         return websocket.create_connection(f'{prefix}{host}:{port}', **options)
 
-    def _init_ws_compression(self):
-        """ All further communication is transparently compressed after successful login or sublogin command """
-        if self.compression:
-            self._ws_send = lambda x: self._ws.send_binary(zlib.compress(x.encode(), 1))
-            self._ws_recv = lambda: zlib.decompress(self._ws.recv())
-
     def _init_logger(self):
-        if hasattr(self, '_logger'):
+        if hasattr(self, 'logger'):
             pass
 
-        self._logger = self.cls_logger(self, constant.DRIVER_NAME)
-        self._logger.setLevel('DEBUG' if self.debug else 'WARNING')
-        self._logger.add_default_handler()
+        self.logger = self.cls_logger(self, constant.DRIVER_NAME)
+        self.logger.setLevel('DEBUG' if self.debug else 'WARNING')
+        self.logger.add_default_handler()
 
     def _init_format(self):
         if hasattr(self, 'format'):
@@ -539,12 +507,7 @@ class ExaConnection(object):
         self.format = self.cls_formatter(self)
 
     def _init_json(self):
-        """
-        Init json functions
-        Please overload it if you're unhappy with provided options
-        """
-
-        # rapidjson is well maintained library with acceptable performance, default choice
+        # rapidjson is well maintained library with acceptable performance, good choice
         if self.json_lib == 'rapidjson':
             import rapidjson
 
@@ -558,7 +521,7 @@ class ExaConnection(object):
             self._json_encode = ujson.dumps
             self._json_decode = ujson.loads
 
-        # json is native Python library, very safe choice, but slow
+        # json from Python stdlib, very safe choice, but slow
         elif self.json_lib == 'json':
             import json
 

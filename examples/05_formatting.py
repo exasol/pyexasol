@@ -3,14 +3,14 @@ Example 5
 How to format values and identifiers
 """
 
-import pyexasol as E
+import pyexasol
 import _config as config
 
 import pprint
 printer = pprint.PrettyPrinter(indent=4, width=40)
 
 # Basic connect
-C = E.connect(dsn=config.dsn, user=config.user, password=config.password, schema=config.schema)
+C = pyexasol.connect(dsn=config.dsn, user=config.user, password=config.password, schema=config.schema)
 
 # SQL with formatting
 params = {

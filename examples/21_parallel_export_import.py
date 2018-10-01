@@ -4,7 +4,7 @@ Parallel EXPORT followed by IMPORT with multiple independent processes
 Optional encryption and compression are enabled
 """
 
-import pyexasol as E
+import pyexasol
 import _config as config
 
 import multiprocessing
@@ -31,8 +31,8 @@ class ExportProc(multiprocessing.Process):
     def run(self):
         self.read_pipe.close()
 
-        http_export = E.http_transport(self.shard_id, config.dsn, E.HTTP_EXPORT, compression=True, encryption=True)
-        http_import = E.http_transport(self.shard_id, config.dsn, E.HTTP_IMPORT, compression=True, encryption=True)
+        http_export = pyexasol.http_transport(self.shard_id, config.dsn, pyexasol.HTTP_EXPORT, compression=True, encryption=True)
+        http_import = pyexasol.http_transport(self.shard_id, config.dsn, pyexasol.HTTP_IMPORT, compression=True, encryption=True)
 
         # Send list of proxy strings, one element per HTTP transport instance
         self.write_pipe.send([http_export.get_proxy(), http_import.get_proxy()])
@@ -53,8 +53,8 @@ if __name__ == '__main__':
     proxy_export_list = list()
     proxy_import_list = list()
 
-    C = E.connect(dsn=config.dsn, user=config.user, password=config.password, schema=config.schema
-                  , compression=True, encryption=True)
+    C = pyexasol.connect(dsn=config.dsn, user=config.user, password=config.password, schema=config.schema,
+                         compression=True, encryption=True)
 
     C.execute("TRUNCATE TABLE payments_copy")
 

@@ -3,7 +3,7 @@ Example 14
 Parallel export into multiple independent processes
 """
 
-import pyexasol as E
+import pyexasol
 import _config as config
 
 import multiprocessing
@@ -30,7 +30,7 @@ class ExportProc(multiprocessing.Process):
     def run(self):
         self.read_pipe.close()
 
-        http = E.http_transport(self.shard_id, config.dsn, E.HTTP_EXPORT)
+        http = pyexasol.http_transport(self.shard_id, config.dsn, pyexasol.HTTP_EXPORT)
         self.write_pipe.send(http.get_proxy())
         self.write_pipe.close()
 
@@ -45,7 +45,7 @@ if __name__ == '__main__':
     pool = list()
     proxy_list = list()
 
-    C = E.connect(dsn=config.dsn, user=config.user, password=config.password, schema=config.schema)
+    C = pyexasol.connect(dsn=config.dsn, user=config.user, password=config.password, schema=config.schema)
 
     for i in range(pool_size):
         proc = ExportProc(i)

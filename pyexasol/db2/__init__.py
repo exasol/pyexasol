@@ -9,7 +9,6 @@ There is no "paramstyle" and no proper error handling
 """
 
 from ..connection import ExaConnection
-from ..exceptions import ExaError
 
 apilevel = '2.0'
 threadsafety = 1
@@ -38,7 +37,7 @@ class DB2Cursor(object):
     def execute(self, query):
         self.stmt = self.connection.execute(query)
 
-    def executemany(self):
+    def executemany(self, query):
         raise NotSupportedError
 
     def fetchone(self):
@@ -87,5 +86,5 @@ class DB2Cursor(object):
         self.stmt.close()
 
 
-class NotSupportedError(ExaError):
+class NotSupportedError(Exception):
     pass

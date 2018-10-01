@@ -18,13 +18,11 @@ class ExaExtension(object):
     def get_columns_sql(self, query, query_params=None):
         """
         Get columns of SQL query without executing it (Websocket format)
-        Relies on prepared statement which are closed immediately without execution
+        It relies on prepared statement which is closed immediately without execution
         """
-        st = self.connection._statement(query, query_params)
-        st._prepare()
-
-        columns = st.columns()
-        st.close()
+        stmt = self.connection.cls_statement(self.connection, query, query_params, prepare=True)
+        columns = stmt.columns()
+        stmt.close()
 
         return columns
 
@@ -324,12 +322,11 @@ class ExaExtension(object):
         return self._execute(sql, params).fetchall()
 
     def _execute(self, query, query_params=None):
-        st = self.connection._statement(query, query_params)
+        # Preserve ext-functions output format regardless of current options for user queries
+        options = {
+            'fetch_dict': True,
+            'fetch_mapper': None,
+            'lower_ident': True,
+        }
 
-        st.fetch_dict = True
-        st.fetch_mapper = None
-        st.lower_ident = True
-
-        st._execute()
-
-        return st
+        return self.connection.cls_statement(self.connection, query, query_params, **options)
