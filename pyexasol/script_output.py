@@ -3,7 +3,7 @@ TCP Server to capture UDF script output.
 Unlike HTTP Transport, we have to use real server with proper bindings.
 
 Incoming connections may be blocked by firewalls!
-It mostly affects local laptops trying to connect to Exasol located in remote data center.
+It mostly affects local laptops trying to connect to Exasol located in remote data centre.
 
 This module can work in two modes:
 

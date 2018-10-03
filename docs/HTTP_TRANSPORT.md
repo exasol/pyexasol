@@ -6,7 +6,7 @@ This is a powerful tool which helps to bypass creation of Python objects altoget
 
 PyEXASOL offloads HTTP communication and decompression to separate process using [multiprocessing](https://docs.python.org/3/library/multiprocessing.html) module. Main process only reads or writes to [pipe](https://docs.python.org/3/library/os.html#os.pipe) opened in binary mode.
 
-You may specify custom `callback` function to read or write from pipe and to apply any custom logic you need. You may specify `callback_params` to pass additional parameters to `callback` function (e.g. options for pandas).
+Specify custom `callback` function to read or write from pipe and to apply complex logic. Use `callback_params` to pass additional parameters to `callback` function (e.g. options for pandas).
 
 You may also specify `import_params` or `export_params` to alter `IMPORT` or `EXPORT` query and modify data stream.
 
