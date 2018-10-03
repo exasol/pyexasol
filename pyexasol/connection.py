@@ -539,4 +539,4 @@ class ExaConnection(object):
         self.ext = self.cls_extension(self)
 
     def __repr__(self):
-        return f'<{self.__class__.__name__} (session_id="{self.session_id()}" dsn="{self.dsn}" user="{self.user}")>'
+        return f'<{self.__class__.__name__} session_id={self.session_id()} dsn={self.dsn} user={self.user}>'

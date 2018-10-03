@@ -41,3 +41,4 @@ python examples/01_basic.py
 - [22_profiling.py](/examples/22_profiling.py) - last query profiling;
 - [23_snapshot_transactions.py](/examples/23_snapshot_transactions.py) - snapshot transactions mode, which may help with metadata locking problems;
 - [24_script_output.py](/examples/24_script_output.py) - run query with UDF script and capture output (may not work on local laptop);
+- [25_overload.py](/examples/25_overload.py) - how to extend core PyEXASOL classes to add custom logic;

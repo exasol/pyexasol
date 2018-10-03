@@ -43,3 +43,7 @@ class ExaLogger(logging.Logger):
 
     def _get_log_filename(self):
         return f'{self.name}_{datetime.datetime.now().strftime(constant.LOGGER_FILENAME_TIMESTAMP_FORMAT)}.log'
+
+    def __repr__(self):
+        level = logging.getLevelName(self.getEffectiveLevel())
+        return f'<{self.__class__.__name__} session_id={self.connection.session_id()} level={level}>'

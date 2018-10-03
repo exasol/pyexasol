@@ -208,4 +208,4 @@ class ExaStatement(object):
             raise ExaRuntimeError(self.connection, f'Duplicate column names in result set: {", ".join(duplicate_col_names)}')
 
     def __repr__(self):
-        return f'<{self.__class__.__name__} (session_id="{self.connection.session_id()}" stmt_idx="{self.stmt_idx}")>'
+        return f'<{self.__class__.__name__} session_id={self.connection.session_id()} stmt_idx={self.stmt_idx}>'

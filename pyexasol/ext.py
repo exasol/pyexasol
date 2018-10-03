@@ -330,3 +330,6 @@ class ExaExtension(object):
         }
 
         return self.connection.cls_statement(self.connection, query, query_params, **options)
+
+    def __repr__(self):
+        return f'<{self.__class__.__name__} session_id={self.connection.session_id()}>'

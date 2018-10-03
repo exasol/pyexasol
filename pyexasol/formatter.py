@@ -102,3 +102,6 @@ class ExaFormatter(string.Formatter):
             raise ValueError(f'Value [{val}] is not a safe integer')
 
         return val
+
+    def __repr__(self):
+        return f'<{self.__class__.__name__} session_id={self.connection.session_id()}>'

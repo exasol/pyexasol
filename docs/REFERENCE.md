@@ -507,8 +507,6 @@ This function returns dictionary with 4 keys:
 
 Profile (EXPLAIN) last executed query. Example: [22_profiling](/examples/22_profiling.py)
 
-"Auditing" must be enabled in Exasol instance options
-
 | Argument | Example | Description |
 | --- | --- | --- |
 | `details` | `True` | (optional) return additional details |
