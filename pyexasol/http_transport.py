@@ -200,7 +200,7 @@ class ExaHTTPProcess(object):
         if self.encryption:
             args.append('--encryption')
 
-        self.proc = subprocess.Popen(args, stdin=subprocess.PIPE, stdout=subprocess.PIPE)
+        self.proc = subprocess.Popen(args, stdin=subprocess.PIPE, stdout=subprocess.PIPE, bufsize=0)
         self.proxy = self.proc.stdout.readline().decode().rstrip('\n')
 
         self.read_pipe = self.proc.stdout

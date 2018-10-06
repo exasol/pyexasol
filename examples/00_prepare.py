@@ -54,7 +54,7 @@ def random_ts():
 
 C = pyexasol.connect(dsn=config.dsn, user=config.user, password=config.password, autocommit=False)
 
-# Create schema if not exist and make it default
+# Create schema if not exist and open it
 C.execute("CREATE SCHEMA IF NOT EXISTS {schema!i}", {'schema': config.schema})
 C.open_schema(config.schema)
 

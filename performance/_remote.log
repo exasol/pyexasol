@@ -1,0 +1,62 @@
+Python: 3.6.3 | packaged by conda-forge | (default, Nov  4 2017, 10:10:56)
+[GCC 4.8.2 20140120 (Red Hat 4.8.2-15)]
+PyEXASOL: 0.4.1
+PyODBC: 4.0.16
+TurbODBC: 2.4.1
+Creating random data set for tests, 10000000 rows
+Please wait, it may take a few minutes
+Test data was prepared
+
+
+time python 03_pyexasol_fetch.py
+
+real	4m54.332s
+user	0m32.623s
+sys	0m40.536s
+
+
+time python 03_pyexasol_fetch.py (with compression=True)
+
+real	3m44.263s
+user	0m32.407s
+sys	0m18.106s
+
+
+time python 06_pyexasol_pandas.py
+<class 'pandas.core.frame.DataFrame'>
+RangeIndex: 10000000 entries, 0 to 9999999
+Data columns (total 8 columns):
+USER_ID          int64
+USER_NAME        object
+REGISTER_DT      object
+LAST_VISIT_TS    object
+IS_FEMALE        int64
+USER_RATING      float64
+USER_SCORE       float64
+STATUS           object
+dtypes: float64(2), int64(2), object(4)
+memory usage: 610.4+ MB
+
+real	4m33.068s
+user	0m39.775s
+sys	0m20.234s
+
+
+time python 07_pyexasol_pandas_compress.py
+<class 'pandas.core.frame.DataFrame'>
+RangeIndex: 10000000 entries, 0 to 9999999
+Data columns (total 8 columns):
+USER_ID          int64
+USER_NAME        object
+REGISTER_DT      object
+LAST_VISIT_TS    object
+IS_FEMALE        int64
+USER_RATING      float64
+USER_SCORE       float64
+STATUS           object
+dtypes: float64(2), int64(2), object(4)
+memory usage: 610.4+ MB
+
+real	2m10.762s
+user	0m38.110s
+sys	0m13.609s

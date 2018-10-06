@@ -1,0 +1,121 @@
+Python: 3.6.3 | packaged by conda-forge | (default, Nov  4 2017, 10:10:56)
+[GCC 4.8.2 20140120 (Red Hat 4.8.2-15)]
+PyEXASOL: 0.4.1
+PyODBC: 4.0.16
+TurbODBC: 2.4.1
+Creating random data set for tests, 10000000 rows
+Please wait, it may take a few minutes
+Test data was prepared
+
+
+time python 01_pyodbc_fetch.py
+
+real	1m46.934s
+user	1m38.781s
+sys	0m3.141s
+
+
+time python 02_turbodbc_fetch.py
+
+real	0m55.425s
+user	0m48.323s
+sys	0m2.051s
+
+
+time python 03_pyexasol_fetch.py
+
+real	0m39.147s
+user	0m26.868s
+sys	0m2.908s
+
+
+time python 04_turbodbc_pandas_numpy.py
+<class 'pandas.core.frame.DataFrame'>
+RangeIndex: 10000000 entries, 0 to 9999999
+Data columns (total 8 columns):
+USER_ID          int64
+USER_NAME        object
+REGISTER_DT      datetime64[ns]
+LAST_VISIT_TS    datetime64[ns]
+IS_FEMALE        bool
+USER_RATING      float64
+USER_SCORE       float64
+STATUS           object
+dtypes: bool(1), datetime64[ns](2), float64(2), int64(1), object(2)
+memory usage: 543.6+ MB
+
+real	0m14.964s
+user	0m8.325s
+sys	0m1.492s
+
+
+time python 05_turbodbc_pandas_arrow.py
+<class 'pandas.core.frame.DataFrame'>
+RangeIndex: 10000000 entries, 0 to 9999999
+Data columns (total 8 columns):
+USER_ID          int64
+USER_NAME        object
+REGISTER_DT      datetime64[ns]
+LAST_VISIT_TS    datetime64[ns]
+IS_FEMALE        bool
+USER_RATING      float64
+USER_SCORE       float64
+STATUS           object
+dtypes: bool(1), datetime64[ns](2), float64(2), int64(1), object(2)
+memory usage: 543.6+ MB
+
+real	0m13.854s
+user	0m6.928s
+sys	0m1.968s
+
+
+time python 06_pyexasol_pandas.py
+<class 'pandas.core.frame.DataFrame'>
+RangeIndex: 10000000 entries, 0 to 9999999
+Data columns (total 8 columns):
+USER_ID          int64
+USER_NAME        object
+REGISTER_DT      object
+LAST_VISIT_TS    object
+IS_FEMALE        int64
+USER_RATING      float64
+USER_SCORE       float64
+STATUS           object
+dtypes: float64(2), int64(2), object(4)
+memory usage: 610.4+ MB
+
+real	0m20.831s
+user	0m19.257s
+sys	0m2.454s
+
+
+time python 07_pyexasol_pandas_compress.py
+<class 'pandas.core.frame.DataFrame'>
+RangeIndex: 10000000 entries, 0 to 9999999
+Data columns (total 8 columns):
+USER_ID          int64
+USER_NAME        object
+REGISTER_DT      object
+LAST_VISIT_TS    object
+IS_FEMALE        int64
+USER_RATING      float64
+USER_SCORE       float64
+STATUS           object
+dtypes: float64(2), int64(2), object(4)
+memory usage: 610.4+ MB
+
+real	0m53.423s
+user	0m29.050s
+sys	0m2.368s
+
+
+time python 08_pyexasol_pandas_parallel.py
+4:1901896
+0:1998156
+3:1827215
+1:2090281
+2:2182452
+
+real	0m7.405s
+user	0m22.053s
+sys	0m2.960s
