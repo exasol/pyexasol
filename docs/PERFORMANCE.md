@@ -28,7 +28,7 @@ I measure total rounded execution time in seconds using `time` command in bash.
 ## Results
 
 | | [Low random](/performance/_low_random.log) | [High random](/performance/_high_random.log) | [Slow network](/performance/_low_random.log) |
-| --- | --- | --- |
+| --- | --- | --- | --- |
 | [PyODBC fetchall](/performance/01_pyodbc_fetch.py) | 106 | 107 | - |
 | [TurbODBC fetchall](/performance/02_turbodbc_fetch.py) | 56 | 55 | - |
 | [PyEXASOL fetchall](/performance/03_pyexasol_fetch.py) | 32 | 39 | 294 |
