@@ -10,16 +10,15 @@ Test data was prepared
 
 time python 03_pyexasol_fetch.py
 
-real	4m54.332s
-user	0m32.623s
-sys	0m40.536s
-
+real	2m6.109s
+user	0m20.151s
+sys	0m11.957s
 
 time python 03_pyexasol_fetch.py (with compression=True)
 
-real	3m44.263s
-user	0m32.407s
-sys	0m18.106s
+real	1m32.433s
+user	0m18.651s
+sys	0m6.110s
 
 
 time python 06_pyexasol_pandas.py
@@ -32,14 +31,14 @@ REGISTER_DT      object
 LAST_VISIT_TS    object
 IS_FEMALE        int64
 USER_RATING      float64
-USER_SCORE       float64
+USER_SCORE       int64
 STATUS           object
-dtypes: float64(2), int64(2), object(4)
+dtypes: float64(1), int64(3), object(4)
 memory usage: 610.4+ MB
 
-real	4m33.068s
-user	0m39.775s
-sys	0m20.234s
+real	1m17.030s
+user	0m13.039s
+sys	0m3.587s
 
 
 time python 07_pyexasol_pandas_compress.py
@@ -52,11 +51,11 @@ REGISTER_DT      object
 LAST_VISIT_TS    object
 IS_FEMALE        int64
 USER_RATING      float64
-USER_SCORE       float64
+USER_SCORE       int64
 STATUS           object
-dtypes: float64(2), int64(2), object(4)
+dtypes: float64(1), int64(3), object(4)
 memory usage: 610.4+ MB
 
-real	2m10.762s
-user	0m38.110s
-sys	0m13.609s
+real	0m28.997s
+user	0m13.734s
+sys	0m2.454s

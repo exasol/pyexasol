@@ -31,12 +31,12 @@ I measure total rounded execution time in seconds using `time` command in bash.
 | --- | --- | --- | --- |
 | [PyODBC fetchall](/performance/01_pyodbc_fetch.py) | 106 | 107 | - |
 | [TurbODBC fetchall](/performance/02_turbodbc_fetch.py) | 56 | 55 | - |
-| [PyEXASOL fetchall](/performance/03_pyexasol_fetch.py) | 32 | 39 | 294 |
-| [PyEXASOL fetchall+zlib](/performance/03_pyexasol_fetch.py) | - | - | 224 |
+| [PyEXASOL fetchall](/performance/03_pyexasol_fetch.py) | 32 | 39 | 126 |
+| [PyEXASOL fetchall+zlib](/performance/03_pyexasol_fetch.py) | - | - | 92 |
 | [TurbODBC fetchallnumpy](/performance/04_turbodbc_pandas_numpy.py) | 15 | 15 | - |
 | [TurbODBC fetchallarrow](/performance/05_turbodbc_pandas_arrow.py) | 14 | 14 | - |
-| [PyEXASOL export_to_pandas](/performance/06_pyexasol_pandas.py) | 11 | 21 | 273 |
-| [PyEXASOL export_to_pandas+zlib](/performance/07_pyexasol_pandas_compress.py) | 28 | 53 | 131 |
+| [PyEXASOL export_to_pandas](/performance/06_pyexasol_pandas.py) | 11 | 21 | 77 |
+| [PyEXASOL export_to_pandas+zlib](/performance/07_pyexasol_pandas_compress.py) | 28 | 53 | 29 |
 | [PyEXASOL export_parallel](/performance/08_pyexasol_pandas_parallel.py) | 5 | 7 | - |
 
 ### Conclusions

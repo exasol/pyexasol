@@ -176,6 +176,11 @@ class ExaConnection(object):
             'autocommit': val
         })
 
+    def set_query_timeout(self, val):
+        self.set_attr({
+            'queryTimeout': int(val)
+        })
+
     def open_schema(self, schema):
         self.set_attr({
             'currentSchema': self.format.safe_ident(schema)

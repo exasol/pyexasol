@@ -11,6 +11,7 @@ This page contains complete reference of PyEXASOL public API.
   - [commit()](#commit)
   - [rollback()](#rollback)
   - [set_autocommit()](#set_autocommit)
+  - [set_query_timeout()](#set_query_timeout)
   - [open_schema()](#open_schema)
   - [current_schema()](#current_schema)
   - [export_to_file()](#export_to_file)
@@ -151,6 +152,15 @@ Autocommit is `True` by default because Exasol has to commit indexes and statist
 | Argument | Example | Description |
 | --- | --- | --- |
 | `val` | `False` | Autocommit mode |
+
+### set_query_timeout()
+Set the maximum time in seconds for which a query can run before Exasol kills it automatically. Set value `0` to disable timeout.
+
+It is highly recommended to set timeout for UDF scripts to avoid potential infinite loops and very long transactions.
+
+| Argument | Example | Description |
+| --- | --- | --- |
+| `val` | `10` | Timeout value in seconds |
 
 ### open_schema()
 Wrapper for `OPEN SCHEMA`
