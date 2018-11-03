@@ -13,7 +13,7 @@ You may also specify `import_params` or `export_params` to alter `IMPORT` or `EX
 # Pre-defined functions
 
 ## Export from Exasol to pandas
-Read data from Exasol directly to `pandas.DataFrame`.
+Export data from Exasol into `pandas.DataFrame`. You may use `callback_param` argument to pass custom options for pandas [`read_csv`](https://pandas.pydata.org/pandas-docs/stable/generated/pandas.read_csv.html) function.
 
 ```python
 # Read from SQL
@@ -24,7 +24,7 @@ pd = C.export_to_pandas("users")
 ```
 
 ## Import from pandas to Exasol
-Write data from `pandas.DataFrame` directly to Exasol table
+Import data from `pandas.DataFrame` into Exasol table. You may use `callback_param` argument to pass custom options for pandas [`to_csv`](https://pandas.pydata.org/pandas-docs/stable/generated/pandas.DataFrame.to_csv.html) function.
 
 ```python
 C.import_from_pandas(pd, "users")
@@ -42,7 +42,7 @@ C.import_from_iterable(my_list, "users")
 ```
 
 ## Import from generator
-This function is suitable for very big INSERTS as long as generator returns rows 1-by-1 and does not internally run out of memory.
+This function is suitable for very big INSERTS as long as generator returns rows 1-by-1 and does not run out of memory.
 
 ```python
 def my_generator():
@@ -53,15 +53,31 @@ C.import_from_iterable(my_generator, "users")
 ```
 
 ## Import from file
-Can use string, path-like object or file-like object opened in binary mode as data source.
+Import data from file, path object or file-like object opened in binary mode. You may import from process `STDIN` using `sys.stdin.buffer`.
 ```python
-C.import_from_file('my_file.csv', "users")
+# Import from file defined with string path
+C.import_from_file('/test/my_file.csv', "users")
+
+# Import from path object
+C.import_from_file(pathlib.Path('/test/my_file.csv'), "users")
+
+# Import from opened file
+file = open('/test/my_file.csv', 'rb')
+C.import_from_file(file, "users")
+file.close()
+
+# Import from STDIN
+C.import_from_file(sys.stdin.buffer, "users")
 ```
 
 ## Export to file
-Can use string, path-like object or file-like object opened in binary mode as data destination.
+Export data from Exasol into file, path object or file-like object opened in binary mode. You may export to process `STDOUT` using `sys.stdout.buffer`.
 ```python
+# Export from file defined with string path
 C.export_to_file('my_file.csv', "users")
+
+# Export into STDOUT
+C.export_to_file(sys.stdout.buffer, "users")
 ```
 
 # Parameters
@@ -114,8 +130,6 @@ Example of callback importing from Pandas into Exasol.
 df = <pandas.DataFrame>
 
 def import_from_pandas(pipe, src, **kwargs):
-    import pandas
-
     wrapped_pipe = io.TextIOWrapper(pipe, newline='\n')
     return src.to_csv(wrapped_pipe, header=False, index=False, quoting=csv.QUOTE_NONNUMERIC, **kwargs)
 
