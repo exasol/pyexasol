@@ -1,28 +1,36 @@
 ## DB-API 2.0 compatibility
 
-PyEXASOL [public interface](/docs/REFERENCE.md) resembles [PEP-249 DB-API 2.0](https://www.python.org/dev/peps/pep-0249/) specification, but it does not strictly follow it. This is done on purpose.
+PyEXASOL [public interface](/docs/REFERENCE.md) is similar to [PEP-249 DB-API 2.0](https://www.python.org/dev/peps/pep-0249/) specification, but it does not strictly follow it. This page explains the reasons behind this decision.
 
-Basic [compatibility wrapper](#db-api-20-wrapper) is available, so you could try PyEXASOL in context of existing application, but it should not be used in production and should not be relied upon.
+If you absolutely need DB-API 2.0 compatibility, you may use [TurbODBC](https://github.com/blue-yonder/turbodbc) instead.
 
----
+### Rationale
 
-The main reasons behind this decision are following:
-- To discourage "drop-in" replacements of other Exasol drivers without switching to faster [HTTP transport](/docs/HTTP_TRANSPORT.md);
-- To prevent usage of ORM, SQLAlchemy and other SQL wrappers originally designed for row-based databases;
-- To introduce better [SQL formatter](/docs/SQL_FORMATTING.md);
+PEP-249 was originally created for general purpose OLTP row store databases running on single server: SQLite, MySQL, PostgreSQL, MSSQL, Oracle, etc.
 
-Unlike common OLTP databases, each OLAP database is unique. Understanding of implementation details is mandatory. Generalisation of any kind and "copy-paste" approach may lead to abysmal performance in trivial cases. You should know exactly what you're doing.
+It does not work very well for OLAP columnar databases (like Exasol) running on multiple servers because it was never designed for this purpose. Despite both OLTP DBMS and OLAP DBMS use SQL for communication, the foundation and usage patterns are completely different.
 
-## Key differences
+When people use DB-API 2.0 drivers, they tend to skip manuals and automatically apply OLTP usage patterns without even realizing how much they lose in terms of performance and efficiency.
 
-- No `Cursor` object.
-- `Execute()` method belongs to main `ExaConnection`. `Execute()` returns `ExaStatement` which behaves very similar to `Cursor`, but it is NOT reusable.
-- No `executemany()`, no `nextset()`.
-- No `.description` attribute in `ExaStatement`. Methods `columns()` and `column_names()` are provided instead. Method `columns()` returns information about result set columns in Exasol-specific format.
-- `Autocommit=True` by default to make sure Exasol stores indexes and statistic objects after SELECT statements.
-- No `.paramstyle` option. Custom Python 3 new style formatter is provided instead.
+The good example is [TurbODBC](https://github.com/blue-yonder/turbodbc). Very few know that it is possible to fetch data as [NumPy arrays](https://turbodbc.readthedocs.io/en/latest/pages/advanced_usage.html#numpy-support) and as [Apache Arrow](https://turbodbc.readthedocs.io/en/latest/pages/advanced_usage.html#apache-arrow-support).
 
-## Migration
+Minor intentional incompatibilities with DB-API 2.0 force users to look through manual and to learn about [better ways](/docs/BEST_PRACTICES.md) of getting the job done.
+
+### Exasol specific problems with DB-API 2.0
+
+- Default `autocommit=off` prevents indexes from being stored permanently on disk for `SELECT` statements;
+- Default `autocommit=off` may hold transaction for a long time (e.g. opened connection in IPython notebook);
+- Python object creation and destruction overhead is very significant when you process large amounts of data;
+- Functions `fetchmany()` and `executemany()` has significant additional overhead related to JSON serialisation;
+- Exasol WebSocket protocol provides more information about columns than normally available in `.description` property of `cursor`;
+
+We also wanted to discourage:
+- "Drop-in" replacements of other Exasol drivers without reading manual;
+- Usage of OLTP-oriented ORM (e.g. SQLAlchemy, Django);
+
+Unlike common OLTP databases, each OLAP database is very unique. It is important to understand implementation details and features of specific database and to build application around those features. Generalisation of any kind and "copy-paste" approach may lead to abysmal performance in trivial cases.
+
+## Ideas for migration
 
 Find `cursor()` calls:
 ```python
@@ -61,7 +69,7 @@ etc.
 
 ## DB-API 2.0 wrapper
 
-In order to make it easier to start using PyEXASOL, simple DB-API 2.0 wrapper is provided. Please see example:
+In order to make it easier to start using PyEXASOL, simple DB-API 2.0 wrapper is provided. It works for `SELECT` statements without placeholders. Please see the example:
 
 ```python
 # Import "wrapped" version of PyEXASOL module
