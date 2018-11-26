@@ -5,7 +5,15 @@ cache: pip
 matrix:
     include:
         -   python: 3.6
+            env: EXASOL_TAG=latest
+        -   python: 3.6
+            env: EXASOL_TAG=6.0.12-d1
         -   python: 3.7
+            env: EXASOL_TAG=latest
+            sudo: required
+            dist: xenial
+        -   python: 3.7
+            env: EXASOL_TAG=6.0.12-d1
             sudo: required
             dist: xenial
 
@@ -21,8 +29,7 @@ env:
     - EXAHOST="127.0.0.1:8563"
 
 before_install:
-    # test docker
-    - docker run --detach --name exasol --privileged -p 127.0.0.1:8563:8888 --stop-timeout 120 exasol/docker-db:latest
+    - docker run --detach --name exasol --privileged -p 127.0.0.1:8563:8888 --stop-timeout 120 exasol/docker-db:$EXASOL_TAG
 
 install:
     # sleep a bit to ensure that Docker is running (can be refactored to be more intelligent in future)
