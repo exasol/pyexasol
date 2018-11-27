@@ -7,13 +7,13 @@ matrix:
         -   python: 3.6
             env: EXASOL_TAG=latest
         -   python: 3.6
-            env: EXASOL_TAG=6.0.12-d1
+            env: EXASOL_TAG=6.0.13-d1
         -   python: 3.7
             env: EXASOL_TAG=latest
             sudo: required
             dist: xenial
         -   python: 3.7
-            env: EXASOL_TAG=6.0.12-d1
+            env: EXASOL_TAG=6.0.13-d1
             sudo: required
             dist: xenial
 
