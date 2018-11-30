@@ -14,8 +14,8 @@ printer = pprint.PrettyPrinter(indent=4, width=140)
 
 
 class ExportProc(multiprocessing.Process):
-    def __init__(self, shard_id):
-        self.shard_id = shard_id
+    def __init__(self, node):
+        self.node = node
         self.read_pipe, self.write_pipe = multiprocessing.Pipe(False)
 
         super().__init__()
@@ -30,12 +30,12 @@ class ExportProc(multiprocessing.Process):
     def run(self):
         self.read_pipe.close()
 
-        http = pyexasol.http_transport(self.shard_id, config.dsn, pyexasol.HTTP_EXPORT)
+        http = pyexasol.http_transport(self.node['host'], self.node['port'], pyexasol.HTTP_EXPORT)
         self.write_pipe.send(http.get_proxy())
         self.write_pipe.close()
 
         pd = http.export_to_callback(cb.export_to_pandas, None)
-        print(f'{self.shard_id}:{len(pd)}')
+        print(f"{self.node['idx']}:{len(pd)}")
 
 
 # This condition is required for 'spawn' multiprocessing implementation (Windows)
@@ -47,8 +47,8 @@ if __name__ == '__main__':
 
     C = pyexasol.connect(dsn=config.dsn, user=config.user, password=config.password, schema=config.schema)
 
-    for i in range(pool_size):
-        proc = ExportProc(i)
+    for n in C.get_nodes(pool_size):
+        proc = ExportProc(n)
         proc.start()
 
         proxy_list.append(proc.get_proxy())

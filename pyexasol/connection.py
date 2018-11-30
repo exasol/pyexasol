@@ -4,6 +4,7 @@ import getpass
 import time
 import zlib
 import ssl
+import itertools
 
 from . import callback as cb
 from . import constant
@@ -373,6 +374,28 @@ class ExaConnection(object):
 
         # At this moment setAttributes response is inconsistent, so we have to fully refresh after every call
         self.get_attr()
+
+    def get_nodes(self, pool_size=None):
+        """
+        Returns list of dictionaries describing active Exasol nodes
+        Format: {'host': <ip_address>, 'port': <port>, 'idx': <incremental index of returned node>}
+
+        If pool_size is bigger than number of nodes, list will wrap around and nodes will repeat with different 'idx'
+        If pool_size is omitted, returns every active node once
+
+        It is useful to balance workload for parallel IMPORT and EXPORT
+        Exasol shuffles list for every connection
+        """
+        ret = self.req({
+            'command': 'getHosts',
+            'hostIp': self.ws_host,
+        })
+
+        if pool_size is None:
+            pool_size = ret['responseData']['numNodes']
+
+        return [{'host': ip_address, 'port': self.ws_port, 'idx': idx} for idx, ip_address
+                in enumerate(itertools.islice(itertools.cycle(ret['responseData']['nodes']), pool_size), start=1)]
 
     def req(self, req):
         """ Run WebSocket request synchronously """

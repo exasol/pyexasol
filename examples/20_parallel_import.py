@@ -16,8 +16,8 @@ printer = pprint.PrettyPrinter(indent=4, width=140)
 
 
 class ImportProc(multiprocessing.Process):
-    def __init__(self, shard_id):
-        self.shard_id = shard_id
+    def __init__(self, node):
+        self.node = node
         self.read_pipe, self.write_pipe = multiprocessing.Pipe(False)
 
         super().__init__()
@@ -32,14 +32,14 @@ class ImportProc(multiprocessing.Process):
     def run(self):
         self.read_pipe.close()
 
-        http = pyexasol.http_transport(self.shard_id, config.dsn, pyexasol.HTTP_IMPORT)
+        http = pyexasol.http_transport(self.node['host'], self.node['port'], pyexasol.HTTP_IMPORT)
         self.write_pipe.send(http.get_proxy())
         self.write_pipe.close()
 
         data = [
-            {'user_id': 1, 'user_name': 'John', 'shard_id': self.shard_id},
-            {'user_id': 2, 'user_name': 'Foo', 'shard_id': self.shard_id},
-            {'user_id': 3, 'user_name': 'Bar', 'shard_id': self.shard_id},
+            {'user_id': 1, 'user_name': 'John', 'shard_id': self.node['idx']},
+            {'user_id': 2, 'user_name': 'Foo', 'shard_id': self.node['idx']},
+            {'user_id': 3, 'user_name': 'Bar', 'shard_id': self.node['idx']},
         ]
 
         pd = pandas.DataFrame(data, columns=['user_id', 'user_name', 'shard_id'])
@@ -58,8 +58,8 @@ if __name__ == '__main__':
 
     C.execute('TRUNCATE TABLE parallel_import')
 
-    for i in range(pool_size):
-        proc = ImportProc(i)
+    for n in C.get_nodes(pool_size):
+        proc = ImportProc(n)
         proc.start()
 
         proxy_list.append(proc.get_proxy())

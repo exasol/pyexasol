@@ -24,6 +24,7 @@ This page contains complete reference of PyEXASOL public API.
   - [import_from_pandas()](#import_from_pandas)
   - [import_from_callback()](#import_from_callback)
   - [import_parallel()](#import_parallel)
+  - [get_nodes()](#get_nodes)
   - [session_id()](#session_id)
   - [last_statement()](#last_statement)
   - [close()](#exaconnectionclose)
@@ -106,11 +107,13 @@ Opens new HTTP connection and returns `ExaHTTPTransportWrapper` object. This fun
 
 | Argument | Example | Description |
 | --- | --- | --- |
-| `shard_id` | `0` `1` `2` | Monotonically increasing ID of the child process, required for load balancing of connections to Exasol nodes |
-| `dsn` | `exasolpool1..5.mlan:8563` `10.10.127.1..11:8564` | Connection string, same format as standard JDBC / ODBC drivers |
+| `host` | `10.17.1.10` | IP address of one of Exasol nodes received from [`get_nodes()`](#get_nodes) |
+| `port` | `8563` | Port of one of Exasol nodes received from [`get_nodes()`](#get_nodes) |
 | `mode` | `pyexasol.HTTP_EXPORT` | Open connection for `pyexasol.HTTP_EXPORT` or `pyexasol.HTTP_IMPORT` |
 | `compression` | `True` | Use zlib compression for HTTP transport, must be the same as `compression` of main connection (Default: `False`) |
 | `encryption` | `True` | Use [SSL encryption](/docs/ENCRYPTION.md) for HTTP transport, must be the same as `encryption` of main connection (Default: `False`) |
+
+Please note: this function was changed in PyEXASOL 0.5.1 and is no longer accepts `shard_id` and `dsn` arguments due to potential issues with reserve nodes and partially invalid DSN. You should now call `get_nodes()` in order to get list of real active Exasol nodes and pass this this information to child processes.
 
 ## ExaConnection
 
@@ -274,6 +277,20 @@ This function is part of [parallel HTTP transport API](/docs/HTTP_TRANSPORT_PARA
 | `import_params` | `{'column_separator': ','}` | (optional) Custom parameters for IMPORT query |
 
 Returns nothing on successful export. You may access `IMPORT` statement results using [`last_statement()`](#last_statement) function.
+
+### get_nodes()
+
+Returns list of currently active Exasol nodes which is normally used for [parallel HTTP transport](/docs/HTTP_TRANSPORT_PARALLEL.md).
+
+| Argument | Example | Description |
+| --- | --- | --- |
+| `pool_size` | `10` | (optional) Returns list of specific size |
+
+Result format: `[{'host': <ip_address>, 'port': <port>, 'idx': <incremental index of returned node>}]`
+
+If `pool_size` is bigger than number of nodes, list will wrap around and nodes will repeat with different `idx`. If `pool_size` is omitted, returns every active node once.
+
+Exasol shuffles list for every connection.
 
 ### session_id()
 Returns `SESSION_ID` of current session.

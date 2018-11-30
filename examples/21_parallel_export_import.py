@@ -15,8 +15,8 @@ printer = pprint.PrettyPrinter(indent=4, width=140)
 
 
 class ExportProc(multiprocessing.Process):
-    def __init__(self, shard_id):
-        self.shard_id = shard_id
+    def __init__(self, node):
+        self.node = node
         self.read_pipe, self.write_pipe = multiprocessing.Pipe(False)
 
         super().__init__()
@@ -31,18 +31,18 @@ class ExportProc(multiprocessing.Process):
     def run(self):
         self.read_pipe.close()
 
-        http_export = pyexasol.http_transport(self.shard_id, config.dsn, pyexasol.HTTP_EXPORT, compression=True, encryption=True)
-        http_import = pyexasol.http_transport(self.shard_id, config.dsn, pyexasol.HTTP_IMPORT, compression=True, encryption=True)
+        http_export = pyexasol.http_transport(self.node['host'], self.node['port'], pyexasol.HTTP_EXPORT, compression=True, encryption=True)
+        http_import = pyexasol.http_transport(self.node['host'], self.node['port'], pyexasol.HTTP_IMPORT, compression=True, encryption=True)
 
         # Send list of proxy strings, one element per HTTP transport instance
         self.write_pipe.send([http_export.get_proxy(), http_import.get_proxy()])
         self.write_pipe.close()
 
         pd = http_export.export_to_callback(cb.export_to_pandas, None)
-        print(f'EXPORT shard_id:{self.shard_id}, affected_rows:{len(pd)}')
+        print(f"EXPORT shard_id:{self.node['idx']}, affected_rows:{len(pd)}")
 
         http_import.import_from_callback(cb.import_from_pandas, pd)
-        print(f'IMPORT shard_id:{self.shard_id}, affected_rows:{len(pd)}')
+        print(f"IMPORT shard_id:{self.node['idx']}, affected_rows:{len(pd)}")
 
 
 # This condition is required for 'spawn' multiprocessing implementation (Windows)
@@ -58,7 +58,7 @@ if __name__ == '__main__':
 
     C.execute("TRUNCATE TABLE payments_copy")
 
-    for i in range(pool_size):
+    for i in C.get_nodes(pool_size):
         proc = ExportProc(i)
         proc.start()
 

@@ -60,7 +60,7 @@ def connect_local_config(config_section, config_path=None, **kwargs) -> ExaConne
     return connect(**{**conf_args, **kwargs})
 
 
-def http_transport(shard_id, dsn, mode, compression=False, encryption=False) -> ExaHTTPTransportWrapper:
+def http_transport(host, port, mode, compression=False, encryption=False) -> ExaHTTPTransportWrapper:
     """
     Constructor of HTTP Transport wrapper objects for IMPORT / EXPORT parallelism
 
@@ -76,4 +76,4 @@ def http_transport(shard_id, dsn, mode, compression=False, encryption=False) -> 
 
     All child processes should run in parallel. It is not possible to run some processes first, than run some more.
     """
-    return ExaHTTPTransportWrapper(shard_id, dsn, mode, compression, encryption)
+    return ExaHTTPTransportWrapper(host, port, mode, compression, encryption)
