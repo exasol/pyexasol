@@ -8,6 +8,7 @@ import socket
 import ssl
 import os
 import sys
+import urllib.parse
 
 from . import constant
 
@@ -126,3 +127,9 @@ def get_pid():
     Some special code to handle Windows might be added later to this function
     """
     return os.getpid()
+
+
+def parse_http_proxy(http_proxy):
+    parts = urllib.parse.urlparse(http_proxy)
+
+    return parts.hostname, parts.port, parts.username, parts.password

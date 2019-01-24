@@ -47,6 +47,7 @@ class ExaConnection(object):
             , udf_output_host=None
             , udf_output_port=None
             , udf_output_dir=None
+            , http_proxy=None
             , client_name=None
             , client_version=None):
         """
@@ -73,6 +74,7 @@ class ExaConnection(object):
         :param udf_output_host: Specific address to bind TCPServer for UDF script output (default: 0.0.0.0)
         :param udf_output_port: Specific port to bind TCPServer for UDF script output (default: random port)
         :param udf_output_dir: Directory to store captured UDF script output logs, split by <session_id>_<statement_id>/<vm_num>
+        :param http_proxy: HTTP proxy string in Linux http_proxy format (default: None)
         :param client_name: Custom name of client application displayed in Exasol sessions tables (Default: PyEXASOL)
         :param client_version: Custom version of client application (Default: pyexasol.__version__)
         """
@@ -104,6 +106,8 @@ class ExaConnection(object):
         self.udf_output_port = udf_output_port
         self.udf_output_dir = udf_output_dir
         self.udf_output_count = 0
+
+        self.http_proxy = http_proxy
 
         self.client_name = client_name
         self.client_version = client_version
@@ -518,6 +522,16 @@ class ExaConnection(object):
             options['sslopt'] = {
                 'cert_reqs': ssl.CERT_NONE
             }
+
+        if self.http_proxy:
+            proxy_host, proxy_port, proxy_username, proxy_password = utils.parse_http_proxy(self.http_proxy)
+
+            if proxy_host is None:
+                raise ValueError("Could not parse http_proxy")
+
+            options['http_proxy_host'] = proxy_host
+            options['http_proxy_port'] = proxy_port
+            options['http_proxy_auth'] = (proxy_username, proxy_password)
 
         return websocket.create_connection(f'{prefix}{host}:{port}', **options)
 
