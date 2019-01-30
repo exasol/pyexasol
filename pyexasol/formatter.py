@@ -75,7 +75,12 @@ class ExaFormatter(string.Formatter):
         val = str(val)
 
         if not cls.safe_ident_regexp.match(val):
-            raise ValueError(f'Value [{val}] is not a safe identifier')
+            if '.' in val:
+                parts = val.split('.')
+                raise ValueError(f"Value [{val}] is not a safe identifier. Please use tuple to pass schema names. "
+                                 f"Example: ('{parts[0]}', '{parts[1]}')")
+            else:
+                raise ValueError(f"Value [{val}] is not a safe identifier")
 
         return val
 
@@ -87,7 +92,7 @@ class ExaFormatter(string.Formatter):
         val = str(val)
 
         if not cls.safe_float_regexp.match(val):
-            raise ValueError(f'Value [{val}] is not a safe number')
+            raise ValueError(f'Value [{val}] is not a safe float')
 
         return val
 
