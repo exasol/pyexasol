@@ -9,3 +9,6 @@ build/
 .idea/
 
 .realsync*
+
+# Visual Studio Code
+.vscode
