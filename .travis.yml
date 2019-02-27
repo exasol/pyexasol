@@ -68,3 +68,4 @@ script:
     - python examples/23_snapshot_transactions.py
   # - python examples/24_script_output.py  disabled due to connectivity problems
     - python examples/25_overload.py
+    - python tests/test_concurrent_queries.py

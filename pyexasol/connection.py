@@ -1,3 +1,5 @@
+import threading
+
 import websocket
 import platform
 import getpass
@@ -78,6 +80,7 @@ class ExaConnection(object):
         :param client_name: Custom name of client application displayed in Exasol sessions tables (Default: PyEXASOL)
         :param client_version: Custom version of client application (Default: pyexasol.__version__)
         """
+        self.request_lock = threading.Lock() # to prevent concurrent requests against the database
 
         self.dsn = dsn
         self.user = user
@@ -131,6 +134,8 @@ class ExaConnection(object):
 
         self._login()
         self.get_attr()
+
+
 
     def execute(self, query, query_params=None) -> ExaStatement:
         """
@@ -402,46 +407,47 @@ class ExaConnection(object):
                 in enumerate(itertools.islice(itertools.cycle(ret['responseData']['nodes']), pool_size), start=1)]
 
     def req(self, req):
-        """ Run WebSocket request synchronously """
-        self.ws_req_count += 1
+        with self.request_lock:
+            """ Run WebSocket request synchronously """
+            self.ws_req_count += 1
 
-        # Build request
-        send_data = self._json_encode(req)
-        self.logger.debug_json(f'WebSocket request #{self.ws_req_count}', req)
+            # Build request
+            send_data = self._json_encode(req)
+            self.logger.debug_json(f'WebSocket request #{self.ws_req_count}', req)
 
-        start_ts = time.time()
+            start_ts = time.time()
 
-        # Send request, wait for response
-        try:
-            self._ws_send(send_data)
-            recv_data = self._ws_recv()
-        except websocket.WebSocketException as e:
-            raise ExaCommunicationError(self, str(e))
+            # Send request, wait for response
+            try:
+                self._ws_send(send_data)
+                recv_data = self._ws_recv()
+            except websocket.WebSocketException as e:
+                raise ExaCommunicationError(self, str(e))
 
-        self.ws_req_time = time.time() - start_ts
+            self.ws_req_time = time.time() - start_ts
 
-        # Parse response
-        ret = self._json_decode(recv_data)
-        self.logger.debug_json(f'WebSocket response #{self.ws_req_count}', ret)
+            # Parse response
+            ret = self._json_decode(recv_data)
+            self.logger.debug_json(f'WebSocket response #{self.ws_req_count}', ret)
 
-        # Updated attributes may be returned from any request
-        if 'attributes' in ret:
-            self.attr = {**self.attr, **ret['attributes']}
+            # Updated attributes may be returned from any request
+            if 'attributes' in ret:
+                self.attr = {**self.attr, **ret['attributes']}
 
-        if ret['status'] == 'ok':
-            return ret
+            if ret['status'] == 'ok':
+                return ret
 
-        if ret['status'] == 'error':
-            # Special treatment for "execute" command to prevent very long tracebacks in most common cases
-            if req.get('command') == 'execute':
-                if ret['exception']['sqlCode'] == 'R0001':
-                    cls_err = ExaQueryTimeoutError
+            if ret['status'] == 'error':
+                # Special treatment for "execute" command to prevent very long tracebacks in most common cases
+                if req.get('command') == 'execute':
+                    if ret['exception']['sqlCode'] == 'R0001':
+                        cls_err = ExaQueryTimeoutError
+                    else:
+                        cls_err = ExaQueryError
+
+                    raise cls_err(self, req['sqlText'], ret['exception']['sqlCode'], ret['exception']['text'])
                 else:
-                    cls_err = ExaQueryError
-
-                raise cls_err(self, req['sqlText'], ret['exception']['sqlCode'], ret['exception']['text'])
-            else:
-                raise ExaRequestError(self, ret['exception']['sqlCode'], ret['exception']['text'])
+                    raise ExaRequestError(self, ret['exception']['sqlCode'], ret['exception']['text'])
 
     def _login(self):
         ret = self.req({

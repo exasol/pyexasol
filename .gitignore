@@ -12,3 +12,5 @@ build/
 
 # Visual Studio Code
 .vscode
+
+venv
