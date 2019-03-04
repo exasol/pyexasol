@@ -119,7 +119,7 @@ class ExaSQLExportThread(ExaSQLThread):
         if self.params.get('with_column_names'):
             query += '\nWITH COLUMN NAMES'
 
-        self.connection.execute(query)
+        self.connection._execute_without_lock(query)
 
 
 class ExaSQLImportThread(ExaSQLThread):
@@ -162,7 +162,7 @@ class ExaSQLImportThread(ExaSQLThread):
         if self.params.get('column_delimiter'):
             query += '\nCOLUMN DELIMITER = ' + self.connection.format.quote(self.params['column_delimiter'])
 
-        self.connection.execute(query)
+        self.connection._execute_without_lock(query)
 
 
 class ExaHTTPProcess(object):

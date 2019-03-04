@@ -1,3 +1,5 @@
+import threading
+
 
 class ExaError(Exception):
     def __init__(self, connection, message):
@@ -65,3 +67,16 @@ class ExaQueryError(ExaRequestError):
 
 class ExaQueryTimeoutError(ExaQueryError):
     pass
+
+class ExaConcurrencyError(ExaError):
+    def __init__(self, connection, message):
+        self.current_thread = threading.get_ident()
+
+        super().__init__(connection, message)
+
+    def get_params_for_print(self):
+        params = super().get_params_for_print()
+        params['owning_thread'] = self.connection.owning_thread
+        params['current_thread'] = self.current_thread
+
+        return params

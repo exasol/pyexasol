@@ -12,7 +12,8 @@ from . import callback as cb
 from . import constant
 from . import utils
 
-from .exceptions import ExaQueryError, ExaQueryTimeoutError, ExaRequestError, ExaCommunicationError, ExaRuntimeError
+from .exceptions import ExaQueryError, ExaQueryTimeoutError, ExaRequestError, ExaCommunicationError, ExaRuntimeError, \
+    ExaConcurrencyError
 from .statement import ExaStatement
 from .logger import ExaLogger
 from .formatter import ExaFormatter
@@ -80,7 +81,6 @@ class ExaConnection(object):
         :param client_name: Custom name of client application displayed in Exasol sessions tables (Default: PyEXASOL)
         :param client_version: Custom version of client application (Default: pyexasol.__version__)
         """
-        self.request_lock = threading.Lock() # to prevent concurrent requests against the database
 
         self.dsn = dsn
         self.user = user
@@ -127,6 +127,10 @@ class ExaConnection(object):
         self.ws_req_time = 0
 
         self._init_logger()
+
+        self._request_lock = threading.RLock() # to prevent other threads to use this connection
+        self.acquire() # pin the the connection the the creating thread
+
         self._init_format()
         self._init_ws()
         self._init_json()
@@ -136,6 +140,23 @@ class ExaConnection(object):
         self.get_attr()
 
 
+    def acquire(self):
+        self.logger.debug("try to acquire %s", threading.get_ident())
+        if not self._request_lock.acquire(blocking=False):
+            raise ExaConcurrencyError(self, "A connection can be used only by the owning process.")
+        else:
+            self.logger.debug("acquired %s", threading.get_ident())
+            self.owning_thread = threading.get_ident()
+
+    def release(self):
+        self.logger.debug("try to release %s", threading.get_ident())
+        if not self._request_lock.acquire(blocking=False):
+            raise ExaConcurrencyError(self, "Only the owning process can release the connection.")
+        else:
+            self._request_lock.release()
+            self.owning_thread = None
+            self.logger.debug("released %s", threading.get_ident())
+
 
     def execute(self, query, query_params=None) -> ExaStatement:
         """
@@ -143,8 +164,14 @@ class ExaConnection(object):
         Return ExaStatement object
         """
         self.last_stmt = self.cls_statement(self, query, query_params)
+        return self.last_stmt
+
+
+    def _execute_without_lock(self, query, query_params=None) -> ExaStatement:
+        self.last_stmt = self.cls_statement(self, query, query_params, req_method=self._req)
 
         return self.last_stmt
+
 
     def execute_udf_output(self, query, query_params=None):
         """
@@ -218,6 +245,7 @@ class ExaConnection(object):
         return self.import_from_callback(cb.import_from_pandas, src, table, callback_params)
 
     def export_to_callback(self, callback, dst, query_or_table, query_params=None, callback_params=None, export_params=None):
+        self.acquire()
         from .http_transport import ExaSQLExportThread, ExaHTTPProcess, HTTP_EXPORT
 
         if not callable(callback):
@@ -240,7 +268,6 @@ class ExaConnection(object):
         try:
             http_proc = ExaHTTPProcess(self.ws_host, self.ws_port, compression, self.encryption, HTTP_EXPORT)
             http_proc.start()
-
             sql_thread = ExaSQLExportThread(self, http_proc.get_proxy(), compression, query_or_table, export_params)
             sql_thread.set_http_proc(http_proc)
             sql_thread.start()
@@ -250,7 +277,6 @@ class ExaConnection(object):
 
             http_proc.join()
             sql_thread.join()
-
             return result
         except Exception as e:
             # Close HTTP Server if it is still running
@@ -264,6 +290,7 @@ class ExaConnection(object):
             raise e
 
     def import_from_callback(self, callback, src, table, callback_params=None, import_params=None):
+        self.acquire()
         from .http_transport import ExaSQLImportThread, ExaHTTPProcess, HTTP_IMPORT
 
         if callback_params is None:
@@ -312,6 +339,7 @@ class ExaConnection(object):
         Get proxy strings from each child process
         Pass proxy strings to parent process and use it for export_parallel() call
         """
+        self.acquire()
         from .http_transport import ExaSQLExportThread
 
         if export_params is None:
@@ -336,6 +364,7 @@ class ExaConnection(object):
         Get proxy strings from each child process
         Pass proxy strings to parent process and use it for import_parallel() call
         """
+        self.acquire()
         from .http_transport import ExaSQLImportThread
 
         if import_params is None:
@@ -406,48 +435,57 @@ class ExaConnection(object):
         return [{'host': ip_address, 'port': self.ws_port, 'idx': idx} for idx, ip_address
                 in enumerate(itertools.islice(itertools.cycle(ret['responseData']['nodes']), pool_size), start=1)]
 
+
     def req(self, req):
-        with self.request_lock:
-            """ Run WebSocket request synchronously """
-            self.ws_req_count += 1
 
-            # Build request
-            send_data = self._json_encode(req)
-            self.logger.debug_json(f'WebSocket request #{self.ws_req_count}', req)
+        """ Run WebSocket request synchronously """
+        self.acquire()
+        return self._req(req)
 
-            start_ts = time.time()
+    def _req(self, req):
 
-            # Send request, wait for response
-            try:
-                self._ws_send(send_data)
-                recv_data = self._ws_recv()
-            except websocket.WebSocketException as e:
-                raise ExaCommunicationError(self, str(e))
+        """ Run WebSocket request synchronously """
+        self.ws_req_count += 1
 
-            self.ws_req_time = time.time() - start_ts
+        # Build request
+        send_data = self._json_encode(req)
+        self.logger.debug_json(f'WebSocket request #{self.ws_req_count}', req)
 
-            # Parse response
-            ret = self._json_decode(recv_data)
-            self.logger.debug_json(f'WebSocket response #{self.ws_req_count}', ret)
+        start_ts = time.time()
 
-            # Updated attributes may be returned from any request
-            if 'attributes' in ret:
-                self.attr = {**self.attr, **ret['attributes']}
+        # Send request, wait for response
+        try:
+            self._ws_send(send_data)
+            recv_data = self._ws_recv()
+        except websocket.WebSocketException as e:
+            raise ExaCommunicationError(self, str(e))
 
-            if ret['status'] == 'ok':
-                return ret
+        self.ws_req_time = time.time() - start_ts
 
-            if ret['status'] == 'error':
-                # Special treatment for "execute" command to prevent very long tracebacks in most common cases
-                if req.get('command') == 'execute':
-                    if ret['exception']['sqlCode'] == 'R0001':
-                        cls_err = ExaQueryTimeoutError
-                    else:
-                        cls_err = ExaQueryError
+        # Parse response
+        ret = self._json_decode(recv_data)
+        self.logger.debug_json(f'WebSocket response #{self.ws_req_count}', ret)
 
-                    raise cls_err(self, req['sqlText'], ret['exception']['sqlCode'], ret['exception']['text'])
+        # Updated attributes may be returned from any request
+        if 'attributes' in ret:
+            self.attr = {**self.attr, **ret['attributes']}
+
+        if ret['status'] == 'ok':
+            return ret
+
+        if ret['status'] == 'error':
+            # Special treatment for "execute" command to prevent very long tracebacks in most common cases
+            if req.get('command') == 'execute':
+                if ret['exception']['sqlCode'] == 'R0001':
+                    cls_err = ExaQueryTimeoutError
                 else:
-                    raise ExaRequestError(self, ret['exception']['sqlCode'], ret['exception']['text'])
+                    cls_err = ExaQueryError
+
+                raise cls_err(self, req['sqlText'], ret['exception']['sqlCode'], ret['exception']['text'])
+            else:
+                raise ExaRequestError(self, ret['exception']['sqlCode'], ret['exception']['text'])
+
+
 
     def _login(self):
         ret = self.req({
@@ -519,6 +557,7 @@ class ExaConnection(object):
         options = {
             'timeout': self.socket_timeout,
             'skip_utf8_validation': True,
+            'enable_multithread': True
         }
 
         if self.encryption:

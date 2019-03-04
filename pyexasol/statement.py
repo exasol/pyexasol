@@ -6,8 +6,11 @@ from . import constant
 
 
 class ExaStatement(object):
-    def __init__(self, connection, query, query_params=None, prepare=False, **options):
+    def __init__(self, connection, query, query_params=None, prepare=False, req_method=None, **options):
         self.connection = connection
+        self.req_method = req_method
+        if self.req_method is None:
+            self.req_method = self.connection.req
         self.query = self._format_query(query, query_params)
 
         self.fetch_dict = options.get('fetch_dict', self.connection.fetch_dict)
@@ -114,13 +117,13 @@ class ExaStatement(object):
 
     def close(self):
         if self.result_set_handle:
-            self.connection.req({
+            self.req_method({
                 'command': 'closeResultSet',
                 'resultSetHandles': [self.result_set_handle]
             })
 
         if self.statement_handle:
-            self.connection.req({
+            self.req_method({
                 'command': 'closePreparedStatement',
                 'statementHandle': self.statement_handle,
             })
@@ -136,7 +139,7 @@ class ExaStatement(object):
         return query.lstrip(' \n').rstrip(' \n;')
 
     def _execute(self):
-        ret = self.connection.req({
+        ret = self.req_method({
             'command': 'execute',
             'sqlText': self.query,
         })
@@ -145,7 +148,7 @@ class ExaStatement(object):
         self._init_result_set(ret)
 
     def _prepare(self):
-        ret = self.connection.req({
+        ret = self.req_method({
             'command': 'createPreparedStatement',
             'sqlText': self.query,
         })
@@ -182,7 +185,7 @@ class ExaStatement(object):
             raise ExaRuntimeError(self.connection, f'Unknown resultType: {self.result_type}')
 
     def _next_chunk(self):
-        ret = self.connection.req({
+        ret = self.req_method({
             'command': 'fetch',
             'resultSetHandle': self.result_set_handle,
             'startPosition': self.pos_total,
