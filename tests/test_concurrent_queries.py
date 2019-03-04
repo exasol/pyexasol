@@ -24,7 +24,7 @@ class TestConcurrentQueries(unittest.TestCase):
             result.append(str(e))
 
     def test_concurrent_executes(self):
-        C = pyexasol.connect(dsn=config.dsn, user=config.user, password=config.password, autocommit=False)
+        C = pyexasol.connect(dsn=config.dsn, user=config.user, password=config.password, autocommit=False, threadsafety=1)
         try:
             C.execute("CREATE SCHEMA IF NOT EXISTS {schema!i}", {'schema': config.schema})
             C.open_schema(config.schema)
@@ -35,7 +35,7 @@ class TestConcurrentQueries(unittest.TestCase):
     
             def run(ctx):
                 import time
-                time.sleep( 10 )
+                time.sleep( 5 )
             \
             """)
 
@@ -59,7 +59,7 @@ class TestConcurrentQueries(unittest.TestCase):
             result.append(str(e))
 
     def test_concurrent_export_pandas(self):
-        C = pyexasol.connect(dsn=config.dsn, user=config.user, password=config.password, autocommit=False)
+        C = pyexasol.connect(dsn=config.dsn, user=config.user, password=config.password, autocommit=False, threadsafety=1)
         try:
             # Create schema if not exist and open it
             C.execute("CREATE SCHEMA IF NOT EXISTS {schema!i}", {'schema': config.schema})
@@ -71,7 +71,7 @@ class TestConcurrentQueries(unittest.TestCase):
 
             def run(ctx):
                 import time
-                time.sleep( 10 )
+                time.sleep( 5 )
             \
             """)
 
@@ -94,8 +94,10 @@ class TestConcurrentQueries(unittest.TestCase):
         except Exception as e:
             result.append(str(e))
 
+
     def test_concurrent_import_pandas(self):
-        C = pyexasol.connect(dsn=config.dsn, user=config.user, password=config.password, autocommit=False)
+        C = pyexasol.connect(dsn=config.dsn, user=config.user, password=config.password, autocommit=False,
+                             threadsafety=1)
         try:
             # Create schema if not exist and open it
             C.execute("CREATE SCHEMA IF NOT EXISTS {schema!i}", {'schema': config.schema})

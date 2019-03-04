@@ -45,6 +45,7 @@ class ExaConnection(object):
             , lower_ident=False
             , json_lib='json'
             , verbose_error=True
+            , threadsafety=0
             , debug=False
             , debug_logdir=None
             , udf_output_host=None
@@ -72,6 +73,7 @@ class ExaConnection(object):
         :param lower_ident: Automatically lowercase all identifiers (table names, column names, etc.) returned from relevant functions (Default: False)
         :param json_lib: Supported values: rapidjson, ujson, json (Default: json)
         :param verbose_error: Display additional information when error occurs (Default: True)
+        :param threadsafety: The value 1, indicating that the connection is thread-safe, but only usable by the owning thread, to transfer the ownership use release() and acquire(). (Default: 0)
         :param debug: Output debug information for client-server communication and connection attempts to STDERR
         :param debug_logdir: Store debug information into files in debug_logdir instead of outputting it to STDERR
         :param udf_output_host: Specific address to bind TCPServer for UDF script output (default: 0.0.0.0)
@@ -82,6 +84,7 @@ class ExaConnection(object):
         :param client_version: Custom version of client application (Default: pyexasol.__version__)
         """
 
+        self.threadsafety = threadsafety
         self.dsn = dsn
         self.user = user
         self.password = password
@@ -128,8 +131,9 @@ class ExaConnection(object):
 
         self._init_logger()
 
-        self._request_lock = threading.RLock() # to prevent other threads to use this connection
-        self.acquire() # pin the the connection the the creating thread
+        if self.threadsafety==1:
+            self._request_lock = threading.RLock() # to prevent other threads to use this connection
+            self.acquire() # pin the the connection the the creating thread
 
         self._init_format()
         self._init_ws()
@@ -141,21 +145,23 @@ class ExaConnection(object):
 
 
     def acquire(self):
-        self.logger.debug("try to acquire %s", threading.get_ident())
-        if not self._request_lock.acquire(blocking=False):
-            raise ExaConcurrencyError(self, "A connection can be used only by the owning process.")
-        else:
-            self.logger.debug("acquired %s", threading.get_ident())
-            self.owning_thread = threading.get_ident()
+        if self.threadsafety==1:
+            self.logger.debug("try to acquire %s", threading.get_ident())
+            if not self._request_lock.acquire(blocking=False):
+                raise ExaConcurrencyError(self, "A connection can be used only by the owning process.")
+            else:
+                self.logger.debug("acquired %s", threading.get_ident())
+                self.owning_thread = threading.get_ident()
 
     def release(self):
-        self.logger.debug("try to release %s", threading.get_ident())
-        if not self._request_lock.acquire(blocking=False):
-            raise ExaConcurrencyError(self, "Only the owning process can release the connection.")
-        else:
-            self._request_lock.release()
-            self.owning_thread = None
-            self.logger.debug("released %s", threading.get_ident())
+        if self.threadsafety == 1:
+            self.logger.debug("try to release %s", threading.get_ident())
+            if not self._request_lock.acquire(blocking=False):
+                raise ExaConcurrencyError(self, "Only the owning process can release the connection.")
+            else:
+                self._request_lock.release()
+                self.owning_thread = None
+                self.logger.debug("released %s", threading.get_ident())
 
 
     def execute(self, query, query_params=None) -> ExaStatement:
@@ -169,7 +175,6 @@ class ExaConnection(object):
 
     def _execute_without_lock(self, query, query_params=None) -> ExaStatement:
         self.last_stmt = self.cls_statement(self, query, query_params, req_method=self._req)
-
         return self.last_stmt
 
 
