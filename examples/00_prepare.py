@@ -127,6 +127,13 @@ CREATE OR REPLACE TABLE edge_case
 """)
 
 C.execute("""
+CREATE OR REPLACE TABLE "camelCaseTable"
+(
+    "camelCaseColumn!" DECIMAL(18,0)
+)
+""")
+
+C.execute("""
 CREATE OR REPLACE VIEW users_view
 AS
 SELECT * FROM users

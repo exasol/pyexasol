@@ -21,6 +21,14 @@ class ExaFormatter(string.Formatter):
 
         self.default_conversion = 's'
 
+        # Set default treatment for identifiers passed as strings to relevant functions
+        if self.connection.quote_ident:
+            self.default_format_ident = self.quote_ident  # Identifiers will be quoted and escaped
+            self.default_format_ident_value = str         # Identifier values will be left unchanged
+        else:
+            self.default_format_ident = self.safe_ident   # Identifiers will only be checked for safety
+            self.default_format_ident_value = str.upper   # Identifier values will be transformed to upper-case
+
     def format_field(self, value, format_spec):
         if format_spec != '':
             raise ValueError("format_spec is disabled for ExaFormatter")
@@ -79,6 +87,9 @@ class ExaFormatter(string.Formatter):
                 parts = val.split('.')
                 raise ValueError(f"Value [{val}] is not a safe identifier. Please use tuple to pass schema names. "
                                  f"Example: ('{parts[0]}', '{parts[1]}')")
+            elif '"' in val:
+                raise ValueError(f"Value [{val}] is not a safe identifier. Please use 'quote_ident' or '!q' conversion "
+                                 f"to pass identifiers with lowercase or special characters.")
             else:
                 raise ValueError(f"Value [{val}] is not a safe identifier")
 

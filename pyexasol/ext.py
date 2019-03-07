@@ -13,7 +13,8 @@ class ExaExtension(object):
         Get information about columns of table or view (Websocket format)
         Object name may be passed as tuple to specify custom schema
         """
-        return self.get_columns_sql("SELECT * FROM {object_name!i}", {'object_name': object_name})
+        object_name = self.connection.format.default_format_ident(object_name)
+        return self.get_columns_sql(f"SELECT * FROM {object_name}")
 
     def get_columns_sql(self, query, query_params=None):
         """
@@ -32,11 +33,11 @@ class ExaExtension(object):
         Object name may be passed as tuple to specify custom schema
         """
         if isinstance(object_name, tuple):
-            schema = str(object_name[0]).upper()
-            object_name = str(object_name[1]).upper()
+            schema = self.connection.format.default_format_ident_value(object_name[0])
+            object_name = self.connection.format.default_format_ident_value(object_name[1])
         else:
             schema = self.connection.current_schema()
-            object_name = str(object_name).upper()
+            object_name = self.connection.format.default_format_ident_value(object_name)
 
         sql = """
             SELECT c.column_name, c.column_type, c.column_maxsize, c.column_num_scale,
@@ -75,9 +76,10 @@ class ExaExtension(object):
         if schema is None:
             schema = self.connection.current_schema()
         else:
-            schema = str(schema).upper()
+            schema = self.connection.format.default_format_ident_value(schema)
 
-        table_name_prefix = self.connection.format.escape_like(table_name_prefix).upper()
+        table_name_prefix = self.connection.format.default_format_ident_value(table_name_prefix)
+        table_name_prefix = self.connection.format.escape_like(table_name_prefix)
 
         sql = """
             SELECT *
@@ -109,9 +111,10 @@ class ExaExtension(object):
         if schema is None:
             schema = self.connection.current_schema()
         else:
-            schema = str(schema).upper()
+            schema = self.connection.format.default_format_ident_value(schema)
 
-        view_name_prefix = self.connection.format.escape_like(view_name_prefix).upper()
+        view_name_prefix = self.connection.format.default_format_ident_value(view_name_prefix)
+        view_name_prefix = self.connection.format.escape_like(view_name_prefix)
 
         sql = """
             SELECT *
@@ -140,7 +143,8 @@ class ExaExtension(object):
         Get information about schemas (SYS format)
         Output may be optionally filtered by schema name prefix
         """
-        schema_name_prefix = self.connection.format.escape_like(schema_name_prefix).upper()
+        schema_name_prefix = self.connection.format.default_format_ident_value(schema_name_prefix)
+        schema_name_prefix = self.connection.format.escape_like(schema_name_prefix)
 
         sql = """
             SELECT *
@@ -222,7 +226,7 @@ class ExaExtension(object):
         if query_params:
             query_or_table = self.connection.format.format(query_or_table, **query_params)
 
-        if str(query_or_table).strip().find(' ') == -1:
+        if isinstance(query_or_table, tuple) or str(query_or_table).strip().find(' ') == -1:
             columns = self.get_columns(query_or_table)
         else:
             columns = self.get_columns_sql(query_or_table)

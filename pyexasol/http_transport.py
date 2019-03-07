@@ -87,7 +87,7 @@ class ExaSQLExportThread(ExaSQLThread):
 
     def run_sql(self):
         if isinstance(self.query_or_table, tuple) or str(self.query_or_table).strip().find(' ') == -1:
-            export_source = self.connection.format.safe_ident(self.query_or_table)
+            export_source = self.connection.format.default_format_ident(self.query_or_table)
         else:
             # New lines are mandatory to handle queries with single-line comments '--'
             export_query = self.query_or_table.lstrip(" \n").rstrip(" \n;")
@@ -134,7 +134,7 @@ class ExaSQLImportThread(ExaSQLThread):
         self.params = import_params
 
     def run_sql(self):
-        table_ident = self.connection.format.safe_ident(self.table)
+        table_ident = self.connection.format.default_format_ident(self.table)
 
         query = f"IMPORT INTO {table_ident} FROM CSV\n"
         query += self.build_file_list()

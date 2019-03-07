@@ -23,6 +23,7 @@ class ExaLocalConfig(object):
         'fetch_dict': bool,
         'fetch_size_bytes': int,
         'lower_ident': bool,
+        'quote_ident': bool,
         'verbose_error': bool,
         'debug': bool,
         'udf_output_port': int,
