@@ -7,13 +7,13 @@ matrix:
         -   python: 3.6
             env: EXASOL_TAG=latest
         -   python: 3.6
-            env: EXASOL_TAG=6.0.13-d1
+            env: EXASOL_TAG=6.0.14-d1
         -   python: 3.7
             env: EXASOL_TAG=latest
             sudo: required
             dist: xenial
         -   python: 3.7
-            env: EXASOL_TAG=6.0.13-d1
+            env: EXASOL_TAG=6.0.14-d1
             sudo: required
             dist: xenial
 
@@ -68,3 +68,4 @@ script:
     - python examples/23_snapshot_transactions.py
   # - python examples/24_script_output.py  disabled due to connectivity problems
     - python examples/25_overload.py
+    - python examples/26_quote_ident.py

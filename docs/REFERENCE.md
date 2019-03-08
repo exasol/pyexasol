@@ -82,7 +82,8 @@ Opens new connection and returns `ExaConnection` object.
 | `fetch_dict` | `False` | Fetch result rows as dicts instead of tuples (Default: `False`) |
 | `fetch_mapper` | `pyexasol.exasol_mapper` | Use custom mapper function to convert Exasol values into Python objects during fetching (Default: `None`) |
 | `fetch_size_bytes` | `5 * 1024 * 1024` | Maximum size of data message for single fetch request in bytes (Default: 5Mb) |
-| `lower_ident` | `False` | Automatically lowercase all identifiers (table names, column names, etc.) returned from relevant functions (Default: `False`) |
+| `lower_ident` | `False` | Automatically lowercase identifiers (table names, column names, etc.) returned from relevant functions (Default: `False`) |
+| `quote_ident` | `False` | Add double quotes and escape identifiers passed to relevant functions (`export_*`, `import_*`, `ext.*`, etc.) (Default: `False`) |
 | `json_lib` | `rapidjson` | Supported values: [`rapidjson`](https://github.com/python-rapidjson/python-rapidjson), [`ujson`](https://github.com/esnme/ultrajson), [`json`](https://docs.python.org/3/library/json.html) (Default: `json`) |
 | `verbose_error` | `True` | Display additional information when error occurs (Default: `True`) |
 | `debug` | `False` | Output debug information for client-server communication and connection attempts to STDERR |

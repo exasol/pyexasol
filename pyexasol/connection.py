@@ -67,8 +67,8 @@ class ExaConnection(object):
         :param fetch_dict: Fetch result rows as dicts instead of tuples (Default: False)
         :param fetch_mapper: Use custom mapper function to convert Exasol values into Python objects during fetching (Default: None)
         :param fetch_size_bytes: Maximum size of data message for single fetch request in bytes (Default: 5Mb)
-        :param lower_ident: Automatically lowercase all identifiers (table names, column names, etc.) returned from relevant functions (Default: False)
-        :param quote_ident: Quote all identifiers passed to relevant functions (export_*, import_*, ext.*, etc.) (Default: False)
+        :param lower_ident: Automatically lowercase identifiers (table names, column names, etc.) returned from relevant functions (Default: False)
+        :param quote_ident: Add double quotes and escape identifiers passed to relevant functions (export_*, import_*, ext.*, etc.) (Default: False)
         :param json_lib: Supported values: rapidjson, ujson, json (Default: json)
         :param verbose_error: Display additional information when error occurs (Default: True)
         :param debug: Output debug information for client-server communication and connection attempts to STDERR
