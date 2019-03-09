@@ -27,6 +27,7 @@ This page contains complete reference of PyEXASOL public API.
   - [get_nodes()](#get_nodes)
   - [session_id()](#session_id)
   - [last_statement()](#last_statement)
+  - [abort_query()](#abort_query)
   - [close()](#exaconnectionclose)
 - [ExaStatement](#exastatement)
   - [\_\_iter\_\_()](#__iter__)
@@ -301,6 +302,19 @@ Returns `SESSION_ID` of current session.
 Get last `ExaStatement` object. May be useful while working with `export_*` and `import_*` functions normally returning result of callback function instead of statement object.
 
 Returns instance of `ExaStatement`.
+
+### abort_query()
+Abort running query.
+
+This function should be called from a separate thread and has no response. Response should be checked in the main thread which started execution of query. Please check [27_abort_query](/examples/27_abort_query.py) example.
+
+There are three possible outcomes of calling this function:
+
+1) Query is aborted normally, connection remains active;
+2) Query was stuck in a state which cannot be aborted, so Exasol has to terminate connection;
+3) Query might be finished successfully before abort call had a chance to take effect;
+
+Please note that you may terminate the whole Python process to close WebSocket connection. It will stop running query automatically.
 
 ### ExaConnection.close()
 Closes connection to database.

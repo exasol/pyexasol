@@ -69,3 +69,5 @@ script:
   # - python examples/24_script_output.py  disabled due to connectivity problems
     - python examples/25_overload.py
     - python examples/26_quote_ident.py
+    - python examples/27_abort_query.py
+    - python examples/28_thread_safety.py

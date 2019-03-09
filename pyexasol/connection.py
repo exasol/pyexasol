@@ -5,12 +5,13 @@ import time
 import zlib
 import ssl
 import itertools
+import threading
 
 from . import callback as cb
 from . import constant
 from . import utils
 
-from .exceptions import ExaQueryError, ExaQueryTimeoutError, ExaRequestError, ExaCommunicationError, ExaRuntimeError
+from .exceptions import *
 from .statement import ExaStatement
 from .logger import ExaLogger
 from .formatter import ExaFormatter
@@ -24,6 +25,16 @@ class ExaConnection(object):
     cls_formatter = ExaFormatter
     cls_logger = ExaLogger
     cls_extension = ExaExtension
+
+    """
+    Threads may share the module, but not connections
+    One connection may be used by different threads, just not at the same time
+
+    .abort_query() is an exception, it is meant to be called from another thread
+
+    It is advisable to use multiprocessing instead of threading and create new connection in each sub-process
+    """
+    threadsafety = 1
 
     def __init__(self
             , dsn=None
@@ -125,6 +136,8 @@ class ExaConnection(object):
         self.ws_port = None
         self.ws_req_count = 0
         self.ws_req_time = 0
+
+        self._req_lock = threading.Lock()
 
         self._init_logger()
         self._init_format()
@@ -405,27 +418,36 @@ class ExaConnection(object):
                 in enumerate(itertools.islice(itertools.cycle(ret['responseData']['nodes']), pool_size), start=1)]
 
     def req(self, req):
-        """ Run WebSocket request synchronously """
+        """ Send WebSocket request and wait for response """
         self.ws_req_count += 1
+        local_req_count = self.ws_req_count
 
         # Build request
         send_data = self._json_encode(req)
-        self.logger.debug_json(f'WebSocket request #{self.ws_req_count}', req)
+        self.logger.debug_json(f'WebSocket request #{local_req_count}', req)
 
-        start_ts = time.time()
+        # Prevent and discourage attempts to use connection object from another thread simultaneously
+        if not self._req_lock.acquire(blocking=False):
+            self.logger.debug(f'[WebSocket request #{local_req_count} WAS NOT SENT]')
+            raise ExaConcurrencyError(self, 'Connection cannot be shared between multiple threads '
+                                            'sending requests simultaneously')
 
         # Send request, wait for response
         try:
+            start_ts = time.time()
+
             self._ws_send(send_data)
             recv_data = self._ws_recv()
+
+            self.ws_req_time = time.time() - start_ts
         except websocket.WebSocketException as e:
             raise ExaCommunicationError(self, str(e))
-
-        self.ws_req_time = time.time() - start_ts
+        finally:
+            self._req_lock.release()
 
         # Parse response
         ret = self._json_decode(recv_data)
-        self.logger.debug_json(f'WebSocket response #{self.ws_req_count}', ret)
+        self.logger.debug_json(f'WebSocket response #{local_req_count}', ret)
 
         # Updated attributes may be returned from any request
         if 'attributes' in ret:
@@ -439,12 +461,37 @@ class ExaConnection(object):
             if req.get('command') == 'execute':
                 if ret['exception']['sqlCode'] == 'R0001':
                     cls_err = ExaQueryTimeoutError
+                elif ret['exception']['sqlCode'] == 'R0003':
+                    cls_err = ExaQueryAbortError
                 else:
                     cls_err = ExaQueryError
 
                 raise cls_err(self, req['sqlText'], ret['exception']['sqlCode'], ret['exception']['text'])
             else:
                 raise ExaRequestError(self, ret['exception']['sqlCode'], ret['exception']['text'])
+
+    def abort_query(self):
+        """
+        Abort running query
+        This function should be called from a separate thread and has no response
+        Response should be checked in the main thread which started execution of query
+
+        There are three possible outcomes of calling this function:
+        1) Query is aborted normally, connection remains active
+        2) Query was stuck in a state which cannot be aborted, so Exasol has to terminate connection
+        3) Query might be finished successfully before abort call had a chance to take effect
+        """
+        req = {
+            'command': 'abortQuery'
+        }
+
+        send_data = self._json_encode(req)
+        self.logger.debug_json('WebSocket abort request', req)
+
+        try:
+            self._ws_send(send_data)
+        except websocket.WebSocketException as e:
+            raise ExaCommunicationError(self, str(e))
 
     def _login(self):
         ret = self.req({
@@ -516,6 +563,7 @@ class ExaConnection(object):
         options = {
             'timeout': self.socket_timeout,
             'skip_utf8_validation': True,
+            'enable_multithread': True,     # It is necessary to protect abort_query() calls
         }
 
         if self.encryption:

@@ -6,9 +6,11 @@ __all__ = [
     'exasol_mapper',
     'ExaError',
     'ExaCommunicationError',
+    'ExaConcurrencyError',
     'ExaRuntimeError',
     'ExaRequestError',
     'ExaQueryError',
+    'ExaQueryAbortError',
     'ExaQueryTimeoutError',
     'ExaConnection',
     'ExaStatement',
@@ -22,8 +24,7 @@ __all__ = [
 ]
 
 from .version import __version__
-from .exceptions import ExaError, ExaCommunicationError, ExaRuntimeError, ExaRequestError, \
-                        ExaQueryError, ExaQueryTimeoutError
+from .exceptions import *
 from .connection import ExaConnection
 from .statement import ExaStatement
 from .formatter import ExaFormatter

@@ -42,3 +42,6 @@ python examples/01_basic.py
 - [23_snapshot_transactions.py](/examples/23_snapshot_transactions.py) - snapshot transactions mode, which may help with metadata locking problems;
 - [24_script_output.py](/examples/24_script_output.py) - run query with UDF script and capture output (may not work on local laptop);
 - [25_overload.py](/examples/25_overload.py) - how to extend core PyEXASOL classes to add custom logic;
+- [26_quote_ident.py](/examples/26_quote_ident.py) - how to enable quoted identifiers for `import_*`, `export_*` and other relevant functions;
+- [27_abort_query.py](/examples/27_abort_query.py) - how to abort running query using separate thread;
+- [28_thread_safety.py](/examples/28_thread_safety.py) - built-in protection from accessing connection object from multiple threads simultaneously;

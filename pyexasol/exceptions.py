@@ -65,3 +65,11 @@ class ExaQueryError(ExaRequestError):
 
 class ExaQueryTimeoutError(ExaQueryError):
     pass
+
+
+class ExaQueryAbortError(ExaQueryError):
+    pass
+
+
+class ExaConcurrencyError(ExaError):
+    pass
