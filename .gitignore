@@ -1,5 +1,7 @@
 __pycache__/
 *.py[cod]
+*.mypy_cach/
+
 
 dist/
 build/
