@@ -1,6 +1,6 @@
 __pycache__/
 *.py[cod]
-*.mypy_cach/
+*.mypy_cache/
 
 
 dist/
