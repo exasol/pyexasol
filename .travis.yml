@@ -39,9 +39,10 @@ install:
     - docker inspect exasol  # just for the log
 
     # install pyexasol with extras
-    - pip install -e .[pandas,encrypt,ujson,rapidjson]
+    - pip install -e .[pandas,encrypt,ujson,rapidjson,dev]
 
 script:
+    - pytest pyexasol/
     - python examples/00_prepare.py
     - python examples/01_basic.py
     - python examples/02_fetch_tuple.py
