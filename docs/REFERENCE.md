@@ -227,7 +227,7 @@ This function is part of [parallel HTTP transport API](/docs/HTTP_TRANSPORT_PARA
 
 | Argument | Example | Description |
 | --- | --- | --- |
-| `http_proxy_list` | `['27.0.1.10:5362', '27.0.1.11:7262']` | List of proxy `host:port` strings |
+| `exa_proxy_list` | `['27.0.1.10:5362', '27.0.1.11:7262']` | List of proxy `host:port` strings |
 | `query_or_table` | `SELECT * FROM table` `table` `(schema, table)` | SQL query or table for export |
 | `query_params` | `{'table': 'users', 'col1':'bar'}` | (optional) Values for SQL query placeholders |
 | `export_params` | `{'with_column_names': True}` | (optional) Custom parameters for EXPORT query |
@@ -275,7 +275,7 @@ This function is part of [parallel HTTP transport API](/docs/HTTP_TRANSPORT_PARA
 
 | Argument | Example | Description |
 | --- | --- | --- |
-| `http_proxy_list` | `['27.0.1.10:5362', '27.0.1.11:7262']` | List of proxy `host:port` strings |
+| `exa_proxy_list` | `['27.0.1.10:5362', '27.0.1.11:7262']` | List of proxy `host:port` strings |
 | `table` | `table` `(schema, table)` | Destination table for import |
 | `import_params` | `{'column_separator': ','}` | (optional) Custom parameters for IMPORT query |
 

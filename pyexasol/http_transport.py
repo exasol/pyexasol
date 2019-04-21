@@ -1,9 +1,8 @@
 import struct
-import zlib
-import sys
-
-import threading
 import subprocess
+import sys
+import threading
+import zlib
 
 from socketserver import TCPServer
 from http.server import BaseHTTPRequestHandler
@@ -18,9 +17,9 @@ class ExaSQLThread(threading.Thread):
     """
     Thread class which re-throws any Exception to parent thread
     """
-    def __init__(self, connection, http_proxy, compression):
+    def __init__(self, connection, exa_proxy_list, compression):
         self.connection = connection
-        self.http_proxy = http_proxy if isinstance(http_proxy, list) else [http_proxy]
+        self.exa_proxy_list = exa_proxy_list if isinstance(exa_proxy_list, list) else [exa_proxy_list]
         self.compression = compression
 
         self.params = {}
@@ -68,7 +67,7 @@ class ExaSQLThread(threading.Thread):
         else:
             prefix = 'http://'
 
-        for i, proxy in enumerate(self.http_proxy):
+        for i, proxy in enumerate(self.exa_proxy_list):
             files.append(f"AT '{prefix}{proxy}' FILE '{str(i).rjust(3, '0')}.{ext}'")
 
         return '\n'.join(files)
@@ -79,8 +78,8 @@ class ExaSQLExportThread(ExaSQLThread):
     Build and run IMPORT query into separate thread
     Main thread is busy outputting data in callbacks
     """
-    def __init__(self, connection, http_proxy, compression, query_or_table, export_params):
-        super().__init__(connection, http_proxy, compression)
+    def __init__(self, connection, exa_proxy_list, compression, query_or_table, export_params):
+        super().__init__(connection, exa_proxy_list, compression)
 
         self.query_or_table = query_or_table
         self.params = export_params

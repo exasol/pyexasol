@@ -1,5 +1,8 @@
 
 class ExaError(Exception):
+    """
+    Generic PyEXASOL error, holds basic information about connection
+    """
     def __init__(self, connection, message):
         self.connection = connection
         self.message = message
@@ -33,10 +36,16 @@ class ExaRuntimeError(ExaError):
 
 
 class ExaCommunicationError(ExaError):
+    """
+    WebSocket communication failure after connection was established
+    """
     pass
 
 
 class ExaRequestError(ExaError):
+    """
+    Generic error returned from Exasol server after making a request
+    """
     def __init__(self, connection, code, message):
         self.code = code
 
@@ -49,7 +58,17 @@ class ExaRequestError(ExaError):
         return params
 
 
+class ExaAuthError(ExaRequestError):
+    """
+    Connection was established successfully, but authorization failed
+    """
+    pass
+
+
 class ExaQueryError(ExaRequestError):
+    """
+    Error returned from Exasol server specifically for SQL query request (EXECUTE)
+    """
     def __init__(self, connection, query, code, message):
         self.query = query
 
@@ -64,12 +83,42 @@ class ExaQueryError(ExaRequestError):
 
 
 class ExaQueryTimeoutError(ExaQueryError):
+    """
+    Specific error for SQL query reaching QUERY_TIMEOUT and being terminated by server
+    """
     pass
 
 
 class ExaQueryAbortError(ExaQueryError):
+    """
+    Specific error for SQL query being aborted with .abort_query() call or KILL STATEMENT
+    """
+    pass
+
+
+class ExaConnectionError(ExaError):
+    """
+    Generic error for connection failures
+    """
+    pass
+
+
+class ExaConnectionDsnError(ExaConnectionError):
+    """
+    Specific error for connection failure related to DSN (connection string) issues
+    """
+    pass
+
+
+class ExaConnectionFailedError(ExaConnectionError):
+    """
+    Specific error related to establishing WebSocket communication
+    """
     pass
 
 
 class ExaConcurrencyError(ExaError):
+    """
+    Detected an attempt to run multiple queries in multiple threads at the same time
+    """
     pass

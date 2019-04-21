@@ -39,7 +39,7 @@ install:
     - docker inspect exasol  # just for the log
 
     # install pyexasol with extras
-    - pip install -e .[pandas,encrypt,ujson,rapidjson]
+    - pip install -e .[pandas,encrypt,ujson,rapidjson,pproxy]
 
 script:
     - python examples/00_prepare.py
@@ -71,3 +71,5 @@ script:
     - python examples/26_quote_ident.py
     - python examples/27_abort_query.py
     - python examples/28_thread_safety.py
+    - python examples/29_dsn_parsing.py
+    - python examples/30_http_proxy.py

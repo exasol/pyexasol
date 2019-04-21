@@ -55,6 +55,7 @@ Please read "Best practices" manual page to learn how to use PyEXASOL with maxim
         'encrypt': ['pyopenssl>=17.5.0'],
         'ujson': ['ujson'],
         'rapidjson': ['python-rapidjson'],
+        'pproxy': ['pproxy'],
     },
 
     python_requires='>=3.6',

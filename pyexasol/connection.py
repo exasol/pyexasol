@@ -1,11 +1,15 @@
-import websocket
-import platform
 import getpass
-import time
-import zlib
-import ssl
 import itertools
+import platform
+import random
+import re
+import socket
+import ssl
+import time
 import threading
+import urllib.parse
+import websocket
+import zlib
 
 from . import callback as cb
 from . import constant
@@ -317,7 +321,7 @@ class ExaConnection(object):
 
             raise e
 
-    def export_parallel(self, http_proxy_list, query_or_table, query_params=None, export_params=None):
+    def export_parallel(self, exa_proxy_list, query_or_table, query_params=None, export_params=None):
         """
         Init HTTP transport in child processes first using pyexasol.http_transport()
         Get proxy strings from each child process
@@ -338,10 +342,10 @@ class ExaConnection(object):
 
         # There is no need to run separate thread here, all work is performed in child processes
         # We simply reuse thread class to keep logic in one place
-        sql_thread = ExaSQLExportThread(self, http_proxy_list, compression, query_or_table, export_params)
+        sql_thread = ExaSQLExportThread(self, exa_proxy_list, compression, query_or_table, export_params)
         sql_thread.run_sql()
 
-    def import_parallel(self, http_proxy_list, table, import_params=None):
+    def import_parallel(self, exa_proxy_list, table, import_params=None):
         """
         Init HTTP transport in child processes first using pyexasol.http_transport()
         Get proxy strings from each child process
@@ -359,7 +363,7 @@ class ExaConnection(object):
 
         # There is no need to run separate thread here, all work is performed in child processes
         # We simply reuse thread class to keep logic in one place
-        sql_thread = ExaSQLImportThread(self, http_proxy_list, compression, table, import_params)
+        sql_thread = ExaSQLImportThread(self, exa_proxy_list, compression, table, import_params)
         sql_thread.run_sql()
 
     def session_id(self):
@@ -467,6 +471,8 @@ class ExaConnection(object):
                     cls_err = ExaQueryError
 
                 raise cls_err(self, req['sqlText'], ret['exception']['sqlCode'], ret['exception']['text'])
+            elif req.get('username') is not None:
+                raise ExaAuthError(self, ret['exception']['sqlCode'], ret['exception']['text'])
             else:
                 raise ExaRequestError(self, ret['exception']['sqlCode'], ret['exception']['text'])
 
@@ -527,77 +533,132 @@ class ExaConnection(object):
         Connection redundancy is supported
         Specific Exasol host is randomly selected for every connection attempt
         """
-        if hasattr(self, '_ws'):
-            pass
-
-        try:
-            host_port_list = utils.get_host_port_list_from_dsn(self.dsn, shuffle=True)
-        except OSError as err:
-            raise ExaCommunicationError(self, f'Could not resolve IP address list from DSN [{self.dsn}], error: {err}')
-
+        host_port_list = self._process_dsn(self.dsn)
         failed_attempts = 0
 
-        for i in host_port_list:
-            try:
-                self.logger.debug(f'Connection attempt [{i[0]}:{i[1]}]')
-                self._ws = self._ws_connect(i[0], i[1])
+        ws_prefix = 'wss://' if self.encryption else 'ws://'
+        ws_options = self._get_ws_options()
 
-                self.ws_host = i[0]
-                self.ws_port = i[1]
+        for host, port in host_port_list:
+            self.logger.debug(f"Connection attempt [{host}:{port}]")
+
+            try:
+                self._ws = websocket.create_connection(f'{ws_prefix}{host}:{port}', **ws_options)
+
+                self.ws_host = host
+                self.ws_port = port
 
                 self._ws_send = self._ws.send
                 self._ws_recv = self._ws.recv
 
                 return
             except Exception as e:
-                self.logger.debug(f'Failed to connect [{i[0]}:{i[1]}]')
+                self.logger.debug(f'Failed to connect [{host}:{port}]')
 
                 failed_attempts += 1
 
                 if failed_attempts == len(host_port_list):
-                    raise ExaCommunicationError(self, 'Could not connect to Exasol: ' + str(e))
+                    raise ExaConnectionFailedError(self, 'Could not connect to Exasol: ' + str(e))
 
-    def _ws_connect(self, host, port):
-        """ Open WebSocket connection """
-        prefix = 'ws://'
+    def _get_ws_options(self):
         options = {
             'timeout': self.socket_timeout,
             'skip_utf8_validation': True,
-            'enable_multithread': True,     # It is necessary to protect abort_query() calls
+            'enable_multithread': True,     # Extra lock is necessary to protect abort_query() calls
         }
 
         if self.encryption:
-            prefix = 'wss://'
-
             # Exasol does not check validity of certificates, so PyEXASOL follows this behaviour
             options['sslopt'] = {
                 'cert_reqs': ssl.CERT_NONE
             }
 
         if self.http_proxy:
-            proxy_host, proxy_port, proxy_username, proxy_password = utils.parse_http_proxy(self.http_proxy)
+            proxy_components = urllib.parse.urlparse(self.http_proxy)
 
-            if proxy_host is None:
+            if proxy_components.hostname is None:
                 raise ValueError("Could not parse http_proxy")
 
-            options['http_proxy_host'] = proxy_host
-            options['http_proxy_port'] = proxy_port
-            options['http_proxy_auth'] = (proxy_username, proxy_password)
+            options['http_proxy_host'] = proxy_components.hostname
+            options['http_proxy_port'] = proxy_components.port
+            options['http_proxy_auth'] = (proxy_components.username, proxy_components.password)
 
-        return websocket.create_connection(f'{prefix}{host}:{port}', **options)
+        return options
+
+    def _process_dsn(self, dsn):
+        """
+        Parse DSN, expand ranges and resolve IP addresses for all hosts
+        Return list of host:port tuples in random order
+        Randomness is useful to guarantee good distribution of workload across all nodes
+        """
+        if len(dsn.strip()) == 0:
+            raise ExaConnectionDsnError(self, 'Connection string is empty')
+
+        current_port = None
+        result = []
+
+        dsn_re = re.compile(r'^(?P<host_prefix>.+?)'
+                            # Optional range (e.g. myxasol1..4.com)
+                            r'(?:(?P<range_start>\d+)\.\.(?P<range_end>\d+)(?P<host_suffix>.*?))?'
+                            # Optional port (e.g. myexasol1..4.com:8564)
+                            r'(?::(?P<port>\d+)?)?$'
+                            )
+
+        # Port is applied backwards, so we iterate the whole list backwards to avoid second loop
+        for part in reversed(dsn.split(',')):
+            if len(part) == 0:
+                continue
+
+            m = dsn_re.search(part)
+
+            if not m:
+                raise ExaConnectionDsnError(self, f'Could not parse connection string part [{part}]')
+
+            # Optional port was specified
+            if m.group('port'):
+                current_port = int(m.group('port'))
+
+            # If current port is still empty, use default port
+            if current_port is None:
+                current_port = constant.DEFAULT_PORT
+
+            # Hostname or IP range was specified, expand it
+            if m.group('range_start'):
+                if int(m.group('range_start')) > int(m.group('range_end')):
+                    raise ExaConnectionDsnError(self,
+                                                f'Connection string part [{part}] contains an invalid range, '
+                                                f'lower bound is higher than upper bound')
+
+                for i in range(int(m.group('range_start')), int(m.group('range_end')) + 1):
+                    host = f"{m.group('host_prefix')}{i}{m.group('host_suffix')}"
+                    result.extend(self._resolve_host(host, current_port))
+            # Just a single hostname or single IP address
+            else:
+                result.extend(self._resolve_host(m.group('host_prefix'), current_port))
+
+        random.shuffle(result)
+
+        return result
+
+    def _resolve_host(self, host, port):
+        """
+        Resolve all IP addresses for host and add port
+        It also checks that all hosts mentioned in DSN can be resolved
+        """
+        try:
+            hostname, aliaslist, ipaddrlist = socket.gethostbyname_ex(host)
+        except OSError:
+            raise ExaConnectionDsnError(self, f'Could not resolve IP address of host [{host}] '
+                                              f'derived from connection string')
+
+        return [(ipaddr, port) for ipaddr in ipaddrlist]
 
     def _init_logger(self):
-        if hasattr(self, 'logger'):
-            pass
-
         self.logger = self.cls_logger(self, constant.DRIVER_NAME)
         self.logger.setLevel('DEBUG' if self.debug else 'WARNING')
         self.logger.add_default_handler()
 
     def _init_format(self):
-        if hasattr(self, 'format'):
-            pass
-
         self.format = self.cls_formatter(self)
 
     def _init_json(self):
@@ -626,9 +687,6 @@ class ExaConnection(object):
             raise ValueError(f'Unsupported json library [{self.json_lib}]')
 
     def _init_ext(self):
-        if hasattr(self, 'ext'):
-            pass
-
         self.ext = self.cls_extension(self)
 
     def __repr__(self):

@@ -1,16 +1,10 @@
-import re
-import random
-import rsa
 import base64
-import pathlib
-import tempfile
-import socket
-import ssl
 import os
+import pathlib
+import rsa
+import ssl
 import sys
-import urllib.parse
-
-from . import constant
+import tempfile
 
 
 def get_output_dir_for_statement(output_dir, session_id, stmt_id):
@@ -26,51 +20,6 @@ def get_output_dir_for_statement(output_dir, session_id, stmt_id):
 def encrypt_password(public_key_pem, password):
     pk = rsa.PublicKey.load_pkcs1(public_key_pem.encode())
     return base64.b64encode(rsa.encrypt(password.encode(), pk)).decode()
-
-
-def get_host_port_list_from_dsn(dsn, shuffle=False):
-    """
-    Parse dsn, expand it and resolve all IP addresses
-    Return list of host:port tuples in natural order (default) or in randomly shuffled order
-    Random is useful to guarantee good distribution of workload across all nodes
-    """
-    idx = dsn.find(':')
-
-    if idx > -1:
-        port = int(dsn[idx+1:])
-        dsn = dsn[:idx]
-    else:
-        port = constant.DEFAULT_PORT
-
-    result = []
-    regexp = re.compile(r'^(.+?)(\d+)\.\.(\d+)(.*)$')
-
-    for host in dsn.split(','):
-        match = regexp.search(host)
-
-        if match:
-            for i in range(int(match.group(2)), int(match.group(3)) + 1):
-                host = match.group(1) + str(i) + match.group(4)
-                result.extend(get_host_port_ip_address_list(host, port))
-        else:
-            result.extend(get_host_port_ip_address_list(host, port))
-
-    if shuffle:
-        random.shuffle(result)
-    else:
-        result.sort()
-
-    return result
-
-
-def get_host_port_ip_address_list(host, port):
-    hostname, aliaslist, ipaddrlist = socket.gethostbyname_ex(host)
-    result = list()
-
-    for ipaddr in ipaddrlist:
-        result.append((ipaddr, port))
-
-    return result
 
 
 def generate_adhoc_ssl_context():
@@ -127,9 +76,3 @@ def get_pid():
     Some special code to handle Windows might be added later to this function
     """
     return os.getpid()
-
-
-def parse_http_proxy(http_proxy):
-    parts = urllib.parse.urlparse(http_proxy)
-
-    return parts.hostname, parts.port, parts.username, parts.password

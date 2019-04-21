@@ -12,13 +12,13 @@ printer = pprint.PrettyPrinter(indent=4, width=140)
 # Bad dsn
 try:
     C = pyexasol.connect(dsn='123' + config.dsn, user=config.user, password=config.password, schema=config.schema)
-except pyexasol.ExaCommunicationError as e:
+except pyexasol.ExaConnectionError as e:
     print(e)
 
 # Bad user \ password
 try:
     C = pyexasol.connect(dsn=config.dsn, user=config.user, password='123' + config.password, schema=config.schema)
-except pyexasol.ExaRequestError as e:
+except pyexasol.ExaAuthError as e:
     print(e)
 
 C = pyexasol.connect(dsn=config.dsn, user=config.user, password=config.password, schema=config.schema,

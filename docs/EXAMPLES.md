@@ -45,3 +45,5 @@ python examples/01_basic.py
 - [26_quote_ident.py](/examples/26_quote_ident.py) - how to enable quoted identifiers for `import_*`, `export_*` and other relevant functions;
 - [27_abort_query.py](/examples/27_abort_query.py) - how to abort running query using separate thread;
 - [28_thread_safety.py](/examples/28_thread_safety.py) - built-in protection from accessing connection object from multiple threads simultaneously;
+- [29_dsn_parsing.py](/examples/29_dsn_parsing.py) - parsing of complex connection strings and catching relevant exceptions;
+- [30_http_proxy.py](/examples/30_http_proxy.py) - connection via HTTP proxy;
