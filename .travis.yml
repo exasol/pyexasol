@@ -10,14 +10,10 @@ matrix:
             env: EXASOL_TAG=6.0.14-d1
         -   python: 3.7
             env: EXASOL_TAG=latest
-            sudo: required
             dist: xenial
         -   python: 3.7
             env: EXASOL_TAG=6.0.14-d1
-            sudo: required
             dist: xenial
-
-sudo: required
 
 services:
   - docker
