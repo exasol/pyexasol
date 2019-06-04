@@ -108,3 +108,21 @@ stmt = C.last_statement()
 print(f'IMPORTED {stmt.rowcount()} rows in {stmt.execution_time}s')
 
 file.close()
+
+
+# Custom encoding for IMPORT and EXPORT
+file = tempfile.TemporaryFile()
+
+C.export_to_file(file, 'users', export_params={'encoding': 'WINDOWS-1251'})
+
+file.seek(0)
+print(file.read(30))
+file.seek(0)
+
+# Import file with custom encoding
+C.import_from_file(file, 'users_copy', import_params={'encoding': 'WINDOWS-1251'})
+
+stmt = C.last_statement()
+print(f'IMPORTED {stmt.rowcount()} rows in {stmt.execution_time}s')
+
+file.close()
