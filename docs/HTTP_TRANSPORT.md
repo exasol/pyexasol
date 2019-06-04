@@ -90,6 +90,7 @@ Please refer to Exasol User Manual to know more about `IMPORT` / `EXPORT` parame
 | `column_separator` | `,` | Column separator for CSV |
 | `column_delimiter` | `"` | Column delimiter for CSV (quotting) |
 | `row_separator` | `LF` | Row separator for CSV (line-endings) |
+| `encoding` | `UTF8` | File encoding |
 | `with_column_names` | `True` | Add column names as first line, useful for Pandas |
 | `null` | `\N` | Custom `NULL` value |
 | `delimit` | `AUTO` | Delimiter mode: `AUTO`, `ALWAYS`, `NONE` |
@@ -101,6 +102,7 @@ Please refer to Exasol User Manual to know more about `IMPORT` / `EXPORT` parame
 | `column_separator` | `,` | Column separator for CSV |
 | `column_delimiter` | `"` | Column delimiter for CSV (quotting) |
 | `row_separator` | `LF` | Row separator for CSV (line-endings) |
+| `encoding` | `UTF8` | File encoding |
 | `skip` | `1` | How many first rows to skip, useful for skipping header |
 | `null` | `\N` | Custom `NULL` value |
 | `trim` | `TRIM` | Trim mode: `TRIM`, `RTRIM`, `LTRIM` |

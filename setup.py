@@ -12,8 +12,7 @@ setup(
     long_description="""
 Exasol python driver with low overhead, fast HTTP transport and compression.
 
-Main features
-------
+Main features:
 
 -  Based on WebSocket protocol;
 -  Optimized for minimum overhead;
@@ -26,6 +25,7 @@ Driver does not use ODBC. Driver does not strictly follow DB-API 2.0 in favor of
 
 Please read "Best practices" manual page to learn how to use PyEXASOL with maximum efficiency.
     """,
+    long_description_content_type='text/markdown',
     url='https://github.com/badoo/pyexasol',
     author='Vitaly Markov',
     author_email='wild.desu@gmail.com',

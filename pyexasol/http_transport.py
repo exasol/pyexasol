@@ -103,6 +103,9 @@ class ExaSQLExportThread(ExaSQLThread):
 
             query += '\n DELIMIT = ' + delimit
 
+        if self.params.get('encoding'):
+            query += '\nENCODING = ' + self.connection.format.quote(self.params['encoding'])
+
         if self.params.get('null'):
             query += '\nNULL = ' + self.connection.format.quote(self.params['null'])
 
@@ -137,6 +140,9 @@ class ExaSQLImportThread(ExaSQLThread):
 
         query = f"IMPORT INTO {table_ident} FROM CSV\n"
         query += self.build_file_list()
+
+        if self.params.get('encoding'):
+            query += '\nENCODING = ' + self.connection.format.quote(self.params['encoding'])
 
         if self.params.get('null'):
             query += '\nNULL ' + self.connection.format.quote(self.params['null'])
