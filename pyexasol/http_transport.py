@@ -72,6 +72,12 @@ class ExaSQLThread(threading.Thread):
 
         return '\n'.join(files)
 
+    def build_columns_list(self):
+        if 'columns' not in self.params:
+            return ''
+
+        return f"({','.join([self.connection.format.default_format_ident(c) for c in self.params['columns']])})"
+
 
 class ExaSQLExportThread(ExaSQLThread):
     """
@@ -92,7 +98,10 @@ class ExaSQLExportThread(ExaSQLThread):
             export_query = self.query_or_table.lstrip(" \n").rstrip(" \n;")
             export_source = f'(\n{export_query}\n)'
 
-        query = f"EXPORT {export_source} INTO CSV\n"
+            if self.params.get('columns'):
+                raise ValueError("Export option 'columns' is not compatible with SQL query export source")
+
+        query = f"EXPORT {export_source}{self.build_columns_list()} INTO CSV\n"
         query += self.build_file_list()
 
         if self.params.get('delimit'):
@@ -138,7 +147,7 @@ class ExaSQLImportThread(ExaSQLThread):
     def run_sql(self):
         table_ident = self.connection.format.default_format_ident(self.table)
 
-        query = f"IMPORT INTO {table_ident} FROM CSV\n"
+        query = f"IMPORT INTO {table_ident}{self.build_columns_list()} FROM CSV\n"
         query += self.build_file_list()
 
         if self.params.get('encoding'):

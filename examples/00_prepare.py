@@ -109,6 +109,8 @@ CREATE OR REPLACE TABLE tab2
 C.execute("CREATE OR REPLACE TABLE users_copy LIKE users")
 C.execute("CREATE OR REPLACE TABLE payments_copy LIKE payments")
 
+C.execute("CREATE OR REPLACE TABLE users_copy_reordered LIKE users(register_dt, status, user_id, user_name)")
+
 C.import_from_iterable(users_generator(), 'users')
 C.import_from_iterable(payments_generator(), 'payments')
 

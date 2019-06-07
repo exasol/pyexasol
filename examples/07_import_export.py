@@ -95,7 +95,7 @@ file = tempfile.TemporaryFile()
 C.export_to_file(file, 'users', export_params={'with_column_names': True, 'format': 'gz'})
 
 file.seek(0)
-print(file.read(30))
+print(file.read(100))
 file.seek(0)
 
 stmt = C.last_statement()
@@ -116,11 +116,28 @@ file = tempfile.TemporaryFile()
 C.export_to_file(file, 'users', export_params={'encoding': 'WINDOWS-1251'})
 
 file.seek(0)
-print(file.read(30))
+print(file.read(100))
 file.seek(0)
 
 # Import file with custom encoding
 C.import_from_file(file, 'users_copy', import_params={'encoding': 'WINDOWS-1251'})
+
+stmt = C.last_statement()
+print(f'IMPORTED {stmt.rowcount()} rows in {stmt.execution_time}s')
+
+file.close()
+
+# Custom columns list for EXPORT
+file = tempfile.TemporaryFile()
+
+C.export_to_file(file, 'users', export_params={'columns': ['register_dt', 'user_id', 'status', 'user_name']})
+
+file.seek(0)
+print(file.read(100))
+file.seek(0)
+
+# Custom columns list for IMPORT
+C.import_from_file(file, 'users_copy_reordered', import_params={'columns': ['register_dt', 'user_id', 'status', 'user_name']})
 
 stmt = C.last_statement()
 print(f'IMPORTED {stmt.rowcount()} rows in {stmt.execution_time}s')
