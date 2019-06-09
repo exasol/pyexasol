@@ -217,20 +217,25 @@ class ExaConnection(object):
     def export_to_file(self, dst, query_or_table, query_params=None, export_params=None):
         return self.export_to_callback(cb.export_to_file, dst, query_or_table, query_params, None, export_params)
 
-    def export_to_list(self, query_or_table, query_params=None):
-        return self.export_to_callback(cb.export_to_list, None, query_or_table, query_params)
+    def export_to_list(self, query_or_table, query_params=None, export_params=None):
+        return self.export_to_callback(cb.export_to_list, None, query_or_table, query_params, None, export_params)
 
-    def export_to_pandas(self, query_or_table, query_params=None, callback_params=None):
-        return self.export_to_callback(cb.export_to_pandas, None, query_or_table, query_params, callback_params, {'with_column_names': True})
+    def export_to_pandas(self, query_or_table, query_params=None, callback_params=None, export_params=None):
+        if not export_params:
+            export_params = {}
+
+        export_params['with_column_names'] = True
+
+        return self.export_to_callback(cb.export_to_pandas, None, query_or_table, query_params, callback_params, export_params)
 
     def import_from_file(self, src, table, import_params=None):
         return self.import_from_callback(cb.import_from_file, src, table, None, import_params)
 
-    def import_from_iterable(self, src, table):
-        return self.import_from_callback(cb.import_from_iterable, src, table)
+    def import_from_iterable(self, src, table, import_params=None):
+        return self.import_from_callback(cb.import_from_iterable, src, table, None, import_params)
 
-    def import_from_pandas(self, src, table, callback_params=None):
-        return self.import_from_callback(cb.import_from_pandas, src, table, callback_params)
+    def import_from_pandas(self, src, table, callback_params=None, import_params=None):
+        return self.import_from_callback(cb.import_from_pandas, src, table, callback_params, import_params)
 
     def export_to_callback(self, callback, dst, query_or_table, query_params=None, callback_params=None, export_params=None):
         from .http_transport import ExaSQLExportThread, ExaHTTPProcess, HTTP_EXPORT

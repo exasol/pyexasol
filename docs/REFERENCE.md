@@ -196,6 +196,7 @@ Exports big amount of data from Exasol to basic Python `list` using fast HTTP tr
 | --- | --- | --- |
 | `query_or_table` | `SELECT * FROM table` `table` `(schema, table)` | SQL query or table for export |
 | `query_params` | `{'table': 'users', 'col1':'bar'}` | (optional) Values for SQL query placeholders |
+| `export_params` | `{'encoding': 'LATIN1'}` | (optional) Custom parameters for EXPORT query |
 
 Returns `list` of `tuples`
 
@@ -206,6 +207,7 @@ Exports big amount of data from Exasol to `pandas.DataFrame`. This function may 
 | --- | --- | --- |
 | `query_or_table` | `SELECT * FROM table` `table` `(schema, table)` | SQL query or table for export |
 | `query_params` | `{'table': 'users', 'col1':'bar'}` | (optional) Values for SQL query placeholders |
+| `export_params` | `{'encoding': 'LATIN1'}` | (optional) Custom parameters for EXPORT query |
 
 Returns instance of `pandas.DataFrame`
 
@@ -250,6 +252,7 @@ Imports big amount of data from `iterable` Python object to Exasol. Iterator mus
 | --- | --- | --- |
 | `src` | `[(123, 'a')]` | Source object implementing `__iter__` |
 | `table` | `my_table` `(my_schema, my_table)` | Destination table for IMPORT |
+| `import_params` | `{'column_separator: ','}` | (optional) Custom parameters for IMPORT query |
 
 ### import_from_pandas()
 Imports big amount of data from `pandas.DataFrame` to Exasol.
@@ -258,6 +261,7 @@ Imports big amount of data from `pandas.DataFrame` to Exasol.
 | --- | --- | --- |
 | `src` | `[(123, 'a')]` | Source `pandas.DataFrame` instance |
 | `table` | `my_table` `(my_schema, my_table)` | Destination table for IMPORT |
+| `import_params` | `{'column_separator: ','}` | (optional) Custom parameters for IMPORT query |
 
 ### import_from_callback()
 Imports big amount of data from user-defined callback function to Exasol.
