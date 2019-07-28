@@ -7,12 +7,17 @@ matrix:
         -   python: 3.6
             env: EXASOL_TAG=latest
         -   python: 3.6
-            env: EXASOL_TAG=6.0.14-d1
+            env: EXASOL_TAG=6.1.5-d1
+        -   python: 3.6
+            env: EXASOL_TAG=6.0.16-d1
         -   python: 3.7
             env: EXASOL_TAG=latest
             dist: xenial
         -   python: 3.7
-            env: EXASOL_TAG=6.0.14-d1
+            env: EXASOL_TAG=6.1.5-d1
+            dist: xenial
+        -   python: 3.7
+            env: EXASOL_TAG=6.0.16-d1
             dist: xenial
 
 services:
