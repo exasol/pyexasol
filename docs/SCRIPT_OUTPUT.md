@@ -57,4 +57,4 @@ You are responsible for deletion of log files.
 
 Unlike [HTTP Transport](/docs/HTTP_TRANSPORT.md), script output TCP server is real server. It receives incoming connections from Exasol nodes. Those connections might be blocked by firewalls and various network policies. You are responsible for making host with TCP server available for incoming connections.
 
-If you want to bind TCP server to specific address and port, you may use `--host`, `--port` arguments for debug mode and `udf_output_host`, `udf_output_port` connection options for script mode.
+If you want to bind TCP server to specific address and port, you may use `--host`, `--port` arguments for debug mode and `udf_output_bind_address`, `udf_output_connect_address` connection options for script mode.

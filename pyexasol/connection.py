@@ -60,8 +60,8 @@ class ExaConnection(object):
             , verbose_error=True
             , debug=False
             , debug_logdir=None
-            , udf_output_host=None
-            , udf_output_port=None
+            , udf_output_bind_address=None
+            , udf_output_connect_address=None
             , udf_output_dir=None
             , http_proxy=None
             , client_name=None
@@ -88,8 +88,8 @@ class ExaConnection(object):
         :param verbose_error: Display additional information when error occurs (Default: True)
         :param debug: Output debug information for client-server communication and connection attempts to STDERR
         :param debug_logdir: Store debug information into files in debug_logdir instead of outputting it to STDERR
-        :param udf_output_host: Specific address to bind TCPServer for UDF script output (default: 0.0.0.0)
-        :param udf_output_port: Specific port to bind TCPServer for UDF script output (default: random port)
+        :param udf_output_bind_address: Specific server_address to bind TCP server for UDF script output (default: ('', 0))
+        :param udf_output_connect_address: Specific SCRIPT_OUTPUT_ADDRESS value to connect from Exasol to UDF script output server (default: inherited from TCP server)
         :param udf_output_dir: Directory to store captured UDF script output logs, split by <session_id>_<statement_id>/<vm_num>
         :param http_proxy: HTTP proxy string in Linux http_proxy format (default: None)
         :param client_name: Custom name of client application displayed in Exasol sessions tables (Default: PyEXASOL)
@@ -120,8 +120,8 @@ class ExaConnection(object):
         self.debug = debug
         self.debug_logdir = debug_logdir
 
-        self.udf_output_host = udf_output_host
-        self.udf_output_port = udf_output_port
+        self.udf_output_bind_address = udf_output_bind_address
+        self.udf_output_connect_address = udf_output_connect_address
         self.udf_output_dir = udf_output_dir
         self.udf_output_count = 0
 
@@ -172,10 +172,15 @@ class ExaConnection(object):
         self.udf_output_count += 1
         output_dir = utils.get_output_dir_for_statement(self.udf_output_dir, self.session_id(), self.udf_output_count)
 
-        script_output = ExaScriptOutputProcess(self.udf_output_host, self.udf_output_host, output_dir)
+        script_output = ExaScriptOutputProcess(self.udf_output_bind_address[0], self.udf_output_bind_address[1], output_dir)
         script_output.start()
 
-        address = script_output.get_output_address()
+        # This option is useful to get around complex network setups, like Exasol running in Docker containers
+        if self.udf_output_connect_address:
+            address = f"{self.udf_output_connect_address[0]}:{self.udf_output_connect_address[1]}"
+        else:
+            address = script_output.get_output_address()
+
         self.execute("ALTER SESSION SET SCRIPT_OUTPUT_ADDRESS = {address}", {'address': address})
 
         try:

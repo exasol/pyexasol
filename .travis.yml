@@ -30,19 +30,13 @@ env:
     - EXAHOST="127.0.0.1:8563"
 
 before_install:
-    - docker run --detach --name exasol --privileged -p 127.0.0.1:8563:8888 --stop-timeout 120 exasol/docker-db:$EXASOL_TAG
+    - docker run --detach --name exasol --privileged -p 127.0.0.1:8563:8888 exasol/docker-db:$EXASOL_TAG
 
 install:
-    # sleep a bit to ensure that Docker is running (can be refactored to be more intelligent in future)
-    - sleep 120
-    - docker logs exasol
-    - docker exec -it exasol dwad_client list  # just for the log
-    - docker inspect exasol  # just for the log
-
-    # install pyexasol with extras
     - pip install -e .[pandas,encrypt,ujson,rapidjson,pproxy]
 
 script:
+    - python examples/_check_connection.py
     - python examples/00_prepare.py
     - python examples/01_basic.py
     - python examples/02_fetch_tuple.py
@@ -67,7 +61,7 @@ script:
     - python examples/21_parallel_export_import.py
     - python examples/22_profiling.py
     - python examples/23_snapshot_transactions.py
-  # - python examples/24_script_output.py  disabled due to connectivity problems
+    - python examples/24_script_output.py
     - python examples/25_overload.py
     - python examples/26_quote_ident.py
     - python examples/27_abort_query.py

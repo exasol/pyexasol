@@ -43,6 +43,7 @@ class ExaScriptOutputProcess(object):
     def __init__(self, host, port, output_dir=None, initial_ppid=None):
         self.host = host
         self.port = port
+
         self.output_dir = output_dir
         self.initial_ppid = initial_ppid
 
