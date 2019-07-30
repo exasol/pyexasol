@@ -33,10 +33,12 @@ before_install:
     - docker run --detach --name exasol --privileged -p 127.0.0.1:8563:8888 exasol/docker-db:$EXASOL_TAG
 
 install:
+    - sleep 120
+    - docker logs exasol
+
     - pip install -e .[pandas,encrypt,ujson,rapidjson,pproxy]
 
 script:
-    - python examples/_check_connection.py
     - python examples/00_prepare.py
     - python examples/01_basic.py
     - python examples/02_fetch_tuple.py
