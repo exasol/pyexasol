@@ -3,7 +3,7 @@ import time
 import _config as config
 
 check_timeout = 180
-bucket_fs_extra_timeout = 20
+bucket_fs_extra_timeout = 30
 start_ts = time.time()
 
 while True:
