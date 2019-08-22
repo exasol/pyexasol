@@ -399,6 +399,8 @@ class ExaConnection(object):
         })
 
         self.attr = ret['attributes']
+        self.autocommit = self.attr['autocommit']
+        self.query_timeout = self.attr['query_timeout']
 
     def set_attr(self, new_attr):
         self.req({
