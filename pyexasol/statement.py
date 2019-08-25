@@ -12,6 +12,7 @@ class ExaStatement(object):
 
         self.fetch_dict = options.get('fetch_dict', self.connection.options['fetch_dict'])
         self.fetch_mapper = options.get('fetch_mapper', self.connection.options['fetch_mapper'])
+        self.named_tuples = options.get('named_tuples', self.connection.options['named_tuples'])
         self.fetch_size_bytes = options.get('fetch_size_bytes', self.connection.options['fetch_size_bytes'])
         self.lower_ident = options.get('lower_ident', self.connection.options['lower_ident'])
 
@@ -63,6 +64,10 @@ class ExaStatement(object):
 
         if self.fetch_mapper:
             row = tuple(map(self.fetch_mapper, row, self.col_types))
+
+        if self.named_tuples:
+            Row = collections.namedtuple('Row', self.col_names, rename=True)
+            row = Row(*row)
 
         if self.fetch_dict:
             row = dict(zip(self.col_names, row))

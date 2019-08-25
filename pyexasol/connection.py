@@ -53,6 +53,7 @@ class ExaConnection(object):
             , encryption=False
             , fetch_dict=False
             , fetch_mapper=None
+            , named_tuples=False
             , fetch_size_bytes=constant.DEFAULT_FETCH_SIZE_BYTES
             , lower_ident=False
             , quote_ident=False
@@ -81,6 +82,7 @@ class ExaConnection(object):
         :param encryption: Use SSL to encrypt client-server communications for WebSocket and HTTP transport (Default: False)
         :param fetch_dict: Fetch result rows as dicts instead of tuples (Default: False)
         :param fetch_mapper: Use custom mapper function to convert Exasol values into Python objects during fetching (Default: None)
+        :param named_tuples: return rows as namedtuples with column names instead of plain tuples (Default: False)
         :param fetch_size_bytes: Maximum size of data message for single fetch request in bytes (Default: 5Mb)
         :param lower_ident: Automatically lowercase identifiers (table names, column names, etc.) returned from relevant functions (Default: False)
         :param quote_ident: Add double quotes and escape identifiers passed to relevant functions (export_*, import_*, ext.*, etc.) (Default: False)
@@ -111,6 +113,7 @@ class ExaConnection(object):
 
             'fetch_dict': fetch_dict,
             'fetch_mapper': fetch_mapper,
+            'named_tuples': named_tuples,
             'fetch_size_bytes': fetch_size_bytes,
             'lower_ident': lower_ident,
             'quote_ident': quote_ident,
