@@ -37,5 +37,5 @@ printer.pprint(cur.description)
 printer.pprint(cur.rowcount)
 
 # Autocommit is False by default
-print(C.autocommit)
+print(C.attr['autocommit'])
 C.commit()
