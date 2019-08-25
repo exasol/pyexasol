@@ -18,7 +18,7 @@ class ExaError(Exception):
         }
 
     def __str__(self):
-        if not self.connection.verbose_error:
+        if not self.connection.options['verbose_error']:
             return self.message
 
         params = self.get_params_for_print()
