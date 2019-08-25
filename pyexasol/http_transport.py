@@ -62,7 +62,7 @@ class ExaSQLThread(threading.Thread):
         else:
             ext = 'gz' if self.compression else 'csv'
 
-        if self.connection.encryption:
+        if self.connection.options['encryption']:
             prefix = 'https://'
         else:
             prefix = 'http://'

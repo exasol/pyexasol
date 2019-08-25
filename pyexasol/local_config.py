@@ -7,7 +7,7 @@ class ExaLocalConfig(object):
     Parse local config file
     Prepare arguments for pyexasol.connect() method
 
-    Arguments accepting functions and class names are not supported
+    Arguments accepting functions class names and tuples are not supported
     You may pass such arguments directly in code using **kwargs
     """
 

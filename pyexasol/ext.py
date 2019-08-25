@@ -94,8 +94,8 @@ class ExaExtension(object):
 
         for r in st:
             res.append({
-                'table_name': r['table_name'].lower() if self.connection.lower_ident else r['table_name'],
-                'table_schema': r['table_schema'].lower() if self.connection.lower_ident else r['table_schema'],
+                'table_name': r['table_name'].lower() if self.connection.options['lower_ident'] else r['table_name'],
+                'table_schema': r['table_schema'].lower() if self.connection.options['lower_ident'] else r['table_schema'],
                 'table_is_virtual': r['table_is_virtual'],
                 'table_has_distribution_key': r['table_has_distribution_key'],
                 'table_comment': r['table_comment'],
@@ -129,9 +129,9 @@ class ExaExtension(object):
 
         for r in st:
             res.append({
-                'view_name': r['view_name'].lower() if self.connection.lower_ident else r['view_name'],
-                'view_schema': r['view_schema'].lower() if self.connection.lower_ident else r['view_schema'],
-                'scope_schema': r['scope_schema'].lower() if self.connection.lower_ident else r['scope_schema'],
+                'view_name': r['view_name'].lower() if self.connection.options['lower_ident'] else r['view_name'],
+                'view_schema': r['view_schema'].lower() if self.connection.options['lower_ident'] else r['view_schema'],
+                'scope_schema': r['scope_schema'].lower() if self.connection.options['lower_ident'] else r['scope_schema'],
                 'view_text': r['view_text'],
                 'view_comment': r['view_comment'],
             })
@@ -158,8 +158,8 @@ class ExaExtension(object):
 
         for r in st:
             res.append({
-                'schema_name': r['schema_name'].lower() if self.connection.lower_ident else r['schema_name'],
-                'schema_owner': r['schema_owner'].lower() if self.connection.lower_ident else r['schema_owner'],
+                'schema_name': r['schema_name'].lower() if self.connection.options['lower_ident'] else r['schema_name'],
+                'schema_owner': r['schema_owner'].lower() if self.connection.options['lower_ident'] else r['schema_owner'],
                 'schema_is_virtual': r['schema_is_virtual'],
                 'schema_comment': r['schema_comment'],
             })

@@ -10,10 +10,10 @@ class ExaStatement(object):
         self.connection = connection
         self.query = self._format_query(query, query_params)
 
-        self.fetch_dict = options.get('fetch_dict', self.connection.fetch_dict)
-        self.fetch_mapper = options.get('fetch_mapper', self.connection.fetch_mapper)
-        self.fetch_size_bytes = options.get('fetch_size_bytes', self.connection.fetch_size_bytes)
-        self.lower_ident = options.get('lower_ident', self.connection.lower_ident)
+        self.fetch_dict = options.get('fetch_dict', self.connection.options['fetch_dict'])
+        self.fetch_mapper = options.get('fetch_mapper', self.connection.options['fetch_mapper'])
+        self.fetch_size_bytes = options.get('fetch_size_bytes', self.connection.options['fetch_size_bytes'])
+        self.lower_ident = options.get('lower_ident', self.connection.options['lower_ident'])
 
         self.data_zip = zip()
         self.col_names = []

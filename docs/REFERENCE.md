@@ -29,6 +29,9 @@ This page contains complete reference of PyEXASOL public API.
   - [last_statement()](#last_statement)
   - [abort_query()](#abort_query)
   - [close()](#exaconnectionclose)
+  - [.attr](#attr)
+  - [.login_info](#login_info)
+  - [.options](#options)
 - [ExaStatement](#exastatement)
   - [\_\_iter\_\_()](#__iter__)
   - [fetchone()](#fetchone)
@@ -40,6 +43,7 @@ This page contains complete reference of PyEXASOL public API.
   - [columns()](#columns)
   - [column_names()](#column_names)
   - [close()](#exastatementclose)
+  - [.execution_time](#execution_time)
 - [ExaFormatter](#exaformatter)
   - [format()](#format)
   - [escape()](#escape)
@@ -300,7 +304,7 @@ If `pool_size` is bigger than number of nodes, list will wrap around and nodes w
 Exasol shuffles list for every connection.
 
 ### session_id()
-Returns `SESSION_ID` of current session.
+Returns unique `SESSION_ID` of the current session.
 
 ### last_statement()
 Get last `ExaStatement` object. May be useful while working with `export_*` and `import_*` functions normally returning result of callback function instead of statement object.
@@ -323,6 +327,34 @@ Please note that you may terminate the whole Python process to close WebSocket c
 ### ExaConnection.close()
 Closes connection to database.
 
+### .attr
+
+Read-only `dict` of attributes of current connection. The most notable attributes are:
+
+| Attribute | Description |
+| --- |  --- |
+| `autocommit` | Current state of autocommit (enabled / disabled) |
+| `queryTimeout` | Current state of query timeout measured in seconds (0 = disabled) |
+| `snapshotTransactionsEnabled` | Current state of [snapshot transactions](/docs/SNAPSHOT_TRANSACTIONS.md) mode (enabled / disabled) |
+| `timezone` | Timezone of the current session |
+
+Full list of possible attributes is available [here](https://github.com/exasol/websocket-api/blob/master/WebsocketAPI.md#attributes-session-and-database-properties).
+
+### .login_info
+
+Read-only `dict` of login information returned by second response of LOGIN command. The most notable info key are:
+
+| Info | Description |
+| --- |  --- |
+| `sessionId` | Unique `SESSION_ID` of current connection. It is advisable to use [`session_id()`](#session_id) wrapper function to get this info |
+| `releaseVersion` | Version of Exasol (e.g. `6.0.15`) |
+| `databaseName` | Name of Exasol instance |
+
+Full list of possible keys is available [here](https://github.com/exasol/websocket-api/blob/master/WebsocketAPI.md#login-establishes-a-connection-to-exasol). Please scroll down a bit to find "responseData".
+
+### .options
+
+Read-only `dict` of arguments passed to [`connect()'](#connect) function and used to create ExaConnection object.
 
 ## ExaStatement
 
@@ -401,6 +433,10 @@ Returns `list` of column names.
 
 ### ExaStatement.close()
 Closes result set handle if it was opened. You won't be able to fetch next chunk of large dataset after calling this function, but no other side-effects.
+
+### .execution_time
+
+Execution time of SQL statement. It is measured by wall-clock time of WebSocket request, so real execution time is a bit faster. Returns `float`.
 
 ## ExaFormatter
 

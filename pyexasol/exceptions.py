@@ -12,8 +12,8 @@ class ExaError(Exception):
     def get_params_for_print(self):
         return {
             'message': self.message,
-            'dsn': self.connection.dsn,
-            'user': self.connection.user,
+            'dsn': self.connection.options['dsn'],
+            'user': self.connection.options['user'],
             'schema': self.connection.current_schema(),
         }
 

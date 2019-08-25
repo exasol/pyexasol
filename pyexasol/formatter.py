@@ -22,7 +22,7 @@ class ExaFormatter(string.Formatter):
         self.default_conversion = 's'
 
         # Set default treatment for identifiers passed as strings to relevant functions
-        if self.connection.quote_ident:
+        if self.connection.options['quote_ident']:
             self.default_format_ident = self.quote_ident  # Identifiers will be quoted and escaped
             self.default_format_ident_value = str         # Identifier values will be left unchanged
         else:
@@ -59,7 +59,7 @@ class ExaFormatter(string.Formatter):
 
     @classmethod
     def escape_like(cls, val):
-        return cls.escape(val).replace('\\', '\\\\').replace('%', '\%').replace('_', '\_')
+        return cls.escape(val).replace('\\', '\\\\').replace('%', r'\%').replace('_', r'\_')
 
     @classmethod
     def quote(cls, val):

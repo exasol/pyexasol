@@ -96,43 +96,43 @@ class ExaConnection(object):
         :param client_version: Custom version of client application (Default: pyexasol.__version__)
         """
 
-        self.dsn = dsn
-        self.user = user
-        self.password = password
-        self.schema = schema
-        self.autocommit = autocommit
-        self.snapshot_transactions = snapshot_transactions
+        self.options = {
+            'dsn': dsn,
+            'user': user,
+            'password': password,
+            'schema': schema,
+            'autocommit': autocommit,
+            'snapshot_transactions': snapshot_transactions,
 
-        self.socket_timeout = socket_timeout
-        self.query_timeout = query_timeout
-        self.compression = compression
-        self.encryption = encryption
+            'socket_timeout': socket_timeout,
+            'query_timeout': query_timeout,
+            'compression': compression,
+            'encryption': encryption,
 
-        self.fetch_dict = fetch_dict
-        self.fetch_mapper = fetch_mapper
-        self.fetch_size_bytes = fetch_size_bytes
-        self.lower_ident = lower_ident
-        self.quote_ident = quote_ident
+            'fetch_dict': fetch_dict,
+            'fetch_mapper': fetch_mapper,
+            'fetch_size_bytes': fetch_size_bytes,
+            'lower_ident': lower_ident,
+            'quote_ident': quote_ident,
 
-        self.json_lib = json_lib
+            'json_lib': json_lib,
 
-        self.verbose_error = verbose_error
-        self.debug = debug
-        self.debug_logdir = debug_logdir
+            'verbose_error': verbose_error,
+            'debug': debug,
+            'debug_logdir': debug_logdir,
 
-        self.udf_output_bind_address = udf_output_bind_address
-        self.udf_output_connect_address = udf_output_connect_address
-        self.udf_output_dir = udf_output_dir
-        self.udf_output_count = 0
+            'udf_output_bind_address': udf_output_bind_address,
+            'udf_output_connect_address': udf_output_connect_address,
+            'udf_output_dir': udf_output_dir,
 
-        self.http_proxy = http_proxy
+            'http_proxy': http_proxy,
 
-        self.client_name = client_name
-        self.client_version = client_version
+            'client_name': client_name,
+            'client_version': client_version
+        }
 
-        self.meta = {}
+        self.login_info = {}
         self.attr = {}
-        self.last_stmt = None
         self.stmt_count = 0
         self.is_closed = False
 
@@ -140,6 +140,9 @@ class ExaConnection(object):
         self.ws_port = None
         self.ws_req_count = 0
         self.ws_req_time = 0
+
+        self._last_stmt = None
+        self._udf_output_count = 0
 
         self._req_lock = threading.Lock()
 
@@ -157,9 +160,9 @@ class ExaConnection(object):
         Execute SQL query with optional query formatting parameters
         Return ExaStatement object
         """
-        self.last_stmt = self.cls_statement(self, query, query_params)
+        self._last_stmt = self.cls_statement(self, query, query_params)
 
-        return self.last_stmt
+        return self._last_stmt
 
     def execute_udf_output(self, query, query_params=None):
         """
@@ -169,15 +172,19 @@ class ExaConnection(object):
         Exasol should be able to open connection to the host where current script is running
         """
 
-        self.udf_output_count += 1
-        output_dir = utils.get_output_dir_for_statement(self.udf_output_dir, self.session_id(), self.udf_output_count)
+        self._udf_output_count += 1
+        output_dir = utils.get_output_dir_for_statement(self.options['udf_output_dir'],
+                                                        self.session_id(),
+                                                        self._udf_output_count)
 
-        script_output = ExaScriptOutputProcess(self.udf_output_bind_address[0], self.udf_output_bind_address[1], output_dir)
+        script_output = ExaScriptOutputProcess(self.options['udf_output_bind_address'][0],
+                                               self.options['udf_output_bind_address'][1],
+                                               output_dir)
         script_output.start()
 
         # This option is useful to get around complex network setups, like Exasol running in Docker containers
-        if self.udf_output_connect_address:
-            address = f"{self.udf_output_connect_address[0]}:{self.udf_output_connect_address[1]}"
+        if self.options['udf_output_connect_address']:
+            address = f"{self.options['udf_output_connect_address'][0]}:{self.options['udf_output_connect_address'][1]}"
         else:
             address = script_output.get_output_address()
 
@@ -257,13 +264,13 @@ class ExaConnection(object):
         if 'format' in export_params:
             compression = False
         else:
-            compression = self.compression
+            compression = self.options['compression']
 
         if query_params is not None:
             query_or_table = self.format.format(query_or_table, **query_params)
 
         try:
-            http_proc = ExaHTTPProcess(self.ws_host, self.ws_port, compression, self.encryption, HTTP_EXPORT)
+            http_proc = ExaHTTPProcess(self.ws_host, self.ws_port, compression, self.options['encryption'], HTTP_EXPORT)
             http_proc.start()
 
             sql_thread = ExaSQLExportThread(self, http_proc.get_proxy(), compression, query_or_table, export_params)
@@ -300,13 +307,13 @@ class ExaConnection(object):
         if 'format' in import_params:
             compression = False
         else:
-            compression = self.compression
+            compression = self.options['compression']
 
         if not callable(callback):
             raise ValueError('Callback argument is not callable')
 
         try:
-            http_proc = ExaHTTPProcess(self.ws_host, self.ws_port, compression, self.encryption, HTTP_IMPORT)
+            http_proc = ExaHTTPProcess(self.ws_host, self.ws_port, compression, self.options['encryption'], HTTP_IMPORT)
             http_proc.start()
 
             sql_thread = ExaSQLImportThread(self, http_proc.get_proxy(), compression, table, import_params)
@@ -345,7 +352,7 @@ class ExaConnection(object):
         if 'format' in export_params:
             compression = False
         else:
-            compression = self.compression
+            compression = self.options['compression']
 
         if query_params is not None:
             query_or_table = self.format.format(query_or_table, **query_params)
@@ -369,7 +376,7 @@ class ExaConnection(object):
         if 'format' in import_params:
             compression = False
         else:
-            compression = self.compression
+            compression = self.options['compression']
 
         # There is no need to run separate thread here, all work is performed in child processes
         # We simply reuse thread class to keep logic in one place
@@ -377,13 +384,13 @@ class ExaConnection(object):
         sql_thread.run_sql()
 
     def session_id(self):
-        return str(self.meta.get('sessionId', ''))
+        return str(self.login_info.get('sessionId', ''))
 
     def last_statement(self) -> ExaStatement:
-        if self.last_stmt is None:
+        if self._last_stmt is None:
             raise ExaRuntimeError(self, 'Last statement not found')
 
-        return self.last_stmt
+        return self._last_stmt
 
     def close(self):
         if not self.is_closed:
@@ -515,25 +522,25 @@ class ExaConnection(object):
             'protocolVersion': 1,
         })
 
-        self.meta = self.req({
-            'username': self.user,
-            'password': utils.encrypt_password(ret['responseData']['publicKeyPem'], self.password),
+        self.login_info = self.req({
+            'username': self.options['user'],
+            'password': utils.encrypt_password(ret['responseData']['publicKeyPem'], self.options['password']),
             'driverName': f'{constant.DRIVER_NAME} {__version__}',
-            'clientName': self.client_name if self.client_name else constant.DRIVER_NAME,
-            'clientVersion': self.client_version if self.client_version else __version__,
+            'clientName': self.options['client_name'] if self.options['client_name'] else constant.DRIVER_NAME,
+            'clientVersion': self.options['client_version'] if self.options['client_version'] else __version__,
             'clientOs': platform.platform(),
             'clientOsUsername': getpass.getuser(),
             'clientRuntime': f'Python {platform.python_version()}',
-            'useCompression': self.compression,
+            'useCompression': self.options['compression'],
             'attributes': {
-                'currentSchema': str(self.schema),
-                'autocommit': self.autocommit,
-                'queryTimeout': self.query_timeout,
-                'snapshotTransactionsEnabled': self.snapshot_transactions,
+                'currentSchema': str(self.options['schema']),
+                'autocommit': self.options['autocommit'],
+                'queryTimeout': self.options['query_timeout'],
+                'snapshotTransactionsEnabled': self.options['snapshot_transactions'],
             }
         })['responseData']
 
-        if self.compression:
+        if self.options['compression']:
             self._ws_send = lambda x: self._ws.send_binary(zlib.compress(x.encode(), 1))
             self._ws_recv = lambda: zlib.decompress(self._ws.recv())
 
@@ -543,10 +550,10 @@ class ExaConnection(object):
         Connection redundancy is supported
         Specific Exasol host is randomly selected for every connection attempt
         """
-        host_port_list = self._process_dsn(self.dsn)
+        host_port_list = self._process_dsn(self.options['dsn'])
         failed_attempts = 0
 
-        ws_prefix = 'wss://' if self.encryption else 'ws://'
+        ws_prefix = 'wss://' if self.options['encryption'] else 'ws://'
         ws_options = self._get_ws_options()
 
         for host, port in host_port_list:
@@ -572,19 +579,19 @@ class ExaConnection(object):
 
     def _get_ws_options(self):
         options = {
-            'timeout': self.socket_timeout,
+            'timeout': self.options['socket_timeout'],
             'skip_utf8_validation': True,
             'enable_multithread': True,     # Extra lock is necessary to protect abort_query() calls
         }
 
-        if self.encryption:
+        if self.options['encryption']:
             # Exasol does not check validity of certificates, so PyEXASOL follows this behaviour
             options['sslopt'] = {
                 'cert_reqs': ssl.CERT_NONE
             }
 
-        if self.http_proxy:
-            proxy_components = urllib.parse.urlparse(self.http_proxy)
+        if self.options['http_proxy']:
+            proxy_components = urllib.parse.urlparse(self.options['http_proxy'])
 
             if proxy_components.hostname is None:
                 raise ValueError("Could not parse http_proxy")
@@ -665,7 +672,7 @@ class ExaConnection(object):
 
     def _init_logger(self):
         self.logger = self.cls_logger(self, constant.DRIVER_NAME)
-        self.logger.setLevel('DEBUG' if self.debug else 'WARNING')
+        self.logger.setLevel('DEBUG' if self.options['debug'] else 'WARNING')
         self.logger.add_default_handler()
 
     def _init_format(self):
@@ -673,31 +680,32 @@ class ExaConnection(object):
 
     def _init_json(self):
         # rapidjson is well maintained library with acceptable performance, good choice
-        if self.json_lib == 'rapidjson':
+        if self.options['json_lib'] == 'rapidjson':
             import rapidjson
 
             self._json_encode = lambda x: rapidjson.dumps(x, number_mode=rapidjson.NM_NATIVE)
             self._json_decode = lambda x: rapidjson.loads(x, number_mode=rapidjson.NM_NATIVE)
 
         # ujson provides best performance in our tests, but it is abandoned by maintainers
-        elif self.json_lib == 'ujson':
+        elif self.options['json_lib'] == 'ujson':
             import ujson
 
             self._json_encode = ujson.dumps
             self._json_decode = ujson.loads
 
         # json from Python stdlib, very safe choice, but slow
-        elif self.json_lib == 'json':
+        elif self.options['json_lib'] == 'json':
             import json
 
             self._json_encode = json.dumps
             self._json_decode = json.loads
 
         else:
-            raise ValueError(f'Unsupported json library [{self.json_lib}]')
+            raise ValueError(f"Unsupported json library [{self.options['json_lib']}]")
 
     def _init_ext(self):
         self.ext = self.cls_extension(self)
 
     def __repr__(self):
-        return f'<{self.__class__.__name__} session_id={self.session_id()} dsn={self.dsn} user={self.user}>'
+        return f"<{self.__class__.__name__} session_id={self.session_id()}" \
+               f" dsn={self.options['dsn']} user={self.options['user']}>"

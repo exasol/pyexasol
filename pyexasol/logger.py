@@ -12,9 +12,9 @@ class ExaLogger(logging.Logger):
         super().__init__(name, level)
 
     def add_default_handler(self):
-        if self.connection.debug:
-            if self.connection.debug_logdir:
-                logdir = pathlib.Path(self.connection.debug_logdir)
+        if self.connection.options['debug']:
+            if self.connection.options['debug_logdir']:
+                logdir = pathlib.Path(self.connection.options['debug_logdir'])
 
                 if not logdir.is_dir():
                     raise ExaRuntimeError(self.connection, 'Not a directory: ' + str(logdir))

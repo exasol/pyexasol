@@ -20,6 +20,7 @@ You may expect significant performance improvement over existing ODBC / JDBC sol
 - [UDF scripts output](/docs/SCRIPT_OUTPUT.md)
 - [DB-API 2.0 compatibility](/docs/DBAPI_COMPAT.md)
 - [Optional dependencies](/docs/DEPENDENCIES.md)
+- [Changelog](/CHANGELOG.md)
 
 
 ## PyEXASOL main concepts
