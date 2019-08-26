@@ -8,6 +8,8 @@ In this example we add print_session_id() custom method to all objects
 import pyexasol
 import _config as config
 
+import collections
+
 import pprint
 printer = pprint.PrettyPrinter(indent=4, width=140)
 
@@ -57,5 +59,29 @@ stmt.print_session_id()
 C.format.print_session_id()
 C.logger.print_session_id()
 C.ext.print_session_id()
+
+C.close()
+
+print("Return result rows as named tuples")
+
+
+class NamedTupleExaStatement(pyexasol.ExaStatement):
+    def __next__(self):
+        row = super().__next__()
+        return self.cls_row(*row)
+
+    def _init_result_set(self, res):
+        super()._init_result_set(res)
+        self.cls_row = collections.namedtuple('Row', self.col_names)
+
+
+class NamedTupleExaConnection(pyexasol.ExaConnection):
+    cls_statement = NamedTupleExaStatement
+
+
+C = NamedTupleExaConnection(dsn=config.dsn, user=config.user, password=config.password, schema=config.schema)
+stmt = C.execute("SELECT * FROM users ORDER BY user_id LIMIT 5")
+print(stmt.fetchone())
+print(stmt.fetchone())
 
 C.close()
