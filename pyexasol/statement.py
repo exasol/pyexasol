@@ -46,6 +46,12 @@ class ExaStatement(object):
         else:
             self._execute()
 
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *args):
+        self.close()
+
     def __iter__(self):
         return self
 

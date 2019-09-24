@@ -155,6 +155,12 @@ class ExaConnection(object):
         self._login()
         self.get_attr()
 
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *args):
+        self.close()
+
     def execute(self, query, query_params=None) -> ExaStatement:
         """
         Execute SQL query with optional query formatting parameters
