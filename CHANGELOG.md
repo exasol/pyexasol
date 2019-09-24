@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.8.0] - 2019-09-24
+
+### ExaConnection
+
+- Context manager ("with" statement) is now supported for connection object.
+
+### ExaStatement
+
+- Context manager ("with" statement) is now supported for statement object.
+
 ## [0.7.0] - 2019-08-25
 
 ### ExaConnection

@@ -47,3 +47,4 @@ python examples/01_basic.py
 - [28_thread_safety.py](/examples/28_thread_safety.py) - built-in protection from accessing connection object from multiple threads simultaneously;
 - [29_dsn_parsing.py](/examples/29_dsn_parsing.py) - parsing of complex connection strings and catching relevant exceptions;
 - [30_http_proxy.py](/examples/30_http_proxy.py) - connection via HTTP proxy;
+- [31_context_manager.py](/examples/31_context_manager.py) - using WITH clause for `ExaConnection` and `ExaStatement` objects;

@@ -709,3 +709,9 @@ class ExaConnection(object):
     def __repr__(self):
         return f"<{self.__class__.__name__} session_id={self.session_id()}" \
                f" dsn={self.options['dsn']} user={self.options['user']}>"
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        self.close()
