@@ -646,8 +646,10 @@ class ExaConnection(object):
                                                 f'Connection string part [{part}] contains an invalid range, '
                                                 f'lower bound is higher than upper bound')
 
+                zfill_width = len(m.group('range_start'))
+
                 for i in range(int(m.group('range_start')), int(m.group('range_end')) + 1):
-                    host = f"{m.group('host_prefix')}{i}{m.group('host_suffix')}"
+                    host = f"{m.group('host_prefix')}{str(i).zfill(zfill_width)}{m.group('host_suffix')}"
                     result.extend(self._resolve_host(host, current_port))
             # Just a single hostname or single IP address
             else:
