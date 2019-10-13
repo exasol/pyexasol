@@ -1,5 +1,6 @@
 
 __all__ = [
+    '__version__',
     'connect',
     'connect_local_config',
     'http_transport',

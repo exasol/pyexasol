@@ -1,13 +1,7 @@
-import struct
+import os
 import subprocess
 import sys
 import threading
-import zlib
-
-from socketserver import TCPServer
-from http.server import BaseHTTPRequestHandler
-
-from . import utils
 
 HTTP_EXPORT = 'export'
 HTTP_IMPORT = 'import'
@@ -201,11 +195,11 @@ class ExaHTTPProcess(object):
 
     def start(self):
         args = [sys.executable,
-                '-m', 'pyexasol', 'http',
+                '-m', 'pyexasol_utils.http',
                 '--host', self.host,
                 '--port', str(self.port),
                 '--mode', self.mode,
-                '--ppid', str(utils.get_pid())
+                '--ppid', str(os.getpid())
                 ]
 
         if self.compression:
@@ -219,15 +213,6 @@ class ExaHTTPProcess(object):
 
         self.read_pipe = self.proc.stdout
         self.write_pipe = self.proc.stdin
-
-    def init_server(self):
-        self.server = ExaTCPServer((self.host, self.port), ExaHTTPRequestHandler
-                                   , compression=self.compression, encryption=self.encryption)
-
-        if self.mode == HTTP_IMPORT:
-            self.server.set_pipe(sys.stdin.buffer)
-        else:
-            self.server.set_pipe(sys.stdout.buffer)
 
     def join(self):
         self.read_pipe.close()
@@ -247,154 +232,6 @@ class ExaHTTPProcess(object):
             raise RuntimeError("Proxy 'host:port' string is not available")
 
         return self.proxy
-
-    def send_proxy(self):
-        sys.stdout.buffer.write(f'{self.server.proxy_host}:{self.server.proxy_port}\n'.encode())
-        sys.stdout.buffer.flush()
-
-    def handle_request(self):
-        # Wait for exactly one connection
-        while self.server.total_clients == 0:
-            self.server.handle_request()
-            utils.check_orphaned(self.initial_ppid)
-
-        self.server.server_close()
-
-
-class ExaTCPServer(TCPServer):
-    """
-    This TCPServer is fake
-    Instead of listening for incoming connections it connects to Exasol and uses proxy magic
-    It allows to bypass various connectivity problems (e.g. firewall)
-    """
-    timeout = 5
-
-    def __init__(self, *args, **kwargs):
-        self.proxy_host = None
-        self.proxy_port = None
-        self.pipe = None
-
-        self.compression = kwargs.pop('compression', False)
-        self.encryption = kwargs.pop('encryption', False)
-
-        self.total_clients = 0
-
-        super().__init__(*args, **kwargs)
-
-    def set_pipe(self, pipe):
-        self.pipe = pipe
-
-    def server_bind(self):
-        """ Special Exasol packet to establish tunneling and return proxy host and port which can be used in query """
-        self.socket.connect(self.server_address)
-        self.socket.sendall(struct.pack("iii", 0x02212102, 1, 1))
-        _, port, host = struct.unpack("ii16s", self.socket.recv(24))
-
-        self.proxy_host = host.replace(b'\x00', b'').decode()
-        self.proxy_port = port
-
-        if self.encryption:
-            context = utils.generate_adhoc_ssl_context()
-            self.socket = context.wrap_socket(self.socket, server_side=True, do_handshake_on_connect=False)
-
-    def server_activate(self): pass
-
-    def get_request(self):
-        return self.socket, self.server_address
-
-    def shutdown_request(self, request): pass
-
-    def close_request(self, request): pass
-
-
-class ExaHTTPRequestHandler(BaseHTTPRequestHandler):
-    """
-    GzipFile cannot be used for this request handler
-    Data stream is not monolith gzip, but chunked gzip with \r\n between chunks
-    """
-
-    def log_message(self, format, *args): pass
-
-    def setup(self):
-        super().setup()
-        self.server.total_clients += 1
-
-    def do_PUT(self):
-        # Compressed data loop
-        if self.server.compression:
-            d = zlib.decompressobj(wbits=16 + zlib.MAX_WBITS)
-
-            while True:
-                data = self.read_chunk()
-
-                if data is None:
-                    self.server.pipe.write(d.flush())
-                    break
-
-                self.server.pipe.write(d.decompress(data))
-
-        # Normal data loop
-        else:
-            while True:
-                data = self.read_chunk()
-
-                if data is None:
-                    break
-
-                self.server.pipe.write(data)
-
-        self.server.pipe.close()
-
-        self.send_response(200, 'OK')
-        self.end_headers()
-
-    def read_chunk(self):
-        hex_length = self.rfile.readline().rstrip()
-
-        if len(hex_length) == 0:
-            chunk_len = 0
-        else:
-            chunk_len = int(hex_length, 16)
-
-        if chunk_len == 0:
-            return None
-
-        data = self.rfile.read(chunk_len)
-
-        if self.rfile.read(2) != b'\r\n':
-            raise RuntimeError('Got wrong chunk delimiter in HTTP')
-
-        return data
-
-    def do_GET(self):
-        self.protocol_version = 'HTTP/1.1'
-        self.send_response(200, 'OK')
-        self.send_header('Content-type', 'application/octet-stream')
-        self.send_header('Connection', 'close')
-        self.end_headers()
-
-        # Compressed data loop
-        if self.server.compression:
-            c = zlib.compressobj(level=1, wbits=16 + zlib.MAX_WBITS)
-
-            while True:
-                data = self.server.pipe.read(65535)
-
-                if data is None or len(data) == 0:
-                    self.wfile.write(c.flush(zlib.Z_FINISH))
-                    break
-
-                self.wfile.write(c.compress(data))
-
-        # Normal data loop
-        else:
-            while True:
-                data = self.server.pipe.read(65535)
-
-                if data is None or len(data) == 0:
-                    break
-
-                self.wfile.write(data)
 
 
 class ExaHTTPTransportWrapper(object):

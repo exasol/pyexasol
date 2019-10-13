@@ -43,6 +43,7 @@ Please read "Best practices" manual page to learn how to use PyEXASOL with maxim
     packages=[
         'pyexasol',
         'pyexasol.db2',
+        'pyexasol_utils',
     ],
 
     install_requires=[
