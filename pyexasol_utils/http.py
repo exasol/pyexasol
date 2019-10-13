@@ -82,7 +82,7 @@ class ExaTCPServer(socketserver.TCPServer):
         cert.gmtime_adj_notAfter(60 * 60 * 24 * 365)
 
         cert.set_pubkey(k)
-        cert.sign(k, b'sha256')
+        cert.sign(k, 'sha256')
 
         # TemporaryDirectory is used instead of NamedTemporaryFile for compatibility with Windows
         with tempfile.TemporaryDirectory(prefix='pyexasol_ssl_') as tempdir:
