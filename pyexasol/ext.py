@@ -1,6 +1,7 @@
 """
 Extension with Exasol-specific helper functions
 """
+from .exceptions import ExaRuntimeError
 
 
 class ExaExtension(object):
@@ -26,6 +27,38 @@ class ExaExtension(object):
         stmt.close()
 
         return columns
+
+    def insert_multi(self, table_name, data, columns=None):
+        """
+        INSERT small number of rows into table using prepared statement
+        Please use .import_from_iterable() for larger data sets of 10,000 rows or more
+
+        You may use "columns" argument to specify order of columns for insertion
+        or to exclude some columns and use DEFAULT values
+        """
+
+        # Convert possible iterator into list
+        data = list(data)
+
+        if len(data) == 0:
+            raise ExaRuntimeError(self.connection, "Data for insert_multi() is empty")
+
+        params = {
+            'table_name': self.connection.format.default_format_ident(table_name),
+            'columns': '',
+            'values': ', '.join(['?'] * len(data[0]))
+        }
+
+        if columns:
+            params['columns'] = f"({','.join([self.connection.format.default_format_ident(c) for c in columns])})"
+
+        query = "INSERT INTO {table_name!r}{columns!r} VALUES ({values!r})"
+
+        stmt = self.connection.cls_statement(self.connection, query, params, prepare=True)
+        stmt.execute_prepared(data)
+        stmt.close()
+
+        return stmt
 
     def get_sys_columns(self, object_name):
         """

@@ -479,7 +479,7 @@ class ExaConnection(object):
 
         if ret['status'] == 'error':
             # Special treatment for "execute" command to prevent very long tracebacks in most common cases
-            if req.get('command') == 'execute':
+            if req.get('command') in ['execute', 'createPreparedStatement', 'executePreparedStatement']:
                 if ret['exception']['sqlCode'] == 'R0001':
                     cls_err = ExaQueryTimeoutError
                 elif ret['exception']['sqlCode'] == 'R0003':

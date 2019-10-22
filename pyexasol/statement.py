@@ -30,6 +30,7 @@ class ExaStatement(object):
         self.result_type = None
         self.result_set_handle = None
         self.statement_handle = None
+        self.parameter_data = None
 
         # This index may not match STMT_ID in system tables due to automatically executed queries (e.g. autocommit)
         self.connection.stmt_count += 1
@@ -151,6 +152,23 @@ class ExaStatement(object):
         })
 
         self.statement_handle = ret['responseData']['statementHandle']
+
+        if 'parameterData' in ret['responseData']:
+            self.parameter_data = ret['responseData']['parameterData']
+
+        self._init_result_set(ret)
+
+    def execute_prepared(self, data=None):
+        ret = self.connection.req({
+            'command': 'executePreparedStatement',
+            'statementHandle': self.statement_handle,
+            'numColumns': self.parameter_data['numColumns'] if self.parameter_data else 0,
+            'numRows': len(data) if data else 0,
+            'columns': self.parameter_data['columns'] if self.parameter_data else [],
+            'data': list(zip(*data)) if data else [],
+        })
+
+        self.execution_time = self.connection.ws_req_time
         self._init_result_set(ret)
 
     def _init_result_set(self, ret):
