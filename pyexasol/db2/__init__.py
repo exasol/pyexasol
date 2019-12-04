@@ -34,8 +34,8 @@ class DB2Cursor(object):
         self.connection = connection
         self.stmt = None
 
-    def execute(self, query):
-        self.stmt = self.connection.execute(query)
+    def execute(self, query, query_params={}):
+        self.stmt = self.connection.execute(query, query_params)
 
     def executemany(self, query):
         raise NotSupportedError
