@@ -59,6 +59,7 @@ This page contains complete reference of PyEXASOL public API.
   - [export_to_callback()](#exahttptransportwrapperexport_to_callback)
   - [import_from_callback()](#exahttptransportwrapperimport_from_callback)
 - [ExaExtension](#exaextension)
+  - [insert_multi()](#insert_multi)
   - [get_columns()](#get_columns)
   - [get_columns_sql()](#get_columns_sql)
   - [get_sys_columns()](#get_sys_columns)
@@ -517,6 +518,22 @@ For example:
 ```python
 C.ext.get_columns('my_table')
 ```
+
+### insert_multi()
+
+INSERT small number of rows into table using prepared statement. It provides better performance for **small data sets of 10,000 rows or less** compared to [`import_from_iterable()`](#import_from_iterable).
+
+Please use [`import_from_iterable`](#import_from_iterable) for larger data sets and better memory efficiency. Please use [`import_from_pandas`](#import_from_pandas) to import from data frame regardless of its size.
+
+You may use `columns` argument to specify custom order of columns for insertion. If some columns are not included in this list, NULL or DEFAULT value will be used instead.
+
+| Argument | Example | Description |
+| --- | --- | --- |
+| `table_name` | `my_table` `(my_schema, my_table)` | Target table for INSERT |
+| `data` | `[(1, 'foo'), (2, 'bar')]` | Source object implementing `__iter__` (e.g.: list of tuples) |
+| `columns` | `['id', 'name'] | List of column names to specify custom order of columns |
+
+Please note that data should be presented in a row format. You may use `zip(*data_cols)` to convert columnar format into row format.
 
 ### get_columns()
 

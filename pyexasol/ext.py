@@ -31,17 +31,20 @@ class ExaExtension(object):
     def insert_multi(self, table_name, data, columns=None):
         """
         INSERT small number of rows into table using prepared statement
-        Please use .import_from_iterable() for larger data sets of 10,000 rows or more
+        It provides better performance for small data sets of 10,000 rows or less compared to .import_from_iterable()
 
-        You may use "columns" argument to specify order of columns for insertion
-        or to exclude some columns and use DEFAULT values
+        Please use .import_from_iterable() for larger data sets and better memory efficiency
+        Please use .import_from_pandas() to import from data frame regardless of its size
+
+        You may use "columns" argument to specify custom order of columns for insertion
+        If some columns are not included in this list, NULL or DEFAULT value will be used instead
         """
 
         # Convert possible iterator into list
         data = list(data)
 
         if len(data) == 0:
-            raise ExaRuntimeError(self.connection, "Data for insert_multi() is empty")
+            raise ExaRuntimeError(self.connection, "At least one row of data is required for insert_multi()")
 
         params = {
             'table_name': self.connection.format.default_format_ident(table_name),
