@@ -75,7 +75,7 @@ class ExaExtension(object):
             schema = self.connection.current_schema()
             object_name = self.connection.format.default_format_ident_value(object_name)
 
-        sql = """
+        sql = """/*snapshot execution*/
             SELECT c.column_name, c.column_type, c.column_maxsize, c.column_num_scale,
                    c.column_is_nullable, c.column_is_distribution_key, c.column_default,
                    c.column_comment, t.type_name
@@ -117,7 +117,7 @@ class ExaExtension(object):
         table_name_prefix = self.connection.format.default_format_ident_value(table_name_prefix)
         table_name_prefix = self.connection.format.escape_like(table_name_prefix)
 
-        sql = """
+        sql = """/*snapshot execution*/
             SELECT *
             FROM EXA_ALL_TABLES
             WHERE table_schema={schema}
@@ -152,7 +152,7 @@ class ExaExtension(object):
         view_name_prefix = self.connection.format.default_format_ident_value(view_name_prefix)
         view_name_prefix = self.connection.format.escape_like(view_name_prefix)
 
-        sql = """
+        sql = """/*snapshot execution*/
             SELECT *
             FROM EXA_ALL_VIEWS
             WHERE view_schema={schema}
@@ -182,7 +182,7 @@ class ExaExtension(object):
         schema_name_prefix = self.connection.format.default_format_ident_value(schema_name_prefix)
         schema_name_prefix = self.connection.format.escape_like(schema_name_prefix)
 
-        sql = """
+        sql = """/*snapshot execution*/
             SELECT *
             FROM EXA_SCHEMAS
             WHERE schema_name LIKE '{schema_name_prefix!r}%'
