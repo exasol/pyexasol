@@ -523,7 +523,7 @@ C.ext.get_columns('my_table')
 
 INSERT small number of rows into table using prepared statement. It provides better performance for **small data sets of 10,000 rows or less** compared to [`import_from_iterable()`](#import_from_iterable).
 
-Please use [`import_from_iterable`](#import_from_iterable) for larger data sets and better memory efficiency. Please use [`import_from_pandas`](#import_from_pandas) to import from data frame regardless of its size.
+Please use [`import_from_iterable()`](#import_from_iterable) for larger data sets and better memory efficiency. Please use [`import_from_pandas()`](#import_from_pandas) to import from data frame regardless of its size.
 
 You may use `columns` argument to specify custom order of columns for insertion. If some columns are not included in this list, NULL or DEFAULT value will be used instead.
 

@@ -35,11 +35,13 @@ for row in stmt:
     print(row)
 ```
 
-## Never use INSERT statement to insert raw values in SQL
+## Avoid using INSERT prepared statement to import raw values in SQL
 
-PyEXASOL does not support INSERT prepared statements on purpose. You should use more efficient `IMPORT` command instead, even for small batch inserts.
+PyEXASOL supports INSERT prepared statements since version `0.9.1` via [`.ext.insert_multi()`](/docs/REFERENCE.md#insert_multi) function. It works for small data sets and may provide some performance benefits.
 
-You may use [`import_from_iterable`](/docs/REFERENCE.md#import_from_iterable) to insert data from list of rows.
+However, it is strongly advised to use more efficient `IMPORT` command and HTTP transport instead. It has some small initial overhead, but large data sets will be transferred and processed much faster. It is also more CPU and memory efficient.
+
+You may use [`import_from_iterable()`](/docs/REFERENCE.md#import_from_iterable) to insert data from list of rows.
 
 ```python
 data = [
@@ -51,7 +53,7 @@ data = [
 C.import_from_iterable(data, 'table')
 ```
 
-Please note: if you want to INSERT only single row into Exasol, you're probably doing something wrong. We strongly suggest to use row-based databases (MySQL, PostgreSQL, etc) to track status of ETL jobs and to avoid putting any technical tables in Exasol.
+Please note: if you want to INSERT single row only into Exasol, you're probably doing something wrong. It is advised to use row-based databases (MySQL, PostgreSQL, etc) to track status of ETL jobs, etc.
 
 ## Always specify full connection string for Exasol cluster
 
