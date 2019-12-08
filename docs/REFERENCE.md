@@ -531,7 +531,7 @@ You may use `columns` argument to specify custom order of columns for insertion.
 | --- | --- | --- |
 | `table_name` | `my_table` `(my_schema, my_table)` | Target table for INSERT |
 | `data` | `[(1, 'foo'), (2, 'bar')]` | Source object implementing `__iter__` (e.g.: list of tuples) |
-| `columns` | `['id', 'name'] | List of column names to specify custom order of columns |
+| `columns` | `['id', 'name']` | List of column names to specify custom order of columns |
 
 Please note that data should be presented in a row format. You may use `zip(*data_cols)` to convert columnar format into row format.
 
