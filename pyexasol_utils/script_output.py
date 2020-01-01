@@ -44,7 +44,7 @@ class ExaScriptOutputServer(socketserver.ThreadingMixIn, socketserver.TCPServer)
     daemon_threads = True
     allow_reuse_address = True
 
-    output_dir = None
+    output_dir_path = None
     initial_ppid = None
 
     def get_output_address(self):
@@ -96,7 +96,7 @@ class ExaScriptOutputDebugModeHandler(ExaScriptOutputHandler):
 
 class ExaScriptOutputScriptModeHandler(ExaScriptOutputHandler):
     def handle(self):
-        path = self.server.output_dir / (str(self.server.total_clients).rjust(5, '0') + '.log')
+        path = self.server.output_dir_path / (str(self.server.total_clients).rjust(5, '0') + '.log')
         dst = open(path, 'wb')
 
         shutil.copyfileobj(self.rfile, dst)
@@ -131,7 +131,7 @@ if __name__ == '__main__':
 
         # Start TCP server
         server = ExaScriptOutputServer((args.host, args.port), ExaScriptOutputScriptModeHandler)
-        server.output_dir = args.output_dir
+        server.output_dir_path = output_dir_path
         server.initial_ppid = args.ppid
 
         # Send output address to the main process
