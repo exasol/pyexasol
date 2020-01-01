@@ -1,3 +1,10 @@
+"""
+Fake TCP Server to process HTTP transport requests.
+
+Instead of listening for incoming connections, it connects to Exasol and uses proxy magic.
+This approach allows to bypass various connectivity problems (e.g. firewall).
+"""
+
 import os
 import socketserver
 import struct
@@ -6,12 +13,6 @@ import zlib
 
 
 class ExaTCPServer(socketserver.TCPServer):
-    """
-    This TCPServer is fake
-    Instead of listening for incoming connections it connects to Exasol and uses proxy magic
-    This approach allows to bypass various connectivity problems (e.g. firewall)
-    """
-
     timeout = 5
 
     def __init__(self, *args, **kwargs):
@@ -202,7 +203,7 @@ class ExaHTTPRequestHandler(socketserver.StreamRequestHandler):
 if __name__ == '__main__':
     import argparse
 
-    parser = argparse.ArgumentParser(prog='python -m pyexasol_utils.http'
+    parser = argparse.ArgumentParser(prog='python -m pyexasol_utils.http_transport'
                                      , description='TCP server for PyEXASOL HTTP transport')
 
     parser.add_argument('--host', help='Exasol host')

@@ -195,7 +195,7 @@ class ExaHTTPProcess(object):
 
     def start(self):
         args = [sys.executable,
-                '-m', 'pyexasol_utils.http',
+                '-m', 'pyexasol_utils.http_transport',
                 '--host', self.host,
                 '--port', str(self.port),
                 '--mode', self.mode,

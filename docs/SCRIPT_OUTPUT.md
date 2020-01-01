@@ -23,12 +23,13 @@ How to use it:
 
 1. Run server in debug mode;
 ```
-python -m pyexasol script_debug
+python -m pyexasol_utils.script_output
 ```
 2. Copy-paste provided SQL query to your SQL client and execute it;
 3. Run queries with UDF scripts, see output in terminal;
 4. Stop server with (Ctrl + C) when you finish debugging;
 
+Please note: if you have problems getting script output immediately out of VM's, please make sure you **flush** STDOUT / STDERR in your UDF script. Some programming languages (like Python) may buffer output by default.
 
 ### SCRIPT MODE
 Script mode is useful for production usage and during last stages of development.

@@ -1,8 +1,10 @@
+import base64
 import getpass
 import itertools
 import platform
 import random
 import re
+import rsa
 import socket
 import ssl
 import time
@@ -13,7 +15,6 @@ import zlib
 
 from . import callback as cb
 from . import constant
-from . import utils
 
 from .exceptions import *
 from .statement import ExaStatement
@@ -60,7 +61,7 @@ class ExaConnection(object):
             , verbose_error=True
             , debug=False
             , debug_logdir=None
-            , udf_output_bind_address=None
+            , udf_output_bind_address=(None, None)
             , udf_output_connect_address=None
             , udf_output_dir=None
             , http_proxy=None
@@ -171,15 +172,14 @@ class ExaConnection(object):
 
         Exasol should be able to open connection to the host where current script is running
         """
+        stmt_output_dir = self._get_stmt_output_dir()
 
-        self._udf_output_count += 1
-        output_dir = utils.get_output_dir_for_statement(self.options['udf_output_dir'],
-                                                        self.session_id(),
-                                                        self._udf_output_count)
+        script_output = ExaScriptOutputProcess(
+            self.options['udf_output_bind_address'][0] if self.options['udf_output_bind_address'] else None,
+            self.options['udf_output_bind_address'][1] if self.options['udf_output_bind_address'] else None,
+            stmt_output_dir
+        )
 
-        script_output = ExaScriptOutputProcess(self.options['udf_output_bind_address'][0],
-                                               self.options['udf_output_bind_address'][1],
-                                               output_dir)
         script_output.start()
 
         # This option is useful to get around complex network setups, like Exasol running in Docker containers
@@ -192,12 +192,19 @@ class ExaConnection(object):
 
         try:
             stmt = self.execute(query, query_params)
-            script_output.join()
+            log_files = sorted(list(stmt_output_dir.glob('*.log')))
+
+            if len(log_files) > 0:
+                script_output.join()
+            else:
+                # In some cases Exasol does not run any VM's even when UDF scripts are being called
+                # In this case we must terminate TCP server, since it won't stop automatically
+                script_output.terminate()
         except ExaQueryError:
             script_output.terminate()
             raise
 
-        return stmt, sorted(list(output_dir.glob('*.log')))
+        return stmt, log_files
 
     def commit(self):
         return self.execute('COMMIT')
@@ -524,7 +531,7 @@ class ExaConnection(object):
 
         self.login_info = self.req({
             'username': self.options['user'],
-            'password': utils.encrypt_password(ret['responseData']['publicKeyPem'], self.options['password']),
+            'password': self._encrypt_password(ret['responseData']['publicKeyPem']),
             'driverName': f'{constant.DRIVER_NAME} {__version__}',
             'clientName': self.options['client_name'] if self.options['client_name'] else constant.DRIVER_NAME,
             'clientVersion': self.options['client_version'] if self.options['client_version'] else __version__,
@@ -543,6 +550,10 @@ class ExaConnection(object):
         if self.options['compression']:
             self._ws_send = lambda x: self._ws.send_binary(zlib.compress(x.encode(), 1))
             self._ws_recv = lambda: zlib.decompress(self._ws.recv())
+
+    def _encrypt_password(self, public_key_pem):
+        pk = rsa.PublicKey.load_pkcs1(public_key_pem.encode())
+        return base64.b64encode(rsa.encrypt(self.options['password'].encode(), pk)).decode()
 
     def _init_ws(self):
         """
@@ -707,6 +718,23 @@ class ExaConnection(object):
 
     def _init_ext(self):
         self.ext = self.cls_extension(self)
+
+    def _get_stmt_output_dir(self):
+        import pathlib
+        import tempfile
+
+        if self.options['udf_output_dir']:
+            base_output_dir = self.options['udf_output_dir']
+        else:
+            base_output_dir = tempfile.gettempdir()
+
+        # Create unique sub-directory for every statement of every session
+        self._udf_output_count += 1
+
+        stmt_output_dir = pathlib.Path(base_output_dir) / f'{self.session_id()}_{self._udf_output_count}'
+        stmt_output_dir.mkdir(parents=True, exist_ok=True)
+
+        return stmt_output_dir
 
     def __repr__(self):
         return f"<{self.__class__.__name__} session_id={self.session_id()}" \
