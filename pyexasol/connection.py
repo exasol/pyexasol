@@ -61,7 +61,7 @@ class ExaConnection(object):
             , verbose_error=True
             , debug=False
             , debug_logdir=None
-            , udf_output_bind_address=(None, None)
+            , udf_output_bind_address=None
             , udf_output_connect_address=None
             , udf_output_dir=None
             , http_proxy=None

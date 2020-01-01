@@ -4,14 +4,11 @@ import subprocess
 
 
 class ExaScriptOutputProcess(object):
-    def __init__(self, host, port, output_dir=None, initial_ppid=None):
+    def __init__(self, host, port, output_dir):
         self.host = host
         self.port = port
 
         self.output_dir = output_dir
-        self.initial_ppid = initial_ppid
-
-        self.server = None
         self.output_address = None
 
         self.proc = None
