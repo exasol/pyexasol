@@ -48,3 +48,4 @@ class ExaScriptOutputProcess(object):
     def terminate(self):
         if self.proc:
             self.proc.terminate()
+            self.proc.wait()      # wait without checking exitcode
