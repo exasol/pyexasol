@@ -400,12 +400,14 @@ class ExaConnection(object):
         return self._last_stmt
 
     def close(self):
-        if not self.is_closed:
-            self.req({
-                'command': 'disconnect',
-            })
+        """
+        It is not necessary to send "disconnect" command explicitly, basic CLOSE frame is sufficient
+        """
+        if self._ws.connected:
+            self.logger.debug('[WebSocket connection close]')
+            self._ws.close()
 
-            self.is_closed = True
+        self.is_closed = True
 
     def get_attr(self):
         ret = self.req({
@@ -469,6 +471,7 @@ class ExaConnection(object):
 
             self.ws_req_time = time.time() - start_ts
         except websocket.WebSocketException as e:
+            self.close()
             raise ExaCommunicationError(self, str(e))
         finally:
             self._req_lock.release()
@@ -521,6 +524,7 @@ class ExaConnection(object):
         try:
             self._ws_send(send_data)
         except websocket.WebSocketException as e:
+            self.close()
             raise ExaCommunicationError(self, str(e))
 
     def _login(self):
@@ -745,3 +749,17 @@ class ExaConnection(object):
 
     def __exit__(self, exc_type, exc_value, traceback):
         self.close()
+
+    def __del__(self):
+        """
+        close() is being called automatically in order to:
+
+        1) send OP_CLOSE frame to Exasol server rather than silently terminating the socket on client side
+        2) make sure connection is closed immediately even if garbage collection was disabled for any reasons
+        3) write debug logs
+        """
+        try:
+            self.close()
+            pass
+        except Exception:
+            pass

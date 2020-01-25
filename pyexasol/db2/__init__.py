@@ -8,6 +8,8 @@ It is highly recommended to switch to native interface before any production usa
 There is no "paramstyle" and no proper error handling
 """
 
+import weakref
+
 from ..connection import ExaConnection
 
 apilevel = '2.0'
@@ -31,7 +33,7 @@ class DB2Cursor(object):
     arraysize = 1
 
     def __init__(self, connection):
-        self.connection = connection
+        self.connection = weakref.proxy(connection)
         self.stmt = None
 
     def execute(self, query):

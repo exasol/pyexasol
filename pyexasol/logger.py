@@ -1,6 +1,7 @@
 import logging
 import datetime
 import pathlib
+import weakref
 
 from . import constant
 from .exceptions import ExaRuntimeError
@@ -8,7 +9,7 @@ from .exceptions import ExaRuntimeError
 
 class ExaLogger(logging.Logger):
     def __init__(self, connection, name, level=logging.NOTSET):
-        self.connection = connection
+        self.connection = weakref.proxy(connection)
         super().__init__(name, level)
 
     def add_default_handler(self):

@@ -1,12 +1,14 @@
 """
 Extension with Exasol-specific helper functions
 """
+import weakref
+
 from .exceptions import ExaRuntimeError
 
 
 class ExaExtension(object):
     def __init__(self, connection):
-        self.connection = connection
+        self.connection = weakref.proxy(connection)
         self.reserved_words = None
 
     def get_columns(self, object_name):
