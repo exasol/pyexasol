@@ -148,21 +148,38 @@ CREATE OR REPLACE JAVA SET SCRIPT "ECHO_JAVA" ("str" VARCHAR(255) UTF8) RETURNS 
 import java.util.Arrays;
 
 class ECHO_JAVA {
-	static String run(ExaMetadata exa, ExaIterator ctx) throws Exception {
-		System.out.println("VM_ID: " + exa.getVmId());
-		System.out.println("NODE_ID: " + exa.getNodeId());
+    static String run(ExaMetadata exa, ExaIterator ctx) throws Exception {
+        System.out.println("VM_ID: " + exa.getVmId());
+        System.out.println("NODE_ID: " + exa.getNodeId());
 
-		System.out.println("This is custom STDOUT");
-		System.err.println("This is custom STDERR");
+        System.out.println("This is custom STDOUT");
+        System.err.println("This is custom STDERR");
 
-		System.out.println("Total memory:" + Runtime.getRuntime().totalMemory() / 1024 / 1024 + "Mb");
-		System.out.println("Max memory:" + Runtime.getRuntime().maxMemory() / 1024 / 1024 + "Mb");
+        System.out.println("Total memory:" + Runtime.getRuntime().totalMemory() / 1024 / 1024 + "Mb");
+        System.out.println("Max memory:" + Runtime.getRuntime().maxMemory() / 1024 / 1024 + "Mb");
 
-		String[][] deepArray = new String[][] {{"John", "Mary"}, {"Alice", "Bob"}};
-		System.out.println(Arrays.deepToString(deepArray));
+        String[][] deepArray = new String[][] {{"John", "Mary"}, {"Alice", "Bob"}};
+        System.out.println(Arrays.deepToString(deepArray));
 
-		return ctx.getString(0);
-	}
+        return ctx.getString(0);
+    }
+}
+""")
+
+C.execute("""
+CREATE OR REPLACE JAVA SET SCRIPT "SLEEP_JAVA" ("sleep_interval" DECIMAL(18,0)) RETURNS DECIMAL(18,0) AS
+%jvmoption -Xms16m -Xmx128m -Xss512k;
+
+class SLEEP_JAVA {
+    static Long run(ExaMetadata exa, ExaIterator ctx) throws Exception {
+        try {
+            Thread.sleep(1000 * ctx.getLong(0));
+        } catch(InterruptedException ex) {
+            Thread.currentThread().interrupt();
+        }
+
+        return ctx.getLong(0);
+    }
 }
 """)
 

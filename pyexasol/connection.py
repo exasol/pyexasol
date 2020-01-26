@@ -136,6 +136,7 @@ class ExaConnection(object):
         self.attr = {}
         self.stmt_count = 0
         self.is_closed = False
+        self.connection_time = 0
 
         self.ws_host = None
         self.ws_port = None
@@ -528,6 +529,8 @@ class ExaConnection(object):
             raise ExaCommunicationError(self, str(e))
 
     def _login(self):
+        start_ts = time.time()
+
         ret = self.req({
             'command': 'login',
             'protocolVersion': 1,
@@ -550,6 +553,8 @@ class ExaConnection(object):
                 'snapshotTransactionsEnabled': self.options['snapshot_transactions'],
             }
         })['responseData']
+
+        self.connection_time = time.time() - start_ts
 
         if self.options['compression']:
             self._ws_send = lambda x: self._ws.send_binary(zlib.compress(x.encode(), 1))
