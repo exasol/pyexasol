@@ -66,7 +66,9 @@ class ExaConnection(object):
             , udf_output_dir=None
             , http_proxy=None
             , client_name=None
-            , client_version=None):
+            , client_version=None
+            , client_os_username=None
+            ):
         """
         Exasol connection object
 
@@ -95,6 +97,7 @@ class ExaConnection(object):
         :param http_proxy: HTTP proxy string in Linux http_proxy format (default: None)
         :param client_name: Custom name of client application displayed in Exasol sessions tables (Default: PyEXASOL)
         :param client_version: Custom version of client application (Default: pyexasol.__version__)
+        :param client_os_username: Custom OS username displayed in Exasol sessions table (Default: getpass.getuser())
         """
 
         self.options = {
@@ -129,7 +132,8 @@ class ExaConnection(object):
             'http_proxy': http_proxy,
 
             'client_name': client_name,
-            'client_version': client_version
+            'client_version': client_version,
+            'client_os_username': client_os_username,
         }
 
         self.login_info = {}
@@ -543,7 +547,7 @@ class ExaConnection(object):
             'clientName': self.options['client_name'] if self.options['client_name'] else constant.DRIVER_NAME,
             'clientVersion': self.options['client_version'] if self.options['client_version'] else __version__,
             'clientOs': platform.platform(),
-            'clientOsUsername': getpass.getuser(),
+            'clientOsUsername': self.options['client_os_username'] if self.options['client_os_username'] else getpass.getuser(),
             'clientRuntime': f'Python {platform.python_version()}',
             'useCompression': self.options['compression'],
             'attributes': {

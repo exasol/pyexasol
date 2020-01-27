@@ -100,6 +100,7 @@ Opens new connection and returns `ExaConnection` object.
 | `http_proxy` | `http://myproxy.com:3128` | HTTP proxy string in Linux [`http_proxy`](https://www.shellhacks.com/linux-proxy-server-settings-set-proxy-command-line/) format (Default: `None`) |
 | `client_name` | `MyClient` | Custom name of client application displayed in Exasol sessions tables (Default: `PyEXASOL`) |
 | `client_version` | `1.0.0` | Custom version of client application (Default: `pyexasol.__version__`) |
+| `client_os_username` | `john` | Custom OS username displayed in Exasol sessions table (Default: `getpass.getuser()`) |
 
 ## connect_local_config()
 Opens new connection and returns `ExaConnection` object. It uses local .ini file (usually `~/.pyexasol.ini`) to read credentials and connection parameters. Please read [local config](/docs/LOCAL_CONFIG.md) page for more details.
