@@ -4,7 +4,7 @@
 
 ### ExaConnection
 
-- Added option `client_os_username` to specify custom client OS username. Previously username was always detected automatically with `getpass.getuser()`, but it might not work in some environments, like OpenStack.
+- Added option `client_os_username` to specify custom client OS username. Previously username was always detected automatically with `getpass.getuser()`, but it might not work in some environments, like OpenShift.
 
 ## [0.11.1] - 2020-01-26
 
