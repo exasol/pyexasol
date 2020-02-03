@@ -79,7 +79,7 @@ class ExaConnection(object):
         :param autocommit: Enable autocommit on connection (Default: True)
         :param snapshot_transactions: Enable snapshot transactions on connection (Default: False)
         :param socket_timeout: Socket timeout in seconds passed directly to websocket (Default: 10)
-        :param query_timeout: Maximum execution time of queries before automatic abort, in seconds (Default: 0, no timeout)
+        :param query_timeout: Maximum execution time of queries in seconds before automatic abort, in seconds (Default: 0, no timeout)
         :param compression: Use zlib compression both for WebSocket and HTTP transport (Default: False)
         :param encryption: Use SSL to encrypt client-server communications for WebSocket and HTTP transport (Default: False)
         :param fetch_dict: Fetch result rows as dicts instead of tuples (Default: False)
