@@ -148,7 +148,7 @@ class ExaSQLImportThread(ExaSQLThread):
             query += '\nENCODING = ' + self.connection.format.quote(self.params['encoding'])
 
         if self.params.get('null'):
-            query += '\nNULL ' + self.connection.format.quote(self.params['null'])
+            query += '\nNULL = ' + self.connection.format.quote(self.params['null'])
 
         if self.params.get('skip'):
             query += '\nSKIP = ' + self.connection.format.safe_decimal(self.params['skip'])
