@@ -44,7 +44,7 @@ This page contains complete reference of PyEXASOL public API.
   - [column_names()](#column_names)
   - [close()](#exastatementclose)
   - [.execution_time](#execution_time)
-- [ExaFormatter](#exaformatter)
+- [ExaFormatter](#exaformatter) (.format)
   - [format()](#format)
   - [escape()](#escape)
   - [escape_ident()](#escape_ident)
@@ -54,24 +54,36 @@ This page contains complete reference of PyEXASOL public API.
   - [safe_ident()](#safe_ident)
   - [safe_float()](#safe_float)
   - [safe_decimal()](#safe_decimal)
+- [ExaMetaData](#exametadata) (.meta)
+  - [sql_columns()](#sql_columns)
+  - [schema_exists()](#schema_exists)
+  - [table_exists()](#table_exists)
+  - [view_exists()](#view_exists)
+  - [list_schemas()](#list_schemas)
+  - [list_tables()](#list_tables)
+  - [list_views()](#list_views)
+  - [list_columns()](#list_views)
+  - [list_objects()](#list_objects)
+  - [list_object_sizes()](#list_object_sizes)
+  - [list_sql_keywords()](#list_sql_keywords)
+- [ExaExtension](#exaextension) (.ext)
+  - [insert_multi()](#insert_multi)
+  - [get_disk_space_usage()](#get_disk_space_usage)
+  - [explain_last()](#explain_last)
+  - get_columns() (deprecated, please use [.meta.sql_columns()](#sql_columns))
+  - get_columns_sql() (deprecated, please use [.meta.sql_columns()](#sql_columns))
+  - get_sys_columns() (deprecated, please use [.meta.list_columns()](#list_columns))
+  - get_sys_tables() (deprecated, please use [.meta.list_tables()](#list_tables))
+  - get_sys_views() (deprecated, please use [.meta.list_views()](#list_views))
+  - get_sys_schemas() (deprecated, please use [.meta.list_schemas()](#list_schemas))
+  - get_reserved_words() (deprecated, please use [.meta.list_sql_keywords()](#list_sql_keywords))
 - [ExaHTTPTransportWrapper](#exahttptransportwrapper)
   - [get_proxy()](#exahttptransportwrapperget_proxy)
   - [export_to_callback()](#exahttptransportwrapperexport_to_callback)
   - [import_from_callback()](#exahttptransportwrapperimport_from_callback)
-- [ExaExtension](#exaextension)
-  - [insert_multi()](#insert_multi)
-  - [get_columns()](#get_columns)
-  - [get_columns_sql()](#get_columns_sql)
-  - [get_sys_columns()](#get_sys_columns)
-  - [get_sys_tables()](#get_sys_tables)
-  - [get_sys_views()](#get_sys_views)
-  - [get_sys_schemas()](#get_sys_schemas)
-  - [get_reserved_words()](#get_reserved_words)
-  - [get_disk_space_usage()](#get_disk_space_usage)
-  - [explain_last()](#explain_last)
 
 ## connect()
-Opens new connection and returns `ExaConnection` object.
+Open new connection and return `ExaConnection` object.
 
 | Argument | Example | Description |
 | --- | --- | --- |
@@ -81,7 +93,8 @@ Opens new connection and returns `ExaConnection` object.
 | `schema` | `ingres` | Open schema after connection (Default: `''`, no schema) |
 | `autocommit` | `True` | Enable autocommit on connection (Default: `True`) |
 | `snapshot_transactions` | `False` | Enable [snapshot transactions](/docs/SNAPSHOT_TRANSACTIONS.md) on connection (Default: `False`) |
-| `socket_timeout` | `10` | Socket timeout in seconds passed directly to websocket (Default: `10`) |
+| `connection_timeout` | `10` | Socket timeout in seconds used to establish connection (Default: `10`) |
+| `socket_timeout` | `20` | Socket timeout in seconds used for requests after connection was established (Default: `30`) |
 | `query_timeout` | `0` | Maximum execution time of queries before automatic abort (Default: `0`, no timeout) |
 | `compression` | `True` | Use zlib compression both for WebSocket and HTTP transport (Default: `False`) |
 | `encryption` | `True` | Use [SSL encryption](/docs/ENCRYPTION.md) for WebSocket communication and HTTP transport (Default: `False`) |
@@ -103,7 +116,7 @@ Opens new connection and returns `ExaConnection` object.
 | `client_os_username` | `john` | Custom OS username displayed in Exasol sessions table (Default: `getpass.getuser()`) |
 
 ## connect_local_config()
-Opens new connection and returns `ExaConnection` object. It uses local .ini file (usually `~/.pyexasol.ini`) to read credentials and connection parameters. Please read [local config](/docs/LOCAL_CONFIG.md) page for more details.
+Open new connection and return `ExaConnection` object using local .ini file (usually `~/.pyexasol.ini`) to read credentials and connection parameters. Please read [local config](/docs/LOCAL_CONFIG.md) page for more details.
 
 | Argument | Example | Description |
 | --- | --- | --- |
@@ -112,7 +125,7 @@ Opens new connection and returns `ExaConnection` object. It uses local .ini file
 | `**kwargs` | - | All other arguments from [`connect`](#connect) method; `**kwargs` override values from config file |
 
 ## http_transport()
-Opens new HTTP connection and returns `ExaHTTPTransportWrapper` object. This function is part of [parallel HTTP transport API](/docs/HTTP_TRANSPORT_PARALLEL.md).
+Open new HTTP connection and return `ExaHTTPTransportWrapper` object. This function is a part of [parallel HTTP transport API](/docs/HTTP_TRANSPORT_PARALLEL.md).
 
 | Argument | Example | Description |
 | --- | --- | --- |
@@ -136,7 +149,7 @@ Execute SQL statement with optional formatting.
 | `query` | `SELECT * FROM {table:i} WHERE col1={col1}` | SQL query text, possibly with placeholders |
 | `query_params` | `{'table': 'users', 'col1':'bar'}` | (optional) Values for placeholders |
 
-Returns instance of `ExaStatement`
+Return instance of `ExaStatement`
 
 ### execute_udf_output()
 Execute SQL statement with optional formatting. Capture [output](/docs/SCRIPT_OUTPUT.md) of UDF scripts.
@@ -146,7 +159,7 @@ Execute SQL statement with optional formatting. Capture [output](/docs/SCRIPT_OU
 | `query` | `SELECT * FROM {table:i} WHERE col1={col1}` | SQL query text, possibly with placeholders |
 | `query_params` | `{'table': 'users', 'col1':'bar'}` | (optional) Values for placeholders |
 
-Returns tuple with two elements: (1) instance of `ExaStatement` and (2) list of `Path` objects for script output log files.
+Return tuple with two elements: (1) instance of `ExaStatement` and (2) list of `Path` objects for script output log files.
 
 Exasol should be able to open connection to the host where current script is running. It is usually OK in the same data centre, but it is normally not working if you try to run this function on local laptop.
 
@@ -182,10 +195,10 @@ Wrapper for `OPEN SCHEMA`
 | `schema` | `ingres` | Schema name |
 
 ### current_schema()
-Returns name of currently opened schema. Returns empty string if no schema was opened.
+Return name of currently opened schema. Return empty string if no schema was opened.
 
 ### export_to_file()
-Exports big amount of data from Exasol to file or file-like object using fast HTTP transport.
+Export large amount of data from Exasol to file or file-like object using fast HTTP transport.
 File must be opened in binary mode.
 
 | Argument | Example | Description |
@@ -196,7 +209,7 @@ File must be opened in binary mode.
 | `export_params` | `{'with_column_names': True}` | (optional) Custom parameters for EXPORT query |
 
 ### export_to_list()
-Exports big amount of data from Exasol to basic Python `list` using fast HTTP transport. This function may run out of memory.
+Export large amount of data from Exasol to basic Python `list` using fast HTTP transport. This function may run out of memory.
 
 | Argument | Example | Description |
 | --- | --- | --- |
@@ -204,10 +217,10 @@ Exports big amount of data from Exasol to basic Python `list` using fast HTTP tr
 | `query_params` | `{'table': 'users', 'col1':'bar'}` | (optional) Values for SQL query placeholders |
 | `export_params` | `{'encoding': 'LATIN1'}` | (optional) Custom parameters for EXPORT query |
 
-Returns `list` of `tuples`
+Return `list` of `tuples`.
 
 ### export_to_pandas()
-Exports big amount of data from Exasol to `pandas.DataFrame`. This function may run out of memory.
+Export large amount of data from Exasol to `pandas.DataFrame`. This function may run out of memory.
 
 | Argument | Example | Description |
 | --- | --- | --- |
@@ -215,10 +228,10 @@ Exports big amount of data from Exasol to `pandas.DataFrame`. This function may 
 | `query_params` | `{'table': 'users', 'col1':'bar'}` | (optional) Values for SQL query placeholders |
 | `export_params` | `{'encoding': 'LATIN1'}` | (optional) Custom parameters for EXPORT query |
 
-Returns instance of `pandas.DataFrame`
+Return instance of `pandas.DataFrame`
 
 ### export_to_callback()
-Exports big amount of data to user-defined callback function
+Export large amount of data to user-defined callback function
 
 | Argument | Example | Description |
 | --- | --- | --- |
@@ -228,7 +241,7 @@ Exports big amount of data to user-defined callback function
 | `query_params` | `{'table': 'users', 'col1':'bar'}` | (optional) Values for SQL query placeholders |
 | `export_params` | `{'with_column_names': True}` | (optional) Custom parameters for EXPORT query |
 
-Returns result of callback function
+Return result of callback function
 
 ### export_parallel()
 This function is part of [parallel HTTP transport API](/docs/HTTP_TRANSPORT_PARALLEL.md). It accepts list of proxy `host:port` strings obtained from all child processes and executes parallel export query. Parent process only monitors the execution of query. All actual work is performed in child processes.
@@ -240,10 +253,10 @@ This function is part of [parallel HTTP transport API](/docs/HTTP_TRANSPORT_PARA
 | `query_params` | `{'table': 'users', 'col1':'bar'}` | (optional) Values for SQL query placeholders |
 | `export_params` | `{'with_column_names': True}` | (optional) Custom parameters for EXPORT query |
 
-Returns nothing on successful export. You may access `EXPORT` statement results using [`last_statement()`](#last_statement) function.
+Return nothing on successful export. You may access `EXPORT` statement results using [`last_statement()`](#last_statement) function.
 
 ### import_from_file()
-Imports big amount of data from file or file-like object to Exasol. File must be opened in binary mode.
+Import large amount of data from file or file-like object to Exasol. File must be opened in binary mode.
 
 | Argument | Example | Description |
 | --- | --- | --- |
@@ -252,7 +265,7 @@ Imports big amount of data from file or file-like object to Exasol. File must be
 | `import_params` | `{'column_separator: ','}` | (optional) Custom parameters for IMPORT query |
 
 ### import_from_iterable()
-Imports big amount of data from `iterable` Python object to Exasol. Iterator must return tuples of values.
+Import large amount of data from `iterable` Python object to Exasol. Iterator must return tuples of values.
 
 | Argument | Example | Description |
 | --- | --- | --- |
@@ -261,7 +274,7 @@ Imports big amount of data from `iterable` Python object to Exasol. Iterator mus
 | `import_params` | `{'column_separator: ','}` | (optional) Custom parameters for IMPORT query |
 
 ### import_from_pandas()
-Imports big amount of data from `pandas.DataFrame` to Exasol.
+Import large amount of data from `pandas.DataFrame` to Exasol.
 
 | Argument | Example | Description |
 | --- | --- | --- |
@@ -270,7 +283,7 @@ Imports big amount of data from `pandas.DataFrame` to Exasol.
 | `import_params` | `{'column_separator: ','}` | (optional) Custom parameters for IMPORT query |
 
 ### import_from_callback()
-Imports big amount of data from user-defined callback function to Exasol.
+Import large amount of data from user-defined callback function to Exasol.
 
 | Argument | Example | Description |
 | --- | --- | --- |
@@ -289,15 +302,15 @@ This function is part of [parallel HTTP transport API](/docs/HTTP_TRANSPORT_PARA
 | `table` | `table` `(schema, table)` | Destination table for import |
 | `import_params` | `{'column_separator': ','}` | (optional) Custom parameters for IMPORT query |
 
-Returns nothing on successful export. You may access `IMPORT` statement results using [`last_statement()`](#last_statement) function.
+Return nothing on successful export. You may access `IMPORT` statement results using [`last_statement()`](#last_statement) function.
 
 ### get_nodes()
 
-Returns list of currently active Exasol nodes which is normally used for [parallel HTTP transport](/docs/HTTP_TRANSPORT_PARALLEL.md).
+Return list of currently active Exasol nodes which is normally used for [parallel HTTP transport](/docs/HTTP_TRANSPORT_PARALLEL.md).
 
 | Argument | Example | Description |
 | --- | --- | --- |
-| `pool_size` | `10` | (optional) Returns list of specific size |
+| `pool_size` | `10` | (optional) Return list of specific size |
 
 Result format: `[{'host': <ip_address>, 'port': <port>, 'idx': <incremental index of returned node>}]`
 
@@ -306,12 +319,12 @@ If `pool_size` is bigger than number of nodes, list will wrap around and nodes w
 Exasol shuffles list for every connection.
 
 ### session_id()
-Returns unique `SESSION_ID` of the current session.
+Return unique `SESSION_ID` of the current session. Return value type is `str`.
 
 ### last_statement()
-Get last `ExaStatement` object. May be useful while working with `export_*` and `import_*` functions normally returning result of callback function instead of statement object.
+Get last `ExaStatement` object. It is useful while working with `export_*` and `import_*` functions normally returning result of callback function instead of statement object.
 
-Returns instance of `ExaStatement`.
+Return instance of `ExaStatement`.
 
 ### abort_query()
 Abort running query.
@@ -383,7 +396,7 @@ Iterator yields `tuple` or `dict` depending on `fetch_dict` connection option.
 ### fetchone()
 Fetches one row.
 
-Returns `tuple` or `dict`. Returns `None` if all rows were fetched.
+Return `tuple` or `dict`. Return `None` if all rows were fetched.
 
 ### fetchmany()
 Fetches multiple rows.
@@ -392,29 +405,31 @@ Fetches multiple rows.
 | --- | --- | --- |
 | `size` | `100` | Set the specific amount of rows to fetch (Default: `10000`) |
 
-Returns `list` of `tuples` or `list` of `dict`. Returns empty `list` if all rows were fetched.
+Return `list` of `tuples` or `list` of `dict`. Return empty `list` if all rows were fetched previously.
 
 ### fetchall()
 Fetches all remaining rows. This function may run out of memory.
 
-Returns `list` of `tuples` or `list` of `dict`. Returns empty `list` if all rows were fetched.
+Return `list` of `tuples` or `list` of `dict`. Return empty `list` if all rows were fetched previously.
 
 ### fetchcol()
 Fetches all values from first column.
 
-Returns `list` of values. Returns empty `list` if all rows were fetched.
+Return `list` of values. Return empty `list` if all rows were fetched previously.
 
 ### fetchval()
 Fetches first column of first row. It may be useful for queries returning single value like `SELECT count(*) FROM table`.
 
-Returns value. Returns `None` if all rows were fetched.
+Return value. Return `None` if all rows were fetched previously.
 
 ### rowcount()
-- Returns total amount of selected rows for statements with result set (`num_rows`).
-- Returns total amount of processed rows for DML queries (`row_count`).
+Depending on the type of query:
+
+- Return total amount of selected rows for statements with result set (`num_rows`).
+- Return total amount of processed rows for DML queries (`row_count`).
 
 ### columns()
-Returns `dict` with keys as `column names` and values as `dataType` objects defined in Exasol WebSocket protocol.
+Return `dict` with keys as `column names` and values as `dataType` objects defined in Exasol WebSocket protocol.
 
 | Names | Type | Description |
 | --- | --- | --- |
@@ -431,18 +446,26 @@ Since the minimum supported version of Python is 3.6, the order of `dict` preser
 
 ### column_names()
 
-Returns `list` of column names.
+Return `list` of column names.
 
 ### ExaStatement.close()
 Closes result set handle if it was opened. You won't be able to fetch next chunk of large dataset after calling this function, but no other side-effects.
 
 ### .execution_time
 
-Execution time of SQL statement. It is measured by wall-clock time of WebSocket request, so real execution time is a bit faster. Returns `float`.
+Execution time of SQL statement. It is measured by wall-clock time of WebSocket request, so real execution time is a bit faster. Return `float`.
+
 
 ## ExaFormatter
 
 `ExaFormatter` inherits standard Python `string.Formatter`. It introduces set of placeholders to prevent SQL injections specifically in Exasol dynamic SQL queries. It also completely disabled `format_spec` section of standard formatting since it has no use in context of SQL queries and may cause more harm than good.
+
+You may access these functions using `.format` property of connection object. Example:
+
+```python
+C = pyexasol.connect(...)
+print(C.format.escape('abc'))
+```
 
 ### format()
 Formats SQL query using given arguments. Definition is the same as standard `format` function.
@@ -454,7 +477,7 @@ Accepts raw value. Converts it to `str` and replaces `'` (single-quote) with `''
 Accepts raw identifier. Converts it to `str` and replaces `"` (double-quote) with `""` (two double-quotes). May be useful on its own when escaping small parts of big identifiers.
 
 ### escape_like()
-Accepts raw value. Converts it to `str` and escapes for LIKE pattern value.
+Accepts raw value. Converts it to `str` and escapes for LIKE-pattern value.
 
 ### quote()
 Accepts raw value. Converts it to `str`, escapes it using `escape()` and wraps in `'` (single-quote). This is the primary function to pass arbitrary values to Exasol queries.
@@ -479,45 +502,153 @@ Accepts raw value. Converts it to `str` and validates it as float value for Exas
 ### safe_decimal()
 Accepts raw values. Converts it to `str` and validates it as decimal valie for Exasol. If value is not valid, throws `ValueError` exception.
 
-## ExaHTTPTransportWrapper
+## ExaMetaData
 
-Wrapper for [parallel HTTP transport](/docs/HTTP_TRANSPORT_PARALLEL.md) used by child processes.
+`ExaMetaData` provides convenient functions  to perform lock-free meta data requests using `/*snapshot execution*/` SQL hint and prepared statements. If you still get locks, please make sure to update Exasol server to the latest minor version.
 
-### ExaHTTPTransportWrapper.get_proxy()
+You may access these functions using `.meta` property of connection object. Example:
 
-Returns proxy `host:port` string. Those strings should be passed from child processes to parent process and used as argument for [`export_parallel()`](#export_parallel) and [`import_parallel()`](#import_parallel) functions.
+```python
+C = pyexasol.connect(...)
+print(C.meta.sql_columns('SELECT 1 AS id'))
+```
 
-### ExaHTTPTransportWrapper.export_to_callback()
+### sql_columns
 
-Exports chunk of data using callback function. You may use exactly the same callbacks utilized by standard non-parallel [`export_to_callback()`](#export_to_callback) function.
-
-| Argument | Example | Description |
-| --- | --- | --- |
-| `callback` | `def my_callback(pipe, dst, **kwargs)` | Callback function |
-| `dst` | `anything` | (optional) Export destination for callback function |
-| `callback_params` | `{'a': 'b'}` | (optional) Dict with additional parameters for callback function |
-
-Returns result of callback function
-
-### ExaHTTPTransportWrapper.import_from_callback()
-
-Import chunk of data using callback function. You may use exactly the same callbacks utilized by standard non-parallel [`import_from_callback()`](#import_from_callback) function.
+Return columns of SQL query result without executing it. Output format is similar to [ExaStatement.columns()](#columns).
 
 | Argument | Example | Description |
 | --- | --- | --- |
-| `callback` | `def my_callback(pipe, dst, **kwargs)` | Callback function |
-| `src` | `anything` | (optional) Import source for callback function |
-| `callback_params` | `{'a': 'b'}` | (optional) Dict with additional parameters for callback function |
+| `query` | `SELECT * FROM {table:i} WHERE col1={col1}` | SQL query text, possibly with placeholders |
+| `query_params` | `{'table': 'users', 'col1':'bar'}` | (optional) Values for placeholders |
 
-Returns result of callback function
+
+### schema_exists()
+
+Return `True` if schema exists, `False` otherwise.
+
+| Argument | Example | Description |
+| --- | --- | --- |
+| `schema_name` | `FINANCE` | Schema name |
+
+### table_exists()
+
+Return `True` if table exists, `False` otherwise. If schema name was not specified, [current_schema](#current_schema) will be used instead.
+
+| Argument | Example | Description |
+| --- | --- | --- |
+| `table_name` | `my_table`, `(my_schema, my_table)` | Table name (with optional schema name) |
+
+### view_exists()
+
+Return `True` if view exists, `False` otherwise. If schema name was not specified, [current_schema](#current_schema) will be used instead.
+
+| Argument | Example | Description |
+| --- | --- | --- |
+| `view_name` | `my_view`, `(my_schema, my_view)` | View name (with optional schema name) |
+
+### list_schemas()
+
+Return list of schemas from [EXA_SCHEMAS](https://docs.exasol.com/sql_references/metadata/metadata_system_tables.htm#EXA_SCHEMAS) system view matching LIKE-pattern.
+
+| Argument | Example | Description |
+| --- | --- | --- |
+| `schema_name_pattern` | `FINANCE`, `TEST%` | Schema name LIKE-pattern |
+
+Patterns are case-sensitive. You may escape LIKE-patterns using [.format.escape_like()](#escape_like). Response contains all columns from system view and might change depending on Exasol server version.
+
+### list_tables()
+
+Return list of tables from [EXA_ALL_TABLES](https://docs.exasol.com/sql_references/metadata/metadata_system_tables.htm#EXA_ALL_TABLES) system view matching LIKE-pattern.
+
+| Argument | Example | Description |
+| --- | --- | --- |
+| `table_schema_pattern` | `FINANCE`, `TEST%` | Schema name LIKE-pattern |
+| `table_name_pattern` | `MY_TABLE`, `PAYMENTS_%` | Table name LIKE-pattern |
+
+Patterns are case-sensitive. You may escape LIKE-patterns using [.format.escape_like()](#escape_like). Response contains all columns from system view and might change depending on Exasol server version.
+
+### list_views()
+
+Return list of views from [EXA_ALL_VIEWS](https://docs.exasol.com/sql_references/metadata/metadata_system_tables.htm#EXA_ALL_VIEWS) system view matching LIKE-pattern.
+
+| Argument | Example | Description |
+| --- | --- | --- |
+| `view_schema_pattern` | `FINANCE`, `TEST%` | Schema name LIKE-pattern |
+| `view_name_pattern` | `MY_VIEW`, `PAYMENTS_VIEW_%` | View name LIKE-pattern |
+
+Patterns are case-sensitive. You may escape LIKE-patterns using [.format.escape_like()](#escape_like). Response contains all columns from system view and might change depending on Exasol server version.
+
+### list_columns()
+
+Return list of columns from [EXA_ALL_COLUMNS](https://docs.exasol.com/sql_references/metadata/metadata_system_tables.htm#EXA_ALL_COLUMNS) system view matching LIKE-pattern.
+
+| Argument | Example | Description |
+| --- | --- | --- |
+| `column_schema_pattern` | `FINANCE`, `TEST%` | Schema name LIKE-pattern |
+| `column_table_pattern` | `MY_VIEW`, `PAYMENTS_VIEW_%` | Object name LIKE-pattern |
+| `column_table_type_pattern` | `TABLE`, `VIEW` | Object type LIKE-pattern |
+| `column_name_pattern` | `USER_ID`, `USER_ID%` | Column name LIKE-pattern |
+
+Patterns are case-sensitive. You may escape LIKE-patterns using [.format.escape_like()](#escape_like). Response contains all columns from system view and might change depending on Exasol server version.
+
+### list_objects()
+
+Return list of objects from [EXA_ALL_OBJECTS](https://docs.exasol.com/sql_references/metadata/metadata_system_tables.htm#EXA_ALL_OBJECTS) system view matching LIKE-pattern.
+
+| Argument | Example | Description |
+| --- | --- | --- |
+| `object_name_pattern` | `MY_VIEW`, `PAYMENTS_VIEW_%` | Object name LIKE-pattern |
+| `object_type_pattern` | `TABLE`, `VIEW`, `FUNCTION` | Object type LIKE-pattern |
+| `owner_pattern` | `INGRES`, `SYS` | Owner (user or role) LIKE-pattern |
+| `root_name_pattern` | `FINANCE`, `TEST%` | Root name LIKE-pattern, it normally refers to schema name |
+
+Patterns are case-sensitive. You may escape LIKE-patterns using [.format.escape_like()](#escape_like). Response contains all columns from system view and might change depending on Exasol server version.
+
+### list_object_sizes()
+
+Return list of objects with sizes from [EXA_ALL_OBJECT_SIZES](https://docs.exasol.com/sql_references/metadata/metadata_system_tables.htm#EXA_ALL_OBJECT_SIZES) system view matching LIKE-pattern.
+
+Please note: object sizes do not include indices and statistics!
+
+| Argument | Example | Description |
+| --- | --- | --- |
+| `object_name_pattern` | `MY_VIEW`, `PAYMENTS_VIEW_%` | Object name LIKE-pattern |
+| `object_type_pattern` | `TABLE`, `VIEW`, `FUNCTION` | Object type LIKE-pattern |
+| `owner_pattern` | `INGRES`, `SYS` | Owner (user or role) LIKE-pattern |
+| `root_name_pattern` | `FINANCE`, `TEST%` | Root name LIKE-pattern, it normally refers to schema name |
+
+Patterns are case-sensitive. You may escape LIKE-patterns using [.format.escape_like()](#escape_like). Response contains all columns from system view and might change depending on Exasol server version.
+
+### list_indices()
+
+Return list of indices with sizes from [EXA_ALL_INDICES](https://docs.exasol.com/sql_references/metadata/metadata_system_tables.htm#EXA_ALL_INDICES) system view matching LIKE-pattern.
+
+| Argument | Example | Description |
+| --- | --- | --- |
+| `index_schema_pattern` | `FINANCE`, `TEST%` | Schema name LIKE-pattern |
+| `index_table_pattern` | `TABLE`, `VIEW`, `FUNCTION` | Table name LIKE-pattern |
+| `index_owner_pattern` | `INGRES`, `SYS` | Owner (user or role) LIKE-pattern |
+
+Patterns are case-sensitive. You may escape LIKE-patterns using [.format.escape_like()](#escape_like). Response contains all columns from system view and might change depending on Exasol server version.
+
+### list_sql_keywords()
+
+Return list of SQL keywords from [EXA_SQL_KEYWORDS](https://docs.exasol.com/sql_references/metadata/metadata_system_tables.htm#EXA_SQL_KEYWORDS) system view.
+
+These keywords cannot be used as identifiers without double quotes.
+
+Please try to avoid hardcoding this list. It might change depending on Exasol server version without warning.
 
 ## ExaExtension
 
 This class provides additional capabilities to solve common Exasol-related problems which are normally out of scope of simple SQL driver. You should call `ExaConnection.ext` property in order to use those functions.
 
-For example:
+You may access these functions using `.ext` property of connection object. Example:
+
 ```python
-C.ext.get_columns('my_table')
+C = pyexasol.connect(...)
+print(C.ext.get_disk_space_usage())
 ```
 
 ### insert_multi()
@@ -535,61 +666,6 @@ You may use `columns` argument to specify custom order of columns for insertion.
 | `columns` | `['id', 'name']` | List of column names to specify custom order of columns |
 
 Please note that data should be presented in a row format. You may use `zip(*data_cols)` to convert columnar format into row format.
-
-### get_columns()
-
-Returns structure of table or view using WebSocket response format. Output is very similar to [ExaStatement.columns()](#columns).
-
-| Argument | Example | Description |
-| --- | --- | --- |
-| `object_name` | `my_table` `(my_schema, my_table)` | Object name or tuple |
-
-### get_columns_sql()
-
-Returns structure of SQL query result without executing it. Output is very similar to [ExaStatement.columns()](#columns).
-
-| Argument | Example | Description |
-| --- | --- | --- |
-| `query` | `SELECT * FROM {table:i} WHERE col1={col1}` | SQL query text, possibly with placeholders |
-| `query_params` | `{'table': 'users', 'col1':'bar'}` | (optional) Values for placeholders |
-
-### get_sys_columns()
-
-Returns info about columns using Exasol system views. This is different from WebSocket response format.
-
-| Argument | Example | Description |
-| --- | --- | --- |
-| `object_name` | `my_table` `(my_schema, my_table)` | Object name or tuple |
-
-### get_sys_tables()
-
-Returns info about tables using Exasol system views.
-
-| Argument | Example | Description |
-| --- | --- | --- |
-| `schema` | `my_schema` | (optional) schema name (Default: current schema) |
-| `table_name_prefix` | `DIM_` | (optional) filter tables by name prefix (Default: all tables in schema) |
-
-### get_sys_views()
-
-Returns info about views using Exasol system views.
-
-| Argument | Example | Description |
-| --- | --- | --- |
-| `schema` | `my_schema` | (optional) schema name (Default: current schema) |
-| `view_name_prefix` | `DIM_` | (optional) filter views by name prefix (Default: all views in schema) |
-
-### get_sys_schemas()
-
-Returns info about schemas using Exasol system views.
-
-| Argument | Example | Description |
-| --- | --- | --- |
-| `schema_name_prefix` | `MUR_` | (optional) filter schemas by name prefix (Default: all schemas) |
-
-### get_reserved_words()
-
-Returns list of Exasol reserved words. Those words cannot be used as identifiers without quotes. It is a bad practice to hard-code such words in SQL driver code. This is list is constantly updated by Exasol during version upgrades, and it's a good idea to always fetch it for best possible results.
 
 ### get_disk_space_usage()
 
@@ -622,3 +698,37 @@ Details are useful to detect bad data distribution and imbalanced execution acro
 If you want to see real values of CPU, MEM, HDD, NET columns, please enable Exasol profiling first with: `ALTER SESSION SET PROFILE = 'ON';`
 
 Please refer to Exasol User Manuals for explanations about profiling columns.
+
+## ExaHTTPTransportWrapper
+
+Wrapper for [parallel HTTP transport](/docs/HTTP_TRANSPORT_PARALLEL.md) used by child processes.
+
+You may create this wrapper using [http_transport()](#http_transport) function.
+
+### ExaHTTPTransportWrapper.get_proxy()
+
+Return proxy `host:port` string. Those strings should be passed from child processes to parent process and used as argument for [`export_parallel()`](#export_parallel) and [`import_parallel()`](#import_parallel) functions.
+
+### ExaHTTPTransportWrapper.export_to_callback()
+
+Exports chunk of data using callback function. You may use exactly the same callbacks utilized by standard non-parallel [`export_to_callback()`](#export_to_callback) function.
+
+| Argument | Example | Description |
+| --- | --- | --- |
+| `callback` | `def my_callback(pipe, dst, **kwargs)` | Callback function |
+| `dst` | `anything` | (optional) Export destination for callback function |
+| `callback_params` | `{'a': 'b'}` | (optional) Dict with additional parameters for callback function |
+
+Return result of callback function
+
+### ExaHTTPTransportWrapper.import_from_callback()
+
+Import chunk of data using callback function. You may use exactly the same callbacks utilized by standard non-parallel [`import_from_callback()`](#import_from_callback) function.
+
+| Argument | Example | Description |
+| --- | --- | --- |
+| `callback` | `def my_callback(pipe, dst, **kwargs)` | Callback function |
+| `src` | `anything` | (optional) Import source for callback function |
+| `callback_params` | `{'a': 'b'}` | (optional) Dict with additional parameters for callback function |
+
+Return result of callback function

@@ -22,6 +22,7 @@ __all__ = [
     'ExaFormatter',
     'ExaLogger',
     'ExaExtension',
+    'ExaMetaData',
     'ExaHTTPTransportWrapper',
     'ExaLocalConfig',
     'HTTP_EXPORT',
@@ -36,6 +37,7 @@ from .formatter import ExaFormatter
 from .local_config import ExaLocalConfig
 from .logger import ExaLogger
 from .ext import ExaExtension
+from .meta import ExaMetaData
 from .mapper import exasol_mapper
 from .http_transport import ExaHTTPTransportWrapper, HTTP_EXPORT, HTTP_IMPORT
 

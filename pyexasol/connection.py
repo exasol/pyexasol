@@ -21,6 +21,7 @@ from .statement import ExaStatement
 from .logger import ExaLogger
 from .formatter import ExaFormatter
 from .ext import ExaExtension
+from .meta import ExaMetaData
 from .script_output import ExaScriptOutputProcess
 from .version import __version__
 
@@ -30,6 +31,7 @@ class ExaConnection(object):
     cls_formatter = ExaFormatter
     cls_logger = ExaLogger
     cls_extension = ExaExtension
+    cls_meta = ExaMetaData
 
     """
     Threads may share the module, but not connections
@@ -48,6 +50,7 @@ class ExaConnection(object):
             , schema=''
             , autocommit=constant.DEFAULT_AUTOCOMMIT
             , snapshot_transactions=False
+            , connection_timeout=constant.DEFAULT_CONNECTION_TIMEOUT
             , socket_timeout=constant.DEFAULT_SOCKET_TIMEOUT
             , query_timeout=constant.DEFAULT_QUERY_TIMEOUT
             , compression=False
@@ -78,7 +81,8 @@ class ExaConnection(object):
         :param schema: Open schema after connection (Default: '', no schema)
         :param autocommit: Enable autocommit on connection (Default: True)
         :param snapshot_transactions: Enable snapshot transactions on connection (Default: False)
-        :param socket_timeout: Socket timeout in seconds passed directly to websocket (Default: 10)
+        :param connection_timeout: Socket timeout in seconds used to establish connection (Default: 10)
+        :param socket_timeout: Socket timeout in seconds used for requests after connection was established (Default: 30)
         :param query_timeout: Maximum execution time of queries before automatic abort, in seconds (Default: 0, no timeout)
         :param compression: Use zlib compression both for WebSocket and HTTP transport (Default: False)
         :param encryption: Use SSL to encrypt client-server communications for WebSocket and HTTP transport (Default: False)
@@ -108,6 +112,7 @@ class ExaConnection(object):
             'autocommit': autocommit,
             'snapshot_transactions': snapshot_transactions,
 
+            'connection_timeout': connection_timeout,
             'socket_timeout': socket_timeout,
             'query_timeout': query_timeout,
             'compression': compression,
@@ -137,26 +142,31 @@ class ExaConnection(object):
         }
 
         self.login_info = {}
+        self.login_time = 0
         self.attr = {}
-        self.stmt_count = 0
         self.is_closed = False
-        self.connection_time = 0
 
         self.ws_host = None
         self.ws_port = None
         self.ws_req_count = 0
         self.ws_req_time = 0
 
-        self._last_stmt = None
-        self._udf_output_count = 0
+        self.last_stmt = None
+        self.stmt_count = 0
 
+        self.json_encode = None
+        self.json_decode = None
+
+        self._udf_output_count = 0
         self._req_lock = threading.Lock()
 
-        self._init_logger()
         self._init_format()
-        self._init_ws()
         self._init_json()
         self._init_ext()
+        self._init_meta()
+
+        self._init_logger()
+        self._init_ws()
 
         self._login()
         self.get_attr()
@@ -166,9 +176,7 @@ class ExaConnection(object):
         Execute SQL query with optional query formatting parameters
         Return ExaStatement object
         """
-        self._last_stmt = self.cls_statement(self, query, query_params)
-
-        return self._last_stmt
+        return self.cls_statement(self, query, query_params)
 
     def execute_udf_output(self, query, query_params=None):
         """
@@ -185,28 +193,31 @@ class ExaConnection(object):
             stmt_output_dir
         )
 
-        script_output.start()
-
-        # This option is useful to get around complex network setups, like Exasol running in Docker containers
-        if self.options['udf_output_connect_address']:
-            address = f"{self.options['udf_output_connect_address'][0]}:{self.options['udf_output_connect_address'][1]}"
-        else:
-            address = script_output.get_output_address()
-
-        self.execute("ALTER SESSION SET SCRIPT_OUTPUT_ADDRESS = {address}", {'address': address})
-
         try:
+            script_output.start()
+
+            # This option is useful to get around complex network setups, like Exasol running in Docker containers
+            if self.options['udf_output_connect_address']:
+                address = f"{self.options['udf_output_connect_address'][0]}:{self.options['udf_output_connect_address'][1]}"
+            else:
+                address = script_output.get_output_address()
+
+            self.execute("ALTER SESSION SET SCRIPT_OUTPUT_ADDRESS = {address}", {'address': address})
+
             stmt = self.execute(query, query_params)
             log_files = sorted(list(stmt_output_dir.glob('*.log')))
 
             if len(log_files) > 0:
-                script_output.join()
+                script_output.join_with_exc()
             else:
                 # In some cases Exasol does not run any VM's even when UDF scripts are being called
                 # In this case we must terminate TCP server, since it won't stop automatically
                 script_output.terminate()
+                script_output.join()
         except ExaQueryError:
             script_output.terminate()
+            script_output.join()
+
             raise
 
         return stmt, log_files
@@ -232,7 +243,7 @@ class ExaConnection(object):
 
     def open_schema(self, schema):
         self.set_attr({
-            'currentSchema': self.format.default_format_ident(schema)
+            'currentSchema': self.format.default_format_ident_value(schema)
         })
 
     def current_schema(self):
@@ -281,28 +292,39 @@ class ExaConnection(object):
         if query_params is not None:
             query_or_table = self.format.format(query_or_table, **query_params)
 
+        http_proc = ExaHTTPProcess(self.ws_host, self.ws_port, compression, self.options['encryption'], HTTP_EXPORT)
+        sql_thread = ExaSQLExportThread(self, compression, query_or_table, export_params)
+
         try:
-            http_proc = ExaHTTPProcess(self.ws_host, self.ws_port, compression, self.options['encryption'], HTTP_EXPORT)
             http_proc.start()
 
-            sql_thread = ExaSQLExportThread(self, http_proc.get_proxy(), compression, query_or_table, export_params)
             sql_thread.set_http_proc(http_proc)
+            sql_thread.set_exa_proxy_list(http_proc.get_proxy())
+
             sql_thread.start()
 
             result = callback(http_proc.read_pipe, dst, **callback_params)
             http_proc.read_pipe.close()
 
-            http_proc.join()
-            sql_thread.join()
+            http_proc.join_with_exc()
+            sql_thread.join_with_exc()
 
             return result
         except Exception as e:
-            # Close HTTP Server if it is still running
-            if 'http_proc' in locals():
-                http_proc.terminate()
+            # Terminate HTTP Server if it is still running
+            http_proc.terminate()
+            http_proc.join()
+
+            # Try to join SQL thread, but no longer than 1 second
+            sql_thread.join(1)
+
+            # If SQL thread is still running somehow, abort query and join again
+            if sql_thread.is_alive():
+                self.abort_query()
+                sql_thread.join()
 
             # Give higher priority to SQL thread exception
-            if 'sql_thread' in locals() and sql_thread.exc:
+            if sql_thread.exc:
                 raise sql_thread.exc
 
             raise e
@@ -324,28 +346,39 @@ class ExaConnection(object):
         if not callable(callback):
             raise ValueError('Callback argument is not callable')
 
+        http_proc = ExaHTTPProcess(self.ws_host, self.ws_port, compression, self.options['encryption'], HTTP_IMPORT)
+        sql_thread = ExaSQLImportThread(self, compression, table, import_params)
+
         try:
-            http_proc = ExaHTTPProcess(self.ws_host, self.ws_port, compression, self.options['encryption'], HTTP_IMPORT)
             http_proc.start()
 
-            sql_thread = ExaSQLImportThread(self, http_proc.get_proxy(), compression, table, import_params)
             sql_thread.set_http_proc(http_proc)
+            sql_thread.set_exa_proxy_list(http_proc.get_proxy())
+
             sql_thread.start()
 
             result = callback(http_proc.write_pipe, src, **callback_params)
             http_proc.write_pipe.close()
 
-            http_proc.join()
-            sql_thread.join()
+            http_proc.join_with_exc()
+            sql_thread.join_with_exc()
 
             return result
         except Exception as e:
-            # Close HTTP Server if it is still running
-            if 'http_proc' in locals():
-                http_proc.terminate()
+            # Terminate HTTP Server if it is still running
+            http_proc.terminate()
+            http_proc.join()
+
+            # Try to join SQL thread, but no longer than 1 second
+            sql_thread.join(1)
+
+            # If SQL thread is still running somehow, abort query in the main thread and join SQL thread again
+            if sql_thread.is_alive():
+                self.abort_query()
+                sql_thread.join()
 
             # Give higher priority to SQL thread exception
-            if 'sql_thread' in locals() and sql_thread.exc:
+            if sql_thread.exc:
                 raise sql_thread.exc
 
             raise e
@@ -371,7 +404,8 @@ class ExaConnection(object):
 
         # There is no need to run separate thread here, all work is performed in child processes
         # We simply reuse thread class to keep logic in one place
-        sql_thread = ExaSQLExportThread(self, exa_proxy_list, compression, query_or_table, export_params)
+        sql_thread = ExaSQLExportThread(self, compression, query_or_table, export_params)
+        sql_thread.set_exa_proxy_list(exa_proxy_list)
         sql_thread.run_sql()
 
     def import_parallel(self, exa_proxy_list, table, import_params=None):
@@ -392,17 +426,24 @@ class ExaConnection(object):
 
         # There is no need to run separate thread here, all work is performed in child processes
         # We simply reuse thread class to keep logic in one place
-        sql_thread = ExaSQLImportThread(self, exa_proxy_list, compression, table, import_params)
+        sql_thread = ExaSQLImportThread(self, compression, table, import_params)
+        sql_thread.set_exa_proxy_list(exa_proxy_list)
         sql_thread.run_sql()
 
     def session_id(self):
         return str(self.login_info.get('sessionId', ''))
 
     def last_statement(self) -> ExaStatement:
-        if self._last_stmt is None:
+        """
+        Return last created ExaStatement object
+
+        It is mainly used for HTTP transport to access internal IMPORT / EXPORT query,
+        measure execution time and number of rows
+        """
+        if self.last_stmt is None:
             raise ExaRuntimeError(self, 'Last statement not found')
 
-        return self._last_stmt
+        return self.last_stmt
 
     def close(self):
         """
@@ -413,6 +454,7 @@ class ExaConnection(object):
             self._ws.close()
 
         self.is_closed = True
+        self.last_stmt = None
 
     def get_attr(self):
         ret = self.req({
@@ -427,16 +469,16 @@ class ExaConnection(object):
             'attributes': new_attr,
         })
 
-        # At this moment setAttributes response is inconsistent, so we have to fully refresh after every call
+        # At this moment setAttributes response is inconsistent, so attributes must be refreshed after every call
         self.get_attr()
 
     def get_nodes(self, pool_size=None):
         """
-        Returns list of dictionaries describing active Exasol nodes
+        Return list of dictionaries describing active Exasol nodes
         Format: {'host': <ip_address>, 'port': <port>, 'idx': <incremental index of returned node>}
 
         If pool_size is bigger than number of nodes, list will wrap around and nodes will repeat with different 'idx'
-        If pool_size is omitted, returns every active node once
+        If pool_size is omitted, return every active node once
 
         It is useful to balance workload for parallel IMPORT and EXPORT
         Exasol shuffles list for every connection
@@ -458,7 +500,7 @@ class ExaConnection(object):
         local_req_count = self.ws_req_count
 
         # Build request
-        send_data = self._json_encode(req)
+        send_data = self.json_encode(req)
         self.logger.debug_json(f'WebSocket request #{local_req_count}', req)
 
         # Prevent and discourage attempts to use connection object from another thread simultaneously
@@ -482,7 +524,7 @@ class ExaConnection(object):
             self._req_lock.release()
 
         # Parse response
-        ret = self._json_decode(recv_data)
+        ret = self.json_decode(recv_data)
         self.logger.debug_json(f'WebSocket response #{local_req_count}', ret)
 
         # Updated attributes may be returned from any request
@@ -523,7 +565,7 @@ class ExaConnection(object):
             'command': 'abortQuery'
         }
 
-        send_data = self._json_encode(req)
+        send_data = self.json_encode(req)
         self.logger.debug_json('WebSocket abort request', req)
 
         try:
@@ -558,7 +600,7 @@ class ExaConnection(object):
             }
         })['responseData']
 
-        self.connection_time = time.time() - start_ts
+        self.login_time = time.time() - start_ts
 
         if self.options['compression']:
             self._ws_send = lambda x: self._ws.send_binary(zlib.compress(x.encode(), 1))
@@ -585,6 +627,7 @@ class ExaConnection(object):
 
             try:
                 self._ws = websocket.create_connection(f'{ws_prefix}{host}:{port}', **ws_options)
+                self._ws.settimeout(self.options['socket_timeout'])
 
                 self.ws_host = host
                 self.ws_port = port
@@ -594,7 +637,7 @@ class ExaConnection(object):
 
                 return
             except Exception as e:
-                self.logger.debug(f'Failed to connect [{host}:{port}]')
+                self.logger.debug(f'Failed to connect [{host}:{port}]: {e}')
 
                 failed_attempts += 1
 
@@ -603,7 +646,7 @@ class ExaConnection(object):
 
     def _get_ws_options(self):
         options = {
-            'timeout': self.options['socket_timeout'],
+            'timeout': self.options['connection_timeout'],
             'skip_utf8_validation': True,
             'enable_multithread': True,     # Extra lock is necessary to protect abort_query() calls
         }
@@ -709,28 +752,31 @@ class ExaConnection(object):
         if self.options['json_lib'] == 'rapidjson':
             import rapidjson
 
-            self._json_encode = lambda x: rapidjson.dumps(x, number_mode=rapidjson.NM_NATIVE)
-            self._json_decode = lambda x: rapidjson.loads(x, number_mode=rapidjson.NM_NATIVE)
+            self.json_encode = lambda x: rapidjson.dumps(x, number_mode=rapidjson.NM_NATIVE)
+            self.json_decode = lambda x: rapidjson.loads(x, number_mode=rapidjson.NM_NATIVE)
 
         # ujson provides best performance in our tests, but it is abandoned by maintainers
         elif self.options['json_lib'] == 'ujson':
             import ujson
 
-            self._json_encode = ujson.dumps
-            self._json_decode = ujson.loads
+            self.json_encode = ujson.dumps
+            self.json_decode = ujson.loads
 
         # json from Python stdlib, very safe choice, but slow
         elif self.options['json_lib'] == 'json':
             import json
 
-            self._json_encode = json.dumps
-            self._json_decode = json.loads
+            self.json_encode = json.dumps
+            self.json_decode = json.loads
 
         else:
             raise ValueError(f"Unsupported json library [{self.options['json_lib']}]")
 
     def _init_ext(self):
         self.ext = self.cls_extension(self)
+
+    def _init_meta(self):
+        self.meta = self.cls_meta(self)
 
     def _get_stmt_output_dir(self):
         import pathlib
@@ -769,6 +815,5 @@ class ExaConnection(object):
         """
         try:
             self.close()
-            pass
         except Exception:
             pass

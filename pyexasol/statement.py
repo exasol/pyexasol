@@ -32,15 +32,18 @@ class ExaStatement(object):
         self.statement_handle = None
         self.parameter_data = None
 
+        if self.connection.is_closed:
+            raise ExaRuntimeError(self.connection, "Exasol connection was closed")
+
+        # Always set last_stmt in connection object regardless of how statement object was created
+        self.connection.last_stmt = self
+
         # This index may not match STMT_ID in system tables due to automatically executed queries (e.g. autocommit)
         self.connection.stmt_count += 1
         self.stmt_idx = self.connection.stmt_count
 
         self.execution_time = 0
         self.is_closed = False
-
-        if self.connection.is_closed:
-            raise ExaRuntimeError(self.connection, "Exasol connection was closed")
 
         if prepare:
             self._prepare()
@@ -55,6 +58,7 @@ class ExaStatement(object):
             if self.result_type != 'resultSet':
                 raise ExaRuntimeError(self.connection, 'Attempt to fetch from statement without result set')
 
+            self._close_result_set_handle()
             raise StopIteration
 
         if self.pos_chunk >= self.num_rows_chunk:
@@ -114,19 +118,28 @@ class ExaStatement(object):
         return self.col_names
 
     def close(self):
-        if self.result_set_handle:
+        self._close_result_set_handle()
+        self._close_statement_handle()
+
+        self.is_closed = True
+
+    def _close_result_set_handle(self):
+        if not self.connection.is_closed and self.result_set_handle:
             self.connection.req({
                 'command': 'closeResultSet',
                 'resultSetHandles': [self.result_set_handle]
             })
 
-        if self.statement_handle:
+            self.result_set_handle = None
+
+    def _close_statement_handle(self):
+        if not self.connection.is_closed and self.statement_handle:
             self.connection.req({
                 'command': 'closePreparedStatement',
                 'statementHandle': self.statement_handle,
             })
 
-        self.is_closed = True
+            self.statement_handle = None
 
     def _format_query(self, query, query_params):
         query = str(query)
@@ -233,3 +246,13 @@ class ExaStatement(object):
 
     def __exit__(self, exc_type, exc_value, traceback):
         self.close()
+
+    def __del__(self):
+        """
+        close() is being called automatically in order to close handles which
+        might be still opened on Exasol server side
+        """
+        try:
+            self.close()
+        except Exception:
+            pass

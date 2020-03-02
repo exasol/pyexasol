@@ -1,3 +1,5 @@
+from . import constant
+
 
 class ExaError(Exception):
     """
@@ -77,7 +79,12 @@ class ExaQueryError(ExaRequestError):
     def get_params_for_print(self):
         params = super().get_params_for_print()
         params['session_id'] = self.connection.session_id()
-        params['query'] = self.query
+
+        if len(self.query) > constant.EXCEPTION_QUERY_TEXT_MAX_LENGTH:
+            params['query'] = f'{self.query[:constant.EXCEPTION_QUERY_TEXT_MAX_LENGTH]}' \
+                              f'\n------ TRUNCATED TOO LONG QUERY ------\n'
+        else:
+            params['query'] = self.query
 
         return params
 

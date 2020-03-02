@@ -1,7 +1,6 @@
 import logging
 import datetime
 import pathlib
-import weakref
 
 from . import constant
 from .exceptions import ExaRuntimeError
@@ -9,7 +8,7 @@ from .exceptions import ExaRuntimeError
 
 class ExaLogger(logging.Logger):
     def __init__(self, connection, name, level=logging.NOTSET):
-        self.connection = weakref.proxy(connection)
+        self.connection = connection
         super().__init__(name, level)
 
     def add_default_handler(self):
@@ -35,7 +34,7 @@ class ExaLogger(logging.Logger):
 
     def debug_json(self, message, data):
         if self.isEnabledFor(logging.DEBUG):
-            json_str = self.connection._json_encode(data, indent=4)
+            json_str = self.connection.json_encode(data, indent=4)
 
             if len(json_str) > constant.LOGGER_MAX_JSON_LENGTH:
                 json_str = f'{json_str[0:constant.LOGGER_MAX_JSON_LENGTH]}\n------ TRUNCATED TOO LONG MESSAGE ------\n'

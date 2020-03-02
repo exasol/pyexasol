@@ -91,3 +91,30 @@ res = C.export_to_list(select_q)
 stmt = C.last_statement()
 print(f'EXPORTED {stmt.rowcount()} rows in {stmt.execution_time}s')
 printer.pprint(res)
+
+# Very large query
+stmt = C.execute('SELECT {val1} AS val1, {val2} AS val2, {val3} AS val3, {val4} AS val4, {val5} AS val5', {
+    'val1': edge_cases[0]['var2000000'],
+    'val2': edge_cases[0]['var2000000'],
+    'val3': edge_cases[0]['var2000000'],
+    'val4': edge_cases[0]['var2000000'],
+    'val5': edge_cases[0]['var2000000'],
+})
+
+print(f'Query length: {len(stmt.query)}')
+print(f'Result column length: {len(stmt.fetchone()[0])}')
+
+# Very large query with compression
+C = pyexasol.connect(dsn=config.dsn, user=config.user, password=config.password, schema=config.schema
+                     , compression=True, encryption=True)
+
+stmt = C.execute('SELECT {val1} AS val1, {val2} AS val2, {val3} AS val3, {val4} AS val4, {val5} AS val5', {
+    'val1': edge_cases[0]['var2000000'],
+    'val2': edge_cases[0]['var2000000'],
+    'val3': edge_cases[0]['var2000000'],
+    'val4': edge_cases[0]['var2000000'],
+    'val5': edge_cases[0]['var2000000'],
+})
+
+print(f'Query length: {len(stmt.query)}')
+print(f'Result column length: {len(stmt.fetchone()[0])}')

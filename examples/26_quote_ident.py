@@ -10,7 +10,10 @@ import pprint
 printer = pprint.PrettyPrinter(indent=4, width=140)
 
 # Basic connect
-C = pyexasol.connect(dsn=config.dsn, user=config.user, password=config.password, schema=config.schema, quote_ident=True)
+C = pyexasol.connect(dsn=config.dsn, user=config.user, password=config.password, quote_ident=True)
+
+# Open schema
+C.open_schema(config.schema)
 
 # Export from table name with lower case characters
 pd = C.export_to_pandas('camelCaseTable')

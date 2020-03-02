@@ -5,25 +5,25 @@ cache: pip
 matrix:
     include:
         -   python: 3.6
-            env: EXASOL_TAG=latest
+            env: EXASOL_TAG=6.2.3-d1
         -   python: 3.6
-            env: EXASOL_TAG=6.1.7-d1
+            env: EXASOL_TAG=6.1.8-d1
         -   python: 3.6
             env: EXASOL_TAG=6.0.16-d1
         -   python: 3.7
-            env: EXASOL_TAG=latest
+            env: EXASOL_TAG=6.2.3-d1
             dist: xenial
         -   python: 3.7
-            env: EXASOL_TAG=6.1.7-d1
+            env: EXASOL_TAG=6.1.8-d1
             dist: xenial
         -   python: 3.7
             env: EXASOL_TAG=6.0.16-d1
             dist: xenial
         -   python: 3.8
-            env: EXASOL_TAG=latest
+            env: EXASOL_TAG=6.2.3-d1
             dist: xenial
         -   python: 3.8
-            env: EXASOL_TAG=6.1.7-d1
+            env: EXASOL_TAG=6.1.8-d1
             dist: xenial
         -   python: 3.8
             env: EXASOL_TAG=6.0.16-d1
@@ -45,7 +45,7 @@ install:
     - sleep 120
     - docker logs exasol
 
-    - pip install -e .[pandas,encrypt,ujson,rapidjson,pproxy]
+    - pip install -e .[pandas,encrypt,ujson,rapidjson,examples]
 
 script:
     - python examples/00_prepare.py
@@ -81,3 +81,6 @@ script:
     - python examples/30_http_proxy.py
     - python examples/31_context_manager.py
     - python examples/32_insert_multi.py
+    - python examples/33_meta.py
+    - python examples/34_http_transport_errors.py
+    - python examples/35_garbage_collection.py

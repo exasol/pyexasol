@@ -1,18 +1,19 @@
 """
 Extension with Exasol-specific helper functions
 """
-import weakref
 
 from .exceptions import ExaRuntimeError
 
 
 class ExaExtension(object):
     def __init__(self, connection):
-        self.connection = weakref.proxy(connection)
+        self.connection = connection
         self.reserved_words = None
 
     def get_columns(self, object_name):
         """
+        DEPRECATED, please use `.meta.sql_columns` instead
+
         Get information about columns of table or view (Websocket format)
         Object name may be passed as tuple to specify custom schema
         """
@@ -21,6 +22,8 @@ class ExaExtension(object):
 
     def get_columns_sql(self, query, query_params=None):
         """
+        DEPRECATED, please use `.meta.sql_columns` instead
+
         Get columns of SQL query without executing it (Websocket format)
         It relies on prepared statement which is closed immediately without execution
         """
@@ -67,6 +70,8 @@ class ExaExtension(object):
 
     def get_sys_columns(self, object_name):
         """
+        DEPRECATED, please use `.meta.list_columns` instead
+
         Get information about columns of table or view (SYS format)
         Object name may be passed as tuple to specify custom schema
         """
@@ -108,6 +113,8 @@ class ExaExtension(object):
 
     def get_sys_tables(self, schema=None, table_name_prefix=''):
         """
+        DEPRECATED, please use `.meta.list_tables` instead
+
         Get information about tables in selected schema(SYS format)
         Output may be optionally filtered by table name prefix
         """
@@ -143,6 +150,8 @@ class ExaExtension(object):
 
     def get_sys_views(self, schema=None, view_name_prefix=''):
         """
+        DEPRECATED, please use `.meta.list_views` instead
+
         Get information about views in selected schema(SYS format)
         Output may be optionally filtered by view name prefix
         """
@@ -178,6 +187,8 @@ class ExaExtension(object):
 
     def get_sys_schemas(self, schema_name_prefix=''):
         """
+        DEPRECATED, please use `.meta.list_schemas` instead
+
         Get information about schemas (SYS format)
         Output may be optionally filtered by schema name prefix
         """
@@ -206,6 +217,8 @@ class ExaExtension(object):
 
     def get_reserved_words(self):
         """
+        DEPRECATED, please use `.meta.list_sql_keywords` instead
+
         Get reserved keywords which cannot be used as identifiers without double-quotes
         Never hard-code this list! It changes with every Exasol versions
         """

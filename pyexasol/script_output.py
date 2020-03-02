@@ -40,12 +40,19 @@ class ExaScriptOutputProcess(object):
         return self.output_address
 
     def join(self):
-        code = self.proc.wait()
+        if self.proc:
+            return self.proc.wait()
+
+        return None
+
+    def join_with_exc(self):
+        code = self.join()
 
         if code != 0:
             raise RuntimeError(f"Script output server process finished with exitcode: {code}")
 
+        return code
+
     def terminate(self):
         if self.proc:
             self.proc.terminate()
-            self.proc.wait()      # wait without checking exitcode

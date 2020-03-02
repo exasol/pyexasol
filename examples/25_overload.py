@@ -34,12 +34,18 @@ class CustomExaExtension(pyexasol.ExaExtension):
         print(f"Extension session_id: {self.connection.session_id()}")
 
 
+class CustomExaMetaData(pyexasol.ExaMetaData):
+    def print_session_id(self):
+        print(f"MetaData session_id: {self.connection.session_id()}")
+
+
 class CustomExaConnection(pyexasol.ExaConnection):
     # Set custom sub-classes here
     cls_statement = CustomExaStatement
     cls_formatter = CustomExaFormatter
     cls_logger = CustomExaLogger
     cls_extension = CustomExaExtension
+    cls_meta = CustomExaMetaData
 
     def __init__(self, **kwargs):
         if 'custom_param' in kwargs:
@@ -59,6 +65,7 @@ stmt.print_session_id()
 C.format.print_session_id()
 C.logger.print_session_id()
 C.ext.print_session_id()
+C.meta.print_session_id()
 
 C.close()
 

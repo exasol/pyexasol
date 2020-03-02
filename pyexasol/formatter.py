@@ -1,6 +1,5 @@
 import string
 import re
-import weakref
 
 
 class ExaFormatter(string.Formatter):
@@ -9,7 +8,7 @@ class ExaFormatter(string.Formatter):
     safe_float_regexp = re.compile(r'^(\+|-)?[0-9]+(\.[0-9]+((e|E)(\+|-)[0-9]+)?)?$')
 
     def __init__(self, connection):
-        self.connection = weakref.proxy(connection)
+        self.connection = connection
 
         self.conversions = {
             's': self.quote,

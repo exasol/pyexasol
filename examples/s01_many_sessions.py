@@ -26,9 +26,9 @@ class SessionProc(multiprocessing.Process):
         super().__init__()
 
     def run(self):
-        C = pyexasol.connect(dsn=config.dsn, user=config.user, password=config.password, schema=config.schema, socket_timeout=30)
+        C = pyexasol.connect(dsn=config.dsn, user=config.user, password=config.password, schema=config.schema)
 
-        print(f'START ID: {self.id:03} S: {C.session_id()} SLEEP: {self.sleep_interval:02}, T:{C.connection_time} A:{C.ws_req_time}', flush=True)
+        print(f'START ID: {self.id:03} S: {C.session_id()} SLEEP: {self.sleep_interval:02}, T:{C.login_time} A:{C.ws_req_time}', flush=True)
         C.execute('SELECT sleep_java({sleep_interval!d})', {'sleep_interval': self.sleep_interval})
         print(f'STOP  ID: {self.id:03} S: {C.session_id()} SLEEP: {self.sleep_interval:02}', flush=True)
 

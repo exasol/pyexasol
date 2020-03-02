@@ -90,13 +90,23 @@ Ujson provides best performance in our internal tests, but it is abandoned by cr
 
 You may try any other json library. All you need to do is to overload `_init_json()` method in `ExaConnection`.
 
-## Use `ext` functions to get structure of tables
+## Use [`.meta`](/docs/REFERENCE.md#exametadata) functions to perform lock-free meta data requests
 
-It is usually good idea to use [`get_columns`](/docs/REFERENCE.md#get_columns) and [`get_columns_sql`](/docs/REFERENCE.md#get_columns_sql) functions to get structure of tables instead of querying `EXA_ALL_COLUMNS` system view.
+It is quite common for Exasol system views to become locked by DML statements, which prevents clients from retrieving meta data.
+
+In order to mitigate this problem, Exasol provided special SQL hint described in [IDEA-476](https://www.exasol.com/support/browse/IDEA-476) which is available in latest versions. It does not require user to enable "snapshot transaction" mode for the whole session. Currently this is the best way to access meta data using WebSocket protocol.
+
+Also, it is possible to get SQL result set column structure without executing the actual query. This method relies on prepared statements and it is also free from locks.
+
+Few examples:
 
 ```python
-cols = C.ext.get_columns('table')
-cols = C.ext.get_columns_sql('SELECT a, b, c FROM table')
-```
+# Get SQL result set column structure without executing the actual query
+C.sql_columns('SELECT user_id, user_name FROM users')
 
-Query to system view might be blocked by transaction locks, but ext function calls are not affected by this problem.
+# Get list of tables matching specified LIKE-pattern
+C.list_tables('MY_SCHEMA', 'USER_%')
+
+# Get list of views matching specified LIKE-pattern
+C.list_views('MY_SCHEMA', 'USER_VIEW_%')
+```

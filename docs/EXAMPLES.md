@@ -48,3 +48,7 @@ python examples/01_basic.py
 - [29_dsn_parsing.py](/examples/29_dsn_parsing.py) - parsing of complex connection strings and catching relevant exceptions;
 - [30_http_proxy.py](/examples/30_http_proxy.py) - connection via HTTP proxy;
 - [31_context_manager.py](/examples/31_context_manager.py) - using WITH clause for `ExaConnection` and `ExaStatement` objects;
+- [32_insert_multi](/examples/32_insert_multi.py) - INSERT small number of rows using prepared statements instead of HTTP transport;
+- [33_meta](/examples/33_meta.py) - Lock-free meta data requests;
+- [34_http_transport_errors](/examples/34_http_transport_errors.py) - various ways to break HTTP transport and recover from it;
+- [35_garbage_collection](/examples/35_garbage_collection.py) - detect potential garbage collection problems due to cross-references;
