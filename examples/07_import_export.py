@@ -16,6 +16,7 @@ C = pyexasol.connect(dsn=config.dsn, user=config.user, password=config.password,
 
 # Prepare empty tables
 C.execute("TRUNCATE TABLE users_copy")
+C.execute("TRUNCATE TABLE users_copy_reordered")
 C.execute("TRUNCATE TABLE payments_copy")
 
 # Create temporary file
@@ -116,7 +117,7 @@ file = tempfile.TemporaryFile()
 C.export_to_file(file, 'users', export_params={'encoding': 'WINDOWS-1251'})
 
 file.seek(0)
-print(file.read(100))
+print(file.readline())
 file.seek(0)
 
 # Import file with custom encoding
@@ -133,7 +134,7 @@ file = tempfile.TemporaryFile()
 C.export_to_file(file, 'users', export_params={'columns': ['register_dt', 'user_id', 'status', 'user_name']})
 
 file.seek(0)
-print(file.read(100))
+print(file.readline())
 file.seek(0)
 
 # Custom columns list for IMPORT
@@ -143,3 +144,17 @@ stmt = C.last_statement()
 print(f'IMPORTED {stmt.rowcount()} rows in {stmt.execution_time}s')
 
 file.close()
+
+# Custom CSV cols formatting
+file = tempfile.TemporaryFile()
+
+C.export_to_file(file, 'users', export_params={'csv_cols': ["1", "2", "3 FORMAT='DD-MM-YYYY'", "4..6", "7 FORMAT='999.99999'", "8"]})
+
+file.seek(0)
+print(file.readline())
+file.seek(0)
+
+C.import_from_file(file, 'users_copy', import_params={'csv_cols': ["1", "2", "3 FORMAT='DD-MM-YYYY'", "4..6", "7 FORMAT='999.99999'", "8"]})
+
+stmt = C.last_statement()
+print(f'IMPORTED {stmt.rowcount()} rows in {stmt.execution_time}s')

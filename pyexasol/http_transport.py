@@ -1,4 +1,5 @@
 import os
+import re
 import subprocess
 import sys
 import threading
@@ -64,8 +65,10 @@ class ExaSQLThread(threading.Thread):
         else:
             prefix = 'http://'
 
+        csv_cols = self.build_csv_cols()
+
         for i, proxy in enumerate(self.exa_proxy_list):
-            files.append(f"AT '{prefix}{proxy}' FILE '{str(i).rjust(3, '0')}.{ext}'")
+            files.append(f"AT '{prefix}{proxy}' FILE '{str(i).rjust(3, '0')}.{ext}'{csv_cols}")
 
         return files
 
@@ -74,6 +77,18 @@ class ExaSQLThread(threading.Thread):
             return ''
 
         return f"({','.join([self.connection.format.default_format_ident(c) for c in self.params['columns']])})"
+
+    def build_csv_cols(self):
+        if 'csv_cols' not in self.params:
+            return ''
+
+        safe_csv_cols_regexp = re.compile(r"^(\d+|\d+\.\.\d+)(\sFORMAT='[^'\n]+')?$", re.IGNORECASE)
+
+        for c in self.params['csv_cols']:
+            if not safe_csv_cols_regexp.match(c):
+                raise ValueError(f"Value [{c}] is not a safe csv_cols part")
+
+        return f"({','.join(self.params['csv_cols'])})"
 
 
 class ExaSQLExportThread(ExaSQLThread):

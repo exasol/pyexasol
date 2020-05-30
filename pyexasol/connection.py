@@ -445,11 +445,20 @@ class ExaConnection(object):
 
         return self.last_stmt
 
-    def close(self):
+    def close(self, disconnect=True):
         """
-        It is not necessary to send "disconnect" command explicitly, basic CLOSE frame is sufficient
+        Close connection to Exasol by sending CLOSE websocket frame
+        Send optional "disconnect" command to free resources and close session on Exasol server side properly
+
+        Please note that "disconnect" should always be False when .close() is being called from .req()-like functions
+        to prevent an infinite loop if websocket exception happens during handling of "disconnect" command
         """
         if self._ws.connected:
+            if disconnect:
+                self.req({
+                    'command': 'disconnect'
+                })
+
             self.logger.debug('[WebSocket connection close]')
             self._ws.close()
 
@@ -518,7 +527,7 @@ class ExaConnection(object):
 
             self.ws_req_time = time.time() - start_ts
         except websocket.WebSocketException as e:
-            self.close()
+            self.close(disconnect=False)
             raise ExaCommunicationError(self, str(e))
         finally:
             self._req_lock.release()
@@ -571,7 +580,7 @@ class ExaConnection(object):
         try:
             self._ws_send(send_data)
         except websocket.WebSocketException as e:
-            self.close()
+            self.close(disconnect=False)
             raise ExaCommunicationError(self, str(e))
 
     def _login(self):

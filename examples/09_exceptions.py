@@ -82,3 +82,14 @@ try:
     C.execute("SELECT 1")
 except pyexasol.ExaRuntimeError as e:
     print(e)
+
+# Simulate websocket error during close
+C1 = pyexasol.connect(dsn=config.dsn, user=config.user, password=config.password, schema=config.schema)
+C2 = pyexasol.connect(dsn=config.dsn, user=config.user, password=config.password, schema=config.schema)
+
+C2.execute(f'KILL SESSION {C1.session_id()}')
+
+try:
+    C1.close()
+except pyexasol.ExaError as e:
+    print(e)

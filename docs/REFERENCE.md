@@ -342,6 +342,10 @@ Please note that you may terminate the whole Python process to close WebSocket c
 ### ExaConnection.close()
 Closes connection to database.
 
+| Argument | Example | Description |
+| --- | --- | --- |
+| `disconnect` | `True` | (optional) Send [`disconnect`](https://github.com/exasol/websocket-api/blob/master/WebsocketAPI.md#disconnect-closes-a-connection-to-exasol) command before closing the WebSocket connection (default: `True`) |
+
 ### .attr
 
 Read-only `dict` of attributes of current connection. The most notable attributes are:

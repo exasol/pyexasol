@@ -17,6 +17,7 @@ class ExaError(Exception):
             'dsn': self.connection.options['dsn'],
             'user': self.connection.options['user'],
             'schema': self.connection.current_schema(),
+            'session_id': self.connection.session_id(),
         }
 
     def __str__(self):

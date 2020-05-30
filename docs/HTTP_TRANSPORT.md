@@ -90,6 +90,7 @@ Please refer to Exasol User Manual to know more about `IMPORT` / `EXPORT` parame
 | `column_separator` | `,` | Column separator for CSV |
 | `column_delimiter` | `"` | Column delimiter for CSV (quotting) |
 | `columns` | `['id', 'name']` | List of table columns in data source, useful if column order of data source does not match column order of Exasol table |
+| `csv_cols` | `["1..5", "6 FORMAT='999.99'", "8"]` | List of CSV columns with optional [numeric](https://docs.exasol.com/sql_references/formatmodels.htm#NumericFormat) or [date](https://docs.exasol.com/sql_references/formatmodels.htm#DateTimeFormat) formats |
 | `row_separator` | `LF` | Row separator for CSV (line-endings) |
 | `encoding` | `UTF8` | File encoding |
 | `with_column_names` | `True` | Add column names as first line, useful for Pandas |
@@ -103,6 +104,7 @@ Please refer to Exasol User Manual to know more about `IMPORT` / `EXPORT` parame
 | `column_separator` | `,` | Column separator for CSV |
 | `column_delimiter` | `"` | Column delimiter for CSV (quotting) |
 | `columns` | `['id', 'name']` | List of table columns, useful to reorder table columns during export from table |
+| `csv_cols` | `["1..5", "6 FORMAT='999.99'", "8"]` | List of CSV columns with optional [numeric](https://docs.exasol.com/sql_references/formatmodels.htm#NumericFormat) or [date](https://docs.exasol.com/sql_references/formatmodels.htm#DateTimeFormat) formats |
 | `row_separator` | `LF` | Row separator for CSV (line-endings) |
 | `encoding` | `UTF8` | File encoding |
 | `skip` | `1` | How many first rows to skip, useful for skipping header |
