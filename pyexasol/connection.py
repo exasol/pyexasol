@@ -526,7 +526,7 @@ class ExaConnection(object):
             recv_data = self._ws_recv()
 
             self.ws_req_time = time.time() - start_ts
-        except websocket.WebSocketException as e:
+        except (websocket.WebSocketException, ConnectionError) as e:
             self.close(disconnect=False)
             raise ExaCommunicationError(self, str(e))
         finally:
@@ -579,7 +579,7 @@ class ExaConnection(object):
 
         try:
             self._ws_send(send_data)
-        except websocket.WebSocketException as e:
+        except (websocket.WebSocketException, ConnectionError) as e:
             self.close(disconnect=False)
             raise ExaCommunicationError(self, str(e))
 

@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.13.1] - 2020-06-02
+
+- Re-throw `BrokenPipeError` (and other sub-classes of `ConnectionError`) as `ExaCommunicationError`. This type of errors might not be handled in WebSocket client library in certain cases.
+
 ## [0.13.0] - 2020-05-30
 
 - Added optional [`disconnect`](https://github.com/exasol/websocket-api/blob/master/WebsocketAPI.md#disconnect-closes-a-connection-to-exasol) command executed during `.close()`. It is now enabled by default , but can be disabled with explicit `.close(disconnect=False)` to revert to original behaviour;
