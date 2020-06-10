@@ -29,7 +29,7 @@ class ExaError(Exception):
         res = ''
 
         for k in params:
-            res += (' ' * 4) + k.ljust(pad_length) + '  =>  ' + params[k] + '\n'
+            res += f"    {k.ljust(pad_length)}  =>  {params[k]}\n"
 
         return '\n(\n' + res + ')\n'
 
