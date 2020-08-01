@@ -6,9 +6,11 @@ from . import constant
 
 
 class ExaStatement(object):
-    def __init__(self, connection, query, query_params=None, prepare=False, **options):
+    def __init__(self, connection, query=None, query_params=None, prepare=False, meta_nosql=False, **options):
         self.connection = connection
-        self.query = self._format_query(query, query_params)
+
+        self.query = query if meta_nosql else self._format_query(query, query_params)
+        self.query_params = query_params
 
         self.fetch_dict = options.get('fetch_dict', self.connection.options['fetch_dict'])
         self.fetch_mapper = options.get('fetch_mapper', self.connection.options['fetch_mapper'])
@@ -47,6 +49,8 @@ class ExaStatement(object):
 
         if prepare:
             self._prepare()
+        elif meta_nosql:
+            self._execute_meta_nosql()
         else:
             self._execute()
 
@@ -153,6 +157,23 @@ class ExaStatement(object):
         ret = self.connection.req({
             'command': 'execute',
             'sqlText': self.query,
+        })
+
+        self.execution_time = self.connection.ws_req_time
+        self._init_result_set(ret)
+
+    def _execute_meta_nosql(self):
+        meta_params = self.query_params if self.query_params is not None else {}
+
+        if 'command' in meta_params:
+            raise ExaRuntimeError(self.connection, "Key 'command' is not allowed as a parameter for meta nosql request")
+
+        if 'attributes' in meta_params:
+            raise ExaRuntimeError(self.connection, "Key 'attributes' is not allowed as a parameter for meta nosql request")
+
+        ret = self.connection.req({
+            'command': self.query,
+            **meta_params,
         })
 
         self.execution_time = self.connection.ws_req_time

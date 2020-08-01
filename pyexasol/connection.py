@@ -71,6 +71,7 @@ class ExaConnection(object):
             , client_name=None
             , client_version=None
             , client_os_username=None
+            , protocol_version=constant.PROTOCOL_V1
             ):
         """
         Exasol connection object
@@ -102,6 +103,7 @@ class ExaConnection(object):
         :param client_name: Custom name of client application displayed in Exasol sessions tables (Default: PyEXASOL)
         :param client_version: Custom version of client application (Default: pyexasol.__version__)
         :param client_os_username: Custom OS username displayed in Exasol sessions table (Default: getpass.getuser())
+        :param protocol_version: Major WebSocket protocol version requested for connection (Default: pyexasol.PROTOCOL_V1)
         """
 
         self.options = {
@@ -139,6 +141,8 @@ class ExaConnection(object):
             'client_name': client_name,
             'client_version': client_version,
             'client_os_username': client_os_username,
+
+            'protocol_version': protocol_version,
         }
 
         self.login_info = {}
@@ -433,6 +437,15 @@ class ExaConnection(object):
     def session_id(self):
         return str(self.login_info.get('sessionId', ''))
 
+    def protocol_version(self):
+        """
+        Return WebSocket protocol version of opened connection
+        Return 0 if connection was not established yet (e.g. due to exception handling)
+
+        Actual Protocol version might be downgraded from requested protocol version if Exasol server does not support it
+        """
+        return int(self.login_info.get('protocolVersion', 0))
+
     def last_statement(self) -> ExaStatement:
         """
         Return last created ExaStatement object
@@ -588,7 +601,7 @@ class ExaConnection(object):
 
         ret = self.req({
             'command': 'login',
-            'protocolVersion': 1,
+            'protocolVersion': self.options['protocol_version'],
         })
 
         self.login_info = self.req({

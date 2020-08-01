@@ -66,6 +66,8 @@ This page contains complete reference of PyEXASOL public API.
   - [list_objects()](#list_objects)
   - [list_object_sizes()](#list_object_sizes)
   - [list_sql_keywords()](#list_sql_keywords)
+  - [execute_snapshot](#execute_snapshot)
+  - [execute_meta_nosql](#execute_meta_nosql) (requires Exasol v7.0+)
 - [ExaExtension](#exaextension) (.ext)
   - [insert_multi()](#insert_multi)
   - [get_disk_space_usage()](#get_disk_space_usage)
@@ -114,6 +116,7 @@ Open new connection and return `ExaConnection` object.
 | `client_name` | `MyClient` | Custom name of client application displayed in Exasol sessions tables (Default: `PyEXASOL`) |
 | `client_version` | `1.0.0` | Custom version of client application (Default: `pyexasol.__version__`) |
 | `client_os_username` | `john` | Custom OS username displayed in Exasol sessions table (Default: `getpass.getuser()`) |
+| `protocol_version` | `pyexasol.PROTOCOL_V2` | Major [WebSocket protocol version](/docs/PROTOCOL_VERSION.md) requested for connection (Default: `pyexasol.PROTOCOL_V1`) |
 
 ## connect_local_config()
 Open new connection and return `ExaConnection` object using local .ini file (usually `~/.pyexasol.ini`) to read credentials and connection parameters. Please read [local config](/docs/LOCAL_CONFIG.md) page for more details.
@@ -321,6 +324,13 @@ Exasol shuffles list for every connection.
 ### session_id()
 Return unique `SESSION_ID` of the current session. Return value type is `str`.
 
+### protocol_version()
+Return the actual protocol version of the established connection. Actual protocol version may be lower than requested protocol version defined by `protocol_version` connection option.
+
+The possible values are: `pyexasol.PROTOCOL_V1`, `pyexasol.PROTOCOL_V2`. It may also return `0` if called before the connection was established, which is possible during the exception handling.
+
+You may read more about protocol versions [here](/docs/PROTOCOL_VERSION.md).
+
 ### last_statement()
 Get last `ExaStatement` object. It is useful while working with `export_*` and `import_*` functions normally returning result of callback function instead of statement object.
 
@@ -365,7 +375,8 @@ Read-only `dict` of login information returned by second response of LOGIN comma
 
 | Info | Description |
 | --- |  --- |
-| `sessionId` | Unique `SESSION_ID` of current connection. It is advisable to use [`session_id()`](#session_id) wrapper function to get this info |
+| `sessionId` | Unique `SESSION_ID` of current connection. It is advisable to use [`session_id()`](#session_id) wrapper function to get this info. |
+| `protocolVersion` | WebSocket protocol version actually used for connection. It may be lower than requested `protocol_version` in connection arguments. |
 | `releaseVersion` | Version of Exasol (e.g. `6.0.15`) |
 | `databaseName` | Name of Exasol instance |
 
@@ -373,7 +384,7 @@ Full list of possible keys is available [here](https://github.com/exasol/websock
 
 ### .options
 
-Read-only `dict` of arguments passed to [`connect()'](#connect) function and used to create ExaConnection object.
+Read-only `dict` of arguments passed to [`connect()`](#connect) function and used to create ExaConnection object.
 
 ## ExaStatement
 
@@ -643,6 +654,32 @@ Return list of SQL keywords from [EXA_SQL_KEYWORDS](https://docs.exasol.com/sql_
 These keywords cannot be used as identifiers without double quotes.
 
 Please try to avoid hardcoding this list. It might change depending on Exasol server version without warning.
+
+### execute_snapshot()
+
+Execute SQL statement in [snapshot execution](/docs/SNAPSHOT_TRANSACTIONS.md) mode. It prevents read locks and works for system tables and views only.
+
+Please do not try to query normal tables with this method. It will fail during creation of indices or statistics objects.
+
+| Argument | Example | Description |
+| --- | --- | --- |
+| `query` | `SELECT * FROM {table:i} WHERE col1={col1}` | SQL query text, possibly with placeholders |
+| `query_params` | `{'table': 'users', 'col1':'bar'}` | (optional) Values for placeholders |
+
+Return instance of `ExaStatement`
+
+### execute_meta_nosql()
+
+Execute no SQL metadata command introduced in Exasol 7.0, [WebSocket protocol version 2](/docs/PROTOCOL_VERSION.md). It requires connection option `protocol_version=pyexasol.PROTOCOL_V2`.
+
+The full list of metadata commands and arguments is available in the [official documentation](https://github.com/exasol/websocket-api/blob/master/docs/WebsocketAPIV2.md#metadata-related-commands).
+
+| Argument | Example | Description |
+| --- | --- | --- |
+| `meta_command` | `getTables` | Metadata command |
+| `meta_params` | `{'schema': 'PYEXASOL%', 'table': 'USER%', 'tableTypes': ['TABLE', 'VIEW']}` | (optional) Parameters for metadata commands |
+
+Return instance of `ExaStatement`
 
 ## ExaExtension
 

@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.14.0] - 2020-08-01
+
+### ExaConnection
+
+- Added [`protocol_version`](/docs/REFERENCE.md#connect) connection option to adjust the protocol version requested by client (default: `pyexasol.PROTOCOL_V1`).
+- Added [`.protocol_version()`](/docs/REFERENCE.md#protocol_version) function to check the actual protocol version of established connection.
+
+### ExaMetaData
+
+- Added [`.meta.execute_meta_nosql()`](/docs/REFERENCE.md#execute_meta_nosql) function to run [no SQL metadata commands](https://github.com/exasol/websocket-api/blob/master/docs/WebsocketAPIV2.md#metadata-related-commands) introduced in Exasol v7.0+.
+- Function [`.meta.execute_snapshot()`](/docs/REFERENCE.md#execute_snapshot) is not public. You may use it run complex metadata SQL queries in snapshot isolation mode.
+
+### ExaStatement
+
+- Added ability to execute no SQL metadata commands AND process the response as normal SQL-like result set. It does not change anything in public interface, but it might have an impact if you use custom overloaded `ExaStatement` class.
+
 ## [0.13.1] - 2020-06-02
 
 - Re-throw `BrokenPipeError` (and other sub-classes of `ConnectionError`) as `ExaCommunicationError`. This type of errors might not be handled in WebSocket client library in certain cases.

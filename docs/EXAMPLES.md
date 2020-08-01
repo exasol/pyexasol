@@ -52,3 +52,4 @@ python examples/01_basic.py
 - [33_meta](/examples/33_meta.py) - Lock-free meta data requests;
 - [34_http_transport_errors](/examples/34_http_transport_errors.py) - various ways to break HTTP transport and recover from it;
 - [35_garbage_collection](/examples/35_garbage_collection.py) - detect potential garbage collection problems due to cross-references;
+- [36_meta_nosql](/examples/36_meta_nosql.py) - no SQL metadata commands introduces in Exasol v7.0+;

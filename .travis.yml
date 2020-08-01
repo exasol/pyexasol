@@ -84,3 +84,4 @@ script:
     - python examples/33_meta.py
     - python examples/34_http_transport_errors.py
     - python examples/35_garbage_collection.py
+    - python examples/36_meta_nosql.py

@@ -16,6 +16,7 @@ You may expect significant performance improvement over existing ODBC / JDBC sol
 - [HTTP Transport](/docs/HTTP_TRANSPORT.md)
 - [HTTP Transport (multiprocessing)](/docs/HTTP_TRANSPORT_PARALLEL.md)
 - [SSL encryption](/docs/ENCRYPTION.md)
+- [WebSocket protocol versions](/docs/PROTOCOL_VERSION.md)
 - [Performance tests](/docs/PERFORMANCE.md)
 - [UDF scripts output](/docs/SCRIPT_OUTPUT.md)
 - [DB-API 2.0 compatibility](/docs/DBAPI_COMPAT.md)
