@@ -16,7 +16,7 @@ Exasol v7.0+ supports WebSocket protocol versions [`1`](https://github.com/exaso
 
 ---
 
-When client (e.g. pyexasol) opens the connection with Exasol, it sends the requested protocol version during the authorisation. Exasol server may or may not support the requested protocol version. If Exasol server does not support the request version, it will downgrade the protocol version automatically. You may check the actual protocol version of connection using function [`.protocol_version()](/docs/REFERENCE.md#protocol_version).
+When client (e.g. pyexasol) opens the connection with Exasol, it sends the requested protocol version during the authorisation. Exasol server may or may not support the requested protocol version. If Exasol server does not support the requested version, it will downgrade the protocol version automatically. You may check the actual protocol version of connection using function [`.protocol_version()`](/docs/REFERENCE.md#protocol_version).
 
 However, the "downgrade" behaviour was introduced in the latest minor Exasol v6 versions only (`6.2.5`, `6.1.9`). All prior versions, including the whole `6.0.x` branch, will just raise the connection exception if `protocol_version=2` was requested.
 
