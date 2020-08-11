@@ -121,7 +121,7 @@ class ExaSQLExportThread(ExaSQLThread):
         if self.params.get('delimit'):
             delimit = str(self.params['delimit']).upper()
 
-            if delimit != 'AUTO' and delimit != 'ALWAYS' and delimit != 'NONE':
+            if delimit != 'AUTO' and delimit != 'ALWAYS' and delimit != 'NEVER':
                 raise ValueError('Invalid value for export parameter DELIMIT: ' + delimit)
 
             parts.append(f"DELIMIT = {delimit}")
