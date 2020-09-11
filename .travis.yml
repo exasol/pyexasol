@@ -5,29 +5,31 @@ cache: pip
 matrix:
     include:
         -   python: 3.6
-            env: EXASOL_TAG=6.2.8-d1
+            env: EXASOL_TAG=latest-7.0 EXASOL_PORT=8563
         -   python: 3.6
-            env: EXASOL_TAG=6.1.10-d1
+            env: EXASOL_TAG=latest-6.2 EXASOL_PORT=8888
         -   python: 3.6
-            env: EXASOL_TAG=6.0.16-d1
+            env: EXASOL_TAG=latest-6.1 EXASOL_PORT=8888
+        -   python: 3.6
+            env: EXASOL_TAG=6.0.16-d1 EXASOL_PORT=8888
+
         -   python: 3.7
-            env: EXASOL_TAG=6.2.8-d1
-            dist: xenial
+            env: EXASOL_TAG=latest-7.0 EXASOL_PORT=8563
         -   python: 3.7
-            env: EXASOL_TAG=6.1.10-d1
-            dist: xenial
+            env: EXASOL_TAG=latest-6.2 EXASOL_PORT=8888
         -   python: 3.7
-            env: EXASOL_TAG=6.0.16-d1
-            dist: xenial
+            env: EXASOL_TAG=latest-6.1 EXASOL_PORT=8888
+        -   python: 3.7
+            env: EXASOL_TAG=6.0.16-d1 EXASOL_PORT=8888
+
         -   python: 3.8
-            env: EXASOL_TAG=6.2.8-d1
-            dist: xenial
+            env: EXASOL_TAG=latest-7.0 EXASOL_PORT=8563
         -   python: 3.8
-            env: EXASOL_TAG=6.1.10-d1
-            dist: xenial
+            env: EXASOL_TAG=latest-6.2 EXASOL_PORT=8888
         -   python: 3.8
-            env: EXASOL_TAG=6.0.16-d1
-            dist: xenial
+            env: EXASOL_TAG=latest-6.1 EXASOL_PORT=8888
+        -   python: 3.8
+            env: EXASOL_TAG=6.0.16-d1 EXASOL_PORT=8888
 
 services:
   - docker
@@ -39,7 +41,7 @@ env:
     - EXAHOST="127.0.0.1:8563"
 
 before_install:
-    - docker run --detach --name exasol --privileged -p 127.0.0.1:8563:8888 exasol/docker-db:$EXASOL_TAG
+    - docker run --detach --name exasol --privileged -p 127.0.0.1:8563:$EXASOL_PORT exasol/docker-db:$EXASOL_TAG
 
 install:
     - sleep 120
