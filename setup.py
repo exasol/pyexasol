@@ -10,7 +10,7 @@ setup(
     version=__version__,
     description='Exasol python driver with extra features',
     long_description="""
-Exasol python driver with low overhead, fast HTTP transport and compression.
+Exasol driver with low overhead, fast HTTP transport and compression. It is implemented in Python 3.6+.
 
 Main features:
 
@@ -19,9 +19,7 @@ Main features:
 -  Easy integration with pandas via HTTP transport;
 -  Compression to reduce network bottleneck;
 
-PyEXASOL requires Python 3.6+.
-
-Driver does not use ODBC. Driver does not strictly follow DB-API 2.0 in favor of Exasol-specific features.
+PyEXASOL does not follow DB-API 2.0 in favor of Exasol-specific features.
 
 Please read "Best practices" manual page to learn how to use PyEXASOL with maximum efficiency.
     """,
@@ -31,10 +29,13 @@ Please read "Best practices" manual page to learn how to use PyEXASOL with maxim
     author_email='wild.desu@gmail.com',
 
     classifiers=[
-        'Development Status :: 4 - Beta',
+        'Development Status :: 5 - Production/Stable',
         'License :: OSI Approved :: MIT License',
         'Intended Audience :: Developers',
         'Programming Language :: Python :: 3.6',
+        'Programming Language :: Python :: 3.7',
+        'Programming Language :: Python :: 3.8',
+        'Programming Language :: Python :: 3.9',
         'Topic :: Database',
     ],
 
