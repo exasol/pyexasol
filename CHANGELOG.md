@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.15.1] - 2020-11-20
+
+- Added `sslopt` connection option, to set custom SSL options for WebSocket connection. See [WebSocket client code](https://github.com/websocket-client/websocket-client/blob/2222f2c49d71afd74fcda486e3dfd14399e647af/websocket/_http.py#L210-L272) for more details.
+- Add a basic benchmark to compare performance of individual nodes. Documentation will be added shortly.
+
 ## [0.14.2] - 2020-11-02
 
 - Run Travis tests with lowest (3.6) and highest (3.9) supported Python versions only.

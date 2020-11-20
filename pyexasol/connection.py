@@ -72,6 +72,7 @@ class ExaConnection(object):
             , client_version=None
             , client_os_username=None
             , protocol_version=constant.PROTOCOL_V1
+            , websocket_sslopt=None
             ):
         """
         Exasol connection object
@@ -104,6 +105,7 @@ class ExaConnection(object):
         :param client_version: Custom version of client application (Default: pyexasol.__version__)
         :param client_os_username: Custom OS username displayed in Exasol sessions table (Default: getpass.getuser())
         :param protocol_version: Major WebSocket protocol version requested for connection (Default: pyexasol.PROTOCOL_V1)
+        :param websocket_sslopt: Set custom SSL options for WebSocket client (Default: None)
         """
 
         self.options = {
@@ -143,6 +145,7 @@ class ExaConnection(object):
             'client_os_username': client_os_username,
 
             'protocol_version': protocol_version,
+            'websocket_sslopt': websocket_sslopt
         }
 
         self.login_info = {}
@@ -674,10 +677,15 @@ class ExaConnection(object):
         }
 
         if self.options['encryption']:
-            # Exasol does not check validity of certificates, so PyEXASOL follows this behaviour
-            options['sslopt'] = {
-                'cert_reqs': ssl.CERT_NONE
-            }
+            # Exasol JDBC / ODBC drivers do not check validity of certificates by default,
+            # so PyEXASOL follows this behaviour
+            #
+            # It is possible to enable cert validation, use custom certificate and set other SSL options by using
+            # "websocket_sslopt" argument, which is passed directly to WebSocket client constructor
+            if self.options['websocket_sslopt']:
+                options['sslopt'] = self.options['websocket_sslopt']
+            else:
+                options['sslopt'] = {'cert_reqs': ssl.CERT_NONE}
 
         if self.options['http_proxy']:
             proxy_components = urllib.parse.urlparse(self.options['http_proxy'])

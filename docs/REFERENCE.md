@@ -118,6 +118,7 @@ Open new connection and return `ExaConnection` object.
 | `client_version` | `1.0.0` | Custom version of client application (Default: `pyexasol.__version__`) |
 | `client_os_username` | `john` | Custom OS username displayed in Exasol sessions table (Default: `getpass.getuser()`) |
 | `protocol_version` | `pyexasol.PROTOCOL_V2` | Major [WebSocket protocol version](/docs/PROTOCOL_VERSION.md) requested for connection (Default: `pyexasol.PROTOCOL_V1`) |
+| `websocket_sslopt` | `{'cert_reqs': ssl.CERT_NONE}` | Set custom [SSL options](https://github.com/websocket-client/websocket-client/blob/2222f2c49d71afd74fcda486e3dfd14399e647af/websocket/_http.py#L210-L272) for WebSocket client |
 
 ## connect_local_config()
 Open new connection and return `ExaConnection` object using local .ini file (usually `~/.pyexasol.ini`) to read credentials and connection parameters. Please read [local config](/docs/LOCAL_CONFIG.md) page for more details.
