@@ -23,7 +23,7 @@ C.execute("TRUNCATE TABLE payments_copy")
 file = tempfile.TemporaryFile()
 
 # Export to temporary file
-C.export_to_file(file, 'users', export_params={'with_column_names': True})
+C.export_to_file(file, 'users', export_params={'with_column_names': True, 'comment': 'Exporting users to temp file'})
 
 file.seek(0)
 print(file.readline())
