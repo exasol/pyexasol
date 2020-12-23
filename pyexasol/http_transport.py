@@ -115,6 +115,12 @@ class ExaSQLExportThread(ExaSQLThread):
 
         parts = list()
 
+        if self.params.get('comment'):
+            comment = self.params.get('comment')
+            if '*/' in comment:
+                raise ValueError('Invalid comment, cannot contain */')
+            parts.append(f"/*{comment}*/")
+
         parts.append(f"EXPORT {export_source}{self.build_columns_list()} INTO CSV")
         parts.extend(self.build_file_list())
 
@@ -162,6 +168,12 @@ class ExaSQLImportThread(ExaSQLThread):
         table_ident = self.connection.format.default_format_ident(self.table)
 
         parts = list()
+
+        if self.params.get('comment'):
+            comment = self.params.get('comment')
+            if '*/' in comment:
+                raise ValueError('Invalid comment, cannot contain */')
+            parts.append(f"/*{comment}*/")
 
         parts.append(f"IMPORT INTO {table_ident}{self.build_columns_list()} FROM CSV")
         parts.extend(self.build_file_list())

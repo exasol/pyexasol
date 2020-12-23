@@ -97,6 +97,7 @@ Please refer to Exasol User Manual to know more about `IMPORT` / `EXPORT` parame
 | `null` | `\N` | Custom `NULL` value |
 | `delimit` | `AUTO` | Delimiter mode: `AUTO`, `ALWAYS`, `NEVER` |
 | `format` | `gz` | Import file or stream compressed with `gz`, `bzip2`, `zip` |
+| `comment` | `This is a query description` | Add a comment before the beginning of the query |
 
 ### export_params
 | Name | Example | Description |
@@ -111,6 +112,24 @@ Please refer to Exasol User Manual to know more about `IMPORT` / `EXPORT` parame
 | `null` | `\N` | Custom `NULL` value |
 | `trim` | `TRIM` | Trim mode: `TRIM`, `RTRIM`, `LTRIM` |
 | `format` | `gz` | Export file or stream compressed with `gz`, `bzip2`, `zip` |
+| `comment` | `This is a query description` | Add a comment before the beginning of the query |
+
+
+### The `comment` parameter, for adding comments to queries
+
+For any `export_*` or `import_*` call, you can add a comment that will be inserted before the beginning of the query.
+
+This can be used for profiling and auditing. Example:
+
+```python
+C.import_from_file('/test/my_file.csv', 'users', import_params={'comment': '''
+This comment will be inserted before the query.
+This query is importing user from CSV.
+'''})
+```
+
+The comment is inserted as a block comment (`/* <comment> */`). Block comment closing sequence (`*/`) is forbidden in the comment.
+
 
 # How to write custom EXPORT \ IMPORT functions
 
