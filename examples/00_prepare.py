@@ -183,5 +183,25 @@ class SLEEP_JAVA {
 }
 """)
 
+C.execute("""
+CREATE OR REPLACE TABLE interval_test
+(
+    id INTEGER,
+    from_ts TIMESTAMP,
+    to_ts TIMESTAMP,
+    expected_timedelta VARCHAR(100)
+)
+""")
+
+C.execute("""
+INSERT INTO interval_test (id, from_ts, to_ts, expected_timedelta) VALUES
+  (1, '2021-01-10', '2021-01-09',              'datetime.timedelta(days=-1)'),
+  (2, '2021-01-10', '2021-01-09 17:35:11.297', 'datetime.timedelta(days=-1, seconds=63311, microseconds=297000)'),
+  (3, '2021-01-10', '2021-01-10',              'datetime.timedelta(0)'),
+  (4, '2021-01-10', '2021-01-10 17:35:11.297', 'datetime.timedelta(seconds=63311, microseconds=297000)'),
+  (5, '2021-01-10', '2021-01-11',              'datetime.timedelta(days=1)'),
+  (6, '2021-01-10', '2021-01-11 17:35:11.297', 'datetime.timedelta(days=1, seconds=63311, microseconds=297000)')
+""")
+
 C.commit()
 print("Test data was prepared")
