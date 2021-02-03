@@ -10,6 +10,7 @@ import datetime
 import random
 import string
 import decimal
+import pprint
 
 bool_values = [True, False]
 user_statuses = ['ACTIVE', 'PENDING', 'SUSPENDED', 'DISABLED']
@@ -193,15 +194,18 @@ CREATE OR REPLACE TABLE interval_test
 )
 """)
 
-C.execute("""
-INSERT INTO interval_test (id, from_ts, to_ts, expected_timedelta) VALUES
-  (1, '2021-01-10', '2021-01-09',              'datetime.timedelta(days=-1)'),
-  (2, '2021-01-10', '2021-01-09 17:35:11.297', 'datetime.timedelta(days=-1, seconds=63311, microseconds=297000)'),
-  (3, '2021-01-10', '2021-01-10',              'datetime.timedelta(0)'),
-  (4, '2021-01-10', '2021-01-10 17:35:11.297', 'datetime.timedelta(seconds=63311, microseconds=297000)'),
-  (5, '2021-01-10', '2021-01-11',              'datetime.timedelta(days=1)'),
-  (6, '2021-01-10', '2021-01-11 17:35:11.297', 'datetime.timedelta(days=1, seconds=63311, microseconds=297000)')
-""")
+interval_timestamps = [
+    {"from": datetime.datetime(2021, 1, 10), "to": datetime.datetime(2021, 1, 9, 17, 35, 11, 297000)},
+    {"from": datetime.datetime(2021, 1, 10), "to": datetime.datetime(2021, 1, 10)},
+    {"from": datetime.datetime(2021, 1, 10), "to": datetime.datetime(2021, 1, 10, 17, 35, 11, 297000)},
+    {"from": datetime.datetime(2021, 1, 10), "to": datetime.datetime(2021, 1, 11)},
+    {"from": datetime.datetime(2021, 1, 10), "to": datetime.datetime(2021, 1, 11, 17, 35, 11, 297000)},
+    {"from": datetime.datetime(2021, 1, 10), "to": datetime.datetime(2021, 1, 9, 17, 35, 11, 297000)},
+]
+
+for id, ts in enumerate(interval_timestamps):
+    delta = pprint.pformat(ts["to"] - ts["from"])
+    C.execute(f"INSERT INTO interval_test VALUES ({id}, '{ts['from']}', '{ts['to']}', '{delta}')")
 
 C.commit()
 print("Test data was prepared")
