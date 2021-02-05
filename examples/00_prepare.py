@@ -56,6 +56,9 @@ def random_ts():
 
 C = pyexasol.connect(dsn=config.dsn, user=config.user, password=config.password, autocommit=False)
 
+# Ensure desired format for timestamps, regardless of SYSTEM settings
+C.execute(f"ALTER SESSION SET NLS_TIMESTAMP_FORMAT='YYYY-MM-DD HH24:MI:SS.FF6'")
+
 # Create schema if not exist and open it
 C.execute("CREATE SCHEMA IF NOT EXISTS {schema!i}", {'schema': config.schema})
 C.open_schema(config.schema)

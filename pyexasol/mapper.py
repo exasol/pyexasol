@@ -3,9 +3,6 @@ import datetime
 
 
 class ExaTimeDelta(datetime.timedelta):
-    def __new__(cls, *args, **kwargs):
-        return super(ExaTimeDelta, cls).__new__(cls, *args, **kwargs)
-
     def reverse_seconds(self):
         if self.microseconds > 0:
             seconds = 86399 - self.seconds
@@ -16,7 +13,7 @@ class ExaTimeDelta(datetime.timedelta):
         else:
             seconds = 0
             microseconds = 0
-        return (seconds, microseconds)
+        return seconds, microseconds
 
     @classmethod
     def from_interval(cls, val):
