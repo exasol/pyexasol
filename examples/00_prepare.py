@@ -4,12 +4,14 @@ Prepare tables and data for other examples
 """
 
 import pyexasol
+from pyexasol import ExaTimeDelta
 import _config as config
 
 import datetime
 import random
 import string
 import decimal
+import pprint
 
 bool_values = [True, False]
 user_statuses = ['ACTIVE', 'PENDING', 'SUSPENDED', 'DISABLED']
@@ -182,6 +184,29 @@ class SLEEP_JAVA {
     }
 }
 """)
+
+C.execute("""
+CREATE OR REPLACE TABLE interval_test
+(
+    id INTEGER,
+    from_ts TIMESTAMP,
+    to_ts TIMESTAMP,
+    expected_timedelta VARCHAR(100)
+)
+""")
+
+interval_timestamps = [
+    {"from": datetime.datetime(2021, 1, 10), "to": datetime.datetime(2021, 1, 9, 17, 35, 11, 297000)},
+    {"from": datetime.datetime(2021, 1, 10), "to": datetime.datetime(2021, 1, 10)},
+    {"from": datetime.datetime(2021, 1, 10), "to": datetime.datetime(2021, 1, 10, 17, 35, 11, 297000)},
+    {"from": datetime.datetime(2021, 1, 10), "to": datetime.datetime(2021, 1, 11)},
+    {"from": datetime.datetime(2021, 1, 10), "to": datetime.datetime(2021, 1, 11, 17, 35, 11, 297000)},
+    {"from": datetime.datetime(2021, 1, 10), "to": datetime.datetime(2021, 1, 9, 17, 35, 11, 297000)},
+]
+
+for id, ts in enumerate(interval_timestamps):
+    delta = pprint.pformat(ExaTimeDelta.from_timedelta(ts["to"] - ts["from"]))
+    C.execute(f"INSERT INTO interval_test VALUES ({id}, '{ts['from']}', '{ts['to']}', '{delta}')")
 
 C.commit()
 print("Test data was prepared")

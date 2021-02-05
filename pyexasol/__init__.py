@@ -25,6 +25,7 @@ __all__ = [
     'ExaMetaData',
     'ExaHTTPTransportWrapper',
     'ExaLocalConfig',
+    'ExaTimeDelta',
     'HTTP_EXPORT',
     'HTTP_IMPORT',
     'PROTOCOL_V1',
@@ -40,7 +41,7 @@ from .local_config import ExaLocalConfig
 from .logger import ExaLogger
 from .ext import ExaExtension
 from .meta import ExaMetaData
-from .mapper import exasol_mapper
+from .mapper import ExaTimeDelta, exasol_mapper
 from .http_transport import ExaHTTPTransportWrapper, HTTP_EXPORT, HTTP_IMPORT
 from .constant import PROTOCOL_V1, PROTOCOL_V2
 
