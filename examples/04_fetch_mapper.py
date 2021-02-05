@@ -37,12 +37,22 @@ for i in range(0, 9):
     printer.pprint(C.execute("SELECT TIMESTAMP'2018-01-01 03:04:05.123456'").fetchval())
 
 # Test interval mapping
-stmt = C.execute("SELECT id, from_ts, to_ts, expected_timedelta, to_ts - from_ts AS actual_timedelta FROM interval_test")
+stmt = C.execute("SELECT id, from_ts, to_ts, expected_timedelta, cast(to_ts - from_ts as varchar(100)) as expected_interval, to_ts - from_ts AS ts_diff FROM interval_test")
 for row in stmt.fetchall():
-    actual = printer.pformat(row[4])
-    print(f"---- Interval Test #{row[0]} ----")
-    print(f"    FROM: {row[1]}")
-    print(f"      TO: {row[2]}")
-    print(f"EXPECTED: {row[3]}")
-    print(f"  ACTUAL: {actual} " + ("✓" if actual == row[3] else "✗"))
-    assert actual == row[3], f"actual timedelta '{actual}' doesn't match expected timedelta '{row[3]}'"
+    print(f"-------- Interval Test #{row[0]} --------")
+    print(f"              FROM: {row[1]}")
+    print(f"                TO: {row[2]}")
+
+    print(f"EXPECTED TIMEDELTA: {row[3]}")
+    actual_timedelta = printer.pformat(row[5])
+    if actual_timedelta == row[3]:
+        print(f"  \033[1;32mACTUAL TIMEDELTA: {actual_timedelta} ✓\033[0m")
+    else:
+        print(f"  \033[1;31mACTUAL TIMEDELTA: {actual_timedelta} ✗\033[0m")
+
+    print(f" EXPECTED INTERVAL: {row[4]}")
+    actual_interval = row[5].to_interval()
+    if actual_interval == row[4]:
+        print(f"   \033[1;32mACTUAL INTERVAL: {actual_interval} ✓\033[0m")
+    else:
+        print(f"   \033[1;31mACTUAL INTERVAL: {actual_interval} ✗\033[0m")

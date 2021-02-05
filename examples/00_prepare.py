@@ -4,6 +4,7 @@ Prepare tables and data for other examples
 """
 
 import pyexasol
+from pyexasol import ExaTimeDelta
 import _config as config
 
 import datetime
@@ -204,7 +205,7 @@ interval_timestamps = [
 ]
 
 for id, ts in enumerate(interval_timestamps):
-    delta = pprint.pformat(ts["to"] - ts["from"])
+    delta = pprint.pformat(ExaTimeDelta.from_timedelta(ts["to"] - ts["from"]))
     C.execute(f"INSERT INTO interval_test VALUES ({id}, '{ts['from']}', '{ts['to']}', '{delta}')")
 
 C.commit()
