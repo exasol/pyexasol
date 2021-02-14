@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.18.0] - 2021-02-14
+
+- Enforced TCP keep-alive for HTTP transport connections for Linux, MacOS and Windows. Keep-alive is required to address [Google Cloud firewall rules](https://cloud.google.com/compute/docs/troubleshooting/general-tips#communicatewithinternet) dropping idle connections after 10 minutes.
+
 ## [0.17.0] - 2021-02-05
 
 - Added INTERVAL DAY TO SECOND data type support for standard fetch mapper `exasol_mapper`. Now it returns instances of class `ExaTimeDelta` derived from Python [datetime.timedelta](https://docs.python.org/3/library/datetime.html#datetime.timedelta).

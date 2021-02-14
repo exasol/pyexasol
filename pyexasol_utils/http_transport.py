@@ -6,6 +6,7 @@ This approach allows to bypass various connectivity problems (e.g. firewall).
 """
 
 import os
+import socket
 import socketserver
 import struct
 import sys
@@ -27,6 +28,8 @@ class ExaTCPServer(socketserver.TCPServer):
         super().__init__(*args, **kwargs)
 
     def server_bind(self):
+        self.set_sock_opts()
+
         """ Special Exasol packet to establish tunneling and return proxy host and port which can be used in query """
         self.socket.connect(self.server_address)
         self.socket.sendall(struct.pack("iii", 0x02212102, 1, 1))
@@ -48,6 +51,32 @@ class ExaTCPServer(socketserver.TCPServer):
 
     def close_request(self, request): pass
 
+    def set_sock_opts(self):
+        # only large packets are expected for HTTP transport
+        self.socket.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
+
+        # default keep-alive once a minute, 5 probes
+        keepidle = 60
+        keepintvl = 60
+        keepcnt = 5
+
+        if sys.platform.startswith("linux"):
+            self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
+            self.socket.setsockopt(socket.IPPROTO_TCP, socket.TCP_KEEPIDLE, keepidle)
+            self.socket.setsockopt(socket.IPPROTO_TCP, socket.TCP_KEEPINTVL, keepintvl)
+            self.socket.setsockopt(socket.IPPROTO_TCP, socket.TCP_KEEPCNT, keepcnt)
+
+        elif sys.platform.startswith("darwin"):
+            # TCP_KEEPALIVE = 0x10
+            # https://bugs.python.org/issue34932
+            self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
+            self.socket.setsockopt(socket.IPPROTO_TCP, 0x10, keepidle)
+            self.socket.setsockopt(socket.IPPROTO_TCP, socket.TCP_KEEPINTVL, keepintvl)
+            self.socket.setsockopt(socket.IPPROTO_TCP, socket.TCP_KEEPCNT, keepcnt)
+
+        elif sys.platform.startswith("win"):
+            self.socket.ioctl(socket.SIO_KEEPALIVE_VALS, (1, keepidle * 1000, keepintvl * 1000))
+
     @staticmethod
     def check_orphaned(initial_ppid):
         """
@@ -59,7 +88,7 @@ class ExaTCPServer(socketserver.TCPServer):
         """
         current_ppid = os.getppid()
 
-        if sys.platform != "win32" and initial_ppid and current_ppid != initial_ppid:
+        if sys.platform.startswith("win") and initial_ppid and current_ppid != initial_ppid:
             raise RuntimeError(f"Current process is orphaned, initial ppid={initial_ppid}, current ppid={current_ppid}")
 
     @staticmethod
