@@ -86,9 +86,12 @@ class ExaTCPServer(socketserver.TCPServer):
         Currently it works only for POSIX OS
         Please let me know if you know a good way to detect orphans on Windows
         """
+        if sys.platform.startswith("win"):
+            return
+
         current_ppid = os.getppid()
 
-        if sys.platform.startswith("win") and initial_ppid and current_ppid != initial_ppid:
+        if initial_ppid and current_ppid != initial_ppid:
             raise RuntimeError(f"Current process is orphaned, initial ppid={initial_ppid}, current ppid={current_ppid}")
 
     @staticmethod
