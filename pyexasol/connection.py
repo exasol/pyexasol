@@ -73,6 +73,8 @@ class ExaConnection(object):
             , client_os_username=None
             , protocol_version=constant.PROTOCOL_V1
             , websocket_sslopt=None
+            , access_token=None
+            , refresh_token=None
             ):
         """
         Exasol connection object
@@ -106,6 +108,8 @@ class ExaConnection(object):
         :param client_os_username: Custom OS username displayed in Exasol sessions table (Default: getpass.getuser())
         :param protocol_version: Major WebSocket protocol version requested for connection (Default: pyexasol.PROTOCOL_V1)
         :param websocket_sslopt: Set custom SSL options for WebSocket client (Default: None)
+        :param access_token: OpenID access token to use for the login process
+        :param refresh_token: OpenID refresh token to use for the login process
         """
 
         self.options = {
@@ -145,7 +149,10 @@ class ExaConnection(object):
             'client_os_username': client_os_username,
 
             'protocol_version': protocol_version,
-            'websocket_sslopt': websocket_sslopt
+            'websocket_sslopt': websocket_sslopt,
+
+            'access_token': access_token,
+            'refresh_token': refresh_token,
         }
 
         self.login_info = {}
@@ -602,14 +609,13 @@ class ExaConnection(object):
     def _login(self):
         start_ts = time.time()
 
-        ret = self.req({
-            'command': 'login',
-            'protocolVersion': self.options['protocol_version'],
-        })
+        if self.options['access_token'] or self.options['refresh_token']:
+            auth_params = self._login_token()
+        else:
+            auth_params = self._login_password()
 
         self.login_info = self.req({
-            'username': self.options['user'],
-            'password': self._encrypt_password(ret['responseData']['publicKeyPem']),
+            **auth_params,
             'driverName': f'{constant.DRIVER_NAME} {__version__}',
             'clientName': self.options['client_name'] if self.options['client_name'] else constant.DRIVER_NAME,
             'clientVersion': self.options['client_version'] if self.options['client_version'] else __version__,
@@ -630,6 +636,41 @@ class ExaConnection(object):
         if self.options['compression']:
             self._ws_send = lambda x: self._ws.send_binary(zlib.compress(x.encode(), 1))
             self._ws_recv = lambda: zlib.decompress(self._ws.recv())
+
+    def _login_password(self):
+        ret = self.req({
+            'command': 'login',
+            'protocolVersion': self.options['protocol_version'],
+        })
+
+        auth_params = {
+            'username': self.options['user'],
+            'password': self._encrypt_password(ret['responseData']['publicKeyPem']),
+        }
+
+        return auth_params
+
+    def _login_token(self):
+        # Upgrade protocol version automatically if OpenID parameter was used
+        if self.options['protocol_version'] < constant.PROTOCOL_V3:
+            effective_protocol_version = constant.PROTOCOL_V3
+        else:
+            effective_protocol_version = self.options['protocol_version']
+
+        self.req({
+            'command': 'loginToken',
+            'protocolVersion': effective_protocol_version,
+        })
+
+        auth_params = {}
+
+        if self.options['refresh_token']:
+            auth_params['refreshToken'] = self.options['refresh_token']
+
+        if self.options['access_token']:
+            auth_params['accessToken'] = self.options['access_token']
+
+        return auth_params
 
     def _encrypt_password(self, public_key_pem):
         pk = rsa.PublicKey.load_pkcs1(public_key_pem.encode())

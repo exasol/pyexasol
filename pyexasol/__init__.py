@@ -30,6 +30,7 @@ __all__ = [
     'HTTP_IMPORT',
     'PROTOCOL_V1',
     'PROTOCOL_V2',
+    'PROTOCOL_V3',
 ]
 
 from .version import __version__
@@ -43,7 +44,7 @@ from .ext import ExaExtension
 from .meta import ExaMetaData
 from .mapper import ExaTimeDelta, exasol_mapper
 from .http_transport import ExaHTTPTransportWrapper, HTTP_EXPORT, HTTP_IMPORT
-from .constant import PROTOCOL_V1, PROTOCOL_V2
+from .constant import PROTOCOL_V1, PROTOCOL_V2, PROTOCOL_V3
 
 
 def connect(**kwargs) -> ExaConnection:
