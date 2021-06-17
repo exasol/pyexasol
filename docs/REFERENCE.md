@@ -95,7 +95,7 @@ Open new connection and return `ExaConnection` object.
 | `password` | `exasol` | Password |
 | `schema` | `ingres` | Open schema after connection (Default: `''`, no schema) |
 | `autocommit` | `True` | Enable autocommit on connection (Default: `True`) |
-| `snapshot_transactions` | `False` | Enable [snapshot transactions](/docs/SNAPSHOT_TRANSACTIONS.md) on connection (Default: `False`) |
+| `snapshot_transactions` | `None` | Explicitly enable or disable [snapshot transactions](/docs/SNAPSHOT_TRANSACTIONS.md) on connection (Default: `None`, database default) |
 | `connection_timeout` | `10` | Socket timeout in seconds used to establish connection (Default: `10`) |
 | `socket_timeout` | `20` | Socket timeout in seconds used for requests after connection was established (Default: `30`) |
 | `query_timeout` | `0` | Maximum execution time of queries before automatic abort (Default: `0`, no timeout) |

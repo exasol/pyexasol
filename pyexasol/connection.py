@@ -84,7 +84,7 @@ class ExaConnection(object):
         :param password: Password
         :param schema: Open schema after connection (Default: '', no schema)
         :param autocommit: Enable autocommit on connection (Default: True)
-        :param snapshot_transactions: Enable snapshot transactions on connection (Default: None, database default)
+        :param snapshot_transactions: Explicitly enable or disable snapshot transactions on connection (Default: None, database default)
         :param connection_timeout: Socket timeout in seconds used to establish connection (Default: 10)
         :param socket_timeout: Socket timeout in seconds used for requests after connection was established (Default: 30)
         :param query_timeout: Maximum execution time of queries before automatic abort, in seconds (Default: 0, no timeout)
@@ -614,14 +614,6 @@ class ExaConnection(object):
         else:
             auth_params = self._login_password()
 
-        attributes = {
-                'currentSchema': str(self.options['schema']),
-                'autocommit': self.options['autocommit'],
-                'queryTimeout': self.options['query_timeout'],
-        }
-        if self.options['snapshot_transactions'] is not None:
-            attributes['snapshotTransactionsEnabled'] = self.options['snapshot_transactions']
-
         self.login_info = self.req({
             **auth_params,
             'driverName': f'{constant.DRIVER_NAME} {__version__}',
@@ -631,7 +623,7 @@ class ExaConnection(object):
             'clientOsUsername': self.options['client_os_username'] if self.options['client_os_username'] else getpass.getuser(),
             'clientRuntime': f'Python {platform.python_version()}',
             'useCompression': self.options['compression'],
-            'attributes': attributes
+            'attributes': self._get_login_attributes()
         })['responseData']
 
         self.login_time = time.time() - start_ts
@@ -742,6 +734,18 @@ class ExaConnection(object):
             options['http_proxy_auth'] = (proxy_components.username, proxy_components.password)
 
         return options
+
+    def _get_login_attributes(self):
+        attributes = {
+            'currentSchema': str(self.options['schema']),
+            'autocommit': self.options['autocommit'],
+            'queryTimeout': self.options['query_timeout'],
+        }
+
+        if self.options['snapshot_transactions'] is not None:
+            attributes['snapshotTransactionsEnabled'] = self.options['snapshot_transactions']
+
+        return attributes
 
     def _process_dsn(self, dsn):
         """
