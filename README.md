@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/badoo/pyexasol.svg?branch=master)](https://travis-ci.org/badoo/pyexasol)
+[![Build Status](https://travis-ci.com/badoo/pyexasol.svg?branch=master)](https://travis-ci.com/badoo/pyexasol)
 [![PyPI](https://badge.fury.io/py/pyexasol.svg)](https://badge.fury.io/py/pyexasol)
 
 PyEXASOL is a custom Python driver for [Exasol](https://www.exasol.com) created in [Badoo](https://badoo.com/team/). It helps us to handle massive volumes of data commonly associated with this database.
