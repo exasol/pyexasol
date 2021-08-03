@@ -5,6 +5,8 @@ cache: pip
 matrix:
     include:
         -   python: 3.6
+            env: EXASOL_TAG=latest-7.1 EXASOL_PORT=8563
+        -   python: 3.6
             env: EXASOL_TAG=latest-7.0 EXASOL_PORT=8563
         -   python: 3.6
             env: EXASOL_TAG=latest-6.2 EXASOL_PORT=8888
@@ -12,7 +14,7 @@ matrix:
             env: EXASOL_TAG=6.0.16-d1 EXASOL_PORT=8888
 
         -   python: 3.9
-            env: EXASOL_TAG=latest-7.0 EXASOL_PORT=8563
+            env: EXASOL_TAG=latest-7.1 EXASOL_PORT=8563
 
 services:
   - docker
