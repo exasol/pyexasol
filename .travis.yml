@@ -29,7 +29,7 @@ before_install:
     - docker run --detach --name exasol --privileged -p 127.0.0.1:8563:$EXASOL_PORT exasol/docker-db:$EXASOL_TAG
 
 install:
-    - sleep 160
+    - sleep 240
     - docker logs exasol
 
     - pip install -e .[pandas,encrypt,ujson,rapidjson,examples]
