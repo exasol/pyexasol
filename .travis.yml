@@ -1,6 +1,7 @@
 language: python
 
 cache: pip
+dist: bionic
 
 matrix:
     include:
