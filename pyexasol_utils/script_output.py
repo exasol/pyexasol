@@ -112,6 +112,10 @@ class ExaScriptOutputScriptModeHandler(ExaScriptOutputHandler):
 
 if __name__ == '__main__':
     import argparse
+    import signal
+
+    # Restore original SIGTERM handler
+    signal.signal(signal.SIGTERM, signal.SIG_DFL)
 
     parser = argparse.ArgumentParser(prog=f'python -m pyexasol_utils.script_output')
 

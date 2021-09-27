@@ -234,6 +234,10 @@ class ExaHTTPRequestHandler(socketserver.StreamRequestHandler):
 
 if __name__ == '__main__':
     import argparse
+    import signal
+
+    # Restore original SIGTERM handler
+    signal.signal(signal.SIGTERM, signal.SIG_DFL)
 
     parser = argparse.ArgumentParser(prog='python -m pyexasol_utils.http_transport'
                                      , description='TCP server for PyEXASOL HTTP transport')
