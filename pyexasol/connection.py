@@ -71,7 +71,7 @@ class ExaConnection(object):
             , client_name=None
             , client_version=None
             , client_os_username=None
-            , protocol_version=constant.PROTOCOL_V1
+            , protocol_version=constant.PROTOCOL_V3
             , websocket_sslopt=None
             , access_token=None
             , refresh_token=None
@@ -106,7 +106,7 @@ class ExaConnection(object):
         :param client_name: Custom name of client application displayed in Exasol sessions tables (Default: PyEXASOL)
         :param client_version: Custom version of client application (Default: pyexasol.__version__)
         :param client_os_username: Custom OS username displayed in Exasol sessions table (Default: getpass.getuser())
-        :param protocol_version: Major WebSocket protocol version requested for connection (Default: pyexasol.PROTOCOL_V1)
+        :param protocol_version: Major WebSocket protocol version requested for connection (Default: pyexasol.PROTOCOL_V3)
         :param websocket_sslopt: Set custom SSL options for WebSocket client (Default: None)
         :param access_token: OpenID access token to use for the login process
         :param refresh_token: OpenID refresh token to use for the login process
@@ -646,15 +646,9 @@ class ExaConnection(object):
         return auth_params
 
     def _login_token(self):
-        # Upgrade protocol version automatically if OpenID parameter was used
-        if self.options['protocol_version'] < constant.PROTOCOL_V3:
-            effective_protocol_version = constant.PROTOCOL_V3
-        else:
-            effective_protocol_version = self.options['protocol_version']
-
         self.req({
             'command': 'loginToken',
-            'protocolVersion': effective_protocol_version,
+            'protocolVersion': self.options['protocol_version'],
         })
 
         auth_params = {}

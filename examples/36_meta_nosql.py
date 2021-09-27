@@ -12,16 +12,7 @@ import pprint
 printer = pprint.PrettyPrinter(indent=4, width=140)
 
 
-try:
-    C = pyexasol.connect(dsn=config.dsn, user=config.user, password=config.password, schema=config.schema
-                         , protocol_version=pyexasol.PROTOCOL_V2)
-
-except pyexasol.ExaRequestError as e:
-    if e.message == 'Could not create WebSocket protocol version 2':
-        print('Old Exasol versions cannot process protocol_version 2, skipping meta_nosql checks')
-        sys.exit(0)
-    else:
-        raise
+C = pyexasol.connect(dsn=config.dsn, user=config.user, password=config.password, schema=config.schema)
 
 if C.protocol_version() < pyexasol.PROTOCOL_V2:
     print('Actual protocol version is less than 2, skipping meta_nosql checks')

@@ -117,7 +117,7 @@ Open new connection and return `ExaConnection` object.
 | `client_name` | `MyClient` | Custom name of client application displayed in Exasol sessions tables (Default: `PyEXASOL`) |
 | `client_version` | `1.0.0` | Custom version of client application (Default: `pyexasol.__version__`) |
 | `client_os_username` | `john` | Custom OS username displayed in Exasol sessions table (Default: `getpass.getuser()`) |
-| `protocol_version` | `pyexasol.PROTOCOL_V2` | Major [WebSocket protocol version](/docs/PROTOCOL_VERSION.md) requested for connection (Default: `pyexasol.PROTOCOL_V1`) |
+| `protocol_version` | `pyexasol.PROTOCOL_V3` | Major [WebSocket protocol version](/docs/PROTOCOL_VERSION.md) requested for connection (Default: `pyexasol.PROTOCOL_V3`) |
 | `websocket_sslopt` | `{'cert_reqs': ssl.CERT_NONE}` | Set custom [SSL options](https://github.com/websocket-client/websocket-client/blob/2222f2c49d71afd74fcda486e3dfd14399e647af/websocket/_http.py#L210-L272) for WebSocket client |
 | `access_token` | `...` | OpenID access token to use for the login process |
 | `refresh_token` | `...` | OpenID refresh token to use for the login process |
@@ -331,7 +331,7 @@ Return unique `SESSION_ID` of the current session. Return value type is `str`.
 ### protocol_version()
 Return the actual protocol version of the established connection. Actual protocol version may be lower than requested protocol version defined by `protocol_version` connection option.
 
-The possible values are: `pyexasol.PROTOCOL_V1`, `pyexasol.PROTOCOL_V2`. It may also return `0` if called before the connection was established, which is possible during the exception handling.
+The possible values are: `pyexasol.PROTOCOL_V1`, `pyexasol.PROTOCOL_V2`, `pyexasol.PROTOCOL_V3`. It may also return `0` if called before the connection was established, which is possible during the exception handling.
 
 You may read more about protocol versions [here](/docs/PROTOCOL_VERSION.md).
 
@@ -674,7 +674,7 @@ Return instance of `ExaStatement`
 
 ### execute_meta_nosql()
 
-Execute no SQL metadata command introduced in Exasol 7.0, [WebSocket protocol version 2](/docs/PROTOCOL_VERSION.md). It requires connection option `protocol_version=pyexasol.PROTOCOL_V2`.
+Execute no SQL metadata command introduced in Exasol 7.0, [WebSocket protocol version 2](/docs/PROTOCOL_VERSION.md).
 
 The full list of metadata commands and arguments is available in the [official documentation](https://github.com/exasol/websocket-api/blob/master/docs/WebsocketAPIV2.md#metadata-related-commands).
 

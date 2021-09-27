@@ -34,7 +34,7 @@ You may expect significant performance improvement over existing ODBC / JDBC sol
 
 ## System requirements
 
-- Exasol >= 6
+- Exasol >= 6.2
 - Python >= 3.6
 
 
