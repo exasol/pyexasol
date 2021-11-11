@@ -12,7 +12,7 @@ import pprint
 printer = pprint.PrettyPrinter(indent=4, width=140)
 
 # Basic connect
-C = pyexasol.connect(dsn=config.dsn, user=config.user, password=config.password, schema=config.schema)
+C = pyexasol.connect(dsn=config.dsn, user=config.user, password=config.password, schema=config.schema, debug=False)
 
 edge_cases = [
     # Biggest values
@@ -91,6 +91,12 @@ res = C.export_to_list(select_q)
 stmt = C.last_statement()
 print(f'EXPORTED {stmt.rowcount()} rows in {stmt.execution_time}s')
 printer.pprint(res)
+
+# resultSetHandle and data in the same response
+stmt = C.execute("SELECT a.* FROM edge_case a, edge_case b, edge_case c, edge_case d")
+print(f"Rows total: {stmt.num_rows_total}, rows chunk: {stmt.num_rows_chunk}")
+print(f"Rows actually returned {sum(1 for _ in stmt)}")
+
 
 # Very large query
 stmt = C.execute('SELECT {val1} AS val1, {val2} AS val2, {val3} AS val3, {val4} AS val4, {val5} AS val5', {

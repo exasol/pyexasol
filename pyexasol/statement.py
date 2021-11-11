@@ -213,7 +213,8 @@ class ExaStatement(object):
         if self.result_type == 'resultSet':
             if 'resultSetHandle' in res['resultSet']:
                 self.result_set_handle = res['resultSet']['resultSetHandle']
-            elif 'data' in res['resultSet']:
+
+            if 'data' in res['resultSet']:
                 self.data_zip = zip(*res['resultSet']['data'])
 
             if self.lower_ident:
