@@ -34,7 +34,10 @@ class ExaLogger(logging.Logger):
 
     def debug_json(self, message, data):
         if self.isEnabledFor(logging.DEBUG):
-            json_str = self.connection.json_encode(data, indent=4)
+            json_str = self.connection.json_encode(data, indent=True)
+
+            if isinstance(json_str, bytes):
+                json_str = json_str.decode()
 
             if len(json_str) > constant.LOGGER_MAX_JSON_LENGTH:
                 json_str = f'{json_str[0:constant.LOGGER_MAX_JSON_LENGTH]}\n------ TRUNCATED TOO LONG MESSAGE ------\n'

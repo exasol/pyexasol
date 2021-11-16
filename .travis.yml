@@ -5,14 +5,13 @@ dist: bionic
 
 matrix:
     include:
-        -   python: 3.6
-            env: EXASOL_TAG=latest-7.1 EXASOL_PORT=8563
-        -   python: 3.6
-            env: EXASOL_TAG=latest-7.0 EXASOL_PORT=8563
-        -   python: 3.6
-            env: EXASOL_TAG=latest-6.2 EXASOL_PORT=8888
-
         -   python: 3.9
+            env: EXASOL_TAG=latest-7.1 EXASOL_PORT=8563
+        -   python: 3.9
+            env: EXASOL_TAG=latest-7.0 EXASOL_PORT=8563
+        -   python: 3.9
+            env: EXASOL_TAG=latest-6.2 EXASOL_PORT=8888
+        -   python: 3.6
             env: EXASOL_TAG=latest-7.1 EXASOL_PORT=8563
 
 services:
@@ -31,7 +30,7 @@ install:
     - sleep 240
     - docker logs exasol
 
-    - pip install -e .[pandas,encrypt,ujson,rapidjson,examples]
+    - pip install -e .[pandas,encrypt,ujson,rapidjson,orjson,examples]
 
 script:
     - python examples/a00_prepare.py
@@ -71,3 +70,4 @@ script:
     - python examples/c15_garbage_collection.py
     - python examples/j01_rapidjson.py
     - python examples/j02_ujson.py
+    - python examples/j03_orjson.py

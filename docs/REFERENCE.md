@@ -106,7 +106,7 @@ Open new connection and return `ExaConnection` object.
 | `fetch_size_bytes` | `5 * 1024 * 1024` | Maximum size of data message for single fetch request in bytes (Default: 5Mb) |
 | `lower_ident` | `False` | Automatically lowercase identifiers (table names, column names, etc.) returned from relevant functions (Default: `False`) |
 | `quote_ident` | `False` | Add double quotes and escape identifiers passed to relevant functions (`export_*`, `import_*`, `ext.*`, etc.) (Default: `False`) |
-| `json_lib` | `rapidjson` | Supported values: [`rapidjson`](https://github.com/python-rapidjson/python-rapidjson), [`ujson`](https://github.com/esnme/ultrajson), [`json`](https://docs.python.org/3/library/json.html) (Default: `json`) |
+| `json_lib` | `rapidjson` | Supported values: [`rapidjson`](https://github.com/python-rapidjson/python-rapidjson), [`ujson`](https://github.com/esnme/ultrajson), [`orjson`](https://github.com/ijl/orjson),  [`json`](https://docs.python.org/3/library/json.html) (Default: `json`) |
 | `verbose_error` | `True` | Display additional information when error occurs (Default: `True`) |
 | `debug` | `False` | Output debug information for client-server communication and connection attempts to STDERR |
 | `debug_logdir` | `/tmp/` | Store debug information into files in `debug_logdir` instead of outputting it to STDERR |

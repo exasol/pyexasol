@@ -11,10 +11,11 @@
 - `pyopenssl` is required for HTTP transport with [encryption](/docs/ENCRYPTION.md) to generate "ad-hoc" certificates;
 - `ujson` is required for `json_lib=usjon` to improve json parsing performance;
 - `rapidjson` is required for `json_lib=rapidjson` to improve json parsing performance;
+- `orjson` is required for `json_lib=orjson` to improve json parsing performance;
 - `pproxy` is used in examples to test HTTP proxy;
 
 ## Installation with optional dependencies
 
 ```
-pip install pyexasol[pandas,encrypt,ujson,rapidjson,examples]
+pip install pyexasol[pandas,encrypt,ujson,rapidjson,orjson,examples]
 ```

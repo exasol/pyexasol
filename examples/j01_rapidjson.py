@@ -65,7 +65,7 @@ printer.pprint(stmt.fetchall())
 
 
 # Same actions with "exasol_mapper"
-C.fetch_mapper = pyexasol.exasol_mapper
+C.options['fetch_mapper'] = pyexasol.exasol_mapper
 C.execute('TRUNCATE TABLE edge_case')
 
 # Insert (test formatting)

@@ -1,5 +1,5 @@
 """
-JSON library "ujson"
+JSON library "orjson"
 """
 
 import pyexasol
@@ -11,7 +11,7 @@ import pprint
 printer = pprint.PrettyPrinter(indent=4, width=140)
 
 # Basic connect
-C = pyexasol.connect(dsn=config.dsn, user=config.user, password=config.password, schema=config.schema, json_lib='ujson')
+C = pyexasol.connect(dsn=config.dsn, user=config.user, password=config.password, schema=config.schema, json_lib='orjson')
 
 edge_cases = [
     # Biggest values

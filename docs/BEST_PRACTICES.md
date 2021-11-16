@@ -86,7 +86,13 @@ Rapidjson provides significant performance boost and is well maintained by creat
 ```
 pip install pyexasol[ujson]
 ```
-Ujson provides the best performance in our internal tests, but it is abandoned by creators. Also, float values may lose precision with ujson.
+Ujson provides great performance in our internal tests. It was abandoned by maintainers for a while, but now it is supported once again.
+
+#### json_lib=[`orjson`](https://github.com/ijl/orjson)
+```
+pip install pyexasol[orjson]
+```
+Orjson is the fastest modern JSON library.
 
 You may try any other json library. All you need to do is to overload `_init_json()` method in `ExaConnection`.
 

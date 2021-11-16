@@ -62,3 +62,4 @@ python examples/a01_basic.py
 
 - [j01_rapidjson.py](/examples/j01_rapidjson.py) - JSON library `rapidjson`;
 - [j02_ujson.py](/examples/j02_ujson.py) - JSON library `ujson`;
+- [j03_orjson.py](/examples/j03_orjson.py) - JSON library `orjson`;

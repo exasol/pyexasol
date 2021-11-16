@@ -95,7 +95,7 @@ class ExaConnection(object):
         :param fetch_size_bytes: Maximum size of data message for single fetch request in bytes (Default: 5Mb)
         :param lower_ident: Automatically lowercase identifiers (table names, column names, etc.) returned from relevant functions (Default: False)
         :param quote_ident: Add double quotes and escape identifiers passed to relevant functions (export_*, import_*, ext.*, etc.) (Default: False)
-        :param json_lib: Supported values: rapidjson, ujson, json (Default: json)
+        :param json_lib: Supported values: rapidjson, ujson, orjson, json (Default: json)
         :param verbose_error: Display additional information when error occurs (Default: True)
         :param debug: Output debug information for client-server communication and connection attempts to STDERR
         :param debug_logdir: Store debug information into files in debug_logdir instead of outputting it to STDERR
@@ -606,7 +606,7 @@ class ExaConnection(object):
         self.login_time = time.time() - start_ts
 
         if self.options['compression']:
-            self._ws_send = lambda x: self._ws.send_binary(zlib.compress(x.encode(), 1))
+            self._ws_send = lambda x: self._ws.send_binary(zlib.compress(x.encode() if isinstance(x, str) else x, 1))
             self._ws_recv = lambda: zlib.decompress(self._ws.recv())
 
     def _login_password(self):
@@ -797,26 +797,29 @@ class ExaConnection(object):
         self.format = self.cls_formatter(self)
 
     def _init_json(self):
-        # rapidjson is well maintained library with acceptable performance, good choice
         if self.options['json_lib'] == 'rapidjson':
             import rapidjson
 
-            self.json_encode = lambda x: rapidjson.dumps(x, number_mode=rapidjson.NM_NATIVE)
+            self.json_encode = lambda x, indent=False: rapidjson.dumps(x, number_mode=rapidjson.NM_NATIVE, indent=2 if indent else None, ensure_ascii=False)
             self.json_decode = lambda x: rapidjson.loads(x, number_mode=rapidjson.NM_NATIVE)
 
-        # ujson provides best performance in our tests, but it is abandoned by maintainers
         elif self.options['json_lib'] == 'ujson':
             import ujson
 
-            self.json_encode = ujson.dumps
-            self.json_decode = ujson.loads
+            self.json_encode = lambda x, indent=False: ujson.dumps(x, indent=2 if indent else 0, ensure_ascii=False)
+            self.json_decode = lambda x: ujson.loads(x)
 
-        # json from Python stdlib, very safe choice, but slow
+        elif self.options['json_lib'] == 'orjson':
+            import orjson
+
+            self.json_encode = lambda x, indent=False: orjson.dumps(x, option=orjson.OPT_INDENT_2 | orjson.OPT_APPEND_NEWLINE if indent else 0)
+            self.json_decode = lambda x: orjson.loads(x)
+
         elif self.options['json_lib'] == 'json':
             import json
 
-            self.json_encode = json.dumps
-            self.json_decode = json.loads
+            self.json_encode = lambda x, indent=False: json.dumps(x, indent=2 if indent else None, ensure_ascii=False)
+            self.json_decode = lambda x: json.loads(x)
 
         else:
             raise ValueError(f"Unsupported json library [{self.options['json_lib']}]")

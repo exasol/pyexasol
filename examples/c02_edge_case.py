@@ -11,7 +11,7 @@ import pprint
 printer = pprint.PrettyPrinter(indent=4, width=140)
 
 # Basic connect
-C = pyexasol.connect(dsn=config.dsn, user=config.user, password=config.password, schema=config.schema, debug=False)
+C = pyexasol.connect(dsn=config.dsn, user=config.user, password=config.password, schema=config.schema)
 
 edge_cases = [
     # Biggest values
@@ -65,7 +65,7 @@ printer.pprint(stmt.fetchall())
 
 
 # Same actions with "exasol_mapper"
-C.fetch_mapper = pyexasol.exasol_mapper
+C.options['fetch_mapper'] = pyexasol.exasol_mapper
 C.execute('TRUNCATE TABLE edge_case')
 
 # Insert (test formatting)
