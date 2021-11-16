@@ -14,13 +14,13 @@ import websocket
 import zlib
 
 from . import callback as cb
-from . import constant
 
 from .exceptions import *
 from .statement import ExaStatement
 from .logger import ExaLogger
 from .formatter import ExaFormatter
 from .ext import ExaExtension
+from .http_transport import ExaSQLExportThread, ExaSQLImportThread, ExaHttpThread
 from .meta import ExaMetaData
 from .script_output import ExaScriptOutputProcess
 from .version import __version__
@@ -287,8 +287,6 @@ class ExaConnection(object):
         return self.import_from_callback(cb.import_from_pandas, src, table, callback_params, import_params)
 
     def export_to_callback(self, callback, dst, query_or_table, query_params=None, callback_params=None, export_params=None):
-        from .http_transport import ExaSQLExportThread, ExaHTTPProcess, HTTP_EXPORT
-
         if not callable(callback):
             raise ValueError('Callback argument is not callable')
 
@@ -298,150 +296,126 @@ class ExaConnection(object):
         if export_params is None:
             export_params = {}
 
-        if 'format' in export_params:
-            compression = False
-        else:
-            compression = self.options['compression']
-
         if query_params is not None:
             query_or_table = self.format.format(query_or_table, **query_params)
 
-        http_proc = ExaHTTPProcess(self.ws_host, self.ws_port, compression, self.options['encryption'], HTTP_EXPORT)
+        compression = False if ('format' in export_params) else self.options['compression']
+
+        http_thread = ExaHttpThread(self.ws_host, self.ws_port, compression, self.options['encryption'])
         sql_thread = ExaSQLExportThread(self, compression, query_or_table, export_params)
 
         try:
-            http_proc.start()
+            http_thread.start()
 
-            sql_thread.set_http_proc(http_proc)
-            sql_thread.set_exa_proxy_list(http_proc.get_proxy())
-
+            sql_thread.set_http_thread(http_thread)
             sql_thread.start()
 
-            result = callback(http_proc.read_pipe, dst, **callback_params)
-            http_proc.read_pipe.close()
+            result = callback(http_thread.read_pipe, dst, **callback_params)
+            http_thread.read_pipe.close()
 
-            http_proc.join_with_exc()
+            http_thread.join_with_exc()
             sql_thread.join_with_exc()
 
             return result
-        except Exception as e:
-            # Terminate HTTP Server if it is still running
-            http_proc.terminate()
-            http_proc.join()
 
-            # Try to join SQL thread, but no longer than 1 second
+        except (Exception, KeyboardInterrupt) as e:
+            http_thread.terminate()
+            http_thread.join()
+
             sql_thread.join(1)
 
-            # If SQL thread is still running somehow, abort query and join again
+            # Prevent infinite lock if SQL query is still running
             if sql_thread.is_alive():
                 self.abort_query()
                 sql_thread.join()
 
-            # Give higher priority to SQL thread exception
+            # Give SQL exception higher priority
             if sql_thread.exc:
                 raise sql_thread.exc
 
             raise e
 
     def import_from_callback(self, callback, src, table, callback_params=None, import_params=None):
-        from .http_transport import ExaSQLImportThread, ExaHTTPProcess, HTTP_IMPORT
-
         if callback_params is None:
             callback_params = {}
 
         if import_params is None:
             import_params = {}
 
-        if 'format' in import_params:
-            compression = False
-        else:
-            compression = self.options['compression']
+        compression = False if ('format' in import_params) else self.options['compression']
 
         if not callable(callback):
             raise ValueError('Callback argument is not callable')
 
-        http_proc = ExaHTTPProcess(self.ws_host, self.ws_port, compression, self.options['encryption'], HTTP_IMPORT)
+        http_thread = ExaHttpThread(self.ws_host, self.ws_port, compression, self.options['encryption'])
         sql_thread = ExaSQLImportThread(self, compression, table, import_params)
 
         try:
-            http_proc.start()
+            http_thread.start()
 
-            sql_thread.set_http_proc(http_proc)
-            sql_thread.set_exa_proxy_list(http_proc.get_proxy())
-
+            sql_thread.set_http_thread(http_thread)
             sql_thread.start()
 
-            result = callback(http_proc.write_pipe, src, **callback_params)
-            http_proc.write_pipe.close()
+            result = callback(http_thread.write_pipe, src, **callback_params)
+            http_thread.write_pipe.close()
 
-            http_proc.join_with_exc()
+            http_thread.join_with_exc()
             sql_thread.join_with_exc()
 
             return result
-        except Exception as e:
-            # Terminate HTTP Server if it is still running
-            http_proc.terminate()
-            http_proc.join()
 
-            # Try to join SQL thread, but no longer than 1 second
+        except (Exception, KeyboardInterrupt) as e:
+            http_thread.terminate()
+            http_thread.join()
+
             sql_thread.join(1)
 
-            # If SQL thread is still running somehow, abort query in the main thread and join SQL thread again
+            # Prevent infinite lock if SQL query is still running
             if sql_thread.is_alive():
                 self.abort_query()
                 sql_thread.join()
 
-            # Give higher priority to SQL thread exception
+            # Give SQL exception higher priority
             if sql_thread.exc:
                 raise sql_thread.exc
 
             raise e
 
-    def export_parallel(self, exa_proxy_list, query_or_table, query_params=None, export_params=None):
+    def export_parallel(self, exa_address_list, query_or_table, query_params=None, export_params=None):
         """
         Init HTTP transport in child processes first using pyexasol.http_transport()
-        Get proxy strings from each child process
-        Pass proxy strings to parent process and use it for export_parallel() call
+        Get internal Exasol address from each child process using .address
+        Pass address strings to parent process, combine into single list and use it for export_parallel() call
         """
-        from .http_transport import ExaSQLExportThread
-
         if export_params is None:
             export_params = {}
 
-        if 'format' in export_params:
-            compression = False
-        else:
-            compression = self.options['compression']
+        compression = False if ('format' in export_params) else self.options['compression']
 
         if query_params is not None:
             query_or_table = self.format.format(query_or_table, **query_params)
 
-        # There is no need to run separate thread here, all work is performed in child processes
+        # There is no need to actually run a separate thread here, all work is performed in separate processes
         # We simply reuse thread class to keep logic in one place
         sql_thread = ExaSQLExportThread(self, compression, query_or_table, export_params)
-        sql_thread.set_exa_proxy_list(exa_proxy_list)
+        sql_thread.set_exa_address_list(exa_address_list)
         sql_thread.run_sql()
 
-    def import_parallel(self, exa_proxy_list, table, import_params=None):
+    def import_parallel(self, exa_address_list, table, import_params=None):
         """
         Init HTTP transport in child processes first using pyexasol.http_transport()
-        Get proxy strings from each child process
-        Pass proxy strings to parent process and use it for import_parallel() call
+        Get internal Exasol address from each child process using .address
+        Pass address strings to parent process, combine into single list and use it for import_parallel() call
         """
-        from .http_transport import ExaSQLImportThread
-
         if import_params is None:
             import_params = {}
 
-        if 'format' in import_params:
-            compression = False
-        else:
-            compression = self.options['compression']
+        compression = False if ('format' in import_params) else self.options['compression']
 
-        # There is no need to run separate thread here, all work is performed in child processes
+        # There is no need to actually run a separate thread here, all work is performed in separate processes
         # We simply reuse thread class to keep logic in one place
         sql_thread = ExaSQLImportThread(self, compression, table, import_params)
-        sql_thread.set_exa_proxy_list(exa_proxy_list)
+        sql_thread.set_exa_address_list(exa_address_list)
         sql_thread.run_sql()
 
     def session_id(self):
@@ -554,6 +528,9 @@ class ExaConnection(object):
             raise ExaCommunicationError(self, str(e))
         finally:
             self._req_lock.release()
+
+        if not recv_data:
+            raise ExaCommunicationError(self, "Empty WebSocket response, connection was likely closed")
 
         # Parse response
         ret = self.json_decode(recv_data)

@@ -7,49 +7,58 @@ Basic preparation steps are required to see examples in action.
 4. Open `/examples/` directory and edit file `\_config.py`. Input your Exasol credentials.
 5. Run script to prepare data set for testing:
 ```
-python examples/00_prepare.py
+python examples/a00_prepare.py
 ```
 
 That's all. Now you may run examples in any order like common python scripts. E.g.:
 ```
-python examples/01_basic.py
+python examples/a01_basic.py
 ```
 
-## Examples
+### Examples of core functions
 
-- [01_basic.py](/examples/01_basic.py) - minimal code to create connection and run query;
-- [02_fetch_tuple.py](/examples/02_fetch_tuple.py) - all methods of fetching result set returning tuples;
-- [03_fetch_dict.py](/examples/03_fetch_dict.py) - all methods of fetching result set returning dictionaries;
-- [04_fetch_mapper.py](/examples/04_fetch_mapper.py) - adding custom data type mapper for fetching;
-- [05_formatting.py](/examples/05_formatting.py) - SQL text [formatting](/docs/SQL_FORMATTING.md);
-- [06_pandas.py](/examples/06_pandas.py) - IMPORT / EXPORT to and from `pandas.DataFrame`;
-- [07_import_export.py](/examples/07_import_export.py) - other methods of IMPORT / EXPORT;
-- [08_transaction.py](/examples/08_transaction.py) - transaction management, autocommit;
-- [09_exceptions.py](/examples/09_exceptions.py) - error handling, common errors;
-- [10_redundancy.py](/examples/10_redundancy.py) - connection redundancy, how driver handles missing nodes;
-- [11_edge_case.py](/examples/11_edge_case.py) - storing and fetching biggest and smallest values for data types available in Exasol;
-- [12_db2_compat.py](/examples/12_db2_compat.py) - [DB-API 2.0 compatibility wrapper](/docs/DBAPI_COMPAT.md);
-- [13_ext.py](/examples/13_ext.py) - extension functions to help with common Exasol-related problems outside of pure database driver scope;
-- [14_parallel_export.py](/examples/14_parallel_export.py) - multi-process HTTP transport for export;
-- [15_encryption.py](/examples/15_encryption.py) - SSL-encrypted WebSocket connection and HTTP transport;
-- [16_ujson.py](/examples/16_ujson.py) - edge case example with `ujson`;
-- [17_rapidjson.py](/examples/17_rapidjson.py) - edge case example with `rapidjson`;
-- [18_session_params.py](/examples/18_session_params.py) - passing custom session parameters `client_name`, `client_version`;
-- [19_local_config.py](/examples/19_local_config.py) - connect using local config file;
-- [20_parallel_import.py](/examples/20_parallel_import.py) - multi-process HTTP transport for import;
-- [21_parallel_export_import.py](/examples/21_parallel_export_import.py) - multi-process HTTP transport for export followed by import;
-- [22_profiling.py](/examples/22_profiling.py) - last query profiling;
-- [23_snapshot_transactions.py](/examples/23_snapshot_transactions.py) - snapshot transactions mode, which may help with metadata locking problems;
-- [24_script_output.py](/examples/24_script_output.py) - run query with UDF script and capture output (may not work on local laptop);
-- [25_overload.py](/examples/25_overload.py) - how to extend core PyEXASOL classes to add custom logic;
-- [26_quote_ident.py](/examples/26_quote_ident.py) - how to enable quoted identifiers for `import_*`, `export_*` and other relevant functions;
-- [27_abort_query.py](/examples/27_abort_query.py) - how to abort running query using separate thread;
-- [28_thread_safety.py](/examples/28_thread_safety.py) - built-in protection from accessing connection object from multiple threads simultaneously;
-- [29_dsn_parsing.py](/examples/29_dsn_parsing.py) - parsing of complex connection strings and catching relevant exceptions;
-- [30_http_proxy.py](/examples/30_http_proxy.py) - connection via HTTP proxy;
-- [31_context_manager.py](/examples/31_context_manager.py) - using WITH clause for `ExaConnection` and `ExaStatement` objects;
-- [32_insert_multi](/examples/32_insert_multi.py) - INSERT small number of rows using prepared statements instead of HTTP transport;
-- [33_meta](/examples/33_meta.py) - Lock-free meta data requests;
-- [34_http_transport_errors](/examples/34_http_transport_errors.py) - various ways to break HTTP transport and recover from it;
-- [35_garbage_collection](/examples/35_garbage_collection.py) - detect potential garbage collection problems due to cross-references;
-- [36_meta_nosql](/examples/36_meta_nosql.py) - no SQL metadata commands introduces in Exasol v7.0+;
+- [a01_basic.py](/examples/a01_basic.py) - minimal code to create connection and run query;
+- [a02_fetch_tuple.py](/examples/a02_fetch_tuple.py) - all methods of fetching result set returning tuples;
+- [a03_fetch_dict.py](/examples/a03_fetch_dict.py) - all methods of fetching result set returning dictionaries;
+- [a04_fetch_mapper.py](/examples/a04_fetch_mapper.py) - apply custom data type mapper for fetching;
+- [a05_formatting.py](/examples/a05_formatting.py) - SQL text [formatting](/docs/SQL_FORMATTING.md);
+- [a06_transaction.py](/examples/a06_transaction.py) - transaction management, autocommit;
+- [a07_exceptions.py](/examples/a07_exceptions.py) - error handling for basic SQL queries;
+- [a08_ext.py](/examples/a08_ext.py) - extension functions to help with common problems outside of scope of database driver;
+- [a09_abort_query.py](/examples/a09_abort_query.py) - abort running query from separate thread;
+- [a10_context_manager.py](/examples/a10_context_manager.py) - use WITH clause for `ExaConnection` and `ExaStatement` objects;
+- [a11_insert_multi](/examples/a11_insert_multi.py) - INSERT small number of rows using prepared statements instead of HTTP transport;
+- [a12_meta](/examples/a12_meta.py) - lock-free meta data requests;
+- [a13_meta_nosql](/examples/a13_meta_nosql.py) - no-SQL metadata commands introduces in Exasol v7.0+;
+
+### Examples of HTTP transport
+
+- [b01_pandas.py](/examples/b01_pandas.py) - IMPORT / EXPORT to and from `pandas.DataFrame`;
+- [b02_import_export.py](/examples/b02_import_export.py) - other methods of IMPORT / EXPORT;
+- [b03_parallel_export.py](/examples/b03_parallel_export.py) - multi-process HTTP transport for EXPORT;
+- [b04_parallel_import.py](/examples/b04_parallel_import.py) - multi-process HTTP transport for IMPORT;
+- [b05_parallel_export_import.py](/examples/b05_parallel_export_import.py) - multi-process HTTP transport for EXPORT followed by IMPORT;
+- [b06_http_transport_errors](/examples/b06_http_transport_errors.py) - various ways to break HTTP transport and handle errors;
+
+## Examples of misc functions
+
+- [c01_redundancy.py](/examples/c01_redundancy.py) - connection redundancy, handling of missing nodes;
+- [c02_edge_case.py](/examples/c02_edge_case.py) - storing and fetching biggest and smallest values for data types available in Exasol;
+- [c03_db2_compat.py](/examples/c03_db2_compat.py) - [DB-API 2.0 compatibility wrapper](/docs/DBAPI_COMPAT.md);
+- [c04_encryption.py](/examples/c04_encryption.py) - SSL-encrypted WebSocket connection and HTTP transport;
+- [c05_session_params.py](/examples/c05_session_params.py) - passing custom session parameters `client_name`, `client_version`, etc.;
+- [c06_local_config.py](/examples/c06_local_config.py) - connect using local config file;
+- [c07_profiling.py](/examples/c07_profiling.py) - last query profiling;
+- [c08_snapshot_transactions.py](/examples/c08_snapshot_transactions.py) - snapshot transactions mode, which may help with metadata locking problems;
+- [c09_script_output.py](/examples/c09_script_output.py) - run query with UDF script and capture output (may not work on local laptop);
+- [c10_overload.py](/examples/c10_overload.py) - extend core PyEXASOL classes to add custom logic;
+- [c11_quote_ident.py](/examples/c11_quote_ident.py) - enable quoted identifiers for `import_*`, `export_*` and other relevant functions;
+- [c12_thread_safety.py](/examples/c12_thread_safety.py) - built-in protection from accessing connection object from multiple threads simultaneously;
+- [c13_dsn_parsing.py](/examples/c13_dsn_parsing.py) - parsing of complex connection strings and catching relevant exceptions;
+- [c14_http_proxy.py](/examples/c14_http_proxy.py) - connection via HTTP proxy;
+- [c15_garbage_collection](/examples/c15_garbage_collection.py) - detect potential garbage collection problems due to cross-references;
+
+## Examples of JSON libraries used for fetching
+
+- [j01_rapidjson.py](/examples/j01_rapidjson.py) - JSON library `rapidjson`;
+- [j02_ujson.py](/examples/j02_ujson.py) - JSON library `ujson`;

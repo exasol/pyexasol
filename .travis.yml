@@ -14,6 +14,8 @@ matrix:
 
         -   python: 3.9
             env: EXASOL_TAG=latest-7.1 EXASOL_PORT=8563
+        -   python: "3.10"
+            env: EXASOL_TAG=latest-7.1 EXASOL_PORT=8563
 
 services:
   - docker
@@ -34,40 +36,40 @@ install:
     - pip install -e .[pandas,encrypt,ujson,rapidjson,examples]
 
 script:
-    - python examples/00_prepare.py
-    - python examples/01_basic.py
-    - python examples/02_fetch_tuple.py
-    - python examples/03_fetch_dict.py
-    - python examples/04_fetch_mapper.py
-    - python examples/05_formatting.py
-    - python examples/06_pandas.py
-    - python examples/07_import_export.py
-    - python examples/08_transaction.py
-    - python examples/09_exceptions.py
-    - python examples/10_redundancy.py
-    - python examples/11_edge_case.py
-    - python examples/12_db2_compat.py
-    - python examples/13_ext.py
-    - python examples/14_parallel_export.py
-    - python examples/15_encryption.py
-    - python examples/16_ujson.py
-    - python examples/17_rapidjson.py
-    - python examples/18_session_params.py
-    - python examples/19_local_config.py
-    - python examples/20_parallel_import.py
-    - python examples/21_parallel_export_import.py
-    - python examples/22_profiling.py
-    - python examples/23_snapshot_transactions.py
-    - python examples/24_script_output.py
-    - python examples/25_overload.py
-    - python examples/26_quote_ident.py
-    - python examples/27_abort_query.py
-    - python examples/28_thread_safety.py
-    - python examples/29_dsn_parsing.py
-    - python examples/30_http_proxy.py
-    - python examples/31_context_manager.py
-    - python examples/32_insert_multi.py
-    - python examples/33_meta.py
-    - python examples/34_http_transport_errors.py
-    - python examples/35_garbage_collection.py
-    - python examples/36_meta_nosql.py
+    - python examples/a00_prepare.py
+    - python examples/a01_basic.py
+    - python examples/a02_fetch_tuple.py
+    - python examples/a03_fetch_dict.py
+    - python examples/a04_fetch_mapper.py
+    - python examples/a05_formatting.py
+    - python examples/a06_transaction.py
+    - python examples/a07_exceptions.py
+    - python examples/a08_ext.py
+    - python examples/a09_abort_query.py
+    - python examples/a10_context_manager.py
+    - python examples/a11_insert_multi.py
+    - python examples/a12_meta.py
+    - python examples/a13_meta_nosql.py
+    - python examples/b01_pandas.py
+    - python examples/b02_import_export.py
+    - python examples/b03_parallel_export.py
+    - python examples/b04_parallel_import.py
+    - python examples/b05_parallel_export_import.py
+    - python examples/b06_http_transport_errors.py
+    - python examples/c01_redundancy.py
+    - python examples/c02_edge_case.py
+    - python examples/c03_db2_compat.py
+    - python examples/c04_encryption.py
+    - python examples/c05_session_params.py
+    - python examples/c06_local_config.py
+    - python examples/c07_profiling.py
+    - python examples/c08_snapshot_transactions.py
+    - python examples/c09_script_output.py
+    - python examples/c10_overload.py
+    - python examples/c11_quote_ident.py
+    - python examples/c12_thread_safety.py
+    - python examples/c13_dsn_parsing.py
+    - python examples/c14_http_proxy.py
+    - python examples/c15_garbage_collection.py
+    - python examples/j01_rapidjson.py
+    - python examples/j02_ujson.py

@@ -36,6 +36,7 @@ Please read "Best practices" manual page to learn how to use PyEXASOL with maxim
         'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: 3.8',
         'Programming Language :: Python :: 3.9',
+        'Programming Language :: Python :: 3.10',
         'Topic :: Database',
     ],
 
@@ -48,16 +49,16 @@ Please read "Best practices" manual page to learn how to use PyEXASOL with maxim
     ],
 
     install_requires=[
-        'websocket-client>=0.47.0,!=1.0.0',
+        'websocket-client>=1.0.1',
         'rsa',
     ],
 
     extras_require={
-        'pandas': ['pandas>=0.22,!=0.23.1'],
+        'pandas': ['pandas>=1.2'],
         'encrypt': ['pyopenssl>=17.5.0'],
         'ujson': ['ujson'],
         'rapidjson': ['python-rapidjson'],
-        'examples': ['pproxy', 'psutil'],
+        'examples': ['pproxy'],
     },
 
     python_requires='>=3.6',

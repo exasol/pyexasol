@@ -76,11 +76,7 @@ def import_from_pandas(pipe, src, **kwargs):
     if not isinstance(src, pandas.DataFrame):
         raise ValueError('Data source is not pandas.DataFrame')
 
-    # Pandas insists on outputting CSV as text
-    # I could not find a good way to override it
-    wrapped_pipe = io.TextIOWrapper(pipe, newline='\n', encoding='utf-8')
-
-    return src.to_csv(wrapped_pipe, header=False, index=False, line_terminator='\n', quoting=csv.QUOTE_NONNUMERIC, **kwargs)
+    src.to_csv(pipe, header=False, index=False, line_terminator='\n', quoting=csv.QUOTE_NONNUMERIC, **kwargs)
 
 
 def import_from_file(pipe, src):
@@ -90,4 +86,4 @@ def import_from_file(pipe, src):
     if not hasattr(src, 'read'):
         src = open(src, 'rb')
 
-    shutil.copyfileobj(src, pipe, 65535)
+    shutil.copyfileobj(src, pipe, 65536)

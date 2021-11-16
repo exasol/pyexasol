@@ -4,7 +4,7 @@ This page explains how to use PyEXASOL with maximum efficiency.
 
 ## Enable compression for WiFi connections
 
-Wireless network bandwidth is usually the main bottleneck for office laptops. `Compression` flag enables zlib compression both for common fetching and for fast [HTTP transport](/docs/HTTP_TRANSPORT.md). It may improve overall performance by factor 4-8x.
+Wireless network bandwidth is usually the main bottleneck for laptops. `Compression` flag enables zlib compression both for common fetching and for [HTTP transport](/docs/HTTP_TRANSPORT.md). It may improve overall performance by factor 4-8x.
 
 ```python
 C = pyexasol.connect(... , compression=True)
@@ -14,7 +14,7 @@ C = pyexasol.connect(... , compression=True)
 
 It is okay to use common fetching for small data sets up to 1M of records.
 
-For anything bigger than that you should always consider [HTTP transport](/docs/HTTP_TRANSPORT.md) (`export_*` and `import_*` functions). It prevents creation of intermediate Python objects and scales much better.
+For large data sets you should always consider [HTTP transport](/docs/HTTP_TRANSPORT.md) (`export_*` and `import_*` functions). It scales well and prevents creation and destruction of intermediate Python objects.
 
 ```python
 pd = C.export_to_pandas('SELECT * FROM table')
@@ -37,9 +37,9 @@ for row in stmt:
 
 ## Avoid using INSERT prepared statement to import raw values in SQL
 
-PyEXASOL supports INSERT prepared statements since version `0.9.1` via [`.ext.insert_multi()`](/docs/REFERENCE.md#insert_multi) function. It works for small data sets and may provide some performance benefits.
+PyEXASOL supports INSERT prepared statements via [`.ext.insert_multi()`](/docs/REFERENCE.md#insert_multi) function. It works for small data sets and may provide some performance benefits.
 
-However, it is strongly advised to use more efficient `IMPORT` command and HTTP transport instead. It has some small initial overhead, but large data sets will be transferred and processed much faster. It is also more CPU and memory efficient.
+However, it is strongly advised to use more efficient `IMPORT` command and HTTP transport instead. It has a small overhead to initiate the communication, but large data sets will be transferred and processed much faster. It is also more CPU and memory efficient.
 
 You may use [`import_from_iterable()`](/docs/REFERENCE.md#import_from_iterable) to insert data from list of rows.
 
@@ -74,25 +74,25 @@ PyEXASOL tries to connect to random node from this list. If it fails, it tries t
 
 ## Consider faster JSON-parsing libraries
 
-PyEXASOL defaults to standard [`json`](https://docs.python.org/3/library/json.html) library for best compatibility. It is sufficient for majority of use-cases. However, if you are unhappy with HTTP transport and you wish to load large amounts of data using standard fetching, we highly recommend trying faster JSON libraries.
+PyEXASOL defaults to standard [`json`](https://docs.python.org/3/library/json.html) library for best compatibility. It is sufficient for the majority of use-cases. However, if you are unhappy with HTTP transport, and you wish to load large amounts of data using standard fetching, we highly recommend trying faster JSON libraries.
 
 #### json_lib=[`rapidjson`](https://github.com/python-rapidjson/python-rapidjson)
 ```
 pip install pyexasol[rapidjson]
 ```
-Rapidjson provides significant performance boost and it is well maintained by creators. PyEXASOL defaults to `number_mode=NM_NATIVE`. Exasol server wraps big decimals with quotes and returns as strings, so it should be a safe option.
+Rapidjson provides significant performance boost and is well maintained by creators. PyEXASOL defaults to `number_mode=NM_NATIVE`. Exasol server wraps big decimals with quotes and returns as strings, so it should be a safe option.
 
 #### json_lib=[`ujson`](https://github.com/esnme/ultrajson)
 ```
 pip install pyexasol[ujson]
 ```
-Ujson provides best performance in our internal tests, but it is abandoned by creators. Also, float values may lose precision with ujson.
+Ujson provides the best performance in our internal tests, but it is abandoned by creators. Also, float values may lose precision with ujson.
 
 You may try any other json library. All you need to do is to overload `_init_json()` method in `ExaConnection`.
 
 ## Use [`.meta`](/docs/REFERENCE.md#exametadata) functions to perform lock-free meta data requests
 
-It is quite common for Exasol system views to become locked by DML statements, which prevents clients from retrieving meta data.
+It is quite common for Exasol system views to become locked by DML statements, which prevents clients from retrieving metadata.
 
 In order to mitigate this problem, Exasol provided special SQL hint described in [IDEA-476](https://www.exasol.com/support/browse/IDEA-476) which is available in latest versions. It does not require user to enable "snapshot transaction" mode for the whole session. Currently this is the best way to access meta data using WebSocket protocol.
 

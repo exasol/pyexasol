@@ -1,19 +1,19 @@
 # HTTP transport
 
-The main purpose of HTTP transport is to reduce massive fetching overhead associated with large data sets (1M+ rows). It uses native Exasol commands `EXPORT` and `IMPORT` specifically designed to move large amounts of data. Data is transferred using CSV format with optional compression.
+The main purpose of HTTP transport is to reduce massive fetching overhead associated with large data sets (1M+ rows). It uses native Exasol commands `EXPORT` and `IMPORT` specifically designed to move large amounts of data. Data is transferred using CSV format with optional zlib compression.
 
-This is a powerful tool which helps to bypass creation of Python objects altogether and dramatically increase performance.
+This is a powerful tool which helps to bypass creation of intermediate Python objects altogether and dramatically increases performance.
 
-PyEXASOL offloads HTTP communication and decompression to separate process using [multiprocessing](https://docs.python.org/3/library/multiprocessing.html) module. Main process only reads or writes to [pipe](https://docs.python.org/3/library/os.html#os.pipe) opened in binary mode.
+PyEXASOL offloads HTTP communication and decompression to separate thread using [threading](https://docs.python.org/3/library/threading.html) module. Main thread deals with a simple [pipe](https://docs.python.org/3/library/os.html#os.pipe) opened in binary mode.
 
-Specify custom `callback` function to read or write from pipe and to apply complex logic. Use `callback_params` to pass additional parameters to `callback` function (e.g. options for pandas).
+You may specify a custom `callback` function to read or write from raw pipe and to apply complex logic. Use `callback_params` to pass additional parameters to `callback` function (e.g. options for pandas).
 
-You may also specify `import_params` or `export_params` to alter `IMPORT` or `EXPORT` query and modify data stream.
+You may also specify `import_params` or `export_params` to alter `IMPORT` or `EXPORT` query and modify CSV data stream.
 
 # Pre-defined functions
 
 ## Export from Exasol to pandas
-Export data from Exasol into `pandas.DataFrame`. You may use `callback_param` argument to pass custom options for pandas [`read_csv`](https://pandas.pydata.org/pandas-docs/stable/generated/pandas.read_csv.html) function.
+Export data from Exasol into `pandas.DataFrame`. You may use `callback_param` argument to pass custom options for pandas [`read_csv`](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.read_csv.html) function.
 
 ```python
 # Read from SQL
@@ -24,7 +24,7 @@ pd = C.export_to_pandas("users")
 ```
 
 ## Import from pandas to Exasol
-Import data from `pandas.DataFrame` into Exasol table. You may use `callback_param` argument to pass custom options for pandas [`to_csv`](https://pandas.pydata.org/pandas-docs/stable/generated/pandas.DataFrame.to_csv.html) function.
+Import data from `pandas.DataFrame` into Exasol table. You may use `callback_param` argument to pass custom options for pandas [`to_csv`](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.to_csv.html) function.
 
 ```python
 C.import_from_pandas(pd, "users")

@@ -81,9 +81,9 @@ This page contains complete reference of PyEXASOL public API.
   - get_sys_schemas() (deprecated, please use [.meta.list_schemas()](#list_schemas))
   - get_reserved_words() (deprecated, please use [.meta.list_sql_keywords()](#list_sql_keywords))
 - [ExaHTTPTransportWrapper](#exahttptransportwrapper)
-  - [get_proxy()](#exahttptransportwrapperget_proxy)
   - [export_to_callback()](#exahttptransportwrapperexport_to_callback)
   - [import_from_callback()](#exahttptransportwrapperimport_from_callback)
+  - [.address](#exahttptransportwrapperaddress)
 
 ## connect()
 Open new connection and return `ExaConnection` object.
@@ -138,11 +138,10 @@ Open new HTTP connection and return `ExaHTTPTransportWrapper` object. This funct
 | --- | --- | --- |
 | `host` | `10.17.1.10` | IP address of one of Exasol nodes received from [`get_nodes()`](#get_nodes) |
 | `port` | `8563` | Port of one of Exasol nodes received from [`get_nodes()`](#get_nodes) |
-| `mode` | `pyexasol.HTTP_EXPORT` | Open connection for `pyexasol.HTTP_EXPORT` or `pyexasol.HTTP_IMPORT` |
 | `compression` | `True` | Use zlib compression for HTTP transport, must be the same as `compression` of main connection (Default: `False`) |
 | `encryption` | `True` | Use [SSL encryption](/docs/ENCRYPTION.md) for HTTP transport, must be the same as `encryption` of main connection (Default: `False`) |
 
-Please note: this function was changed in PyEXASOL 0.5.1 and is no longer accepts `shard_id` and `dsn` arguments due to potential issues with reserve nodes and partially invalid DSN. You should now call `get_nodes()` in order to get list of real active Exasol nodes and pass this this information to child processes.
+**Note:** this function was changed in PyEXASOL 0.22.0. Third argument `mode` (EXPORT / IMPORT) was removed, it is no longer needed. Please update your code accordingly.
 
 ## ExaConnection
 
@@ -251,11 +250,11 @@ Export large amount of data to user-defined callback function
 Return result of callback function
 
 ### export_parallel()
-This function is part of [parallel HTTP transport API](/docs/HTTP_TRANSPORT_PARALLEL.md). It accepts list of proxy `host:port` strings obtained from all child processes and executes parallel export query. Parent process only monitors the execution of query. All actual work is performed in child processes.
+This function is part of [parallel HTTP transport API](/docs/HTTP_TRANSPORT_PARALLEL.md). It accepts list of `host:port` strings obtained from all child processes and executes parallel export query. Parent process only monitors the execution of query. All actual work is performed in child processes.
 
 | Argument | Example | Description |
 | --- | --- | --- |
-| `exa_proxy_list` | `['27.0.1.10:5362', '27.0.1.11:7262']` | List of proxy `host:port` strings |
+| `exa_address_list` | `['27.0.1.10:5362', '27.0.1.11:7262']` | List of `host:port` strings obtained from HTTP transport [.address](#exahttptransportwrapperaddress) |
 | `query_or_table` | `SELECT * FROM table` `table` `(schema, table)` | SQL query or table for export |
 | `query_params` | `{'table': 'users', 'col1':'bar'}` | (optional) Values for SQL query placeholders |
 | `export_params` | `{'with_column_names': True}` | (optional) Custom parameters for EXPORT query |
@@ -301,11 +300,11 @@ Import large amount of data from user-defined callback function to Exasol.
 | `import_params` | `{'column_separator': ','}` | (optional) Custom parameters for IMPORT query |
 
 ### import_parallel()
-This function is part of [parallel HTTP transport API](/docs/HTTP_TRANSPORT_PARALLEL.md). It accepts list of proxy `host:port` strings obtained from all child processes and executes parallel import query. Parent process only monitors the execution of query. All actual work is performed in child processes.
+This function is part of [parallel HTTP transport API](/docs/HTTP_TRANSPORT_PARALLEL.md). It accepts list of `host:port` strings obtained from all child processes and executes parallel import query. Parent process only monitors the execution of query. All actual work is performed in child processes.
 
 | Argument | Example | Description |
 | --- | --- | --- |
-| `exa_proxy_list` | `['27.0.1.10:5362', '27.0.1.11:7262']` | List of proxy `host:port` strings |
+| `exa_address_list` | `['27.0.1.10:5362', '27.0.1.11:7262']` | List of `host:port` strings obtained from HTTP transport [.address](#exahttptransportwrapperaddress) |
 | `table` | `table` `(schema, table)` | Destination table for import |
 | `import_params` | `{'column_separator': ','}` | (optional) Custom parameters for IMPORT query |
 
@@ -343,7 +342,7 @@ Return instance of `ExaStatement`.
 ### abort_query()
 Abort running query.
 
-This function should be called from a separate thread and has no response. Response should be checked in the main thread which started execution of query. Please check [27_abort_query](/examples/27_abort_query.py) example.
+This function should be called from a separate thread and has no response. Response should be checked in the main thread which started execution of query. Please check [27_abort_query](/examples/a09_abort_query.py) example.
 
 There are three possible outcomes of calling this function:
 
@@ -727,7 +726,7 @@ This function returns dictionary with 4 keys:
 
 ### explain_last()
 
-Profile (EXPLAIN) last executed query. Example: [22_profiling](/examples/22_profiling.py)
+Profile (EXPLAIN) last executed query. Example: [22_profiling](/examples/c07_profiling.py)
 
 | Argument | Example | Description |
 | --- | --- | --- |
@@ -750,9 +749,9 @@ Wrapper for [parallel HTTP transport](/docs/HTTP_TRANSPORT_PARALLEL.md) used by 
 
 You may create this wrapper using [http_transport()](#http_transport) function.
 
-### ExaHTTPTransportWrapper.get_proxy()
+### ExaHTTPTransportWrapper.address
 
-Return proxy `host:port` string. Those strings should be passed from child processes to parent process and used as argument for [`export_parallel()`](#export_parallel) and [`import_parallel()`](#import_parallel) functions.
+Return internal Exasol address as `host:port` string. This string should be passed from child processes to parent process and used as an argument for [`export_parallel()`](#export_parallel) and [`import_parallel()`](#import_parallel) functions.
 
 ### ExaHTTPTransportWrapper.export_to_callback()
 

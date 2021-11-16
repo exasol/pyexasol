@@ -1,9 +1,11 @@
 [![Build Status](https://travis-ci.com/badoo/pyexasol.svg?branch=master)](https://travis-ci.com/badoo/pyexasol)
 [![PyPI](https://badge.fury.io/py/pyexasol.svg)](https://badge.fury.io/py/pyexasol)
 
-PyEXASOL is a custom Python driver for [Exasol](https://www.exasol.com) created in [Badoo](https://badoo.com/team/). It helps us to handle massive volumes of data commonly associated with this database.
+PyEXASOL is a custom Python driver for [Exasol](https://www.exasol.com) originally created in [Bumble](https://bumble.com/en/about). It helps to handle massive volumes of data commonly associated with this DBMS.
 
-You may expect significant performance improvement over existing ODBC / JDBC solutions in single process scenario involving pandas. It is also possible to split data set across multiple processes and servers to achieve linear scalability. With PyEXASOL you are not limited by single CPU core.
+You may expect significant performance improvement over ODBC in single process scenario involving pandas.
+
+PyEXASOL provides API to read & write multiple data streams in parallel using separate processes. It is necessary to fully utilize hardware and achieve linear scalability. With PyEXASOL you are no longer limited to a single CPU core.
 
 
 ## Quick links

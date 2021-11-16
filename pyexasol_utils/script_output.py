@@ -69,6 +69,8 @@ class ExaScriptOutputServer(socketserver.ThreadingMixIn, socketserver.TCPServer)
 
 
 class ExaScriptOutputHandler(socketserver.StreamRequestHandler):
+    server: ExaScriptOutputServer
+
     def setup(self):
         super().setup()
         self.server.connected_clients += 1
@@ -80,6 +82,8 @@ class ExaScriptOutputHandler(socketserver.StreamRequestHandler):
 
 
 class ExaScriptOutputDebugModeHandler(ExaScriptOutputHandler):
+    server: ExaScriptOutputServer
+
     def handle(self):
         if self.server.connected_clients == 1:
             print('\n-------- NEW STATEMENT --------', flush=True)
@@ -95,6 +99,8 @@ class ExaScriptOutputDebugModeHandler(ExaScriptOutputHandler):
 
 
 class ExaScriptOutputScriptModeHandler(ExaScriptOutputHandler):
+    server: ExaScriptOutputServer
+
     def handle(self):
         path = self.server.output_dir_path / (str(self.server.total_clients).rjust(5, '0') + '.log')
         dst = open(path, 'wb')

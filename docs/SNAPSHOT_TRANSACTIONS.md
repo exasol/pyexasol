@@ -24,4 +24,4 @@ If you want to read metadata without locks, and if strict transaction integrity 
 
 Follow this pattern and you should be fine.
 
-Please see [example_23](/examples/23_snapshot_transactions.py) for common locking scenario solved by this feature.
+Please see [example_23](/examples/c08_snapshot_transactions.py) for common locking scenario solved by this feature.
