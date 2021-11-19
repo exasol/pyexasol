@@ -76,7 +76,9 @@ def import_from_pandas(pipe, src, **kwargs):
     if not isinstance(src, pandas.DataFrame):
         raise ValueError('Data source is not pandas.DataFrame')
 
-    src.to_csv(pipe, header=False, index=False, line_terminator='\n', quoting=csv.QUOTE_NONNUMERIC, **kwargs)
+    wrapped_pipe = io.TextIOWrapper(pipe, newline='\n', encoding='utf-8')
+
+    return src.to_csv(wrapped_pipe, header=False, index=False, line_terminator='\n', quoting=csv.QUOTE_NONNUMERIC, **kwargs)
 
 
 def import_from_file(pipe, src):

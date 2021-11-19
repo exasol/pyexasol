@@ -54,7 +54,7 @@ Please read "Best practices" manual page to learn how to use PyEXASOL with maxim
     ],
 
     extras_require={
-        'pandas': ['pandas>=1.2'],
+        'pandas': ['pandas'],
         'encrypt': ['pyopenssl>=17.5.0'],
         'ujson': ['ujson'],
         'rapidjson': ['python-rapidjson'],

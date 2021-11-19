@@ -14,8 +14,6 @@ matrix:
 
         -   python: 3.9
             env: EXASOL_TAG=latest-7.1 EXASOL_PORT=8563
-        -   python: "3.10"
-            env: EXASOL_TAG=latest-7.1 EXASOL_PORT=8563
 
 services:
   - docker
