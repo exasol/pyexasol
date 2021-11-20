@@ -21,7 +21,7 @@ jobs:
 
           - python-version: 3.9
             exasol_tag: latest-7.0
-            exasol_port: 8563
+            exasol-port: 8563
 
           - python-version: 3.9
             exasol-tag: latest-6.2
@@ -36,7 +36,8 @@ jobs:
     services:
       exasol:
         image: exasol/docker-db:${{ matrix.exasol-tag }}
-        ports: 8563:${{ matrix.exasol-port }}
+        ports:
+          - 8563:${{ matrix.exasol-port }}
         options: --privileged
 
     steps:
