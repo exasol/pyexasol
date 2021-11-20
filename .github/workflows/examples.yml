@@ -1,0 +1,95 @@
+name: Examples
+
+on:
+  push:
+    paths:
+      - "**.py"
+  pull_request:
+    paths:
+      - "**.py"
+
+jobs:
+  examples:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - python-version: 3.9
+            exasol-tag: latest-7.1
+            exasol-port: 8563
+
+          - python-version: 3.9
+            exasol_tag: latest-7.0
+            exasol_port: 8563
+
+          - python-version: 3.9
+            exasol-tag: latest-6.2
+            exasol-port: 8888
+
+          - python-version: 3.6
+            exasol-tag: latest-7.1
+            exasol-port: 8636
+
+    runs-on: ubuntu-latest
+
+    services:
+      exasol:
+        image: exasol/docker-db:${{ matrix.exasol-tag }}
+        ports: 8563:${{ matrix.exasol-port }}
+        options: --privileged
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v2
+
+      - name: Setup Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install dependencies
+        run: pip install -e .[pandas,encrypt,ujson,rapidjson,orjson,examples]
+
+      - name: Wait for Exasol container
+        run: sleep 240
+
+      - name: "Run examples"
+        run: |
+          python examples/a00_prepare.py
+          python examples/a01_basic.py
+          python examples/a02_fetch_tuple.py
+          python examples/a03_fetch_dict.py
+          python examples/a04_fetch_mapper.py
+          python examples/a05_formatting.py
+          python examples/a06_transaction.py
+          python examples/a07_exceptions.py
+          python examples/a08_ext.py
+          python examples/a09_abort_query.py
+          python examples/a10_context_manager.py
+          python examples/a11_insert_multi.py
+          python examples/a12_meta.py
+          python examples/a13_meta_nosql.py
+          python examples/b01_pandas.py
+          python examples/b02_import_export.py
+          python examples/b03_parallel_export.py
+          python examples/b04_parallel_import.py
+          python examples/b05_parallel_export_import.py
+          python examples/b06_http_transport_errors.py
+          python examples/c01_redundancy.py
+          python examples/c02_edge_case.py
+          python examples/c03_db2_compat.py
+          python examples/c04_encryption.py
+          python examples/c05_session_params.py
+          python examples/c06_local_config.py
+          python examples/c07_profiling.py
+          python examples/c08_snapshot_transactions.py
+          python examples/c09_script_output.py
+          python examples/c10_overload.py
+          python examples/c11_quote_ident.py
+          python examples/c12_thread_safety.py
+          python examples/c13_dsn_parsing.py
+          python examples/c14_http_proxy.py
+          python examples/c15_garbage_collection.py
+          python examples/j01_rapidjson.py
+          python examples/j02_ujson.py
+          python examples/j03_orjson.py
