@@ -23,7 +23,7 @@ def wait_for_connection():
         try:
             return pyexasol.connect(dsn=config.dsn, user=config.user, password=config.password, query_timeout=QUERY_TIMEOUT)
         except pyexasol.ExaConnectionFailedError as e:
-            print(e)
+            print(e.message)
             time.sleep(SLEEP_TIMEOUT)
 
 
@@ -35,7 +35,7 @@ def wait_for_java(connection: pyexasol.ExaConnection):
 
             return
         except pyexasol.ExaQueryError as e:
-            print(e)
+            print(e.message)
             time.sleep(SLEEP_TIMEOUT)
 
 
