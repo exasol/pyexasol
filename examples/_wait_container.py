@@ -31,7 +31,7 @@ def wait_for_java(connection: pyexasol.ExaConnection):
     while True:
         try:
             connection.execute(TEST_JAVA_UDF)
-            connection.execute("SELECT test_jav1a(true)")
+            connection.execute("SELECT test_java(true)")
 
             return
         except pyexasol.ExaQueryError as e:
