@@ -55,8 +55,6 @@ class ExportProc(multiprocessing.Process):
         print(f"IMPORT child process {self.node['idx']} finished, imported rows:{len(pd)}")
 
 
-# This condition is required for 'spawn' multiprocessing implementation (Windows)
-# Feel free to skip it for POSIX operating systems
 if __name__ == '__main__':
     pool_size = 8
     pool = []
@@ -82,15 +80,25 @@ if __name__ == '__main__':
     printer.pprint(exa_address_export)
     printer.pprint(exa_address_import)
 
-    C.export_parallel(exa_address_export, "SELECT * FROM payments", export_params={'with_column_names': True})
+    try:
+        C.export_parallel(exa_address_export, "SELECT * FROM payments", export_params={'with_column_names': True})
+    except (Exception, KeyboardInterrupt):
+        for p in pool:
+            p.terminate()
+            p.join()
+    else:
+        stmt = C.last_statement()
+        print(f'EXPORTED {stmt.rowcount()} rows in {stmt.execution_time}s')
 
-    stmt = C.last_statement()
-    print(f'EXPORTED {stmt.rowcount()} rows in {stmt.execution_time}s')
+    try:
+        C.import_parallel(exa_address_import, "payments_copy")
+    except (Exception, KeyboardInterrupt):
+        for p in pool:
+            p.terminate()
+            p.join()
+    else:
+        stmt = C.last_statement()
+        print(f'IMPORTED {stmt.rowcount()} rows in {stmt.execution_time}s')
 
-    C.import_parallel(exa_address_import, "payments_copy")
-
-    stmt = C.last_statement()
-    print(f'IMPORTED {stmt.rowcount()} rows in {stmt.execution_time}s')
-
-    for i in range(pool_size):
-        pool[i].join()
+    for p in pool:
+        p.join()

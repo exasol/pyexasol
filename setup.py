@@ -50,12 +50,12 @@ Please read "Best practices" manual page to learn how to use PyEXASOL with maxim
 
     install_requires=[
         'websocket-client>=1.0.1',
+        'pyopenssl',
         'rsa',
     ],
 
     extras_require={
         'pandas': ['pandas'],
-        'encrypt': ['pyopenssl>=17.5.0'],
         'ujson': ['ujson'],
         'rapidjson': ['python-rapidjson'],
         'orjson': ['orjson>=3.6'],

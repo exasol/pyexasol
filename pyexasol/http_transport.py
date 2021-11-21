@@ -38,7 +38,10 @@ class ExaSQLThread(threading.Thread):
 
             # In case of SQL error stop HTTP server, close pipes and interrupt I/O in callback function
             if self.http_thread:
-                self.http_thread.terminate()
+                if self.__class__ == ExaSQLExportThread:
+                    self.http_thread.terminate_export()
+                elif self.__class__ == ExaSQLImportThread:
+                    self.http_thread.terminate_import()
 
     def run_sql(self):
         pass
@@ -247,13 +250,23 @@ class ExaHttpThread(threading.Thread):
         if self.exc:
             raise self.exc
 
-    def terminate(self):
+    def terminate_export(self):
+        self.server.is_terminated = True
+        self.server.can_finish_get.set()
+
+        # Must close pipes here to prevent infinite lock in callback function
+        # Termination pipe order is important for Windows
+        self.read_pipe.close()
+        self.write_pipe.close()
+
+    def terminate_import(self):
         self.server.is_terminated = True
         self.server.can_finish_get.set()
 
         # Must close pipes here to prevent infinite lock in callback function in case of SQL error
-        self.read_pipe.close()
+        # Termination pipe order is important for Windows
         self.write_pipe.close()
+        self.read_pipe.close()
 
 
 class ExaHTTPTransportWrapper(object):
@@ -291,8 +304,8 @@ class ExaHTTPTransportWrapper(object):
 
             return result
 
-        except Exception as e:
-            self.http_thread.terminate()
+        except (Exception, KeyboardInterrupt) as e:
+            self.http_thread.terminate_export()
             self.http_thread.join()
 
             raise e
@@ -312,8 +325,8 @@ class ExaHTTPTransportWrapper(object):
 
             return result
 
-        except Exception as e:
-            self.http_thread.terminate()
+        except (Exception, KeyboardInterrupt) as e:
+            self.http_thread.terminate_import()
             self.http_thread.join()
 
             raise e

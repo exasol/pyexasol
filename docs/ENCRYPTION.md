@@ -2,16 +2,11 @@
 
 If you have to use strong encryption due to compliance and regulations, the best option is to create dedicated secured tunnel. Production Exasol instances should never be exposed to the internet.
 
-However, it is possible to enable SSL encryption in PyEXASOL similar to standard ODBC / JDBC drivers. This option is significantly less secure, but it might be useful in some cases.
+However, it is possible to enable SSL encryption in PyEXASOL similar to standard ODBC / JDBC drivers.
 
 ### How to enable encryption?
 
-1. Install PyEXASOL with extra `[encrypt]`. It adds dependency for [pyOpenSSL](https://github.com/pyca/pyopenssl).
-```
-pip install pyexasol[encrypt]
-```
-
-2. Create connection with argument `encryption=True`. It enables SSL encryption both for WebSocket communication and for [HTTP transport](/docs/HTTP_TRANSPORT.md).
+Create connection with argument `encryption=True`. It enables SSL encryption both for WebSocket communication and for [HTTP transport](/docs/HTTP_TRANSPORT.md).
 
 ### Certificate verification?
 

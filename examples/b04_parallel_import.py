@@ -54,8 +54,6 @@ class ImportProc(multiprocessing.Process):
         print(f"Child process {self.node['idx']} finished, imported rows: {len(pd)}")
 
 
-# This condition is required for 'spawn' multiprocessing implementation (Windows)
-# Feel free to skip it for POSIX operating systems
 if __name__ == '__main__':
     pool_size = 5
     pool = []
@@ -75,10 +73,14 @@ if __name__ == '__main__':
     printer.pprint(pool)
     printer.pprint(exa_address_list)
 
-    C.import_parallel(exa_address_list, 'parallel_import')
-
-    stmt = C.last_statement()
-    print(f'IMPORTED {stmt.rowcount()} rows in {stmt.execution_time}s')
-
-    for i in range(pool_size):
-        pool[i].join()
+    try:
+        C.import_parallel(exa_address_list, 'parallel_import')
+    except (Exception, KeyboardInterrupt):
+        for p in pool:
+            p.terminate()
+    else:
+        stmt = C.last_statement()
+        print(f'IMPORTED {stmt.rowcount()} rows in {stmt.execution_time}s')
+    finally:
+        for p in pool:
+            p.join()

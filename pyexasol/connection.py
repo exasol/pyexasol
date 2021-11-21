@@ -319,7 +319,7 @@ class ExaConnection(object):
             return result
 
         except (Exception, KeyboardInterrupt) as e:
-            http_thread.terminate()
+            http_thread.terminate_export()
             http_thread.join()
 
             sql_thread.join(1)
@@ -365,7 +365,7 @@ class ExaConnection(object):
             return result
 
         except (Exception, KeyboardInterrupt) as e:
-            http_thread.terminate()
+            http_thread.terminate_import()
             http_thread.join()
 
             sql_thread.join(1)

@@ -47,7 +47,7 @@ jobs:
           python-version: ${{ matrix.python-version }}
 
       - name: Install dependencies
-        run: pip install -e .[pandas,encrypt,ujson,rapidjson,orjson,examples]
+        run: pip install -e .[pandas,ujson,rapidjson,orjson,examples]
 
       - name: Wait for Exasol container
         run: python examples/_wait_container.py

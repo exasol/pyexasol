@@ -44,8 +44,6 @@ class ExportProc(multiprocessing.Process):
         print(f"Child process {self.node['idx']} finished, exported rows: {len(pd)}")
 
 
-# This condition is required for 'spawn' multiprocessing implementation (Windows)
-# Feel free to skip it for POSIX operating systems
 if __name__ == '__main__':
     pool_size = 5
     pool = []
@@ -63,10 +61,14 @@ if __name__ == '__main__':
     printer.pprint(pool)
     printer.pprint(exa_address_list)
 
-    C.export_parallel(exa_address_list, "SELECT * FROM payments", export_params={'with_column_names': True})
-
-    stmt = C.last_statement()
-    print(f'EXPORTED {stmt.rowcount()} rows in {stmt.execution_time}s')
-
-    for i in range(pool_size):
-        pool[i].join()
+    try:
+        C.export_parallel(exa_address_list, "SELECT * FROM payments", export_params={'with_column_names': True})
+    except (Exception, KeyboardInterrupt):
+        for p in pool:
+            p.terminate()
+    else:
+        stmt = C.last_statement()
+        print(f'EXPORTED {stmt.rowcount()} rows in {stmt.execution_time}s')
+    finally:
+        for p in pool:
+            p.join()
