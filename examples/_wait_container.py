@@ -30,7 +30,7 @@ def wait_for_connection():
 def wait_for_java():
     while True:
         try:
-            connection = pyexasol.connect(dsn=config.dsn, user=config.user, password=config.password, query_timeout=QUERY_TIMEOUT)
+            connection = pyexasol.connect(dsn=config.dsn, user=config.user, password=config.password, schema=config.schema, query_timeout=QUERY_TIMEOUT)
 
             connection.execute(TEST_JAVA_UDF)
             connection.execute("SELECT test_java(true)")
