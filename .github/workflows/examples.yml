@@ -20,7 +20,7 @@ jobs:
             exasol-port: 8563
 
           - python-version: 3.9
-            exasol_tag: latest-7.0
+            exasol-tag: latest-7.0
             exasol-port: 8563
 
           - python-version: 3.9
@@ -32,6 +32,7 @@ jobs:
             exasol-port: 8636
 
     runs-on: ubuntu-latest
+    timeout-minutes: 10
 
     services:
       exasol:
@@ -53,7 +54,7 @@ jobs:
         run: pip install -e .[pandas,encrypt,ujson,rapidjson,orjson,examples]
 
       - name: Wait for Exasol container
-        run: sleep 240
+        run: python examples/_wait_container.py
 
       - name: "Run examples"
         run: |
