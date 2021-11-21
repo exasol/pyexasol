@@ -27,14 +27,16 @@ def wait_for_connection():
             time.sleep(SLEEP_TIMEOUT)
 
 
-def wait_for_java(connection: pyexasol.ExaConnection):
+def wait_for_java():
     while True:
         try:
+            connection = pyexasol.connect(dsn=config.dsn, user=config.user, password=config.password, query_timeout=QUERY_TIMEOUT)
+
             connection.execute(TEST_JAVA_UDF)
             connection.execute("SELECT test_java(true)")
 
             return
-        except pyexasol.ExaQueryError as e:
+        except pyexasol.ExaError as e:
             print(e.message)
             time.sleep(SLEEP_TIMEOUT)
 
@@ -51,5 +53,5 @@ if __name__ == '__main__':
     C.open_schema(config.schema)
 
     # Wait for availability of Java in BucketFS
-    wait_for_java(C)
+    wait_for_java()
     print(f"Java UDF was ready in {time.time() - start_ts:.3f}")
