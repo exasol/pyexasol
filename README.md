@@ -2,7 +2,7 @@
 [![PyPI](https://badge.fury.io/py/pyexasol.svg)](https://badge.fury.io/py/pyexasol)
 [![Anaconda](https://anaconda.org/conda-forge/pyexasol/badges/version.svg)](https://anaconda.org/conda-forge/pyexasol)
 
-PyEXASOL is a custom Python driver for [Exasol](https://www.exasol.com) which was originally created in [Bumble](https://bumble.com/en/about). It helps to handle massive volumes of data commonly associated with this DBMS.
+PyEXASOL is the officially supported Python connector for [Exasol](https://www.exasol.com), which was originally created by [Vitaly Markov](https://www.linkedin.com/in/markov-vitaly/). It helps to handle massive volumes of data commonly associated with this DBMS.
 
 You may expect significant performance improvement over ODBC in a single process scenario involving pandas.
 
