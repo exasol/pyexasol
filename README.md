@@ -1,11 +1,12 @@
-[![Build Status](https://travis-ci.com/badoo/pyexasol.svg?branch=master)](https://travis-ci.com/badoo/pyexasol)
+[![Examples](https://github.com/exasol/pyexasol/actions/workflows/examples.yml/badge.svg)](https://github.com/exasol/pyexasol/actions/workflows/examples.yml)
 [![PyPI](https://badge.fury.io/py/pyexasol.svg)](https://badge.fury.io/py/pyexasol)
+[![Anaconda](https://anaconda.org/conda-forge/pyexasol/badges/version.svg)](https://anaconda.org/conda-forge/pyexasol)
 
-PyEXASOL is a custom Python driver for [Exasol](https://www.exasol.com) originally created in [Bumble](https://bumble.com/en/about). It helps to handle massive volumes of data commonly associated with this DBMS.
+PyEXASOL is a custom Python driver for [Exasol](https://www.exasol.com) which was originally created in [Bumble](https://bumble.com/en/about). It helps to handle massive volumes of data commonly associated with this DBMS.
 
-You may expect significant performance improvement over ODBC in single process scenario involving pandas.
+You may expect significant performance improvement over ODBC in a single process scenario involving pandas.
 
-PyEXASOL provides API to read & write multiple data streams in parallel using separate processes. It is necessary to fully utilize hardware and achieve linear scalability. With PyEXASOL you are no longer limited to a single CPU core.
+PyEXASOL provides API to read & write multiple data streams in parallel using separate processes, which is necessary to fully utilize hardware and achieve linear scalability. With PyEXASOL you are no longer limited to a single CPU core.
 
 
 ## Quick links
@@ -28,7 +29,7 @@ PyEXASOL provides API to read & write multiple data streams in parallel using se
 
 ## PyEXASOL main concepts
 
-- Based on [WebSocket protocol](https://github.com/EXASOL/websocket-api/blob/master/WebsocketAPI.md);
+- Based on [WebSocket protocol](https://github.com/exasol/websocket-api);
 - Optimized for minimum overhead;
 - Easy integration with pandas via HTTP transport;
 - Compression to reduce network bottleneck;
@@ -81,6 +82,6 @@ print(stmt.fetchone())
 
 
 ## Created by
-Vitaly Markov, 2018
+Vitaly Markov, 2018 — 2021
 
 Enjoy!

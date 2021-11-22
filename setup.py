@@ -24,7 +24,7 @@ PyEXASOL does not follow DB-API 2.0 in favor of Exasol-specific features.
 Please read "Best practices" manual page to learn how to use PyEXASOL with maximum efficiency.
     """,
     long_description_content_type='text/markdown',
-    url='https://github.com/badoo/pyexasol',
+    url='https://github.com/exasol/pyexasol',
     author='Vitaly Markov',
     author_email='wild.desu@gmail.com',
 
