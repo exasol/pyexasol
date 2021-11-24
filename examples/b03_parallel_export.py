@@ -33,7 +33,7 @@ class ExportProc(multiprocessing.Process):
         self.read_pipe.close()
 
         # Init HTTP transport connection
-        http = pyexasol.http_transport(self.node['host'], self.node['port'])
+        http = pyexasol.http_transport(self.node['ipaddr'], self.node['port'])
 
         # Send internal Exasol address to parent process
         self.write_pipe.send(http.exa_address)

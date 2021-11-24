@@ -1,5 +1,6 @@
 import base64
 import getpass
+import hashlib
 import itertools
 import platform
 import random
@@ -160,7 +161,7 @@ class ExaConnection(object):
         self.attr = {}
         self.is_closed = False
 
-        self.ws_host = None
+        self.ws_ipaddr = None
         self.ws_port = None
         self.ws_req_count = 0
         self.ws_req_time = 0
@@ -197,7 +198,7 @@ class ExaConnection(object):
         Execute SQL query with UDF script, capture output
         Return ExaStatement object and list of Path-objects for script output log files
 
-        Exasol should be able to open connection to the host where current script is running
+        Exasol should be able to open connection to the machine where current script is running
         """
         stmt_output_dir = self._get_stmt_output_dir()
 
@@ -301,7 +302,7 @@ class ExaConnection(object):
 
         compression = False if ('format' in export_params) else self.options['compression']
 
-        http_thread = ExaHttpThread(self.ws_host, self.ws_port, compression, self.options['encryption'])
+        http_thread = ExaHttpThread(self.ws_ipaddr, self.ws_port, compression, self.options['encryption'])
         sql_thread = ExaSQLExportThread(self, compression, query_or_table, export_params)
 
         try:
@@ -347,7 +348,7 @@ class ExaConnection(object):
         if not callable(callback):
             raise ValueError('Callback argument is not callable')
 
-        http_thread = ExaHttpThread(self.ws_host, self.ws_port, compression, self.options['encryption'])
+        http_thread = ExaHttpThread(self.ws_ipaddr, self.ws_port, compression, self.options['encryption'])
         sql_thread = ExaSQLImportThread(self, compression, table, import_params)
 
         try:
@@ -481,7 +482,7 @@ class ExaConnection(object):
     def get_nodes(self, pool_size=None):
         """
         Return list of dictionaries describing active Exasol nodes
-        Format: {'host': <ip_address>, 'port': <port>, 'idx': <incremental index of returned node>}
+        Format: {'ipaddr': <ip_address>, 'port': <port>, 'idx': <incremental index of returned node>}
 
         If pool_size is bigger than number of nodes, list will wrap around and nodes will repeat with different 'idx'
         If pool_size is omitted, return every active node once
@@ -491,13 +492,14 @@ class ExaConnection(object):
         """
         ret = self.req({
             'command': 'getHosts',
-            'hostIp': self.ws_host,
+            'hostIp': self.ws_ipaddr,
         })
 
         if pool_size is None:
             pool_size = ret['responseData']['numNodes']
 
-        return [{'host': ip_address, 'port': self.ws_port, 'idx': idx} for idx, ip_address
+        # Key 'host' is deprecated and remains only for backwards compatibility, please use `ipaddr` instead
+        return [{'host': ipaddr, 'ipaddr': ipaddr, 'port': self.ws_port, 'idx': idx} for idx, ipaddr
                 in enumerate(itertools.islice(itertools.cycle(ret['responseData']['nodes']), pool_size), start=1)]
 
     def req(self, req):
@@ -646,35 +648,43 @@ class ExaConnection(object):
         """
         Init websocket connection
         Connection redundancy is supported
-        Specific Exasol host is randomly selected for every connection attempt
+        Specific Exasol node is randomly selected for every connection attempt
         """
-        host_port_list = self._process_dsn(self.options['dsn'])
+        dsn_items = self._process_dsn(self.options['dsn'])
         failed_attempts = 0
 
         ws_prefix = 'wss://' if self.options['encryption'] else 'ws://'
         ws_options = self._get_ws_options()
 
-        for host, port in host_port_list:
-            self.logger.debug(f"Connection attempt [{host}:{port}]")
+        for hostname, ipaddr, port, fingerprint in dsn_items:
+            self.logger.debug(f"Connection attempt [{ipaddr}:{port}]")
+
+            # Use correct hostname matching IP address for each connection attempt
+            if self.options['encryption']:
+                ws_options['sslopt']['server_hostname'] = hostname
 
             try:
-                self._ws = websocket.create_connection(f'{ws_prefix}{host}:{port}', **ws_options)
+                self._ws = websocket.create_connection(f'{ws_prefix}{ipaddr}:{port}', **ws_options)
+            except Exception as e:
+                self.logger.debug(f'Failed to connect [{ipaddr}:{port}]: {e}')
+
+                failed_attempts += 1
+
+                if failed_attempts == len(dsn_items):
+                    raise ExaConnectionFailedError(self, 'Could not connect to Exasol: ' + str(e))
+            else:
                 self._ws.settimeout(self.options['socket_timeout'])
 
-                self.ws_host = host
+                self.ws_ipaddr = ipaddr
                 self.ws_port = port
 
                 self._ws_send = self._ws.send
                 self._ws_recv = self._ws.recv
 
+                if fingerprint:
+                    self._validate_fingerprint(fingerprint)
+
                 return
-            except Exception as e:
-                self.logger.debug(f'Failed to connect [{host}:{port}]: {e}')
-
-                failed_attempts += 1
-
-                if failed_attempts == len(host_port_list):
-                    raise ExaConnectionFailedError(self, 'Could not connect to Exasol: ' + str(e))
 
     def _get_ws_options(self):
         options = {
@@ -684,7 +694,7 @@ class ExaConnection(object):
         }
 
         if self.options['encryption']:
-            # Exasol JDBC / ODBC drivers do not check validity of certificates by default,
+            # Exasol JDBC / ODBC drivers do not check validity of certificates by default until 7.1+,
             # so PyEXASOL follows this behaviour
             #
             # It is possible to enable cert validation, use custom certificate and set other SSL options by using
@@ -720,19 +730,23 @@ class ExaConnection(object):
 
     def _process_dsn(self, dsn):
         """
-        Parse DSN, expand ranges and resolve IP addresses for all hosts
-        Return list of host:port tuples in random order
-        Randomness is useful to guarantee good distribution of workload across all nodes
+        Parse DSN, expand ranges and resolve IP addresses for all hostnames
+        Return list of (hostname, ip_address, port) tuples in random order
+        Randomness is required to guarantee proper distribution of workload across all nodes
         """
         if len(dsn.strip()) == 0:
             raise ExaConnectionDsnError(self, 'Connection string is empty')
 
-        current_port = None
+        current_port = constant.DEFAULT_PORT
+        current_fingerprint = None
+
         result = []
 
-        dsn_re = re.compile(r'^(?P<host_prefix>.+?)'
+        dsn_re = re.compile(r'^(?P<hostname_prefix>.+?)'
                             # Optional range (e.g. myxasol1..4.com)
-                            r'(?:(?P<range_start>\d+)\.\.(?P<range_end>\d+)(?P<host_suffix>.*?))?'
+                            r'(?:(?P<range_start>\d+)\.\.(?P<range_end>\d+)(?P<hostname_suffix>.*?))?'
+                            # Optional fingerprint (e.g. myexasol1..4.com/135a1d2dce102de866f58267521f4232153545a075dc85f8f7596f57e588a181)
+                            r'(?:/(?P<fingerprint>[0-9A-Fa-f]+))?'
                             # Optional port (e.g. myexasol1..4.com:8564)
                             r'(?::(?P<port>\d+)?)?$'
                             )
@@ -747,13 +761,16 @@ class ExaConnection(object):
             if not m:
                 raise ExaConnectionDsnError(self, f'Could not parse connection string part [{part}]')
 
-            # Optional port was specified
+            # Optional port
             if m.group('port'):
                 current_port = int(m.group('port'))
 
-            # If current port is still empty, use default port
-            if current_port is None:
-                current_port = constant.DEFAULT_PORT
+            # Optional fingerprint
+            if m.group('fingerprint'):
+                current_fingerprint = m.group('fingerprint').upper()
+
+                if not self.options['encryption']:
+                    raise ExaConnectionDsnError(self, 'Fingerprint was specified in connection string, but encryption is not enabled')
 
             # Hostname or IP range was specified, expand it
             if m.group('range_start'):
@@ -765,28 +782,35 @@ class ExaConnection(object):
                 zfill_width = len(m.group('range_start'))
 
                 for i in range(int(m.group('range_start')), int(m.group('range_end')) + 1):
-                    host = f"{m.group('host_prefix')}{str(i).zfill(zfill_width)}{m.group('host_suffix')}"
-                    result.extend(self._resolve_host(host, current_port))
+                    hostname = f"{m.group('hostname_prefix')}{str(i).zfill(zfill_width)}{m.group('hostname_suffix')}"
+                    result.extend(self._resolve_hostname(hostname, current_port, current_fingerprint))
             # Just a single hostname or single IP address
             else:
-                result.extend(self._resolve_host(m.group('host_prefix'), current_port))
+                result.extend(self._resolve_hostname(m.group('hostname_prefix'), current_port, current_fingerprint))
 
         random.shuffle(result)
 
         return result
 
-    def _resolve_host(self, host, port):
+    def _resolve_hostname(self, hostname, port, fingerprint):
         """
-        Resolve all IP addresses for host and add port
-        It also checks that all hosts mentioned in DSN can be resolved
+        Resolve all IP addresses for hostname and add port
+        It also implicitly checks that all hostnames mentioned in DSN can be resolved
         """
         try:
-            hostname, aliaslist, ipaddrlist = socket.gethostbyname_ex(host)
+            hostname, alias_list, ipaddr_list = socket.gethostbyname_ex(hostname)
         except OSError:
-            raise ExaConnectionDsnError(self, f'Could not resolve IP address of host [{host}] '
+            raise ExaConnectionDsnError(self, f'Could not resolve IP address of hostname [{hostname}] '
                                               f'derived from connection string')
 
-        return [(ipaddr, port) for ipaddr in ipaddrlist]
+        return [(hostname, ipaddr, port, fingerprint) for ipaddr in ipaddr_list]
+
+    def _validate_fingerprint(self, provided_fingerprint):
+        server_fingerprint = hashlib.sha256(self._ws.sock.getpeercert(True)).hexdigest().upper()
+
+        if provided_fingerprint != server_fingerprint:
+            raise ExaConnectionFailedError(self, f"Provided fingerprint [{provided_fingerprint}] did not match "
+                                                 f"server fingerprint [{server_fingerprint}]")
 
     def _init_logger(self):
         self.logger = self.cls_logger(self, constant.DRIVER_NAME)

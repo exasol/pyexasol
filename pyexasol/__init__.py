@@ -86,7 +86,7 @@ def connect_local_config(config_section, config_path=None, **kwargs) -> ExaConne
     return connect(**{**conf_args, **kwargs})
 
 
-def http_transport(host, port, compression=False, encryption=False) -> ExaHTTPTransportWrapper:
+def http_transport(ipaddr, port, compression=False, encryption=False) -> ExaHTTPTransportWrapper:
     """
     Constructor of HTTP Transport wrapper for parallel HTTP Transport (EXPORT or IMPORT)
     Compression and encryption arguments should match pyexasol.connect()
@@ -96,7 +96,7 @@ def http_transport(host, port, compression=False, encryption=False) -> ExaHTTPTr
     2)
     2) Parent process creates any number of child processes (possibly on remote host or another container)
     3) Every child process starts HTTP transport sub-connection with pyexasol.http_transport()
-        and gets "host:port" string using ExaHTTPTransportWrapper.address
+        and gets "ipaddr:port" string using ExaHTTPTransportWrapper.address
     4) Every child process sends address string to parent process using any communication method (Pipe, Queue, Redis, etc.)
     5) Parent process runs .export_parallel() or .import_parallel(), which initiates EXPORT or IMPORT query in Exasol
     6) Every child process receives or sends a chunk of data using ExaHTTPTransportWrapper.export_*() or .import_*()
@@ -112,4 +112,4 @@ def http_transport(host, port, compression=False, encryption=False) -> ExaHTTPTr
     PyEXASOL does not provide a complete solution to manage child processes, only examples.
     The final solution depends on your hardware, network configuration, cloud provider and container orchestration software.
     """
-    return ExaHTTPTransportWrapper(host, port, compression, encryption)
+    return ExaHTTPTransportWrapper(ipaddr, port, compression, encryption)

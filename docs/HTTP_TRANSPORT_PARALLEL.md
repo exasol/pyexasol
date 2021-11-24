@@ -5,7 +5,7 @@ It is possible to run [HTTP Transport](/docs/HTTP_TRANSPORT.md) in parallel. Wor
 ## How it works on high level
 
 1. Parent process opens main connection to Exasol and spawns multiple child processes.
-2. Each child process connects to individual Exasol node using [`http_transport()`](/docs/REFERENCE.md#http_transport), gets internal Exasol address (`host:port` string) using `.address` property, and sends it to parent process.
+2. Each child process connects to individual Exasol node using [`http_transport()`](/docs/REFERENCE.md#http_transport), gets internal Exasol address (`ipaddr:port` string) using `.address` property, and sends it to parent process.
 3. Parent process collects list of internal Exasol addresses from child processes and runs [`export_parallel()`](/docs/REFERENCE.md#export_parallel) or [`import_parallel()`](/docs/REFERENCE.md#import_parallel) function to execute SQL query.
 4. Each child process runs callback function and reads or sends chunk of data from or to Exasol.
 5. Parent process waits for SQL query and child processes to finish.

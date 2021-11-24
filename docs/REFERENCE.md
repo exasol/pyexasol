@@ -136,7 +136,7 @@ Open new HTTP connection and return `ExaHTTPTransportWrapper` object. This funct
 
 | Argument | Example | Description |
 | --- | --- | --- |
-| `host` | `10.17.1.10` | IP address of one of Exasol nodes received from [`get_nodes()`](#get_nodes) |
+| `ipaddr` | `10.17.1.10` | IP address of one of Exasol nodes received from [`get_nodes()`](#get_nodes) |
 | `port` | `8563` | Port of one of Exasol nodes received from [`get_nodes()`](#get_nodes) |
 | `compression` | `True` | Use zlib compression for HTTP transport, must be the same as `compression` of main connection (Default: `False`) |
 | `encryption` | `True` | Use [SSL encryption](/docs/ENCRYPTION.md) for HTTP transport, must be the same as `encryption` of main connection (Default: `False`) |
@@ -167,7 +167,7 @@ Execute SQL statement with optional formatting. Capture [output](/docs/SCRIPT_OU
 
 Return tuple with two elements: (1) instance of `ExaStatement` and (2) list of `Path` objects for script output log files.
 
-Exasol should be able to open connection to the host where current script is running. It is usually OK in the same data centre, but it is normally not working if you try to run this function on local laptop.
+Exasol should be able to open connection to the machine where current script is running. It is usually OK in the same data centre, but it is normally not working if you try to run this function on local laptop.
 
 ### commit()
 Wrapper for query `COMMIT`
@@ -250,11 +250,11 @@ Export large amount of data to user-defined callback function
 Return result of callback function
 
 ### export_parallel()
-This function is part of [parallel HTTP transport API](/docs/HTTP_TRANSPORT_PARALLEL.md). It accepts list of `host:port` strings obtained from all child processes and executes parallel export query. Parent process only monitors the execution of query. All actual work is performed in child processes.
+This function is part of [parallel HTTP transport API](/docs/HTTP_TRANSPORT_PARALLEL.md). It accepts list of `ipaddr:port` strings obtained from all child processes and executes parallel export query. Parent process only monitors the execution of query. All actual work is performed in child processes.
 
 | Argument | Example | Description |
 | --- | --- | --- |
-| `exa_address_list` | `['27.0.1.10:5362', '27.0.1.11:7262']` | List of `host:port` strings obtained from HTTP transport [.address](#exahttptransportwrapperaddress) |
+| `exa_address_list` | `['27.0.1.10:5362', '27.0.1.11:7262']` | List of `ipaddr:port` strings obtained from HTTP transport [.address](#exahttptransportwrapperaddress) |
 | `query_or_table` | `SELECT * FROM table` `table` `(schema, table)` | SQL query or table for export |
 | `query_params` | `{'table': 'users', 'col1':'bar'}` | (optional) Values for SQL query placeholders |
 | `export_params` | `{'with_column_names': True}` | (optional) Custom parameters for EXPORT query |
@@ -300,11 +300,11 @@ Import large amount of data from user-defined callback function to Exasol.
 | `import_params` | `{'column_separator': ','}` | (optional) Custom parameters for IMPORT query |
 
 ### import_parallel()
-This function is part of [parallel HTTP transport API](/docs/HTTP_TRANSPORT_PARALLEL.md). It accepts list of `host:port` strings obtained from all child processes and executes parallel import query. Parent process only monitors the execution of query. All actual work is performed in child processes.
+This function is part of [parallel HTTP transport API](/docs/HTTP_TRANSPORT_PARALLEL.md). It accepts list of `ipaddr:port` strings obtained from all child processes and executes parallel import query. Parent process only monitors the execution of query. All actual work is performed in child processes.
 
 | Argument | Example | Description |
 | --- | --- | --- |
-| `exa_address_list` | `['27.0.1.10:5362', '27.0.1.11:7262']` | List of `host:port` strings obtained from HTTP transport [.address](#exahttptransportwrapperaddress) |
+| `exa_address_list` | `['27.0.1.10:5362', '27.0.1.11:7262']` | List of `ipaddr:port` strings obtained from HTTP transport [.address](#exahttptransportwrapperaddress) |
 | `table` | `table` `(schema, table)` | Destination table for import |
 | `import_params` | `{'column_separator': ','}` | (optional) Custom parameters for IMPORT query |
 
@@ -318,7 +318,7 @@ Return list of currently active Exasol nodes which is normally used for [paralle
 | --- | --- | --- |
 | `pool_size` | `10` | (optional) Return list of specific size |
 
-Result format: `[{'host': <ip_address>, 'port': <port>, 'idx': <incremental index of returned node>}]`
+Result format: `[{'ipaddr': <ip_address>, 'port': <port>, 'idx': <incremental index of returned node>}]`
 
 If `pool_size` is bigger than number of nodes, list will wrap around and nodes will repeat with different `idx`. If `pool_size` is omitted, returns every active node once.
 
@@ -751,7 +751,7 @@ You may create this wrapper using [http_transport()](#http_transport) function.
 
 ### ExaHTTPTransportWrapper.address
 
-Return internal Exasol address as `host:port` string. This string should be passed from child processes to parent process and used as an argument for [`export_parallel()`](#export_parallel) and [`import_parallel()`](#import_parallel) functions.
+Return internal Exasol address as `ipaddr:port` string. This string should be passed from child processes to parent process and used as an argument for [`export_parallel()`](#export_parallel) and [`import_parallel()`](#import_parallel) functions.
 
 ### ExaHTTPTransportWrapper.export_to_callback()
 

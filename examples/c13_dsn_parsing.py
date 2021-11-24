@@ -10,7 +10,7 @@ printer = pprint.PrettyPrinter(indent=4, width=140)
 
 
 C = pyexasol.connect(dsn=config.dsn, user=config.user, password=config.password, schema=config.schema
-                     , verbose_error=False)
+                     , verbose_error=False, encryption=True)
 
 print('IP range with custom port: ')
 result = C._process_dsn('127.0.0.10..19:8564')
@@ -18,6 +18,10 @@ printer.pprint(sorted(result))
 
 print('Multiple ranges with multiple ports and with default port at the end: ')
 result = C._process_dsn('127.0.0.10..19:8564,127.0.0.20,localhost:8565,127.0.0.21..23')
+printer.pprint(sorted(result))
+
+print('Multiple ranges with fingerprint and port: ')
+result = C._process_dsn('127.0.0.10..19/ABC,127.0.0.20,localhost/CDE:8564')
 printer.pprint(sorted(result))
 
 # Empty DSN

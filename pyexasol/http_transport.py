@@ -215,8 +215,8 @@ class ExaHttpThread(threading.Thread):
     HTTP communication and compression / decompression is offloaded to separate thread
     Thread can be used instead of subprocess when compatibility is an issue
     """
-    def __init__(self, host, port, compression, encryption):
-        self.server = ExaTCPServer((host, port), ExaHttpRequestHandler, compression=compression, encryption=encryption)
+    def __init__(self, ipaddr, port, compression, encryption):
+        self.server = ExaTCPServer((ipaddr, port), ExaHttpRequestHandler, compression=compression, encryption=encryption)
 
         self.read_pipe = self.server.read_pipe
         self.write_pipe = self.server.write_pipe
@@ -227,7 +227,7 @@ class ExaHttpThread(threading.Thread):
 
     @property
     def exa_address(self):
-        return f'{self.server.exa_address_host}:{self.server.exa_address_port}'
+        return f'{self.server.exa_address_ipaddr}:{self.server.exa_address_port}'
 
     def run(self):
         try:
@@ -271,14 +271,14 @@ class ExaHttpThread(threading.Thread):
 
 class ExaHTTPTransportWrapper(object):
     """
-    Start HTTP server, obtain address ("host:port" string)
+    Start HTTP server, obtain address ("ipaddr:port" string)
     Send it to parent process
 
     Block into "export_*()" or "import_*()" call,
     wait for incoming connection, process data and exit.
     """
-    def __init__(self, host, port, compression=False, encryption=False):
-        self.http_thread = ExaHttpThread(host, port, compression, encryption)
+    def __init__(self, ipaddr, port, compression=False, encryption=False):
+        self.http_thread = ExaHttpThread(ipaddr, port, compression, encryption)
         self.http_thread.start()
 
     @property
@@ -336,7 +336,7 @@ class ExaHTTPTransportWrapper(object):
 
 
 class ExaTCPServer(socketserver.TCPServer):
-    exa_address_host: str
+    exa_address_ipaddr: str
     exa_address_port: int
 
     total_clients = 0
@@ -372,9 +372,9 @@ class ExaTCPServer(socketserver.TCPServer):
         """ Special Exasol packet to establish tunneling and return internal exasol address, which can be used in query """
         self.socket.connect(self.server_address)
         self.socket.sendall(struct.pack("iii", 0x02212102, 1, 1))
-        _, port, host = struct.unpack("ii16s", self.socket.recv(24))
+        _, port, ipaddr = struct.unpack("ii16s", self.socket.recv(24))
 
-        self.exa_address_host = host.replace(b'\x00', b'').decode()
+        self.exa_address_ipaddr = ipaddr.replace(b'\x00', b'').decode()
         self.exa_address_port = port
 
         if self.encryption:

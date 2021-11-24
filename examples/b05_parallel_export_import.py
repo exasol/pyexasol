@@ -36,8 +36,8 @@ class ExportProc(multiprocessing.Process):
         self.read_pipe.close()
 
         # Init separate HTTP transport connections for EXPORT and IMPORT
-        http_export = pyexasol.http_transport(self.node['host'], self.node['port'], compression=True, encryption=True)
-        http_import = pyexasol.http_transport(self.node['host'], self.node['port'], compression=True, encryption=True)
+        http_export = pyexasol.http_transport(self.node['ipaddr'], self.node['port'], compression=True, encryption=True)
+        http_import = pyexasol.http_transport(self.node['ipaddr'], self.node['port'], compression=True, encryption=True)
 
         # Send pairs of internal Exasol address to parent process
         self.write_pipe.send([http_export.exa_address, http_import.exa_address])
