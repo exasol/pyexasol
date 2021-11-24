@@ -49,7 +49,7 @@ def my_generator():
     for i in range(5):
         yield (i, 'Bob', True, '2017-01-01')
 
-C.import_from_iterable(my_generator, "users")
+C.import_from_iterable(my_generator(), "users")
 ```
 
 ## Import from file
