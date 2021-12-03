@@ -694,13 +694,14 @@ class ExaConnection(object):
         }
 
         if self.options['encryption']:
-            # Exasol JDBC / ODBC drivers do not check validity of certificates by default until 7.1+,
-            # so PyEXASOL follows this behaviour
-            #
-            # It is possible to enable cert validation, use custom certificate and set other SSL options by using
-            # "websocket_sslopt" argument, which is passed directly to WebSocket client constructor
+            # Use "websocket_sslopt" argument to set custom SSL options, which are passed directly to WebSocket client constructor
             if self.options['websocket_sslopt']:
                 options['sslopt'] = self.options['websocket_sslopt']
+            # OpenID tokens are normally used for Exasol SAAS
+            # Strict certificate verification is enabled by default
+            elif self.options['access_token'] or self.options['refresh_token']:
+                options['sslopt'] = {'cert_reqs': ssl.CERT_REQUIRED}
+            # Certification verification is disabled for other use cases (e.g. Docker container, "on-premises" Exasol setup)
             else:
                 options['sslopt'] = {'cert_reqs': ssl.CERT_NONE}
 
