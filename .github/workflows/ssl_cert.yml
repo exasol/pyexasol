@@ -1,0 +1,48 @@
+name: SSL certificate test
+
+on:
+  push:
+    paths:
+      - "**.py"
+    branches:
+      - master
+      - workflow_test
+  pull_request:
+    paths:
+      - "**.py"
+  workflow_dispatch:
+
+jobs:
+  ssl_cert:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - python-version: 3.9
+            exasol-tag: latest-7.1
+            exasol-port: 8563
+
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    services:
+      exasol:
+        image: exasol/docker-db:${{ matrix.exasol-tag }}
+        ports:
+          - 8563:${{ matrix.exasol-port }}
+        options: --privileged
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v2
+
+      - name: Setup Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install dependencies
+        run: pip install -e .[pandas]
+
+      - name: Wait for Exasol container
+        run: python examples/_wait_container.py
