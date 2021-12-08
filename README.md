@@ -80,6 +80,18 @@ stmt = C.execute("SELECT CURRENT_TIMESTAMP")
 print(stmt.fetchone())
 ```
 
+Connect to Exasol SAAS using OpenID token for authentication:
+
+```python
+import pyexasol
+
+C = pyexasol.connect(dsn='<host:port>', user='sys', refresh_token='<token>', encryption=True)
+
+stmt = C.execute("SELECT * FROM EXA_ALL_USERS")
+
+for row in stmt:
+    print(row)
+```
 
 ## Created by
 [Vitaly Markov](https://www.linkedin.com/in/markov-vitaly/), 2018 — 2021
