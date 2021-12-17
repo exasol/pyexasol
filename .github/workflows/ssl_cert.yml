@@ -45,6 +45,9 @@ jobs:
         run: ./start-test-env spawn-test-environment --environment-name ssl --docker-db-image-version=${{ matrix.exasol-tag }} --database-port-forward 8888 --create-certificates
         working-directory: ./test_env
 
+      - name: Pull certificate from container
+        run: docker cp test_container_ssl:/certificates/rootCA.crt .
+
       - name: Setup custom host
         run: echo "127.0.0.1 exasol-test-database" | sudo tee -a /etc/hosts
 
