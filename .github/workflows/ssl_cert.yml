@@ -6,7 +6,6 @@ on:
       - "**.py"
     branches:
       - master
-      - workflow_test
   pull_request:
     paths:
       - "**.py"
@@ -20,17 +19,12 @@ jobs:
         include:
           - python-version: 3.9
             exasol-tag: latest-7.1
-            exasol-port: 8563
+
+          - python-version: 3.9
+            exasol-tag: latest-7.0
 
     runs-on: ubuntu-latest
     timeout-minutes: 15
-
-    services:
-      exasol:
-        image: exasol/docker-db:${{ matrix.exasol-tag }}
-        ports:
-          - 8563:${{ matrix.exasol-port }}
-        options: --privileged
 
     steps:
       - name: Checkout repo
@@ -44,5 +38,15 @@ jobs:
       - name: Install dependencies
         run: pip install -e .[pandas]
 
-      - name: Wait for Exasol container
-        run: python examples/_wait_container.py
+      - name: Checkout test environment
+        uses: actions/checkout@v2
+        with:
+          repository: exasol/integration-test-docker-environment
+          path: './test_env'
+
+      - name: Spawn EXASOL environemnt
+        run: ./start-test-env spawn-test-environment --environment-name ssl --docker-db-image-version=${{ matrix.exasol-tag }} --database-port-forward 8888 --create-certificates
+        working-directory: ./test_env
+
+      - name: Run test
+        run: python examples/_ssl_test.py
