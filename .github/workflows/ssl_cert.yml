@@ -20,9 +20,6 @@ jobs:
           - python-version: 3.9
             exasol-tag: 7.1.3
 
-          - python-version: 3.9
-            exasol-tag: 7.0.14
-
     runs-on: ubuntu-latest
     timeout-minutes: 15
 
@@ -47,6 +44,9 @@ jobs:
       - name: Spawn EXASOL environemnt
         run: ./start-test-env spawn-test-environment --environment-name ssl --docker-db-image-version=${{ matrix.exasol-tag }} --database-port-forward 8888 --create-certificates
         working-directory: ./test_env
+
+      - name: Setup custom host
+        run: echo "127.0.0.1 exasol-test-database" | sudo tee -a /etc/hosts
 
       - name: Run test
         run: python examples/_ssl_test.py
