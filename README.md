@@ -85,7 +85,7 @@ Connect to Exasol SAAS using OpenID token for authentication:
 ```python
 import pyexasol
 
-C = pyexasol.connect(dsn='<host:port>', user='sys', refresh_token='<token>', encryption=True)
+C = pyexasol.connect(dsn='<host:port>', user='sys', refresh_token='<token>')
 
 stmt = C.execute("SELECT * FROM EXA_ALL_USERS")
 
@@ -94,6 +94,6 @@ for row in stmt:
 ```
 
 ## Created by
-[Vitaly Markov](https://www.linkedin.com/in/markov-vitaly/), 2018 — 2021
+[Vitaly Markov](https://www.linkedin.com/in/markov-vitaly/), 2018 — 2022
 
 Enjoy!

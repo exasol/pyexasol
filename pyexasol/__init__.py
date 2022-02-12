@@ -86,7 +86,7 @@ def connect_local_config(config_section, config_path=None, **kwargs) -> ExaConne
     return connect(**{**conf_args, **kwargs})
 
 
-def http_transport(ipaddr, port, compression=False, encryption=False) -> ExaHTTPTransportWrapper:
+def http_transport(ipaddr, port, compression=False, encryption=True) -> ExaHTTPTransportWrapper:
     """
     Constructor of HTTP Transport wrapper for parallel HTTP Transport (EXPORT or IMPORT)
     Compression and encryption arguments should match pyexasol.connect()

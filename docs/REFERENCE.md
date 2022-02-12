@@ -100,7 +100,7 @@ Open new connection and return `ExaConnection` object.
 | `socket_timeout` | `20` | Socket timeout in seconds used for requests after connection was established (Default: `30`) |
 | `query_timeout` | `0` | Maximum execution time of queries before automatic abort (Default: `0`, no timeout) |
 | `compression` | `True` | Use zlib compression both for WebSocket and HTTP transport (Default: `False`) |
-| `encryption` | `True` | Use [SSL encryption](/docs/ENCRYPTION.md) for WebSocket communication and HTTP transport (Default: `False`) |
+| `encryption` | `True` | Use [SSL encryption](/docs/ENCRYPTION.md) for WebSocket communication and HTTP transport (Default: `True`) |
 | `fetch_dict` | `False` | Fetch result rows as dicts instead of tuples (Default: `False`) |
 | `fetch_mapper` | `pyexasol.exasol_mapper` | Use custom mapper function to convert Exasol values into Python objects during fetching (Default: `None`) |
 | `fetch_size_bytes` | `5 * 1024 * 1024` | Maximum size of data message for single fetch request in bytes (Default: 5Mb) |
@@ -139,7 +139,7 @@ Open new HTTP connection and return `ExaHTTPTransportWrapper` object. This funct
 | `ipaddr` | `10.17.1.10` | IP address of one of Exasol nodes received from [`get_nodes()`](#get_nodes) |
 | `port` | `8563` | Port of one of Exasol nodes received from [`get_nodes()`](#get_nodes) |
 | `compression` | `True` | Use zlib compression for HTTP transport, must be the same as `compression` of main connection (Default: `False`) |
-| `encryption` | `True` | Use [SSL encryption](/docs/ENCRYPTION.md) for HTTP transport, must be the same as `encryption` of main connection (Default: `False`) |
+| `encryption` | `True` | Use [SSL encryption](/docs/ENCRYPTION.md) for HTTP transport, must be the same as `encryption` of main connection (Default: `True`) |
 
 **Note:** this function was changed in PyEXASOL 0.22.0. Third argument `mode` (EXPORT / IMPORT) was removed, it is no longer needed. Please update your code accordingly.
 

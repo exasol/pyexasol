@@ -7,19 +7,11 @@ Exasol published a few articles describing the details:
 - [Using TLS with our analytics database (part 2): secure communication with Exasol](https://www.exasol.com/resource/using-tls-with-our-analytics-database-secure-communication-with-exasol/)
 - [TLS for all Exasol drivers](https://www.exasol.com/support/browse/EXASOL-2936)
 
-### Defaults
+### Default
 
-PyEXASOL defaults are different compared to JDBC / ODBC drivers.
+Encryption is ENABLED by default starting from PyEXASOL version `0.24.0`.
 
-Encryption is disabled by default for connections with username and password. Encryption is enabled by default for connections with username and OpenID token.
-
-The main reasons behind this decision are following:
-
-- The main focus of PyEXASOL is performance. TLS encryption adds some overhead, which is often unnecessary.
-- Exasol clusters running "on-premises" are usually protected by private networks, VPN connections, corporate Wi-fi, etc. TLS does not add any meaningful security in this case.
-- Exasol SAAS clusters running in the cloud are accessible using public internet and are genuinely at risk of MITM attacks. TLS with full certificate validation is required.
-
-If you want to set custom TLS encryption settings, please check the examples below.
+Encryption was DISABLED by default in previous versions.
 
 ### Certification verification
 
@@ -38,8 +30,7 @@ Similar to JDBC / ODBC drivers, PyEXASOL supports fingerprint certificate verifi
 ```python
 pyexasol.connect(dsn='myexasol:8563'
                  , user='user'
-                 , password='password'
-                 , encryption=True)
+                 , password='password')
 ```
 
 2) How to connect with TLS encryption and fingerprint verification:
@@ -48,7 +39,6 @@ pyexasol.connect(dsn='myexasol:8563'
 pyexasol.connect(dsn='myexasol/135a1d2dce102de866f58267521f4232153545a075dc85f8f7596f57e588a181:8563'
                  , user='user'
                  , password='password'
-                 , encryption=True
                  )
 ```
 
@@ -58,7 +48,6 @@ pyexasol.connect(dsn='myexasol/135a1d2dce102de866f58267521f4232153545a075dc85f8f
 pyexasol.connect(dsn='myexasol:8563'
                  , user='user'
                  , password='password'
-                 , encryption=True
                  , websocket_sslopt={
                     "cert_reqs": ssl.CERT_REQUIRED,
                     "ca_certs": '/path/to/rootCA.crt',
@@ -74,9 +63,3 @@ pyexasol.connect(dsn='abc.cloud.exasol.com:8563'
                  , encryption=True
                  )
 ```
-
-### "SERVER_HOSTNAME" verification problem
-
-Previous versions of PyEXASOL were resolving all hostnames from connection string into unique IP addresses, and connection attempts to each individual node were performed using IP address. It was a problem for "hostname" verification of SSL certificates when full verification was enabled.
-
-It is no longer a problem in the most recent PyEXASOL versions. PyEXASOL now remembers hostname for each IP address and sets `sslopt` option `server_hostname` properly for each connection attempt. You may safely remove it from `websocket_sslopt` if you had to use it previously.

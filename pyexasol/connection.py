@@ -55,7 +55,7 @@ class ExaConnection(object):
             , socket_timeout=constant.DEFAULT_SOCKET_TIMEOUT
             , query_timeout=constant.DEFAULT_QUERY_TIMEOUT
             , compression=False
-            , encryption=False
+            , encryption=True
             , fetch_dict=False
             , fetch_mapper=None
             , fetch_size_bytes=constant.DEFAULT_FETCH_SIZE_BYTES
@@ -90,7 +90,7 @@ class ExaConnection(object):
         :param socket_timeout: Socket timeout in seconds used for requests after connection was established (Default: 30)
         :param query_timeout: Maximum execution time of queries before automatic abort, in seconds (Default: 0, no timeout)
         :param compression: Use zlib compression both for WebSocket and HTTP transport (Default: False)
-        :param encryption: Use SSL to encrypt client-server communications for WebSocket and HTTP transport (Default: False)
+        :param encryption: Use SSL to encrypt client-server communications for WebSocket and HTTP transport (Default: True)
         :param fetch_dict: Fetch result rows as dicts instead of tuples (Default: False)
         :param fetch_mapper: Use custom mapper function to convert Exasol values into Python objects during fetching (Default: None)
         :param fetch_size_bytes: Maximum size of data message for single fetch request in bytes (Default: 5Mb)

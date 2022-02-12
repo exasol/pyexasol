@@ -277,7 +277,7 @@ class ExaHTTPTransportWrapper(object):
     Block into "export_*()" or "import_*()" call,
     wait for incoming connection, process data and exit.
     """
-    def __init__(self, ipaddr, port, compression=False, encryption=False):
+    def __init__(self, ipaddr, port, compression=False, encryption=True):
         self.http_thread = ExaHttpThread(ipaddr, port, compression, encryption)
         self.http_thread.start()
 
@@ -346,7 +346,7 @@ class ExaTCPServer(socketserver.TCPServer):
 
     def __init__(self, *args, **kwargs):
         self.compression = kwargs.pop('compression', False)
-        self.encryption = kwargs.pop('encryption', False)
+        self.encryption = kwargs.pop('encryption', True)
 
         r_fd, w_fd = os.pipe()
 
