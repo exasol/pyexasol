@@ -40,21 +40,21 @@ jobs:
         options: --privileged
 
     steps:
-      - name: Checkout repo
+      - name: "Checkout repo (Python ${{ matrix.python-version }} Exasol ${{ matrix.exasol-tag }})"
         uses: actions/checkout@v2
 
-      - name: Setup Python
+      - name: "Setup Python (Python ${{ matrix.python-version }} Exasol ${{ matrix.exasol-tag }})"
         uses: actions/setup-python@v2
         with:
           python-version: ${{ matrix.python-version }}
 
-      - name: Install dependencies
+      - name: "Install dependencies (Python ${{ matrix.python-version }} Exasol ${{ matrix.exasol-tag }})"
         run: pip install -e .[pandas,ujson,rapidjson,orjson,examples]
 
-      - name: Wait for Exasol container
+      - name: "Wait for Exasol container (Python ${{ matrix.python-version }} Exasol ${{ matrix.exasol-tag }})"
         run: python examples/_wait_container.py
 
-      - name: "Run examples"
+      - name: "Run examples (Python ${{ matrix.python-version }} Exasol ${{ matrix.exasol-tag }})"
         run: |
           python examples/a00_prepare.py
           python examples/a01_basic.py
