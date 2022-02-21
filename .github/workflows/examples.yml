@@ -28,6 +28,7 @@ jobs:
           - python-version: "3.6"
             exasol-tag: latest-6.2
             exasol-port: 8888
+    name: "Build with Python ${{ matrix.python-version }} and Exasol ${{ matrix.exasol-tag }}"
 
     runs-on: ubuntu-latest
     timeout-minutes: 15

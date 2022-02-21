@@ -20,7 +20,8 @@ jobs:
       matrix:
         include:
           - python-version: 3.9
-            exasol-tag: 7.1.3
+            exasol-tag: 7.1.6
+    name: "Build SSL-Cert with Python ${{ matrix.python-version }} and Exasol ${{ matrix.exasol-tag }}"
 
     runs-on: ubuntu-latest
     timeout-minutes: 15
