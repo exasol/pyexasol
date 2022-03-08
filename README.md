@@ -18,6 +18,7 @@ PyEXASOL provides API to read & write multiple data streams in parallel using se
 - [SQL formatting](/docs/SQL_FORMATTING.md)
 - [HTTP Transport](/docs/HTTP_TRANSPORT.md)
 - [HTTP Transport (multiprocessing)](/docs/HTTP_TRANSPORT_PARALLEL.md)
+- [Parallelism](/docs/PARALLELISM.md)
 - [SSL encryption](/docs/ENCRYPTION.md)
 - [WebSocket protocol versions](/docs/PROTOCOL_VERSION.md)
 - [Performance tests](/docs/PERFORMANCE.md)
