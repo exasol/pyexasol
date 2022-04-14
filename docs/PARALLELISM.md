@@ -15,7 +15,7 @@ In practice, it means you have two possible options to achieve parallelism:
 
 All other options are inefficient or prone to errors.
 
-## Known probles when trying to use other options
+## Known problems when trying to use other options
 
 - Re-using one PyEXASOL connection in multiple threads will cause an exception.
 - Opening multiple PyEXASOL connections in multiple threads will work, but you will experience a bottleneck in data processing. Your script will be bound by 1 CPU core due to GIL.
