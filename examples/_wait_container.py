@@ -1,5 +1,6 @@
 import _config as config
 import pyexasol
+import ssl
 import time
 
 
@@ -36,7 +37,7 @@ def wait_for_java():
             connection.execute("SELECT test_java(true)")
 
             return
-        except pyexasol.ExaError as e:
+        except (pyexasol.ExaError, ssl.SSLError) as e:
             print(e.message)
             time.sleep(SLEEP_TIMEOUT)
 
