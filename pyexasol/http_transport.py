@@ -96,7 +96,7 @@ class ExaSQLThread(threading.Thread):
 
 class ExaSQLExportThread(ExaSQLThread):
     """
-    Build and run IMPORT query into separate thread
+    Build and run EXPORT query into separate thread
     Main thread is busy outputting data in callbacks
     """
     def __init__(self, connection, compression, query_or_table, export_params):
