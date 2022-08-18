@@ -311,8 +311,8 @@ class ExaConnection(object):
             sql_thread.set_http_thread(http_thread)
             sql_thread.start()
 
-            result = callback(http_thread.read_pipe, dst, **callback_params)
-            http_thread.read_pipe.close()
+            with http_thread.read_pipe as pipe:
+                result = callback(pipe, dst, **callback_params)
 
             http_thread.join_with_exc()
             sql_thread.join_with_exc()
@@ -320,7 +320,7 @@ class ExaConnection(object):
             return result
 
         except (Exception, KeyboardInterrupt) as e:
-            http_thread.terminate_export()
+            http_thread.terminate()
             http_thread.join()
 
             sql_thread.join(1)
@@ -357,8 +357,8 @@ class ExaConnection(object):
             sql_thread.set_http_thread(http_thread)
             sql_thread.start()
 
-            result = callback(http_thread.write_pipe, src, **callback_params)
-            http_thread.write_pipe.close()
+            with http_thread.write_pipe as pipe:
+                result = callback(pipe, src, **callback_params)
 
             http_thread.join_with_exc()
             sql_thread.join_with_exc()
@@ -366,7 +366,7 @@ class ExaConnection(object):
             return result
 
         except (Exception, KeyboardInterrupt) as e:
-            http_thread.terminate_import()
+            http_thread.terminate()
             http_thread.join()
 
             sql_thread.join(1)

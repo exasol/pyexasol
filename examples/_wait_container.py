@@ -22,8 +22,11 @@ class TEST_JAVA {
 def wait_for_connection():
     while True:
         try:
-            return pyexasol.connect(dsn=config.dsn, user=config.user, password=config.password, query_timeout=QUERY_TIMEOUT)
-        except pyexasol.ExaConnectionFailedError as e:
+            connection = pyexasol.connect(dsn=config.dsn, user=config.user, password=config.password, query_timeout=QUERY_TIMEOUT)
+            connection.execute("CREATE SCHEMA IF NOT EXISTS {schema!i}", {'schema': config.schema})
+
+            return
+        except (pyexasol.ExaError, ssl.SSLError) as e:
             print(e.message)
             time.sleep(SLEEP_TIMEOUT)
 
@@ -48,10 +51,6 @@ if __name__ == '__main__':
     # Wait fo connection server to go online
     C = wait_for_connection()
     print(f"Connection server was started in {time.time() - start_ts:.3f}")
-
-    # Create schema if not exist and open it
-    C.execute("CREATE SCHEMA IF NOT EXISTS {schema!i}", {'schema': config.schema})
-    C.open_schema(config.schema)
 
     # Wait for availability of Java in BucketFS
     wait_for_java()

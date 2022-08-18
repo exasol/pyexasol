@@ -39,6 +39,19 @@ print('--- Finished Observer callback (normal execution) ---\n')
 
 
 ###
+# SQL error
+###
+
+
+try:
+    C.export_to_callback(observer_callback, None, 'SELECT * FROM usersaaa LIMIT 1000')
+except Exception as e:
+    traceback.print_exc()
+
+print('--- Finished Observer callback (SQL error) ---\n')
+
+
+###
 # Abort SQL query
 ###
 
