@@ -27,7 +27,7 @@ def wait_for_connection():
 
             return
         except (pyexasol.ExaError, ssl.SSLError) as e:
-            print(e.message)
+            print(e)
             time.sleep(SLEEP_TIMEOUT)
 
 
@@ -41,7 +41,7 @@ def wait_for_java():
 
             return
         except (pyexasol.ExaError, ssl.SSLError) as e:
-            print(e.message)
+            print(e)
             time.sleep(SLEEP_TIMEOUT)
 
 
