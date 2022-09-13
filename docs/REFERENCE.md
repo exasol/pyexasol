@@ -150,20 +150,20 @@ Object of this class holds connection to Exasol, performs client-server communic
 ### execute()
 Execute SQL statement with optional formatting.
 
-| Argument | Example | Description |
-| --- | --- | --- |
-| `query` | `SELECT * FROM {table:i} WHERE col1={col1}` | SQL query text, possibly with placeholders |
-| `query_params` | `{'table': 'users', 'col1':'bar'}` | (optional) Values for placeholders |
+| Argument | Example                                     | Description |
+| --- |---------------------------------------------| --- |
+| `query` | `SELECT * FROM {table!i} WHERE col1={col1}` | SQL query text, possibly with placeholders |
+| `query_params` | `{'table': 'users', 'col1':'bar'}`          | (optional) Values for placeholders |
 
 Return instance of `ExaStatement`
 
 ### execute_udf_output()
 Execute SQL statement with optional formatting. Capture [output](/docs/SCRIPT_OUTPUT.md) of UDF scripts.
 
-| Argument | Example | Description |
-| --- | --- | --- |
-| `query` | `SELECT * FROM {table:i} WHERE col1={col1}` | SQL query text, possibly with placeholders |
-| `query_params` | `{'table': 'users', 'col1':'bar'}` | (optional) Values for placeholders |
+| Argument | Example                                     | Description |
+| --- |---------------------------------------------| --- |
+| `query` | `SELECT * FROM {table!i} WHERE col1={col1}` | SQL query text, possibly with placeholders |
+| `query_params` | `{'table': 'users', 'col1':'bar'}`          | (optional) Values for placeholders |
 
 Return tuple with two elements: (1) instance of `ExaStatement` and (2) list of `Path` objects for script output log files.
 
@@ -535,10 +535,10 @@ print(C.meta.sql_columns('SELECT 1 AS id'))
 
 Return columns of SQL query result without executing it. Output format is similar to [ExaStatement.columns()](#columns).
 
-| Argument | Example | Description |
-| --- | --- | --- |
-| `query` | `SELECT * FROM {table:i} WHERE col1={col1}` | SQL query text, possibly with placeholders |
-| `query_params` | `{'table': 'users', 'col1':'bar'}` | (optional) Values for placeholders |
+| Argument | Example                                     | Description |
+| --- |---------------------------------------------| --- |
+| `query` | `SELECT * FROM {table!i} WHERE col1={col1}` | SQL query text, possibly with placeholders |
+| `query_params` | `{'table': 'users', 'col1':'bar'}`          | (optional) Values for placeholders |
 
 
 ### schema_exists()
@@ -664,10 +664,10 @@ Execute SQL statement in [snapshot execution](/docs/SNAPSHOT_TRANSACTIONS.md) mo
 
 Please do not try to query normal tables with this method. It will fail during creation of indices or statistics objects.
 
-| Argument | Example | Description |
-| --- | --- | --- |
-| `query` | `SELECT * FROM {table:i} WHERE col1={col1}` | SQL query text, possibly with placeholders |
-| `query_params` | `{'table': 'users', 'col1':'bar'}` | (optional) Values for placeholders |
+| Argument | Example                                     | Description |
+| --- |---------------------------------------------| --- |
+| `query` | `SELECT * FROM {table!i} WHERE col1={col1}` | SQL query text, possibly with placeholders |
+| `query_params` | `{'table': 'users', 'col1':'bar'}`          | (optional) Values for placeholders |
 
 Return instance of `ExaStatement`
 
