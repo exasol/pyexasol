@@ -72,13 +72,18 @@ def import_from_pandas(pipe, src, **kwargs):
     Custom params for "to_csv" may be passed in **kwargs
     """
     import pandas
+    import packaging.version
 
     if not isinstance(src, pandas.DataFrame):
         raise ValueError('Data source is not pandas.DataFrame')
 
     wrapped_pipe = io.TextIOWrapper(pipe, newline='\n', encoding='utf-8')
 
-    return src.to_csv(wrapped_pipe, header=False, index=False, line_terminator='\n', quoting=csv.QUOTE_NONNUMERIC, **kwargs)
+    # https://github.com/pandas-dev/pandas/pull/45302
+    if packaging.version.parse(pandas.__version__) >= packaging.version.parse("1.5.0"):
+        return src.to_csv(wrapped_pipe, header=False, index=False, lineterminator='\n', quoting=csv.QUOTE_NONNUMERIC, **kwargs)
+    else:
+        return src.to_csv(wrapped_pipe, header=False, index=False, line_terminator='\n', quoting=csv.QUOTE_NONNUMERIC, **kwargs)
 
 
 def import_from_file(pipe, src):
