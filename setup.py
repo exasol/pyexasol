@@ -52,6 +52,7 @@ Please read "Best practices" manual page to learn how to use PyEXASOL with maxim
         'websocket-client>=1.0.1',
         'pyopenssl',
         'rsa',
+        'packaging',
     ],
 
     extras_require={
