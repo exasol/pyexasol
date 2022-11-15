@@ -1,6 +1,6 @@
 """
 Snapshot transactions
-Explanations about locks: https://www.exasol.com/support/browse/SOL-214
+Explanations about locks: https://exasol.my.site.com/s/article/WAIT-FOR-COMMIT-on-SELECT-statement?language=en_US
 """
 
 import pyexasol
