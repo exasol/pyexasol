@@ -1,12 +1,14 @@
 name: SSL certificate test
 
 on:
-  push:
-    paths:
-      - "**.py"
-      - "**.yml"
-    branches:
-      - master
+  # Workflow is disabled due to incompatible changes in "test_container_ssl"
+  #
+  # push:
+  #  paths:
+  #    - "**.py"
+  #    - "**.yml"
+  #  branches:
+  #    - master
   pull_request:
 
   workflow_dispatch:
