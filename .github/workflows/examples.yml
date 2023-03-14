@@ -15,15 +15,15 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - python-version: "3.9"
+          - python-version: "3.11"
             exasol-tag: latest-7.1
             exasol-port: 8563
 
-          - python-version: "3.9"
+          - python-version: "3.11"
             exasol-tag: latest-7.0
             exasol-port: 8563
 
-          - python-version: "3.6"
+          - python-version: "3.7"
             exasol-tag: latest-6.2
             exasol-port: 8888
     name: "Build with Python ${{ matrix.python-version }} and Exasol ${{ matrix.exasol-tag }}"
