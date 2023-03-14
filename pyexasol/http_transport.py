@@ -439,7 +439,7 @@ class ExaTCPServer(socketserver.TCPServer):
             key_file.write(crypto.dump_privatekey(crypto.FILETYPE_PEM, k))
             key_file.close()
 
-            context = ssl.SSLContext()
+            context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
             context.verify_mode = ssl.CERT_NONE
             context.load_cert_chain(certfile=cert_file.name, keyfile=key_file.name)
 
