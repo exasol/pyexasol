@@ -2,7 +2,8 @@
 
 ## [Unreleased]
 
-- Switch packaging and project workflows to poetry (internal)
+- Switch packaging and project workflows to poetry (internal0.25.3)
+- 
 
 ## [0.25.2] - 2023-03-14
 
