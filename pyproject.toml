@@ -36,7 +36,7 @@ keywords = [
 "Documentation" = "https://github.com/exasol/pyexasol/"
 "Source" = "https://github.com/exasol/pyexasol"
 "Issues" = "https://github.com/exasol/pyexasol/issues"
-"Changelog" = "https://github.com/exasol/pyexasol/CHANGELOG.md"
+"Changelog" = "https://github.com/exasol/pyexasol/blob/master/CHANGELOG.md"
 
 
 [tool.poetry.dependencies]
