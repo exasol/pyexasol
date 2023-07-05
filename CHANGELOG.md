@@ -1,5 +1,11 @@
 # Changelog
 
+## [Unreleased]
+
+- Switch packaging and project workflows to poetry (internal 0.25.3)
+- Drop support for python 3.7
+- Drop support for Exasol 6.x
+
 ## [0.25.2] - 2023-03-14
 
 - Fix deprecation warning by setting SSLContext protocol.
