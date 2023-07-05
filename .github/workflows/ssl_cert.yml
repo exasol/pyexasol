@@ -49,7 +49,7 @@ jobs:
         working-directory: ./test_env
 
       - name: "Pull certificate from container (Python ${{ matrix.python-version }} Exasol ${{ matrix.exasol-tag }})"
-        run: docker cp test_container_ssl:/certificates/rootCA.crt .
+        run: docker cp db_container_ssl:/certificates/rootCA.crt .
 
       - name: "Setup custom host (Python ${{ matrix.python-version }} Exasol ${{ matrix.exasol-tag }})"
         run: echo "127.0.0.1 exasol-test-database" | sudo tee -a /etc/hosts
