@@ -41,6 +41,7 @@ jobs:
         with:
           repository: exasol/integration-test-docker-environment
           path: './test_env'
+          ref: '1.7.1'
 
       - name: "Spawn EXASOL environemnt (Python ${{ matrix.python-version }} Exasol ${{ matrix.exasol-tag }})"
         run: ./start-test-env spawn-test-environment --environment-name ssl --docker-db-image-version=${{ matrix.exasol-tag }} --database-port-forward 8888 --create-certificates
