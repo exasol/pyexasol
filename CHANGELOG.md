@@ -2,7 +2,7 @@
 
 ## [Unreleased]
 
-- Switch packaging and project workflows to poetry (internal0.25.3)
+- Switch packaging and project workflows to poetry (internal 0.25.3)
 - Drop support for python 3.7
 - Drop support for Exasol 6.x
 
