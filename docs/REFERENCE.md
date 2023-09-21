@@ -567,7 +567,7 @@ Return `True` if view exists, `False` otherwise. If schema name was not specifie
 
 ### list_schemas()
 
-Return list of schemas from [EXA_SCHEMAS](https://docs.exasol.com/sql_references/metadata/metadata_system_tables.htm#EXA_SCHEMAS) system view matching LIKE-pattern.
+Return list of schemas from [EXA_SCHEMAS](https://docs.exasol.com/db/latest/sql_references/system_tables/metadata/exa_schemas.htm) system view matching LIKE-pattern.
 
 | Argument | Example | Description |
 | --- | --- | --- |
@@ -577,7 +577,7 @@ Patterns are case-sensitive. You may escape LIKE-patterns using [.format.escape_
 
 ### list_tables()
 
-Return list of tables from [EXA_ALL_TABLES](https://docs.exasol.com/sql_references/metadata/metadata_system_tables.htm#EXA_ALL_TABLES) system view matching LIKE-pattern.
+Return list of tables from [EXA_ALL_TABLES](https://docs.exasol.com/db/latest/sql_references/system_tables/metadata/exa_all_tables.htm) system view matching LIKE-pattern.
 
 | Argument | Example | Description |
 | --- | --- | --- |
@@ -588,7 +588,7 @@ Patterns are case-sensitive. You may escape LIKE-patterns using [.format.escape_
 
 ### list_views()
 
-Return list of views from [EXA_ALL_VIEWS](https://docs.exasol.com/sql_references/metadata/metadata_system_tables.htm#EXA_ALL_VIEWS) system view matching LIKE-pattern.
+Return list of views from [EXA_ALL_VIEWS](https://docs.exasol.com/db/latest/sql_references/system_tables/metadata/exa_all_views.htm) system view matching LIKE-pattern.
 
 | Argument | Example | Description |
 | --- | --- | --- |
@@ -599,7 +599,7 @@ Patterns are case-sensitive. You may escape LIKE-patterns using [.format.escape_
 
 ### list_columns()
 
-Return list of columns from [EXA_ALL_COLUMNS](https://docs.exasol.com/sql_references/metadata/metadata_system_tables.htm#EXA_ALL_COLUMNS) system view matching LIKE-pattern.
+Return list of columns from [EXA_ALL_COLUMNS](https://docs.exasol.com/db/latest/sql_references/system_tables/metadata/exa_all_columns.htm) system view matching LIKE-pattern.
 
 | Argument | Example | Description |
 | --- | --- | --- |
@@ -612,7 +612,7 @@ Patterns are case-sensitive. You may escape LIKE-patterns using [.format.escape_
 
 ### list_objects()
 
-Return list of objects from [EXA_ALL_OBJECTS](https://docs.exasol.com/sql_references/metadata/metadata_system_tables.htm#EXA_ALL_OBJECTS) system view matching LIKE-pattern.
+Return list of objects from [EXA_ALL_OBJECTS](https://docs.exasol.com/db/latest/sql_references/system_tables/metadata/exa_all_objects.htm) system view matching LIKE-pattern.
 
 | Argument | Example | Description |
 | --- | --- | --- |
@@ -625,7 +625,7 @@ Patterns are case-sensitive. You may escape LIKE-patterns using [.format.escape_
 
 ### list_object_sizes()
 
-Return list of objects with sizes from [EXA_ALL_OBJECT_SIZES](https://docs.exasol.com/sql_references/metadata/metadata_system_tables.htm#EXA_ALL_OBJECT_SIZES) system view matching LIKE-pattern.
+Return list of objects with sizes from [EXA_ALL_OBJECT_SIZES](https://docs.exasol.com/db/latest/sql_references/system_tables/metadata/exa_all_object_sizes.htm) system view matching LIKE-pattern.
 
 Please note: object sizes do not include indices and statistics!
 
@@ -640,7 +640,7 @@ Patterns are case-sensitive. You may escape LIKE-patterns using [.format.escape_
 
 ### list_indices()
 
-Return list of indices with sizes from [EXA_ALL_INDICES](https://docs.exasol.com/sql_references/metadata/metadata_system_tables.htm#EXA_ALL_INDICES) system view matching LIKE-pattern.
+Return list of indices with sizes from [EXA_ALL_INDICES](https://docs.exasol.com/db/latest/sql_references/system_tables/metadata/exa_all_indices.htm) system view matching LIKE-pattern.
 
 | Argument | Example | Description |
 | --- | --- | --- |
@@ -652,7 +652,7 @@ Patterns are case-sensitive. You may escape LIKE-patterns using [.format.escape_
 
 ### list_sql_keywords()
 
-Return list of SQL keywords from [EXA_SQL_KEYWORDS](https://docs.exasol.com/sql_references/metadata/metadata_system_tables.htm#EXA_SQL_KEYWORDS) system view.
+Return list of SQL keywords from [EXA_SQL_KEYWORDS](https://docs.exasol.com/db/latest/sql_references/system_tables/metadata/exa_sql_keywords.htm) system view.
 
 These keywords cannot be used as identifiers without double quotes.
 
