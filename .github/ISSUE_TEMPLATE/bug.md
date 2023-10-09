@@ -13,7 +13,7 @@ In order to improve the time, how long a bugfix does take, please make sure you 
 - [ ] I have reproduced the issue with at least the latest released version of \<PROJECT-NAME\>.
 - [ ] I have added references to issues that sound similar.
 
-**Tip: Adding screenshots, outputs and logs help to improve clarity.**
+**Tip: Adding screenshots, outputs and logs might help to improve clarity.**
 
 # Summary
 <!---
