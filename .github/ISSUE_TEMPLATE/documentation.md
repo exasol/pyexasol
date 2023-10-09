@@ -14,7 +14,7 @@ A short summary on what of what needs to be documented or updated.
 
 # Details
 <!---
-A detailed description about what kind of documentation should be added and/or updated and why.
+A detailed description about what kind of documentation should be added and/or updated.
 --->
 
 ## Background & Context
