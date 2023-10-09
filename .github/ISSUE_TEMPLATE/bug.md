@@ -54,7 +54,7 @@ If known
 ## Context
 <!---
 Describe the actual observed behaviour: A clear and concise description of what you observed.
-Screenshot: If applicable, add screenshots to help explain your problem.
+Screenshot: If applicable, add screenshots to help explaining your problem.
 -->
 
 ### System
