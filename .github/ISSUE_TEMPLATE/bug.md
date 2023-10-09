@@ -41,7 +41,7 @@ Describe the expected behaviour: A clear and concise description of what you exp
 
 ## Actual Behaviour
 <!---
-Describe the actual observed behaviour: A clear and concise description of what you actually to happen.
+Describe the actual observed behaviour: A clear and concise description of what actually happened.
 Screenshot: If applicable, add screenshots to help explain your problem.
 -->
 
