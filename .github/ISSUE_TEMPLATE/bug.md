@@ -21,7 +21,6 @@ Describe the bug: A clear and concise description of what the bug is.
 -->
 
 ## Reproducing the Issue
-
 Reproducibility: <pick one of> sporadic, regularly, always
 <!---
 Describe how to reproduce the bug, e.g.:
