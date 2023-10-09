@@ -11,7 +11,7 @@ assignees: ''
 In order to improve the time, how long a bugfix does take, please make sure you address as much as possible of the following checklist.
 
 - [ ] I have reproduced the issue with at least the latest released version of \<PROJECT-NAME\>.
-- [ ] I have added references to issues that sound similar.
+- [ ] I have added references to issues that sound similar in section _Related Issues_.
 
 **Tip: Adding screenshots, outputs and logs might help to improve clarity.**
 
