@@ -894,6 +894,7 @@ class ExaConnection(object):
         #
         # 1. `__del__` is invoked during a regular garbage collector run while the process remains active.
         # 2. `__del__` is invoked during interpreter shutdown (throws an exception).
+        #     * This leads to a minor residual on the database, which will automatically be cleared up within a couple of hours
         #
         # In situations where interpreter shutdown occurs while a connection remains unclosed
         # due to not being addressed during a regular garbage collector run or manual close,
