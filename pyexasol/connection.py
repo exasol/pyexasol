@@ -45,38 +45,38 @@ class ExaConnection(object):
     threadsafety = 1
 
     def __init__(self
-                 , dsn=None
-                 , user=None
-                 , password=None
-                 , schema=''
-                 , autocommit=constant.DEFAULT_AUTOCOMMIT
-                 , snapshot_transactions=None
-                 , connection_timeout=constant.DEFAULT_CONNECTION_TIMEOUT
-                 , socket_timeout=constant.DEFAULT_SOCKET_TIMEOUT
-                 , query_timeout=constant.DEFAULT_QUERY_TIMEOUT
-                 , compression=False
-                 , encryption=True
-                 , fetch_dict=False
-                 , fetch_mapper=None
-                 , fetch_size_bytes=constant.DEFAULT_FETCH_SIZE_BYTES
-                 , lower_ident=False
-                 , quote_ident=False
-                 , json_lib='json'
-                 , verbose_error=True
-                 , debug=False
-                 , debug_logdir=None
-                 , udf_output_bind_address=None
-                 , udf_output_connect_address=None
-                 , udf_output_dir=None
-                 , http_proxy=None
-                 , client_name=None
-                 , client_version=None
-                 , client_os_username=None
-                 , protocol_version=constant.PROTOCOL_V3
-                 , websocket_sslopt=None
-                 , access_token=None
-                 , refresh_token=None
-                 ):
+            , dsn=None
+            , user=None
+            , password=None
+            , schema=''
+            , autocommit=constant.DEFAULT_AUTOCOMMIT
+            , snapshot_transactions=None
+            , connection_timeout=constant.DEFAULT_CONNECTION_TIMEOUT
+            , socket_timeout=constant.DEFAULT_SOCKET_TIMEOUT
+            , query_timeout=constant.DEFAULT_QUERY_TIMEOUT
+            , compression=False
+            , encryption=True
+            , fetch_dict=False
+            , fetch_mapper=None
+            , fetch_size_bytes=constant.DEFAULT_FETCH_SIZE_BYTES
+            , lower_ident=False
+            , quote_ident=False
+            , json_lib='json'
+            , verbose_error=True
+            , debug=False
+            , debug_logdir=None
+            , udf_output_bind_address=None
+            , udf_output_connect_address=None
+            , udf_output_dir=None
+            , http_proxy=None
+            , client_name=None
+            , client_version=None
+            , client_os_username=None
+            , protocol_version=constant.PROTOCOL_V3
+            , websocket_sslopt=None
+            , access_token=None
+            , refresh_token=None
+            ):
         """
         Exasol connection object
 
@@ -276,8 +276,7 @@ class ExaConnection(object):
 
         export_params['with_column_names'] = True
 
-        return self.export_to_callback(cb.export_to_pandas, None, query_or_table, query_params, callback_params,
-                                       export_params)
+        return self.export_to_callback(cb.export_to_pandas, None, query_or_table, query_params, callback_params, export_params)
 
     def import_from_file(self, src, table, import_params=None):
         return self.import_from_callback(cb.import_from_file, src, table, None, import_params)
@@ -288,8 +287,7 @@ class ExaConnection(object):
     def import_from_pandas(self, src, table, callback_params=None, import_params=None):
         return self.import_from_callback(cb.import_from_pandas, src, table, callback_params, import_params)
 
-    def export_to_callback(self, callback, dst, query_or_table, query_params=None, callback_params=None,
-                           export_params=None):
+    def export_to_callback(self, callback, dst, query_or_table, query_params=None, callback_params=None, export_params=None):
         if not callable(callback):
             raise ValueError('Callback argument is not callable')
 
@@ -601,8 +599,7 @@ class ExaConnection(object):
             'clientName': self.options['client_name'] if self.options['client_name'] else constant.DRIVER_NAME,
             'clientVersion': self.options['client_version'] if self.options['client_version'] else __version__,
             'clientOs': platform.platform(),
-            'clientOsUsername': self.options['client_os_username'] if self.options[
-                'client_os_username'] else getpass.getuser(),
+            'clientOsUsername': self.options['client_os_username'] if self.options['client_os_username'] else getpass.getuser(),
             'clientRuntime': f'Python {platform.python_version()}',
             'useCompression': self.options['compression'],
             'attributes': self._get_login_attributes()
@@ -693,7 +690,7 @@ class ExaConnection(object):
         options = {
             'timeout': self.options['connection_timeout'],
             'skip_utf8_validation': True,
-            'enable_multithread': True,  # Extra lock is necessary to protect abort_query() calls
+            'enable_multithread': True,     # Extra lock is necessary to protect abort_query() calls
         }
 
         if self.options['encryption']:
@@ -774,8 +771,7 @@ class ExaConnection(object):
                 current_fingerprint = m.group('fingerprint').upper()
 
                 if not self.options['encryption']:
-                    raise ExaConnectionDsnError(self,
-                                                'Fingerprint was specified in connection string, but encryption is not enabled')
+                    raise ExaConnectionDsnError(self, 'Fingerprint was specified in connection string, but encryption is not enabled')
 
             # Hostname or IP range was specified, expand it
             if m.group('range_start'):
@@ -829,8 +825,7 @@ class ExaConnection(object):
         if self.options['json_lib'] == 'rapidjson':
             import rapidjson
 
-            self.json_encode = lambda x, indent=False: rapidjson.dumps(x, number_mode=rapidjson.NM_NATIVE,
-                                                                       indent=2 if indent else None, ensure_ascii=False)
+            self.json_encode = lambda x, indent=False: rapidjson.dumps(x, number_mode=rapidjson.NM_NATIVE, indent=2 if indent else None, ensure_ascii=False)
             self.json_decode = lambda x: rapidjson.loads(x, number_mode=rapidjson.NM_NATIVE)
 
         elif self.options['json_lib'] == 'ujson':
@@ -842,8 +837,7 @@ class ExaConnection(object):
         elif self.options['json_lib'] == 'orjson':
             import orjson
 
-            self.json_encode = lambda x, indent=False: orjson.dumps(x,
-                                                                    option=orjson.OPT_INDENT_2 | orjson.OPT_APPEND_NEWLINE if indent else 0)
+            self.json_encode = lambda x, indent=False: orjson.dumps(x, option=orjson.OPT_INDENT_2 | orjson.OPT_APPEND_NEWLINE if indent else 0)
             self.json_decode = lambda x: orjson.loads(x)
 
         elif self.options['json_lib'] == 'json':
