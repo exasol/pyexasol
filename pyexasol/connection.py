@@ -890,6 +890,30 @@ class ExaConnection(object):
         2) make sure connection is closed immediately even if garbage collection was disabled for any reasons
         3) write debug logs
         """
+        # Based on our investigations, two scenarios have emerged, one of which does not function correctly:
+        #
+        # 1. `__del__` is invoked during a regular garbage collector run while the process remains active.
+        # 2. `__del__` is invoked during interpreter shutdown (throws an exception).
+        #     * This leads to a minor residual on the database, which will automatically be cleared up within a couple of hours
+        #
+        # In situations where interpreter shutdown occurs while a connection remains unclosed
+        # due to not being addressed during a regular garbage collector run or manual close,
+        # the error scenario (2.) will be triggered.
+        #
+        # The issue arises because during interpreter shutdown, orderly deletion is not guaranteed
+        # (see also [Python documentation](https://docs.python.org/3/reference/datamodel.html#object.__del__) and
+        # [C-API documentation](https://docs.python.org/3/c-api/init.html#c.Py_FinalizeEx)).
+        # Consequently, scenarios may occur where the underlying socket is already closed or cleaned up while
+        # the connection still tries using it (see [#108](https://github.com/exasol/pyexasol/issues/108)).
+        #
+        # Despite this problem, having a `__del__` method that performs cleanup remains valuable,
+        # particularly in the context of long-running processes, to prevent resource leaks.
+        #
+        # Possible alternative solutions to address this would be:
+        # * Within the catch, report a clear error message that the user did not close all the connections which were opened.
+        # * Remove the `__del__` function to "force" the user to always address open/close in a clean manner.
+        #
+        # Still, the feedback we received from users so far indicates that neither alternative is desirable for them.
         try:
             self.close()
         except Exception:
