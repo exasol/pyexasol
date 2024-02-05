@@ -2,11 +2,10 @@ name: Continues Integration (Master)
 
 on:
   workflow_dispatch:
-  pull_request:
+  push:
     branches-ignore:
       - master
       - main
-      - gh-pages  
   schedule:
     # “At 00:00 on every 7th day-of-month from 1 through 31.” (https://crontab.guru)
     - cron: "0 0 1/7 * *"
