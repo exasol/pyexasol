@@ -1,7 +1,7 @@
 name: Continues Integration (Master)
 
 on:
-  wokflow_dispatch:
+  workflow_dispatch:
   pull_request:
     branches-ignore:
       - master
@@ -9,7 +9,9 @@ on:
       - gh-pages  
   schedule:
     # “At 00:00 on every 7th day-of-month from 1 through 31.” (https://crontab.guru)
-    - cron: "0 0 1/7 * *"jobs:
+    - cron: "0 0 1/7 * *"
+
+jobs:
 
   verify:
     runs-on: ubuntu-latest
@@ -25,4 +27,5 @@ on:
         python-version: "3.11"
 
     - name: Run all checks 
-      run: echo "Stub: This needs to call the checks in the future"
+      run: |
+        echo "Stub: This needs to call the checks in the future"
