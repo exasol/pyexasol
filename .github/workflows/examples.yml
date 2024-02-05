@@ -19,10 +19,6 @@ jobs:
             exasol-tag: latest-7.1
             exasol-port: 8563
 
-          - python-version: "3.11"
-            exasol-tag: latest-7.0
-            exasol-port: 8563
-
     name: "Build with Python ${{ matrix.python-version }} and Exasol ${{ matrix.exasol-tag }}"
 
     runs-on: ubuntu-latest
