@@ -12,20 +12,5 @@ on:
     - cron: "0 0 1/7 * *"
 
 jobs:
-
   verify:
-    runs-on: ubuntu-latest
-
-    steps:
-
-    - name: SCM Checkout
-      uses: actions/checkout@v4
-
-    - name: Setup Python & Poetry Environment
-      uses: exasol/python-toolbox/.github/actions/python-environment@main
-      with:
-        python-version: "3.11"
-
-    - name: Run all checks 
-      run: |
-        echo "Stub: This needs to call the checks in the future"
+    uses: ./.github/workflows/checks.yml
