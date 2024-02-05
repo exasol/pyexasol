@@ -2,10 +2,6 @@ name: Continues Integration (PR)
 
 on:
   pull_request:
-    branches-ignore:
-      - master
-      - main
-      - "Test-Automation"
 
 jobs:
 
