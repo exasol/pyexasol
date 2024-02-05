@@ -21,7 +21,7 @@ jobs:
             exasol-tag: 7.1.6
     name: "Build SSL-Cert with Python ${{ matrix.python-version }} and Exasol ${{ matrix.exasol-tag }}"
 
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     timeout-minutes: 15
 
     steps:
