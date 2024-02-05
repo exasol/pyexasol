@@ -1,0 +1,24 @@
+name: Continues Integration (PR)
+
+on:
+  pull_request:
+    branches-ignore:
+      - master
+      - main
+      - "Test-Automation"
+
+  verify:
+    runs-on: ubuntu-latest
+
+    steps:
+
+    - name: SCM Checkout
+      uses: actions/checkout@v4
+
+    - name: Setup Python & Poetry Environment
+      uses: exasol/python-toolbox/.github/actions/python-environment@0.7.0
+      with:
+        python-version: "3.11"
+
+    - name: Run all checks 
+      run: echo "Stub: This needs to call the checks in the future"
