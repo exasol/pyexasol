@@ -58,6 +58,9 @@ rapidjson = ["python-rapidjson"]
 orjson = ["orjson"]
 examples = ["pproxy"]
 
+[tool.poetry.group.dev.dependencies]
+nox = "^2023.4.22"
+
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
