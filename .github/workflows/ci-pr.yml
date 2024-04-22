@@ -7,3 +7,6 @@ jobs:
 
   verify:
     uses: ./.github/workflows/checks.yml
+
+  examples:
+    uses: ./.github/workflows/examples.yml

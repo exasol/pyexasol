@@ -1,73 +1,78 @@
 name: Examples
 
 on:
-  push:
-    paths:
-      - "**.py"
-      - "**.yml"
-  pull_request:
-
-  workflow_dispatch:
+  workflow_call:
 
 jobs:
-
   examples:
-    name: "Build with Python ${{ matrix.python-version }} and Exasol 7.1.17"
+    name: Run Examples
     runs-on: ubuntu-20.04
-    timeout-minutes: 30
     strategy:
       fail-fast: false
       matrix:
         python-version: ["3.11"]
-
-
-
     steps:
       - name: "Checkout repo"
         uses: actions/checkout@v2
 
-    - name: Setup Python & Poetry Environment
-      uses: exasol/python-toolbox/.github/actions/python-environment@0.7.0
-      with:
-        python-version: ${{ matrix.python-version }} 
+      - name: "Setup Python & Poetry Environment"
+        uses: exasol/python-toolbox/.github/actions/python-environment@0.7.0
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: "Install all extras"
+        run: poetry install --all-extras
+
+      - name: "Start test db"
+        run: >
+          poetry run itde spawn-test-environment --environment-name test 
+          --database-port-forward 8563 --bucketfs-port-forward 2580 
+          --docker-db-image-version 7.1.17 --db-mem-size 4GB
+
+      - name: "Wait for Exasol container (UDF extraction)"
+        run: poetry run python examples/_wait_container.py
 
       - name: "Run examples"
         run: |
-          python examples/a00_prepare.py
-          python examples/a01_basic.py
-          python examples/a02_fetch_tuple.py
-          python examples/a03_fetch_dict.py
-          python examples/a04_fetch_mapper.py
-          python examples/a05_formatting.py
-          python examples/a06_transaction.py
-          python examples/a07_exceptions.py
-          python examples/a08_ext.py
-          python examples/a09_abort_query.py
-          python examples/a10_context_manager.py
-          python examples/a11_insert_multi.py
-          python examples/a12_meta.py
-          python examples/a13_meta_nosql.py
-          python examples/b01_pandas.py
-          python examples/b02_import_export.py
-          python examples/b03_parallel_export.py
-          python examples/b04_parallel_import.py
-          python examples/b05_parallel_export_import.py
-          python examples/b06_http_transport_errors.py
-          python examples/c01_redundancy.py
-          python examples/c02_edge_case.py
-          python examples/c03_db2_compat.py
-          python examples/c04_encryption.py
-          python examples/c05_session_params.py
-          python examples/c06_local_config.py
-          python examples/c07_profiling.py
-          python examples/c08_snapshot_transactions.py
-          python examples/c09_script_output.py
-          python examples/c10_overload.py
-          python examples/c11_quote_ident.py
-          python examples/c12_thread_safety.py
-          python examples/c13_dsn_parsing.py
-          python examples/c14_http_proxy.py
-          python examples/c15_garbage_collection.py
-          python examples/j01_rapidjson.py
-          python examples/j02_ujson.py
-          python examples/j03_orjson.py
+          poetry run python examples/a00_prepare.py
+          poetry run python examples/a01_basic.py
+          poetry run python examples/a02_fetch_tuple.py
+          poetry run python examples/a03_fetch_dict.py
+          poetry run python examples/a04_fetch_mapper.py
+          poetry run python examples/a05_formatting.py
+          poetry run python examples/a06_transaction.py
+          poetry run python examples/a07_exceptions.py
+          poetry run python examples/a08_ext.py
+          poetry run python examples/a09_abort_query.py
+          poetry run python examples/a10_context_manager.py
+          poetry run python examples/a11_insert_multi.py
+          poetry run python examples/a12_meta.py
+          poetry run python examples/a13_meta_nosql.py
+          poetry run python examples/b01_pandas.py
+          poetry run python examples/b02_import_export.py
+          poetry run python examples/b03_parallel_export.py
+          poetry run python examples/b04_parallel_import.py
+          poetry run python examples/b05_parallel_export_import.py
+          poetry run python examples/b06_http_transport_errors.py
+          poetry run python examples/c01_redundancy.py
+          poetry run python examples/c02_edge_case.py
+          poetry run python examples/c03_db2_compat.py
+          poetry run python examples/c04_encryption.py
+          poetry run python examples/c05_session_params.py
+          poetry run python examples/c06_local_config.py
+          poetry run python examples/c07_profiling.py
+          poetry run python examples/c08_snapshot_transactions.py
+          poetry run python examples/c09_script_output.py
+          poetry run python examples/c10_overload.py
+          poetry run python examples/c11_quote_ident.py
+          poetry run python examples/c12_thread_safety.py
+          poetry run python examples/c13_dsn_parsing.py
+          poetry run python examples/c14_http_proxy.py
+          poetry run python examples/c15_garbage_collection.py
+          poetry run python examples/j01_rapidjson.py
+          poetry run python examples/j02_ujson.py
+          poetry run python examples/j03_orjson.py
+
+      - name: "Stop test db"
+        run: |
+          docker kill db_container_test
