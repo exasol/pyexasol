@@ -10,43 +10,28 @@ on:
   workflow_dispatch:
 
 jobs:
+
   examples:
+    name: "Build with Python ${{ matrix.python-version }} and Exasol 7.1.17"
+    runs-on: ubuntu-20.04
+    timeout-minutes: 30
     strategy:
       fail-fast: false
       matrix:
-        include:
-          - python-version: "3.11"
-            exasol-tag: latest-7.1
-            exasol-port: 8563
+        python-version: ["3.11"]
 
-    name: "Build with Python ${{ matrix.python-version }} and Exasol ${{ matrix.exasol-tag }}"
 
-    runs-on: ubuntu-20.04
-    timeout-minutes: 15
-
-    services:
-      exasol:
-        image: exasol/docker-db:${{ matrix.exasol-tag }}
-        ports:
-          - 8563:${{ matrix.exasol-port }}
-        options: --privileged
 
     steps:
-      - name: "Checkout repo (Python ${{ matrix.python-version }} Exasol ${{ matrix.exasol-tag }})"
+      - name: "Checkout repo"
         uses: actions/checkout@v2
 
-      - name: "Setup Python (Python ${{ matrix.python-version }} Exasol ${{ matrix.exasol-tag }})"
-        uses: actions/setup-python@v2
-        with:
-          python-version: ${{ matrix.python-version }}
+    - name: Setup Python & Poetry Environment
+      uses: exasol/python-toolbox/.github/actions/python-environment@0.7.0
+      with:
+        python-version: ${{ matrix.python-version }} 
 
-      - name: "Install dependencies (Python ${{ matrix.python-version }} Exasol ${{ matrix.exasol-tag }})"
-        run: pip install -e .[pandas,ujson,rapidjson,orjson,examples]
-
-      - name: "Wait for Exasol container (Python ${{ matrix.python-version }} Exasol ${{ matrix.exasol-tag }})"
-        run: python examples/_wait_container.py
-
-      - name: "Run examples (Python ${{ matrix.python-version }} Exasol ${{ matrix.exasol-tag }})"
+      - name: "Run examples"
         run: |
           python examples/a00_prepare.py
           python examples/a01_basic.py
