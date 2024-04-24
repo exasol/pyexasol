@@ -77,7 +77,7 @@ def integration_tests(session: Session) -> None:
     Args:
         db_version: version to start, if none no db will be started.
     """
-    with test_db(session, db_version="7.1.17", port=8263):
+    with test_db(session, db_version="7.1.17", port=8563):
         _integration_tests(session)
 
 
