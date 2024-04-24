@@ -11,10 +11,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        include:
-          - python-version: ["3.11"]
-
+        python-version: ["3.11"]
     steps:
+      - name: "Checkout repo"
         uses: actions/checkout@v2
 
       - name: "Setup Python & Poetry Environment"
@@ -28,14 +27,15 @@ jobs:
       - name: "Start test db"
         run: >
           poetry run itde spawn-test-environment --environment-name ssl
-          --database-port-forward 8563 --bucketfs-port-forward 2580 
+          --database-port-forward 8888 --bucketfs-port-forward 2580 
           --docker-db-image-version 7.1.17 --db-mem-size 4GB
+          --create-certificates
 
-      - name: "Pull certificate from container (Python ${{ matrix.python-version }} Exasol ${{ matrix.exasol-tag }})"
+      - name: "Pull certificate from container"
         run: docker cp db_container_ssl:/certificates/rootCA.crt .
 
-      - name: "Setup custom host (Python ${{ matrix.python-version }} Exasol ${{ matrix.exasol-tag }})"
+      - name: "Setup custom host"
         run: echo "127.0.0.1 exasol-test-database" | sudo tee -a /etc/hosts
 
-      - name: "Run test (Python ${{ matrix.python-version }} Exasol ${{ matrix.exasol-tag }})"
+      - name: "Run test"
         run: poetry run python examples/_ssl_test.py
