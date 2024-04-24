@@ -1,51 +1,35 @@
 name: SSL certificate test
 
 on:
- push:
-  paths:
-    - "**.py"
-    - "**.yml"
-  branches:
-    - master
-  pull_request:
-
-  workflow_dispatch:
+  workflow_call:
 
 jobs:
   ssl_cert:
+    name: Build SSL-Cert
+    runs-on: ubuntu-20.04
+    timeout-minutes: 15
     strategy:
       fail-fast: false
       matrix:
         include:
-          - python-version: "3.11"
-            exasol-tag: 7.1.6
-    name: "Build SSL-Cert with Python ${{ matrix.python-version }} and Exasol ${{ matrix.exasol-tag }}"
-
-    runs-on: ubuntu-20.04
-    timeout-minutes: 15
+          - python-version: ["3.11"]
 
     steps:
-      - name: "Checkout repo (Python ${{ matrix.python-version }} Exasol ${{ matrix.exasol-tag }})"
         uses: actions/checkout@v2
 
-      - name: "Setup Python (Python ${{ matrix.python-version }} Exasol ${{ matrix.exasol-tag }})"
-        uses: actions/setup-python@v2
+      - name: "Setup Python & Poetry Environment"
+        uses: exasol/python-toolbox/.github/actions/python-environment@0.7.0
         with:
           python-version: ${{ matrix.python-version }}
 
-      - name: "Install dependencies (Python ${{ matrix.python-version }} Exasol ${{ matrix.exasol-tag }})"
-        run: pip install -e .[pandas]
+      - name: "Install all extras"
+        run: poetry install --all-extras
 
-      - name: "Checkout test environment (Python ${{ matrix.python-version }} Exasol ${{ matrix.exasol-tag }})"
-        uses: actions/checkout@v2
-        with:
-          repository: exasol/integration-test-docker-environment
-          path: './test_env'
-          ref: '1.7.1'
-
-      - name: "Spawn EXASOL environemnt (Python ${{ matrix.python-version }} Exasol ${{ matrix.exasol-tag }})"
-        run: ./start-test-env spawn-test-environment --environment-name ssl --docker-db-image-version=${{ matrix.exasol-tag }} --database-port-forward 8888 --create-certificates
-        working-directory: ./test_env
+      - name: "Start test db"
+        run: >
+          poetry run itde spawn-test-environment --environment-name ssl
+          --database-port-forward 8563 --bucketfs-port-forward 2580 
+          --docker-db-image-version 7.1.17 --db-mem-size 4GB
 
       - name: "Pull certificate from container (Python ${{ matrix.python-version }} Exasol ${{ matrix.exasol-tag }})"
         run: docker cp db_container_ssl:/certificates/rootCA.crt .
@@ -54,4 +38,4 @@ jobs:
         run: echo "127.0.0.1 exasol-test-database" | sudo tee -a /etc/hosts
 
       - name: "Run test (Python ${{ matrix.python-version }} Exasol ${{ matrix.exasol-tag }})"
-        run: python examples/_ssl_test.py
+        run: poetry run python examples/_ssl_test.py
