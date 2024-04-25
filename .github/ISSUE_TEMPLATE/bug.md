@@ -62,7 +62,7 @@ Screenshot: If applicable, add screenshots to help explaining your problem.
 Describe the system and the used configuration.
 -->
 **Desktop:**
- - OS: [e.g. Linux (Fedora 35), Linux (Ubuntu 20.01), MacOs (...), Windows (...)]
+ - OS: [e.g. Linux (Fedora 35), Linux (Ubuntu 20.01), macOS (...), Windows (...)]
  - Python Version [e.g. Python 3.8.0]
  - Package Version [e.g. 22]
 
