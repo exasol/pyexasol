@@ -1,4 +1,4 @@
-name: Continues Integration (PR)
+name: Continuous Integration (PR)
 
 on:
   pull_request:
