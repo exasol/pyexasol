@@ -8,7 +8,7 @@ assignees: ''
 ---
 
 ### Checklist
-In order to improve the time, how long a bugfix does take, please make sure you address as much as possible of the following checklist.
+In order to speedup fixing the bug, please make sure you address as many items from the following checklist as possible.
 
 - [ ] I have reproduced the issue with at least the latest released version of \<PROJECT-NAME\>.
 - [ ] I have added references to issues that sound similar in section _Related Issues_.
