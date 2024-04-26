@@ -1,5 +1,5 @@
+<h1 align="center">Pyexasol</h1>
 <p align="center">
-<h1>Pyexasol</h1>
 <a href="https://github.com/exasol/pyexasol/actions/workflows/ci-master.yml">
     <img src="https://github.com/exasol/pyexasol/actions/workflows/ci-master.yml/badge.svg" alt="Continuous Integration (master)">
 </a>
