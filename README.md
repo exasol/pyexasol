@@ -1,6 +1,20 @@
-[![Examples](https://github.com/exasol/pyexasol/actions/workflows/examples.yml/badge.svg)](https://github.com/exasol/pyexasol/actions/workflows/examples.yml)
-[![PyPI](https://badge.fury.io/py/pyexasol.svg)](https://badge.fury.io/py/pyexasol)
-[![Anaconda](https://anaconda.org/conda-forge/pyexasol/badges/version.svg)](https://anaconda.org/conda-forge/pyexasol)
+<p align="center">
+<a href="https://github.com/exasol/pyexasol/actions/workflows/ci-master.yml">
+    <img src="https://github.com/exasol/pyexasol/actions/workflows/ci-master.yml/badge.svg" alt="Continuous Integration (master)">
+</a>
+<a href="https://anaconda.org/conda-forge/pyexasol">
+    <img src="https://anaconda.org/conda-forge/pyexasol/badges/version.svg" alt="Anaconda">
+</a>
+<a href="https://pypi.org/project/pyexasol/">
+    <img src="https://img.shields.io/pypi/v/pyexasol" alt="PyPi Package">
+</a>
+<a href="https://pypi.org/project/pyexasol/">
+    <img src="https://img.shields.io/pypi/dm/pyexasol" alt="Downloads">
+</a>
+<a href="https://pypi.org/project/pyexasol/">
+    <img src="https://img.shields.io/pypi/pyversions/pyexasol" alt="Supported Python Versions">
+</a>
+</p>
 
 PyEXASOL is the officially supported Python connector for [Exasol](https://www.exasol.com). It helps to handle massive volumes of data commonly associated with this DBMS.
 
@@ -38,8 +52,8 @@ PyEXASOL provides API to read & write multiple data streams in parallel using se
 
 ## System requirements
 
-- Exasol >= 6.2
-- Python >= 3.6
+- Exasol >= 7.1
+- Python >= 3.8
 
 
 ## Getting started
@@ -98,3 +112,7 @@ for row in stmt:
 [Vitaly Markov](https://www.linkedin.com/in/markov-vitaly/), 2018 — 2022
 
 Enjoy!
+
+## Maintained by
+[Exasol](https://www.exasol.com) 2023 — Today 
+
