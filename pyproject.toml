@@ -1,0 +1,69 @@
+[tool.poetry]
+name = "pyexasol"
+version = "0.26.0"
+license = "MIT"
+readme = "README.md"
+description = "Exasol python driver with extra features"
+
+packages = [
+    { include = "pyexasol" },
+    { include = "pyexasol_utils" }
+]
+authors = [
+    "Vitaly Markov <wild.desu@gmail.com>",
+    "Exasol AG <opensource@exasol.com>"
+]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "License :: OSI Approved :: MIT License",
+    "Intended Audience :: Developers",
+    "Topic :: Database",
+]
+
+keywords = [
+    "exasol",
+    "sql",
+    "database",
+    "performance",
+    "websocket",
+    "import",
+    "export"
+]
+
+
+[tool.poetry.urls]
+"Homepage" = "https://www.exasol.com/"
+"Documentation" = "https://github.com/exasol/pyexasol/"
+"Source" = "https://github.com/exasol/pyexasol"
+"Issues" = "https://github.com/exasol/pyexasol/issues"
+"Changelog" = "https://github.com/exasol/pyexasol/blob/master/CHANGELOG.md"
+
+
+[tool.poetry.dependencies]
+python = "^3.8"
+websocket-client = ">=1.0.1"
+pyopenssl = "*"
+rsa = "*"
+packaging = "*"
+pandas = { version = "*", optional = true }
+ujson = { version = "*", optional = true }
+python-rapidjson = { version = "*", optional = true }
+orjson = { version = ">=3.6", optional = true }
+pproxy = { version = "*", optional = true }
+
+[tool.poetry.extras]
+pandas = ["pandas"]
+ujson = ["ujson"]
+rapidjson = ["python-rapidjson"]
+orjson = ["orjson"]
+examples = ["pproxy"]
+
+[tool.poetry.group.dev.dependencies]
+nox = "^2023.4.22"
+pytest = ">=7.0.0,<9"
+docutils = "0.20.1"
+exasol-integration-test-docker-environment = "^3.0.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

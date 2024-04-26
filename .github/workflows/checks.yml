@@ -1,0 +1,49 @@
+name: CI Checks
+
+on: 
+  workflow_call:
+
+
+jobs:
+
+  unit-tests:
+    name: Unit Tests
+    runs-on: ubuntu-22.04
+    strategy:
+      fail-fast: true
+      matrix:
+        python-version: [ "3.9", "3.10", "3.11", "3.12" ]
+
+    steps:
+    - name: SCM Checkout
+      uses: actions/checkout@v4
+
+    - name: Setup Python & Poetry Environment
+      uses: exasol/python-toolbox/.github/actions/python-environment@0.7.0
+      with:
+        python-version: ${{ matrix.python-version }} 
+
+    - name: Run Tests
+      run: |
+        poetry run nox -s unit-tests
+
+  integration-tests:
+    name: Integration Tests
+    runs-on: ubuntu-22.04
+    strategy:
+      fail-fast: true
+      matrix:
+        python-version: [ "3.9", "3.10", "3.11", "3.12" ]
+
+    steps:
+    - name: SCM Checkout
+      uses: actions/checkout@v4
+
+    - name: Setup Python & Poetry Environment
+      uses: exasol/python-toolbox/.github/actions/python-environment@0.7.0
+      with:
+        python-version: ${{ matrix.python-version }} 
+
+    - name: Run Tests
+      run: |
+        poetry run nox -s integration-tests

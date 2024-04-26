@@ -1,0 +1,14 @@
+name: Continuous Integration (PR)
+
+on:
+  pull_request:
+  
+jobs:
+  verify:
+    uses: ./.github/workflows/checks.yml
+  
+  examples:
+    uses: ./.github/workflows/examples.yml
+  
+  ssl_cert:
+    uses: ./.github/workflows/ssl_cert.yml
