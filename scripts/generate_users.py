@@ -66,7 +66,7 @@ def _create_parser():
     parser.add_argument(
         'filename',
         type=argparse.FileType('w', encoding='utf8'),
-        help='file the resulting csv should be wirtten to.'
+        help='file the resulting CSV should be written to.'
     )
     parser.add_argument(
         '-n', '--count',
