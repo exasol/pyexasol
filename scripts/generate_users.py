@@ -71,7 +71,7 @@ def _create_parser():
     parser.add_argument(
         '-n', '--count',
         type=int, default=10000,
-        help='Amount of users to create.'
+        help='Number of users to create.'
     )
 
     return parser
