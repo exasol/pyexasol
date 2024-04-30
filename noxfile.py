@@ -15,7 +15,13 @@ _ROOT: Path = Path(__file__).parent
 
 def _test_command(path: Path) -> Iterable[str]:
     base_command = ["poetry", "run"]
-    pytest_command = ["pytest", "-v", f"{path}"]
+    pytest_command = [
+        "pytest",
+        "-v",
+        "--log-level=INFO",
+        "--log-cli-level=INFO",
+        f"{path}"
+    ]
     return base_command + pytest_command
 
 
@@ -80,5 +86,5 @@ def integration_tests(session: Session) -> None:
 @ nox.session(name="all-tests", python=False)
 def all_tests(session: Session) -> None:
     """Runs all tests (Unit and Integration)"""
-    command=_test_command(_ROOT / "test")
+    command = _test_command(_ROOT / "test")
     session.run(*command)
