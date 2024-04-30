@@ -78,7 +78,7 @@ def prepare_database(dsn, user, password):
             self._upload_files()
             self._import_data()
 
-        def _execute_docker_command(self, command):
+        def _execute_command(self, command):
             self._logger.info("Executing docker command: %s", command)
             result = subprocess.run(
                 command,
@@ -105,7 +105,7 @@ def prepare_database(dsn, user, password):
                 "-print",  # -print -quit will stop after the result is found
                 "-quit",
             ]
-            exaplus = self._execute_docker_command(find_exaplus).strip()
+            exaplus = self._execute_command(find_exaplus).strip()
             self._logger.info("Found exaplus at %s", exaplus)
             return exaplus
 
@@ -118,7 +118,7 @@ def prepare_database(dsn, user, password):
                 "mkdir",
                 self._tmp_dir
             ]
-            stdout = self._execute_docker_command(mkdir)
+            stdout = self._execute_command(mkdir)
             self._logger.info("Stdout: %s", stdout)
 
         def _upload_files(self):
@@ -131,7 +131,7 @@ def prepare_database(dsn, user, password):
                     f"{file.resolve()}",
                     f"{self._container}:{self._tmp_dir}/{file.name}",
                 ]
-                stdout = self._execute_docker_command(copy_file)
+                stdout = self._execute_command(copy_file)
                 self._logger.debug("Stdout: %s", stdout)
 
         def _import_data(self):
@@ -154,7 +154,7 @@ def prepare_database(dsn, user, password):
                 "--jdbcparam",
                 "validateservercertificate=0",
             ]
-            stdout = self._execute_docker_command(execute_ddl_file)
+            stdout = self._execute_command(execute_ddl_file)
             self._logger.info("Stdout: %s", stdout)
 
     data_directory = Path(__file__).parent / '..' / 'data'
