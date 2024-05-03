@@ -10,7 +10,7 @@ from faker import Faker
 from faker.providers import BaseProvider
 
 
-class UserDataProvider(BaseProvider):
+class PaymentsProvider(BaseProvider):
 
     def date(self):
         start_date = datetime.date(2018, 1, 1)
@@ -26,42 +26,40 @@ class UserDataProvider(BaseProvider):
         )
         return datetime.datetime.combine(date, time)
 
-    def boolean(self):
-        return self.random_element([True, False])
+    def amount(self):
+        gross = decimal.Decimal(random.randint(0, 1000)) / 100
+        net = gross * decimal.Decimal('0.7')
+        return gross, net
 
-    def status(self):
-        return self.random_element(
-            ['ACTIVE', 'PENDING', 'SUSPENDED', 'DISABLED']
-        )
+    def user_id(self, min=1, max=10000):
+        return random.randint(min, max)
 
-    def decimal(self):
-        return decimal.Decimal(random.randint(0, 100)) / 100
-
-    def score(self):
-        value = random.randint(0, 10)
-        return None if value == 10 else random.randint(0, 10000) / 100
+    def payment_id(self):
+        return '-'.join([
+            str(random.randint(100, 300)),
+            str(random.randint(100, 300)),
+            str(random.randint(100, 300))
+        ])
 
 
-def generate_users(count):
+def generate_payments(count, min, max):
     fake = Faker()
-    fake.add_provider(UserDataProvider)
+    fake.add_provider(PaymentsProvider)
 
     for i in range(count):
+        gross, net = fake.amount()
         yield (
-            i,
-            fake.name(),
-            fake.date(),
+            fake.user_id(min, max),
+            fake.payment_id(),
             fake.timestamp(),
-            fake.boolean(),
-            fake.decimal(),
-            fake.score(),
-            fake.status()
+            gross,
+            net
         )
 
 
 def _create_parser():
     parser = argparse.ArgumentParser(
-        description="Generate a CSV file containing users",
+        description="Generate a CSV file containing payments",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter
     )
     parser.add_argument(
@@ -73,6 +71,16 @@ def _create_parser():
         '-n', '--count',
         type=int, default=10000,
         help='Number of users to create.'
+    )
+    parser.add_argument(
+        '--min',
+        type=int, default=1,
+        help='Lower bound for user_id used in payments.'
+    )
+    parser.add_argument(
+        '--max',
+        type=int, default=10000,
+        help='Upper bound for user_id used in payments.'
     )
 
     return parser
@@ -86,9 +94,9 @@ def main(argv=None):
     parser = _create_parser()
     args = parser.parse_args(argv)
     try:
-        with open(args.filename, 'w', newline='') as f :
+        with open(args.filename, 'w', newline='') as f:
             writer = csv.writer(f, delimiter=',')
-            for user in generate_users(count=args.count):
+            for user in generate_payments(count=args.count, min=args.min, max=args.max):
                 writer.writerow(user)
     except Exception as ex:
         print(f"Error while generating users, details: {ex}")

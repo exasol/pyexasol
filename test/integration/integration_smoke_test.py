@@ -9,11 +9,11 @@ def test_sorted_select_and_limited_select(connection):
     statement = f"SELECT * FROM USERS ORDER BY USER_ID LIMIT 5;"
     result = connection.execute(statement)
     expected = [
-        (0, 'Amy Marquez', '2018-10-04', '2018-03-06 21:44:36.142000', True, '0.76', 30.11, 'PENDING\r'),
-        (1, 'John Lawson', '2018-05-17', '2018-05-28 02:58:29.079000', True, '0.04', 71.72, 'DISABLED\r'),
-        (2, 'Jessica Clark', '2018-05-23', '2018-05-22 04:19:51.098000', False, '0.72', 29.13, 'PENDING\r'),
-        (3, 'Jennifer Taylor', '2018-05-01', '2018-03-03 08:12:52.685000', True, '0.43', 8.46, 'SUSPENDED\r'),
-        (4, 'Tristan Romero', '2018-10-04', '2018-03-31 20:21:50.199000', True, '0.23', 62.980000000000004, 'PENDING\r')
+        (0, 'Jessica Mccoy', '2018-07-12', '2018-04-03 18:36:40.553000', True, '0.7', None, 'ACTIVE'),
+        (1, 'Beth James', '2018-05-24', '2018-03-24 08:08:46.251000', False, '0.53', 22.07, 'ACTIVE'),
+        (2, 'Mrs. Teresa Ryan', '2018-08-21', '2018-11-07 01:53:08.727000', False, '0.03', 24.88, 'PENDING'),
+        (3, 'Tommy Henderson', '2018-04-18', '2018-04-28 21:39:59.300000', True, '0.5', 27.43, 'DISABLED'),
+        (4, 'Jessica Christian', '2018-12-18', '2018-11-29 14:11:55.450000', True, '0.1', 62.59, 'SUSPENDED')
     ]
     actual = result.fetchall()
     assert expected == actual
