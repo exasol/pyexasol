@@ -88,3 +88,30 @@ def all_tests(session: Session) -> None:
     """Runs all tests (Unit and Integration)"""
     command = _test_command(_ROOT / "test")
     session.run(*command)
+
+
+@nox.session(name="db-start", python=False)
+def start_db(session: Session) -> None:
+    """Start a test database. For more details append '-- -h'"""
+
+    session.run(
+        "itde",
+        "spawn-test-environment",
+        "--environment-name",
+        "test",
+        "--database-port-forward",
+        "8563",
+        "--bucketfs-port-forward",
+        "2580",
+        "--docker-db-image-version",
+        "7.1.17",
+        "--db-mem-size",
+        "4GB",
+        external=True,
+    )
+
+
+@nox.session(name="db-stop", python=False)
+def stop_db(session: Session) -> None:
+    """Stop the test database"""
+    session.run("docker", "kill", "db_container_test", external=True)
