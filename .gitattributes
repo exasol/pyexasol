@@ -1,2 +1,2 @@
-poetry.lock     linguist-generated=true
-test/data/csv/* linguist-generated=true
+poetry.lock             linguist-generated=true
+test/data/csv/*.csv     linguist-generated=true
