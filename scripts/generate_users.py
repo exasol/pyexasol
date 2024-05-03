@@ -4,6 +4,7 @@ import decimal
 import random
 import datetime
 import argparse
+from pathlib import Path
 
 from faker import Faker
 from faker.providers import BaseProvider
@@ -65,7 +66,7 @@ def _create_parser():
     )
     parser.add_argument(
         'filename',
-        type=argparse.FileType('w', encoding='utf8'),
+        type=Path,
         help='file the resulting CSV should be written to.'
     )
     parser.add_argument(
@@ -85,9 +86,10 @@ def main(argv=None):
     parser = _create_parser()
     args = parser.parse_args(argv)
     try:
-        writer = csv.writer(args.filename, delimiter=',')
-        for user in generate_users(count=args.count):
-            writer.writerow(user)
+        with open(args.filename, 'w', newline='') as f :
+            writer = csv.writer(f, delimiter=',')
+            for user in generate_users(count=args.count):
+                writer.writerow(user)
     except Exception as ex:
         print(f"Error while generating users, details: {ex}")
         return FAILURE
