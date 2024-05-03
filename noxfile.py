@@ -117,3 +117,23 @@ def start_db(session: Session) -> None:
 def stop_db(session: Session) -> None:
     """Stop the test database"""
     session.run("docker", "kill", "db_container_test", external=True)
+
+
+@nox.session(name="import-data", python=False)
+def import_data(session: Session) -> None:
+    """Import test data into the database"""
+    import sys
+
+    path = _ROOT / "test" / "integration"
+    data_dir = _ROOT / "test" / "data"
+    sys.path.append(f"{path}")
+    from conftest import DockerDataLoader
+
+    loader = DockerDataLoader(
+        dsn="127.0.0.1:8563",
+        username="sys",
+        password="exasol",
+        container_name='db_container_test',
+        data_directory=data_dir
+    )
+    loader.load()
