@@ -66,8 +66,10 @@ def test_db(session: Session, db_version: str, port: int):
     stop = stop_db if with_db else nop
 
     start()
-    yield
-    stop()
+    try:
+        yield
+    finally:
+        stop()
 
 
 @nox.session(name="unit-tests", python=False)
