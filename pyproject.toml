@@ -68,3 +68,9 @@ faker = "^24.14.1"
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.pytest.ini_options]
+markers = [
+    "a01_examples: tests which have been migrated from a01 examples.",
+]
+
