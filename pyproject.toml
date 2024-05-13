@@ -75,5 +75,6 @@ markers = [
     "basic: basic driver tests.",
     "fetch_tuple: tests related to fechting tuple based results.",
     "fetch_dict: tests realated to fetching dictionary based results.",
+    "fetch_mapper: tests realated to mapping data types.",
 ]
 
