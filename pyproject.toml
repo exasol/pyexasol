@@ -71,8 +71,9 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.pytest.ini_options]
 markers = [
-    "a01_examples: tests which have been migrated from a01 examples.",
-    "a02_examples: tests which have been migrated from a02 examples.",
-    "a03_examples: tests which have been migrated from a03 examples.",
+    "smoke: smoke tests which always should pass.",
+    "basic: basic driver tests.",
+    "fetch_tuple: tests related to fechting tuple based results.",
+    "fetch_dict: tests realated to fetching dictionary based results.",
 ]
 
