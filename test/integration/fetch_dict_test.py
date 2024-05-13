@@ -2,15 +2,22 @@ import pytest
 import pyexasol
 
 
-@pytest.mark.fetch_dict
-def test_fetch_dict_using_fetchone(dsn, user, password, schema):
-    connection = pyexasol.connect(
+# For the fetch_dict tests we need to configure the connection accordingly (fetch_dict=True)
+@pytest.fixture
+def connection(dsn, user, password, schema):
+    con = pyexasol.connect(
         dsn=dsn,
         user=user,
         password=password,
         schema=schema,
         fetch_dict=True
     )
+    yield con
+    con.close()
+
+
+@pytest.mark.fetch_dict
+def test_fetch_dict_using_fetchone(connection):
     statement = "SELECT * FROM USERS ORDER BY USER_ID LIMIT 5;"
     result = connection.execute(statement)
     expected = [
@@ -45,14 +52,7 @@ def test_fetch_dict_using_fetchone(dsn, user, password, schema):
 
 
 @pytest.mark.fetch_dict
-def test_fetch_dict_using_fetchmany(dsn, user, password, schema):
-    connection = pyexasol.connect(
-        dsn=dsn,
-        user=user,
-        password=password,
-        schema=schema,
-        fetch_dict=True
-    )
+def test_fetch_dict_using_fetchmany(connection):
     count = 3
     statement = "SELECT * FROM USERS ORDER BY USER_ID LIMIT 5;"
     result = connection.execute(statement)
@@ -94,14 +94,7 @@ def test_fetch_dict_using_fetchmany(dsn, user, password, schema):
 
 
 @pytest.mark.fetch_dict
-def test_fetch_dict_using_fetchall(dsn, user, password, schema):
-    connection = pyexasol.connect(
-        dsn=dsn,
-        user=user,
-        password=password,
-        schema=schema,
-        fetch_dict=True
-    )
+def test_fetch_dict_using_fetchall(connection):
     statement = "SELECT * FROM USERS ORDER BY USER_ID LIMIT 5;"
     result = connection.execute(statement)
     expected = [
@@ -136,14 +129,7 @@ def test_fetch_dict_using_fetchall(dsn, user, password, schema):
 
 
 @pytest.mark.fetch_dict
-def test_fetch_one_column_as_list_of_values_with_dict_setting(dsn, user, password, schema):
-    connection = pyexasol.connect(
-        dsn=dsn,
-        user=user,
-        password=password,
-        schema=schema,
-        fetch_dict=True
-    )
+def test_fetch_one_column_as_list_of_values_with_dict_setting(connection):
     statement = "SELECT user_name, user_id FROM USERS ORDER BY USER_ID LIMIT 5;"
     result = connection.execute(statement)
     expected = [
@@ -158,14 +144,7 @@ def test_fetch_one_column_as_list_of_values_with_dict_setting(dsn, user, passwor
 
 
 @pytest.mark.fetch_dict
-def test_fetch_a_single_value_with_dict_setting(dsn, user, password, schema):
-    connection = pyexasol.connect(
-        dsn=dsn,
-        user=user,
-        password=password,
-        schema=schema,
-        fetch_dict=True
-    )
+def test_fetch_a_single_value_with_dict_setting(connection):
     statement = "SELECT user_name, user_id FROM USERS ORDER BY USER_ID LIMIT 5;"
     result = connection.execute(statement)
     expected = 'Jessica Mccoy'
