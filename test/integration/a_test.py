@@ -85,6 +85,11 @@ def test_fetch_one_column_as_list_of_values(connection):
 
 @pytest.mark.a02_examples
 def test_fetch_a_single_value(connection):
+    statement = "SELECT user_name, user_id FROM USERS ORDER BY USER_ID LIMIT 5;"
+    result = connection.execute(statement)
+    expected = 'Jessica Mccoy'
+    actual = result.fetchval()
+    assert expected == actual
     count = 3
     statement = "SELECT user_name, user_id FROM USERS ORDER BY USER_ID LIMIT 5;"
     result = connection.execute(statement)
