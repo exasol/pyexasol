@@ -55,7 +55,6 @@ def test_fetch_tuples_using_fetchmany(connection):
     
 @pytest.mark.a02_examples
 def test_fetch_tuples_using_fetchall(connection):
-    count = 3
     statement = "SELECT * FROM USERS ORDER BY USER_ID LIMIT 5;"
     result = connection.execute(statement)
     expected = [
