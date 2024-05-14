@@ -18,7 +18,7 @@ def connection(dsn, user, password, schema):
     con.close()
 
 
-@pytest.makr.fetch_mapper
+@pytest.mark.fetch_mapper
 @pytest.mark.parametrize("sql,expected", [
     ("SELECT CAST(1 AS DECIMAL(18,0));", int),
     ("SELECT CAST(1 AS DECIMAL(18,2));", decimal.Decimal),
