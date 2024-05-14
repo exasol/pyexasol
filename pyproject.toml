@@ -78,5 +78,6 @@ markers = [
     "fetch_mapper: tests related to mapping data types.",
     "format: tests related to f-string based statement formatting.",
     "transaction: tests related to transaction management.",
+    "exceptions: tests related to exceptions in pyexasol.",
 ]
 
