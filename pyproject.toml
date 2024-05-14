@@ -77,5 +77,6 @@ markers = [
     "fetch_dict: tests related to fetching dictionary based results.",
     "fetch_mapper: tests related to mapping data types.",
     "format: tests related to f-string based statement formatting.",
+    "transaction: tests related to transaction management.",
 ]
 
