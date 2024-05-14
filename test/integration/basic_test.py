@@ -17,7 +17,6 @@ def test_sorted_select_and_limited_select(connection):
         (
             2, 'Mrs. Teresa Ryan', '2018-08-21',
             '2018-11-07 01:53:08.727000', False, '0.03', 24.88, 'PENDING'
-
         ),
         (
             3, 'Tommy Henderson', '2018-04-18',
