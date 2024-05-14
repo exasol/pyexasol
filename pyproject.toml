@@ -68,3 +68,13 @@ faker = "^24.14.1"
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.pytest.ini_options]
+markers = [
+    "smoke: smoke tests which always should pass.",
+    "basic: basic driver tests.",
+    "fetch_tuple: tests related to fetching tuple based results.",
+    "fetch_dict: tests related to fetching dictionary based results.",
+    "fetch_mapper: tests related to mapping data types.",
+]
+

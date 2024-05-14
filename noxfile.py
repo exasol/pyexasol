@@ -94,7 +94,7 @@ def all_tests(session: Session) -> None:
 
 @nox.session(name="db-start", python=False)
 def start_db(session: Session) -> None:
-    """Start a test database. For more details append '-- -h'"""
+    """Start a test database"""
 
     session.run(
         "itde",
