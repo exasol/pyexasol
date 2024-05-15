@@ -107,7 +107,6 @@ def test_safe_decimal_conversion(connection, value, expected):
     actual = result.fetchval()
 
     assert expected == actual
-    pass
 
 
 @ pytest.mark.format
