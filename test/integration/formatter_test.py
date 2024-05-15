@@ -109,7 +109,7 @@ def test_safe_decimal_conversion(connection, value, expected):
     assert expected == actual
 
 
-@ pytest.mark.format
+@pytest.mark.format
 def test_complex_format_string(connection, schema):
     params = {
         'random_value': 'abc',
