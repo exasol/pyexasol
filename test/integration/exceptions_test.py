@@ -71,7 +71,7 @@ def test_duplicated_select_of_column(connection):
 
 
 @pytest.mark.exceptions
-def test_attempt_to_Run_query_on_closed_connection(connection):
+def test_attempt_to_run_query_on_closed_connection(connection):
     connection.close()
     with pytest.raises(ExaRuntimeError):
         connection.execute("SELECT 1;")
