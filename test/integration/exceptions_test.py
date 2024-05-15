@@ -78,23 +78,14 @@ def test_attempt_to_run_query_on_closed_connection(connection):
 
 
 @pytest.mark.exceptions
-def test_close_closed_connection(dsn, user, password, schema):
-    connections = [
-        pyexasol.connect(
-            dsn=dsn,
-            user=user,
-            password=password,
-            schema=schema,
-        ),
-        pyexasol.connect(
-            dsn=dsn,
-            user=user,
-            password=password,
-            schema=schema,
-        )
-    ]
+def test_close_closed_connection(connection, dsn, user, password, schema):
+    con = pyexasol.connect(
+        dsn=dsn,
+        user=user,
+        password=password,
+        schema=schema,
+    )
 
-    connections[1].execute(f"KILL SESSION {connections[0].session_id()}")
+    connection.execute(f"KILL SESSION {con.session_id()}")
     with pytest.raises(ExaCommunicationError):
-        con = connections[0]
         con.close()
