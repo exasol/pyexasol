@@ -80,6 +80,5 @@ markers = [
     "transaction: tests related to transaction management.",
     "exceptions: tests related to exceptions in pyexasol.",
     "extensions: tests related to pyexasol extensions.",
-    "misc: miscellaneous tests related to pyexasol extensions."
 ]
 
