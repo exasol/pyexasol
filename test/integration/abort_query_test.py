@@ -27,7 +27,7 @@ class BlockingQuery(threading.Thread):
 @pytest.mark.exceptions
 def test_abort_query(connection):
     # Note all timeouts and sleeps in this test case have been chosen by well-educated guesses
-    # TL;DR: Adjust if required/reasonable
+    # TL;DR: Adjust timeouts if required/reasonable
     test_delay_in_seconds = 0.5
     query_time_in_seconds = 20
     join_timeout_in_seconds = 5
