@@ -156,10 +156,26 @@ def test_list_object_sizes(connection):
 
 @pytest.mark.metadata
 def test_list_indices(connection):
-    expected = []
-    actual = connection.meta.list_indices(
-        index_schema_pattern="PYEXASOL%"
-    )
+    expected = [
+        {
+            "INDEX_OWNER": "SYS",
+            "INDEX_SCHEMA": "PYEXASOL_TEST", 
+            "INDEX_TABLE": "PAYMENTS",
+            "INDEX_TYPE": "GLOBAL"
+        }
+    ]
+    actual = [
+        {
+            "INDEX_OWNER": index["INDEX_OWNER"],
+            "INDEX_SCHEMA": index["INDEX_SCHEMA"], 
+            "INDEX_TABLE": index["INDEX_TABLE"],
+            "INDEX_TYPE": index["INDEX_TYPE"]
+        }
+        for index in
+        connection.meta.list_indices(
+            index_schema_pattern="PYEXASOL%"
+        )
+    ]
     assert actual == expected
 
 
