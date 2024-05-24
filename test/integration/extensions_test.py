@@ -91,9 +91,7 @@ class TestExaExtension:
         actual = connection.ext.get_sys_schemas()
         assert expected == actual
 
-    def test_get_disk_space(self, connection):
-        connection.execute("FLUSH STATISTICS TASKS;")
-        connection.commit()
+    def test_get_disk_space(self, flush_statistics, connection):
         expected = {
             'free_size',
             'measure_time',

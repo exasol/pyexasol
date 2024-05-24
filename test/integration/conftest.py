@@ -40,6 +40,12 @@ def connection(dsn, user, password, schema):
     con.close()
 
 
+@pytest.fixture
+def flush_statistics(connection):
+    connection.execute("FLUSH STATISTICS TASKS;")
+    connection.commit()
+
+
 @pytest.fixture(scope='session', autouse=True)
 def prepare_database(dsn, user, password):
     data_directory = Path(__file__).parent / '..' / 'data'
