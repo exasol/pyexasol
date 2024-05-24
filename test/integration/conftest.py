@@ -39,9 +39,11 @@ def connection(dsn, user, password, schema):
     yield con
     con.close()
 
+
 @pytest.fixture
 def flush_statistics(connection):
     connection.execute("FLUSH STATISTICS;")
+    connection.commit()
 
 
 @pytest.fixture(scope='session', autouse=True)
