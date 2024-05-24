@@ -92,7 +92,7 @@ class TestExaExtension:
         assert expected == actual
 
     def test_get_disk_space(self, connection):
-        connection.execute("FLUSH STATISTICS;")
+        connection.execute("FLUSH STATISTICS TASKS;")
         connection.commit()
         expected = {
             'free_size',
