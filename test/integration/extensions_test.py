@@ -91,7 +91,7 @@ class TestExaExtension:
         actual = connection.ext.get_sys_schemas()
         assert expected == actual
 
-    def test_get_disk_space(self, connection):
+    def test_get_disk_space(self, connection, flush_statistics):
         expected = {
             'free_size',
             'measure_time',
