@@ -1,152 +1,94 @@
 import pytest
+import pyexasol
 
 
 @pytest.mark.metadata
-def test_get_columns_without_executing_query(connection):
-    statement = "SELECT a.*, a.user_id + 1 AS next_user_id FROM users a"
-    expected = {
-        "USER_ID": {"type": "DECIMAL", "precision": 18, "scale": 0},
-        "USER_NAME": {"type": "VARCHAR", "size": 255, "characterSet": "UTF8"},
-        "REGISTER_DT": {"type": "DATE", "size": 4},
-        "LAST_VISIT_TS": {"type": "TIMESTAMP", "withLocalTimeZone": False, "size": 8},
-        "IS_FEMALE": {"type": "BOOLEAN"},
-        "USER_RATING": {"type": "DECIMAL", "precision": 10, "scale": 5},
-        "USER_SCORE": {"type": "DOUBLE"},
-        "STATUS": {"type": "VARCHAR", "size": 50, "characterSet": "UTF8"},
-        "NEXT_USER_ID": {"type": "DECIMAL", "precision": 19, "scale": 0},
-    }
-    actual = connection.meta.sql_columns(statement)
-    assert actual == expected
+def test_wss_protocol_version_supports_nosql_metadata(connection):
+    assert connection.protocol_version() >= pyexasol.PROTOCOL_V2
 
 
 @pytest.mark.metadata
-def test_schema_exists_returns_true_if_schema_exists(connection, schema):
+def test_schema_exists(connection, schema):
     assert connection.meta.schema_exists(schema)
 
 
 @pytest.mark.metadata
-def test_schema_exists_returns_false_if_schema_doesnt_exist(connection):
-    schema = "THIS_SCHEMA_SHOULD_NOT_EXIST_____"
+def test_schema_does_not_exist(connection):
+    schema = "ThisSchemaShouldNotExist"
     assert not connection.meta.schema_exists(schema)
 
 
 @pytest.mark.metadata
-def test_table_exits_returns_true_for_existing_table(connection):
-    table = "users"
-    assert connection.meta.table_exists(table)
+def test_table_exists(connection):
+    assert connection.meta.table_exists("users")
 
 
 @pytest.mark.metadata
-def test_table_exits_returns_false_for_non_existing_table(connection):
-    table = "this_talbe_should_not_exist_____"
-    assert not connection.meta.table_exists(table)
+def test_table_does_not_exist(connection):
+    table = "ThisTableShouldNotExist"
+    assert not connection.meta.view_exists(table)
 
 
 @pytest.mark.metadata
-def test_view_exits_returns_true_for_existing_view(connection, view):
+def test_view_exists(connection, view):
     assert connection.meta.view_exists(view)
 
 
 @pytest.mark.metadata
-def test_view_exits_returns_false_for_non_existing_view(connection):
-    view = "this_view_should_not_exist_____"
+def test_view_does_not_exist(connection):
+    view = "ThisViewShouldNotExist"
     assert not connection.meta.view_exists(view)
 
 
 @pytest.mark.metadata
 def test_list_schemas(connection):
-    expected = ["PYEXASOL_TEST"]
-    actual = [schema["SCHEMA_NAME"] for schema in connection.meta.list_schemas()]
+    query = connection.meta.execute_meta_nosql("getSchemas")
+    schemas = query.fetchall()
+    expected = {"EXA_STATISTICS", "PYEXASOL_TEST", "SYS"}
+    actual = {schema["NAME"] for schema in schemas}
     assert actual == expected
 
 
 @pytest.mark.metadata
-def test_list_schemas_with_filter(connection):
-    expected = []
-    actual = [
-        schema["SCHEMA_NAME"]
-        for schema in connection.meta.list_schemas(schema_name_pattern="FOOBAR%")
-    ]
+def test_list_schemas_with_fitler(connection):
+    schemas = connection.meta.execute_meta_nosql(
+        "getSchemas", {"schema": "PYEXASOL%"}
+    ).fetchall()
+    expected = {"PYEXASOL_TEST"}
+    actual = {schema["NAME"] for schema in schemas}
     assert actual == expected
 
 
 @pytest.mark.metadata
-def test_list_tables(connection):
+def test_list_tables_with_filters(connection):
+    schemas = connection.meta.execute_meta_nosql(
+        "getTables", {"schema": "PYEXASOL_TEST"}
+    ).fetchall()
     expected = {"USERS", "PAYMENTS"}
-    actual = {
-        table["TABLE_NAME"]
-        for table in connection.meta.list_tables(table_schema_pattern="PYEXASOL%")
-    }
+    actual = {schema["NAME"] for schema in schemas}
     assert actual == expected
 
 
 @pytest.mark.metadata
-def test_list_views(connection, view):
-    expected = {view}
-    actual = {
-        view["VIEW_NAME"]
-        for view in connection.meta.list_views(view_schema_pattern="PYEXASOL%")
-    }
-    assert actual == expected
-
-
-@pytest.mark.metadata
-def test_list_columns(connection):
-    expected = {"USER_NAME", "USER_ID", "USER_SCORE", "USER_RATING"}
-    actual = {
-        columns["COLUMN_NAME"]
-        for columns in connection.meta.list_columns(
-            column_schema_pattern="PYEXASOL%",
-            column_table_pattern="USERS%",
-            column_name_pattern="%USER%",
-        )
-    }
-    assert actual == expected
-
-
-@pytest.mark.metadata
-def test_list_objects(connection):
-    expected = {"USERS"}
-    actual = {
-        db_object["OBJECT_NAME"]
-        for db_object in connection.meta.list_objects(
-            object_name_pattern="%USER%",
-        )
-    }
-    assert actual == expected
-
-
-@pytest.mark.metadata
-def test_list_object_sizes(connection):
-    expected = [709780]
-    actual = [
-        db_object["MEM_OBJECT_SIZE"]
-        for db_object in connection.meta.list_object_sizes(
-            object_name_pattern="USERS%", object_type_pattern="TABLE"
-        )
-    ]
-    assert actual == expected
-
-
-@pytest.mark.metadata
-def test_list_indices(connection):
-    expected = [
+def test_list_columns_with_filters(connection):
+    query = connection.meta.execute_meta_nosql(
+        "getColumns",
         {
-            "INDEX_OWNER": "SYS",
-            "INDEX_SCHEMA": "PYEXASOL_TEST",
-            "INDEX_TABLE": "PAYMENTS",
-            "INDEX_TYPE": "GLOBAL",
-        }
-    ]
-    actual = [
-        {
-            "INDEX_OWNER": index["INDEX_OWNER"],
-            "INDEX_SCHEMA": index["INDEX_SCHEMA"],
-            "INDEX_TABLE": index["INDEX_TABLE"],
-            "INDEX_TYPE": index["INDEX_TYPE"],
-        }
-        for index in connection.meta.list_indices(index_schema_pattern="PYEXASOL%")
-    ]
+            "schema": "PYEXASOL_TEST",
+            "table": "USERS",
+        },
+    )
+    expected = {
+        ("USER_ID", "DECIMAL(18,0)"),
+        ("USER_NAME", "VARCHAR(255) UTF8"),
+        ("REGISTER_DT", "DATE"),
+        ("LAST_VISIT_TS", "TIMESTAMP"),
+        ("IS_FEMALE", "BOOLEAN"),
+        ("USER_RATING", "DECIMAL(10,5)"),
+        ("USER_SCORE", "DOUBLE"),
+        ("STATUS", "VARCHAR(50) UTF8"),
+    }
+    actual = {(c["NAME"], c["TYPE"]) for c in query.fetchall()}
     assert actual == expected
 
 
