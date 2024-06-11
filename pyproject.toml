@@ -79,5 +79,8 @@ markers = [
     "format: tests related to f-string based statement formatting.",
     "transaction: tests related to transaction management.",
     "exceptions: tests related to exceptions in pyexasol.",
+    "extensions: tests related to pyexasol extensions.",
+    "context_managers: tests related to pyexasol context_managers.",
+    "metadata: tests related to metadata retrieval with pyexasol."
 ]
 
