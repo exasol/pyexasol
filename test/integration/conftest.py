@@ -8,47 +8,63 @@ from pathlib import Path
 import logging
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope="session")
 def dsn():
-    return os.environ.get('EXAHOST', 'localhost:8563')
+    return os.environ.get("EXAHOST", "localhost:8563")
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope="session")
 def user():
-    return os.environ.get('EXAUID', 'SYS')
+    return os.environ.get("EXAUID", "SYS")
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope="session")
 def password():
-    return os.environ.get('EXAPWD', 'exasol')
+    return os.environ.get("EXAPWD", "exasol")
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope="session")
 def schema():
-    return os.environ.get('EXASCHEMA', 'PYEXASOL_TEST')
+    return os.environ.get("EXASCHEMA", "PYEXASOL_TEST")
 
 
 @pytest.fixture
 def connection(dsn, user, password, schema):
-    con = pyexasol.connect(
-        dsn=dsn,
-        user=user,
-        password=password,
-        schema=schema
-    )
+    con = pyexasol.connect(dsn=dsn, user=user, password=password, schema=schema)
     yield con
     con.close()
 
 
-@pytest.fixture(scope='session', autouse=True)
+@pytest.fixture
+def view(connection, faker):
+    name = f"TEST_VIEW_{uuid.uuid4()}"
+    name = name.replace("-", "_").upper()
+    ddl = f"CREATE OR REPLACE VIEW {name} AS SELECT * FROM users;"
+    connection.execute(ddl)
+    connection.commit()
+
+    yield name
+
+    delete_stmt = f"DROP VIEW IF EXISTS {name};"
+    connection.execute(delete_stmt)
+    connection.commit()
+
+
+@pytest.fixture
+def flush_statistics(connection):
+    connection.execute("FLUSH STATISTICS TASKS;")
+    connection.commit()
+
+
+@pytest.fixture(scope="session", autouse=True)
 def prepare_database(dsn, user, password):
-    data_directory = Path(__file__).parent / '..' / 'data'
+    data_directory = Path(__file__).parent / ".." / "data"
     loader = DockerDataLoader(
         dsn=dsn,
         username=user,
         password=password,
-        container_name='db_container_test',
-        data_directory=data_directory
+        container_name="db_container_test",
+        data_directory=data_directory,
     )
     loader.load()
 
@@ -56,14 +72,7 @@ def prepare_database(dsn, user, password):
 class DockerDataLoader:
     """Data loader for docker based Exasol DB"""
 
-    def __init__(
-        self,
-        dsn,
-        username,
-        password,
-        container_name,
-        data_directory
-    ):
+    def __init__(self, dsn, username, password, container_name, data_directory):
         self._logger = logging.getLogger("DockerDataLoader")
         self._dsn = dsn
         self._user = username
@@ -96,7 +105,7 @@ class DockerDataLoader:
             check=True,
             text=True,
             stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE
+            stderr=subprocess.PIPE,
         )
         self._logger.debug("Stderr: %s", result.stderr)
         return result.stdout
@@ -122,13 +131,7 @@ class DockerDataLoader:
 
     def _create_dir(self):
         """Create data directory within the docker container."""
-        mkdir = [
-            "docker",
-            "exec",
-            self._container,
-            "mkdir",
-            self._tmp_dir
-        ]
+        mkdir = ["docker", "exec", self._container, "mkdir", self._tmp_dir]
         stdout = self._execute_command(mkdir)
         self._logger.info("Stdout: %s", stdout)
 
