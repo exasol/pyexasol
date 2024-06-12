@@ -81,6 +81,7 @@ markers = [
     "exceptions: tests related to exceptions in pyexasol.",
     "context_managers: tests related to pyexasol context_managers.",
     "metadata: tests related to metadata retrieval with pyexasol.",
-    "json: tests related to json serialization in pyexasol."
+    "json: tests related to json serialization in pyexasol.",
+    "dbapi2: tests related to dbapi2 compatibility."
 ]
 
