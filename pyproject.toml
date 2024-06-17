@@ -84,6 +84,7 @@ markers = [
     "json: tests related to json serialization in pyexasol.",
     "dbapi2: tests related to dbapi2 compatibility.",
     "configuration: tests related to pyexasol settings and configuration.",
-    "edge_cases: tests related to pyexasol and exasol edge cases scenarios."
+    "edge_cases: tests related to pyexasol and exasol edge cases scenarios.",
+    "tls: tests related to tls."
 ]
 

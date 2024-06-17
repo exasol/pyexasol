@@ -1,8 +1,5 @@
 import pytest
 import pyexasol
-import decimal
-
-from inspect import cleandoc
 
 
 @pytest.fixture
