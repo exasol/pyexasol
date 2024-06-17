@@ -7,6 +7,10 @@
 - Drop support for Exasol 6.x
 - Drop support for Exasol 7.0.x
 
+### Internal
+
+- Relock Dependencies
+
 ## [0.25.2] - 2023-03-14
 
 - Fix deprecation warning by setting SSLContext protocol.
