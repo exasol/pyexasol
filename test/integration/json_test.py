@@ -27,69 +27,16 @@ def connection_factory(dsn, user, password, schema):
 
 
 @pytest.fixture
-def table(connection):
-    name = "edge_case"
-    ddl = cleandoc(
-        f"""CREATE OR REPLACE TABLE {name}
-        (
-            dec36_0         DECIMAL(36,0),
-            dec36_36        DECIMAL(36,36),
-            dbl             DOUBLE,
-            bl              BOOLEAN,
-            dt              DATE,
-            ts              TIMESTAMP,
-            var100          VARCHAR(100),
-            var2000000      VARCHAR(2000000)
-        )
-        """
-    )
+def table(connection, edge_case_ddl):
+    table_name, ddl = edge_case_ddl
     connection.execute(ddl)
     connection.commit()
 
-    yield name
+    yield table_name
 
-    delete_stmt = f"DROP TABLE IF EXISTS {name};"
+    delete_stmt = f"DROP TABLE IF EXISTS {table_name};"
     connection.execute(delete_stmt)
     connection.commit()
-
-
-@pytest.fixture
-def edge_cases():
-    return [
-        # Biggest values
-        {
-            "DEC36_0": decimal.Decimal("+" + ("9" * 36)),
-            "DEC36_36": decimal.Decimal("+0." + ("9" * 36)),
-            "DBL": 1.7e308,
-            "BL": True,
-            "DT": "9999-12-31",
-            "TS": "9999-12-31 23:59:59.999",
-            "VAR100": "ひ" * 100,
-            "VAR2000000": "ひ" * 2000000,
-        },
-        # Smallest values
-        {
-            "DEC36_0": decimal.Decimal("-" + ("9" * 36)),
-            "DEC36_36": decimal.Decimal("-0." + ("9" * 36)),
-            "DBL": -1.7e308,
-            "BL": False,
-            "DT": "0001-01-01",
-            "TS": "0001-01-01 00:00:00",
-            "VAR100": "",
-            "VAR2000000": "ひ",
-        },
-        # All nulls
-        {
-            "DEC36_0": None,
-            "DEC36_36": None,
-            "DBL": None,
-            "BL": None,
-            "DT": None,
-            "TS": None,
-            "VAR100": None,
-            "VAR2000000": None,
-        },
-    ]
 
 
 @pytest.mark.json
@@ -128,9 +75,27 @@ def test_select(table, connection_factory, edge_cases, json_lib):
 
     expected = {
         # Biggest values
-        ("9" * 36, f"0.{'9' * 36}", 1.7e308, True, "9999-12-31", "9999-12-31 23:59:59.999000", "ひ" * 100, 2000000),
+        (
+            "9" * 36,
+            f"0.{'9' * 36}",
+            1.7e308,
+            True,
+            "9999-12-31",
+            "9999-12-31 23:59:59.999000",
+            "ひ" * 100,
+            2000000,
+        ),
         # Smallest values
-        (f"-{'9' * 36}", f"-0.{'9' * 36}", -1.7e308, False, "0001-01-01", "0001-01-01 00:00:00.000000", None, 1),
+        (
+            f"-{'9' * 36}",
+            f"-0.{'9' * 36}",
+            -1.7e308,
+            False,
+            "0001-01-01",
+            "0001-01-01 00:00:00.000000",
+            None,
+            1,
+        ),
         # All nulls
         (None, None, None, None, None, None, None, None),
     }

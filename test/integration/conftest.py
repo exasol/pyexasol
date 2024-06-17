@@ -1,8 +1,10 @@
 import os
 import uuid
 import pytest
+import decimal
 import pyexasol
 import subprocess
+from inspect import cleandoc
 from pathlib import Path
 
 import logging
@@ -30,7 +32,8 @@ def schema():
 
 @pytest.fixture
 def connection(dsn, user, password, schema):
-    con = pyexasol.connect(dsn=dsn, user=user, password=password, schema=schema)
+    con = pyexasol.connect(
+        dsn=dsn, user=user, password=password, schema=schema)
     yield con
     con.close()
 
@@ -67,6 +70,65 @@ def prepare_database(dsn, user, password):
         data_directory=data_directory,
     )
     loader.load()
+
+
+@pytest.fixture
+def edge_case_ddl():
+    table_name = "edge_case"
+    ddl = cleandoc(
+        f"""CREATE OR REPLACE TABLE {table_name}
+        (
+            dec36_0         DECIMAL(36,0),
+            dec36_36        DECIMAL(36,36),
+            dbl             DOUBLE,
+            bl              BOOLEAN,
+            dt              DATE,
+            ts              TIMESTAMP,
+            var100          VARCHAR(100),
+            var2000000      VARCHAR(2000000)
+        )
+        """
+    )
+    yield table_name, ddl
+
+
+@pytest.fixture
+def edge_cases():
+    return [
+        # Biggest values
+        {
+            "DEC36_0": decimal.Decimal("+" + ("9" * 36)),
+            "DEC36_36": decimal.Decimal("+0." + ("9" * 36)),
+            "DBL": 1.7e308,
+            "BL": True,
+            "DT": "9999-12-31",
+            "TS": "9999-12-31 23:59:59.999",
+            "VAR100": "ひ" * 100,
+            "VAR2000000": "ひ" * 2000000,
+        },
+        # Smallest values
+        {
+            "DEC36_0": decimal.Decimal("-" + ("9" * 36)),
+            "DEC36_36": decimal.Decimal("-0." + ("9" * 36)),
+            "DBL": -1.7e308,
+            "BL": False,
+            "DT": "0001-01-01",
+            "TS": "0001-01-01 00:00:00",
+            "VAR100": "",
+            "VAR2000000": "ひ",
+        },
+        # All nulls
+        {
+            "DEC36_0": None,
+            "DEC36_36": None,
+            "DBL": None,
+            "BL": None,
+            "DT": None,
+            "TS": None,
+            "VAR100": None,
+            "VAR2000000": None,
+        },
+    ]
 
 
 class DockerDataLoader:
