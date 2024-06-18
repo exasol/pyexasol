@@ -1,3 +1,4 @@
+import pyexasol
 import pytest
 from inspect import cleandoc
 
@@ -24,6 +25,19 @@ def enable_session_profiling(connection):
 
 
 @pytest.fixture
+def disable_snapshots(connection):
+    query = (
+        "SELECT system_value  FROM EXA_PARAMETERS "
+        "WHERE parameter_name = 'SNAPSHOT_MODE';"
+    )
+    mode = connection.execute(query).fetchval()
+    stmt = "ALTER SYSTEM SET SNAPSHOT_MODE = '{mode}';"
+    connection.execute(stmt.format(mode="OFF"))
+    yield
+    connection.execute(stmt.format(mode=mode))
+
+
+@pytest.fixture
 def query():
     # fmt: off
     yield cleandoc(
@@ -37,6 +51,32 @@ def query():
         """
     )
     # fmt: on
+
+
+@pytest.mark.misc
+def test_snapshot_mode(disable_snapshots, dsn, user, password, schema):
+    query = (
+        "SELECT session_value  FROM EXA_PARAMETERS "
+        "WHERE parameter_name = 'SNAPSHOT_MODE';"
+    )
+
+    with pyexasol.connect(dsn=dsn, user=user, password=password, schema=schema) as con:
+        mode = con.execute(query).fetchval()
+
+    expected = "OFF"
+    actual = mode
+
+    assert actual == expected
+
+    with pyexasol.connect(
+        dsn=dsn, user=user, password=password, schema=schema, snapshot_transactions=True
+    ) as con:
+        mode = con.execute(query).fetchval()
+
+    expected = "SYSTEM TABLES"
+    actual = mode
+
+    assert actual == expected
 
 
 @pytest.mark.misc
