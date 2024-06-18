@@ -70,6 +70,7 @@ requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.pytest.ini_options]
+xfail_strict = true
 markers = [
     "smoke: smoke tests which always should pass.",
     "basic: basic driver tests.",

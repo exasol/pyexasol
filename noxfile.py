@@ -46,6 +46,7 @@ def test_db(session: Session, db_version: str, port: int):
         session.run(
             "itde",
             "spawn-test-environment",
+            "--create-certificate",
             "--environment-name",
             "test",
             "--database-port-forward",

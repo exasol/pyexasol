@@ -1,8 +1,6 @@
-import ssl
 import hashlib
 import pytest
 import pyexasol
-from inspect import cleandoc
 from pyexasol import ExaConnectionFailedError
 
 
@@ -27,7 +25,7 @@ def server_fingerprint(connection):
 
 def _dsn_with_fingerprint(dsn: str, fingerprint: str):
     if ":" in dsn:
-        dsn.replace(":", f"/{fingerprint}:")
+        dsn = dsn.replace(":", f"/{fingerprint}:")
     else:
         dsn = f"{dsn}/{fingerprint}"
     return dsn
@@ -40,15 +38,11 @@ def dsn_with_valid_fingerprint(dsn, server_fingerprint):
 
 @pytest.fixture
 def dsn_with_invalid_fingerprint(dsn):
-    yield _dsn_with_fingerprint(dsn, "123abcfoooBAAAR")
+    yield _dsn_with_fingerprint(dsn, "123abc")
 
 
 @pytest.mark.xfail(
-    reason=cleandoc(
-        """
-        refer to: TBD
-        """
-    )
+    reason="For futher details see: https://github.com/exasol/integration-tasks/issues/512"
 )
 @pytest.mark.tls
 def test_connect_fails_due_to_strict_certificate_validation_by_default():
@@ -73,7 +67,7 @@ def test_connect_with_valid_fingerprint(
     dsn = dsn_with_valid_fingerprint
     expected = 1
     with pyexasol.connect(
-        dsn=dsn, user=user, password=password, schema=schema, encryption=True, websocket_sslopt={'cert_reqs': ssl.CERT_REQUIRED}
+        dsn=dsn, user=user, password=password, schema=schema, encryption=True
     ) as connection:
         actual = connection.execute("SELECT 1;").fetchval()
 
@@ -85,8 +79,10 @@ def test_connect_with_invalid_fingerprint_fails(
     dsn_with_invalid_fingerprint, user, password, schema
 ):
     dsn = dsn_with_invalid_fingerprint
-    #with pytest.raises(ExaConnectionFailedError):
-    pyexasol.connect(
-        dsn=dsn, user=user, password=password, schema=schema, encryption=False, websocket_sslopt={'cert_reqs': ssl.CERT_REQUIRED}
-    )
+    with pytest.raises(ExaConnectionFailedError) as exec_info:
+        pyexasol.connect(
+            dsn=dsn, user=user, password=password, schema=schema, encryption=True
+        )
 
+    expected = "did not match server fingerprint"
+    assert expected in str(exec_info.value)
