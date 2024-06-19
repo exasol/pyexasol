@@ -83,6 +83,7 @@ markers = [
     "metadata: tests related to metadata retrieval with pyexasol.",
     "json: tests related to json serialization in pyexasol.",
     "dbapi2: tests related to dbapi2 compatibility.",
-    "configuration: tests related to pyexasol settings and configuration."
+    "configuration: tests related to pyexasol settings and configuration.",
+    "udf: tests related to user defined functions."
 ]
 
