@@ -32,8 +32,7 @@ def schema():
 
 @pytest.fixture
 def connection(dsn, user, password, schema):
-    con = pyexasol.connect(
-        dsn=dsn, user=user, password=password, schema=schema)
+    con = pyexasol.connect(dsn=dsn, user=user, password=password, schema=schema)
     yield con
     con.close()
 
@@ -94,9 +93,8 @@ def edge_case_ddl():
 
 @pytest.fixture
 def edge_cases():
-    return [
-        # Biggest values
-        {
+    return {
+        "Biggest-Values": {
             "DEC36_0": decimal.Decimal("+" + ("9" * 36)),
             "DEC36_36": decimal.Decimal("+0." + ("9" * 36)),
             "DBL": 1.7e308,
@@ -106,8 +104,7 @@ def edge_cases():
             "VAR100": "ひ" * 100,
             "VAR2000000": "ひ" * 2000000,
         },
-        # Smallest values
-        {
+        "Smallest-Values": {
             "DEC36_0": decimal.Decimal("-" + ("9" * 36)),
             "DEC36_36": decimal.Decimal("-0." + ("9" * 36)),
             "DBL": -1.7e308,
@@ -117,8 +114,7 @@ def edge_cases():
             "VAR100": "",
             "VAR2000000": "ひ",
         },
-        # All nulls
-        {
+        "All-Nulls": {
             "DEC36_0": None,
             "DEC36_36": None,
             "DBL": None,
@@ -128,7 +124,7 @@ def edge_cases():
             "VAR100": None,
             "VAR2000000": None,
         },
-    ]
+    }
 
 
 class DockerDataLoader:

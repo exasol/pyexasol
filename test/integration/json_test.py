@@ -44,7 +44,7 @@ def test_insert(table, connection_factory, edge_cases, json_lib):
         "INSERT INTO edge_case VALUES"
         "({DEC36_0!d}, {DEC36_36!d}, {DBL!f}, {BL}, {DT}, {TS}, {VAR100}, {VAR2000000})"
     )
-    for edge_case in edge_cases:
+    for edge_case in edge_cases.values():
         connection.execute(insert_stmt, edge_case)
 
     expected = len(edge_cases)
@@ -62,7 +62,7 @@ def test_select(table, connection_factory, edge_cases, json_lib):
         "INSERT INTO edge_case VALUES"
         "({DEC36_0!d}, {DEC36_36!d}, {DBL!f}, {BL}, {DT}, {TS}, {VAR100}, {VAR2000000})"
     )
-    for edge_case in edge_cases:
+    for edge_case in edge_cases.values():
         connection.execute(insert_stmt, edge_case)
 
     select_stmt = (
