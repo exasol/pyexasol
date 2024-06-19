@@ -31,7 +31,7 @@ def edge_case_table(connection, table, edge_cases):
 @pytest.mark.edge_case
 def test_insert(connection, table, edge_cases):
     stmt = (
-        "INSERT INTO edge_case VALUES ({DEC36_0!d}, {DEC36_36!d}, {DBL!f}, "
+        f"INSERT INTO {table} VALUES ({{DEC36_0!d}}, {{DEC36_36!d}}, {{DBL!f}}, "
         "{BL}, {DT}, {TS}, {VAR100}, {VAR2000000})"
     )
     for case in edge_cases:
