@@ -24,7 +24,7 @@ def connection_factory(dsn, user, password, schema):
 
 
 @pytest.fixture
-def table(connection, edge_case_ddl):
+def empty_table(connection, edge_case_ddl):
     table_name, ddl = edge_case_ddl
     connection.execute(ddl)
     connection.commit()
@@ -38,7 +38,7 @@ def table(connection, edge_case_ddl):
 
 @pytest.mark.json
 @pytest.mark.parametrize("json_lib", ["orjson", "ujson", "rapidjson"])
-def test_insert(table, connection_factory, edge_cases, json_lib):
+def test_insert(empty_table, connection_factory, edge_cases, json_lib):
     connection = connection_factory(json_lib)
     insert_stmt = (
         "INSERT INTO edge_case VALUES"
@@ -48,14 +48,14 @@ def test_insert(table, connection_factory, edge_cases, json_lib):
         connection.execute(insert_stmt, edge_case)
 
     expected = len(edge_cases)
-    actual = connection.execute(f"SELECT COUNT(*) FROM {table};").fetchval()
+    actual = connection.execute(f"SELECT COUNT(*) FROM {empty_table};").fetchval()
 
     assert actual == expected
 
 
 @pytest.mark.json
 @pytest.mark.parametrize("json_lib", ["orjson", "ujson", "rapidjson"])
-def test_select(table, connection_factory, edge_cases, json_lib):
+def test_select(empty_table, connection_factory, edge_cases, json_lib):
     connection = connection_factory(json_lib)
 
     insert_stmt = (
