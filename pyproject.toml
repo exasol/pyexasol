@@ -70,6 +70,7 @@ requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.pytest.ini_options]
+xfail_strict = true
 markers = [
     "smoke: smoke tests which always should pass.",
     "basic: basic driver tests.",
@@ -84,6 +85,9 @@ markers = [
     "json: tests related to json serialization in pyexasol.",
     "dbapi2: tests related to dbapi2 compatibility.",
     "configuration: tests related to pyexasol settings and configuration.",
-    "udf: tests related to user defined functions."
+    "edge_cases: tests related to pyexasol and exasol edge cases scenarios.",
+    "tls: tests related to tls.",
+    "udf: tests related to user defined functions.",
+    "misc: miscellaneous tests which did not fit in the other categories."
 ]
 
