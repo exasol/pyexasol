@@ -4,15 +4,21 @@ from inspect import cleandoc
 
 
 @pytest.fixture
-def connection(dsn, user, password, schema):
+def logging_address():
+    # 172.17.0.1 is an IP address of docker host in Linux
+    yield ("172.17.0.1", 8580)
+
+
+@pytest.fixture
+def connection(dsn, user, password, schema, logging_address):
+    _, port = logging_address
     con = pyexasol.connect(
         dsn=dsn,
         user=user,
         password=password,
         schema=schema,
-        # 172.17.0.1 is an IP address of docker host in Linux
-        udf_output_bind_address=("", 8580),
-        udf_output_connect_address=("172.17.0.1", 8580),
+        udf_output_bind_address=("", port),
+        udf_output_connect_address=logging_address,
     )
 
     yield con
@@ -21,17 +27,23 @@ def connection(dsn, user, password, schema):
 
 
 @pytest.fixture
-def echo(connection):
+def echo(connection, logging_address):
     name = "ECHO"
+    ip, port = logging_address
     udf = cleandoc(
         f"""
         --/
-        CREATE OR REPLACE PYTHON3 SCALAR SCRIPT {name}(text VARCHAR(2000)) RETURNS VARCHAR(2000) AS
-        def run(ctx):
-          import sys
-          print(ctx.text)
-          sys.stdout.flush()
-          return ctx.text
+        CREATE OR REPLACE LUA SCALAR SCRIPT {name}(text VARCHAR(2000))
+            RETURNS VARCHAR(2000) AS
+
+        function run(ctx)
+            local socket = require("socket")
+            local tcp_socket = socket.tcp()
+            local ok, err = tcp_socket:connect("{ip}", {port})
+            tcp_socket:send(ctx.text)
+            tcp_socket:shutdown()
+            return ctx.text
+        end
         /
         """
     )
@@ -57,7 +69,7 @@ def test_udf_output(connection, echo):
     result, log = echo(text)
 
     expected_result = text
-    expected_log = f"LOG: {text}\n"
+    expected_log = f"LOG: {text}"
 
     actual_result = result
     actual_log = log

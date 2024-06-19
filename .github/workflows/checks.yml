@@ -8,9 +8,7 @@ jobs:
 
   unit-tests:
     name: Unit Tests
-    # For all containers with versions 7.1.x and older versions 8.y.z of docker-db,
-    # there will be a crash if UDFs (User Defined Functions) are utilized.
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     strategy:
       fail-fast: true
       matrix:
@@ -34,9 +32,7 @@ jobs:
 
   integration-tests:
     name: Integration Tests
-    # For all containers with versions 7.1.x and older versions 8.y.z of docker-db,
-    # there will be a crash if UDFs (User Defined Functions) are utilized.
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     strategy:
       fail-fast: true
       matrix:
