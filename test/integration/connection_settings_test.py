@@ -67,7 +67,7 @@ def test_export_camel_case_table_with_quote_ident(
 ):
     connection = connection_with_quote_indent
     df = connection.export_to_pandas("camelCaseTable")
-    expected = {"camelCaseColun!": {0: 1, 1: 2, 2: 3}}
+    expected = {"camelCaseColumn!": {0: 1, 1: 2, 2: 3}}
     actual = df.to_dict()
     assert actual == expected
 
