@@ -13,7 +13,7 @@ def connection_with_quote_indent(dsn, user, password, schema):
 @pytest.fixture
 def empty_camel_case_table(connection):
     table_name = "camelCaseTable"
-    column_name = "camelCaseColun!"
+    column_name = "camelCaseColumn!"
     ddl = cleandoc(
         f"""
         CREATE OR REPLACE TABLE "{table_name}"
