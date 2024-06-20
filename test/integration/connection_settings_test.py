@@ -5,9 +5,11 @@ from inspect import cleandoc
 
 @pytest.fixture
 def connection_with_quote_indent(dsn, user, password, schema):
-    yield pyexasol.connect(
+    connection = pyexasol.connect(
         dsn=dsn, user=user, password=password, schema=schema, quote_ident=True
     )
+    yield connection
+    connection.close()
 
 
 @pytest.fixture
