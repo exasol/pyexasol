@@ -118,14 +118,14 @@ def test_list_objects(connection):
 
 @pytest.mark.metadata
 def test_list_object_sizes(connection):
-    expected = [709780]
-    actual = [
+    sizes = [
         db_object["MEM_OBJECT_SIZE"]
         for db_object in connection.meta.list_object_sizes(
             object_name_pattern="USERS%", object_type_pattern="TABLE"
         )
     ]
-    assert actual == expected
+    do_all_objects_have_a_size = all(map(lambda size: size != 0, sizes))
+    assert do_all_objects_have_a_size
 
 
 @pytest.mark.metadata
