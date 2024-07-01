@@ -51,7 +51,7 @@ packaging = "*"
 # Once this issue has been resolved, we should remove this explicit dependency.
 # Ultimately, the dependency should be properly managed by pandas itself.
 numpy = { version = ">1.26.0,<2", optional = true }
-pandas = { version = "*", optional = true, extras = ["numpy"] }
+pandas = { version = "^2", optional = true, extras = ["numpy"] }
 ujson = { version = "*", optional = true }
 python-rapidjson = { version = "*", optional = true }
 orjson = { version = ">=3.6", optional = true }
