@@ -29,7 +29,7 @@ def poplulate_edge_case_table(connection, empty_table, edge_cases):
     yield table
 
 
-@pytest.mark.edge_case
+@pytest.mark.edge_cases
 def test_insert(connection, empty_table, edge_cases):
     stmt = (
         f"INSERT INTO {empty_table} VALUES ({{DEC36_0!d}}, {{DEC36_36!d}}, {{DBL!f}}, "
@@ -44,7 +44,7 @@ def test_insert(connection, empty_table, edge_cases):
     assert actual == expected
 
 
-@pytest.mark.edge_case
+@pytest.mark.edge_cases
 def test_select_and_fetch(connection, edge_cases, poplulate_edge_case_table):
     query = (
         "SELECT DEC36_0, DEC36_36, DBL, BL, DT, TS, VAR100, "
@@ -59,7 +59,7 @@ def test_select_and_fetch(connection, edge_cases, poplulate_edge_case_table):
     assert actual == expected
 
 
-@pytest.mark.edge_case
+@pytest.mark.edge_cases
 def test_very_long_query(connection, edge_cases):
     query = (
         "SELECT {VAL1} AS VAL1, {VAL2} AS VAL2, "
