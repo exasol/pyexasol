@@ -46,10 +46,8 @@ pyopenssl = "*"
 rsa = "*"
 packaging = "*"
 # Currently, it is necessary to pin numpy explicitly.
-# At present, our requirement is numpy != 2.0.0.
 # For additional details, refer to: https://github.com/numpy/numpy/issues/26710
-# Once this issue has been resolved, we should remove this explicit dependency.
-# Ultimately, the dependency should be properly managed by pandas itself.
+# Once this issue has been resolved, we should be able remove this explicit dependency.
 numpy = { version = ">1.26.0,<2", optional = true }
 pandas = { version = "^2", optional = true, extras = ["numpy"] }
 ujson = { version = "*", optional = true }
