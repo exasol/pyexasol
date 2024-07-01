@@ -45,13 +45,20 @@ websocket-client = ">=1.0.1"
 pyopenssl = "*"
 rsa = "*"
 packaging = "*"
-pandas = { version = "*", optional = true }
+# Currently, it is necessary to pin numpy explicitly.
+# At present, our requirement is numpy != 2.0.0.
+# For additional details, refer to: https://github.com/numpy/numpy/issues/26710
+# Once this issue has been resolved, we should remove this explicit dependency.
+# Ultimately, the dependency should be properly managed by pandas itself.
+numpy = { version = "!=2.0.0", optional = true }
+pandas = { version = "*", optional = true, extras = ["numpy"] }
 ujson = { version = "*", optional = true }
 python-rapidjson = { version = "*", optional = true }
 orjson = { version = ">=3.6", optional = true }
 pproxy = { version = "*", optional = true }
 
 [tool.poetry.extras]
+numpy = ["numpy"]
 pandas = ["pandas"]
 ujson = ["ujson"]
 rapidjson = ["python-rapidjson"]
@@ -92,4 +99,6 @@ markers = [
     "pandas: tests related to support of pandas library.",
     "misc: miscellaneous tests which did not fit in the other categories."
 ]
-
+filterwarnings = [
+    "ignore:numpy.dtype size changed, may indicate binary incompatibility. Expected 96 from C header, got 88 from PyObject ValueError"
+]
