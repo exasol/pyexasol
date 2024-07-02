@@ -97,6 +97,3 @@ markers = [
     "pandas: tests related to support of pandas library.",
     "misc: miscellaneous tests which did not fit in the other categories."
 ]
-filterwarnings = [
-    "ignore:numpy.dtype size changed, may indicate binary incompatibility. Expected 96 from C header, got 88 from PyObject ValueError"
-]
