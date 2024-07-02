@@ -1,15 +1,25 @@
 ## DB-API 2.0 compatibility
 
-PyEXASOL [public interface](/docs/REFERENCE.md) is similar to [PEP-249 DB-API 2.0](https://www.python.org/dev/peps/pep-0249/) specification, but it does not strictly follow it. This page explains the reasons behind this decision and your alternatives.
+PyEXASOL [public interface](/docs/REFERENCE.md) is similar to [PEP-249 DB-API 2.0](https://www.python.org/dev/peps/pep-0249/) specification, but it does not strictly follow it. This page explains the reasons behind this decision and your alternative(s) if you need or want to use a dbabpi2 compatible driver..
 
 ### Alternatives
 
-```python
-from exasol.driver.websocket import dbapi2
+#### Exasol WebSocket Driver
+The `pyexasol` package includes a DBAPI2 compatible driver facade, located in the `exasol.driver` package. However, using pyexasol directly will generally yield better performance when utilizing Exasol in an OLAP manner, which is likely the typical use case. 
 
-dbapi2.connect(...)
+That said, in specific scenarios, the DBAPI2 API can be advantageous or even necessary. This is particularly true when integrating with "DB-Agnostic" frameworks. In such cases, you can just import and use the DBAPI2 compliant facade as illustrated in the example below.
+
+```python
+from exasol.driver.websocket.dbapi2 import connect
+
+connection = connect(dsn='', username='sys', password='exasol', schema='TEST')
+
+with connection.cursor() as cursor:
+    cursor.execute("SELECT 1;")
 ```
-If you absolutely need DB-API 2.0 compatibility, you may use [TurbODBC](https://github.com/blue-yonder/turbodbc) instead.
+
+#### TurboODBC
+[TurboODBC](https://github.com/blue-yonder/turbodbc) offers an alternative ODBC-based, DBAPI2-compatible driver, which supports the Exasol database.
 
 ### Rationale
 
@@ -73,32 +83,3 @@ Replace with:
 C.export_to_pandas('SELECT * FROM table')
 ```
 etc.
-
-## DB-API 2.0 wrapper
-
-In order to make it easier to start using PyEXASOL, simple DB-API 2.0 wrapper is provided. It works for `SELECT` statements without placeholders. Please see the example:
-
-```python
-# Import "wrapped" version of PyEXASOL module
-import pyexasol.db2 as E
-
-C = E.connect(dsn=config.dsn, user=config.user, password=config.password, schema=config.schema)
-
-# Cursor
-cur = C.cursor()
-cur.execute("SELECT * FROM users ORDER BY user_id LIMIT 5")
-
-# Standard .description and .rowcount attributes
-print(cur.description)
-print(cur.rowcount)
-
-# Standard fetching
-while True:
-    row = cur.fetchone()
-
-    if row is None:
-        break
-
-    print(row)
-
-```
