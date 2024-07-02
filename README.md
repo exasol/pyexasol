@@ -54,7 +54,7 @@ PyEXASOL provides API to read & write multiple data streams in parallel using se
 ## System requirements
 
 - Exasol >= 7.1
-- Python >= 3.8
+- Python >= 3.9
 
 
 ## Getting started

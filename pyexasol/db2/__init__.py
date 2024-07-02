@@ -8,16 +8,29 @@ It is highly recommended to switch to native interface before any production usa
 There is no "paramstyle" and no proper error handling
 """
 
+from warnings import warn
+from inspect import cleandoc
 from ..connection import ExaConnection
+from ..warnings import PyexasolDeprecationWarning
 
-apilevel = '2.0'
+warn(
+    cleandoc(
+        """
+        This module is deprecated and will be removed in the future.
+        If you require a dbapi2 compliant driver, please use the dbapi2 compliant driver facade available in the `exasol.driver.websocket` package.
+        """
+    ),
+    PyexasolDeprecationWarning,
+)
+
+apilevel = "2.0"
 threadsafety = 1
 paramstyle = None
 
 
 def connect(**kwargs):
-    if 'autocommit' not in kwargs:
-        kwargs['autocommit'] = False
+    if "autocommit" not in kwargs:
+        kwargs["autocommit"] = False
 
     return DB2Connection(**kwargs)
 
@@ -66,15 +79,17 @@ class DB2Cursor(object):
         cols = []
 
         for k, v in self.stmt.columns().items():
-            cols.append((
-                k,
-                v.get('type', None),
-                v.get('size', None),
-                v.get('size', None),
-                v.get('precision', None),
-                v.get('scale', None),
-                True
-            ))
+            cols.append(
+                (
+                    k,
+                    v.get("type", None),
+                    v.get("size", None),
+                    v.get("size", None),
+                    v.get("precision", None),
+                    v.get("scale", None),
+                    True,
+                )
+            )
 
         return cols
 
