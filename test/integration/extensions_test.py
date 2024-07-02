@@ -112,8 +112,8 @@ class TestExaExtension:
         expected = {
             'user_id': 'int64',
             'user_name': 'category',
-            'register_dt': 'datetime64[ns]',
-            'last_visit_ts': 'datetime64[ns]',
+            'register_dt': 'object',
+            'last_visit_ts': 'object',
             'is_female': 'category',
             'user_rating': 'float64',
             'user_score': 'float64',

@@ -40,18 +40,23 @@ keywords = [
 
 
 [tool.poetry.dependencies]
-python = "^3.8"
+python = "^3.9"
 websocket-client = ">=1.0.1"
 pyopenssl = "*"
 rsa = "*"
 packaging = "*"
-pandas = { version = "*", optional = true }
+# Currently, it is necessary to pin numpy explicitly.
+# For additional details, refer to: https://github.com/numpy/numpy/issues/26710
+# Once this issue has been resolved, we should be able remove this explicit dependency.
+numpy = { version = ">1.26.0,<2", optional = true }
+pandas = { version = "^2", optional = true, extras = ["numpy"] }
 ujson = { version = "*", optional = true }
 python-rapidjson = { version = "*", optional = true }
 orjson = { version = ">=3.6", optional = true }
 pproxy = { version = "*", optional = true }
 
 [tool.poetry.extras]
+numpy = ["numpy"]
 pandas = ["pandas"]
 ujson = ["ujson"]
 rapidjson = ["python-rapidjson"]
@@ -80,6 +85,7 @@ markers = [
     "format: tests related to f-string based statement formatting.",
     "transaction: tests related to transaction management.",
     "exceptions: tests related to exceptions in pyexasol.",
+    "extensions: tests related to pyexasol extensions.",
     "context_managers: tests related to pyexasol context_managers.",
     "metadata: tests related to metadata retrieval with pyexasol.",
     "json: tests related to json serialization in pyexasol.",
@@ -91,4 +97,3 @@ markers = [
     "pandas: tests related to support of pandas library.",
     "misc: miscellaneous tests which did not fit in the other categories."
 ]
-

@@ -6,6 +6,7 @@
 - Drop support for python 3.7
 - Drop support for Exasol 6.x
 - Drop support for Exasol 7.0.x
+- Relock dependencies (Internal)
 
 ## [0.25.2] - 2023-03-14
 
