@@ -1,7 +1,14 @@
 ## DB-API 2.0 compatibility
 
-PyEXASOL [public interface](/docs/REFERENCE.md) is similar to [PEP-249 DB-API 2.0](https://www.python.org/dev/peps/pep-0249/) specification, but it does not strictly follow it. This page explains the reasons behind this decision.
+PyEXASOL [public interface](/docs/REFERENCE.md) is similar to [PEP-249 DB-API 2.0](https://www.python.org/dev/peps/pep-0249/) specification, but it does not strictly follow it. This page explains the reasons behind this decision and your alternatives.
 
+### Alternatives
+
+```python
+from exasol.driver.websocket import dbapi2
+
+dbapi2.connect(...)
+```
 If you absolutely need DB-API 2.0 compatibility, you may use [TurbODBC](https://github.com/blue-yonder/turbodbc) instead.
 
 ### Rationale

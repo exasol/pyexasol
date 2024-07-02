@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 
+- Add dbapi2 compliant driver interface `exasol.driver.websocket` ontop of pyexasol
 - Switch packaging and project workflows to poetry
 - Drop support for python 3.7
 - Drop support for Exasol 6.x
