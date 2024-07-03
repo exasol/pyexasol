@@ -1,5 +1,5 @@
 """
-This module provides contains `PEP-249`_ compliant DBAPI exceptions.
+This module provides `PEP-249`_ compliant DBAPI exceptions.
 (see also `PEP-249-exceptions`_)
 
 .. _PEP-249-exceptions: https://peps.python.org/pep-0249/#exceptions
