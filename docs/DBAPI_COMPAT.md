@@ -21,6 +21,9 @@ with connection.cursor() as cursor:
 #### TurboODBC
 [TurboODBC](https://github.com/blue-yonder/turbodbc) offers an alternative ODBC-based, DBAPI2-compatible driver, which supports the Exasol database.
 
+#### Pyodbc
+[Pyodbc](https://github.com/mkleehammer/pyodbc) provides an ODBC-based, DBAPI2-compatible driver. For further details, please refer to our [wiki](https://github.com/mkleehammer/pyodbc/wiki).
+
 ### Rationale
 
 PEP-249 was originally created for general purpose OLTP row store databases running on single server: SQLite, MySQL, PostgreSQL, MSSQL, Oracle, etc.
