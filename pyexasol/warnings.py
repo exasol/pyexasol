@@ -1,5 +1,5 @@
 class PyexasolWarning(UserWarning):
-    """Base class for all warnings emited by pyexasol."""
+    """Base class for all warnings emitted by pyexasol."""
 
 
 class PyexasolDeprecationWarning(PyexasolWarning, DeprecationWarning):
