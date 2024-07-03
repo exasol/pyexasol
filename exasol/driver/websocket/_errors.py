@@ -14,7 +14,7 @@ class Warning(Exception):  # Required by spec. pylint: disable=W0622
 
 class Error(Exception):
     """
-    Exception that is the base class of all other error exceptions.
+    Base class of all other error exceptions.
     You can use this to catch all errors with one single except statement.
     Warnings are not considered errors and thus should not use this class as base.
     """
