@@ -7,7 +7,8 @@ description = "Exasol python driver with extra features"
 
 packages = [
     { include = "pyexasol" },
-    { include = "pyexasol_utils" }
+    { include = "pyexasol_utils" },
+    { include = "exasol" }
 ]
 authors = [
     "Vitaly Markov <wild.desu@gmail.com>",
