@@ -43,11 +43,6 @@ def data(faker):
 
 
 @pytest.fixture
-def swaped_data(data):
-    yield [(lastname, firstname) for firstname, lastname in data]
-
-
-@pytest.fixture
 def table(connection, empty_table, data):
     name = empty_table
     stmt = "INSERT INTO {table} VALUES ({{col1}}, {{col2}});"

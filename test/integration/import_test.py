@@ -57,7 +57,7 @@ def csv_file(tmp_path, data):
 
 
 @pytest.mark.etl
-def test_import_with_custom_csv_format(connection, empty_table, csv_file, data):
+def test_import_csv(connection, empty_table, csv_file, data):
     connection.import_from_file(csv_file, empty_table)
     result = connection.execute(f"SELECT * FROM {empty_table};")
 

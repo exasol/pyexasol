@@ -49,29 +49,26 @@ def import_table(connection, table):
 
 @pytest.mark.etl
 @pytest.mark.parametrize(
-    "params,expected",
+    "params",
     [
-        ({}, []),
-        ({"format": "gz"}, []),
-        ({"encoding": "WINDOWS-1251"}, []),
-        ({"columns": ["register_dt", "user_id", "status", "user_name"]}, []),
-        (
-            {
-                "csv_cols": [
-                    "1",
-                    "2",
-                    "3 FORMAT='DD-MM-YYYY'",
-                    "4..6",
-                    "7 FORMAT='999.99999'",
-                    "8",
-                ]
-            },
-            [],
-        ),
+        {},
+        {"format": "gz"},
+        {"encoding": "WINDOWS-1251"},
+        {"columns": ["register_dt", "user_id", "status", "user_name"]},
+        {
+            "csv_cols": [
+                "1",
+                "2",
+                "3 FORMAT='DD-MM-YYYY'",
+                "4..6",
+                "7 FORMAT='999.99999'",
+                "8",
+            ]
+        },
     ],
 )
 def test_export_import_round_trip_to_and_from_file(
-    connection, export_file, table, import_table, params, expected
+    connection, export_file, table, import_table, params
 ):
     connection.export_to_file(export_file, table, export_params=params)
     connection.import_from_file(export_file, import_table, import_params=params)
