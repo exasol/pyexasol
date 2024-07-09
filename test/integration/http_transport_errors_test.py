@@ -52,13 +52,8 @@ def test_error_in_export_callback(connection, statement):
     def export_cb(pipe, dst, **kwargs):
         raise Exception(error_msg)
 
-    with pytest.raises(Exception) as exec_info:
+    with pytest.raises(Exception, matches=error_msg):
         connection.export_to_callback(export_cb, None, statement)
-
-    expected = error_msg
-    actual = f"{exec_info.value}"
-
-    assert actual == expected
 
 
 @pytest.mark.etl
