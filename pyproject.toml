@@ -101,5 +101,6 @@ markers = [
     "tls: tests related to tls.",
     "udf: tests related to user defined functions.",
     "pandas: tests related to support of pandas library.",
+    "etl: etl related tests, export, load (import) and transform data.",
     "misc: miscellaneous tests which did not fit in the other categories."
 ]
