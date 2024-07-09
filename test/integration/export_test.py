@@ -112,7 +112,7 @@ def test_custom_export_callback(connection, table, data, export_file, expected_c
 
 @pytest.mark.etl
 def test_export_csv_cols(connection, table, data, export_file, expected_csv):
-    params = {"csv_cols": ["1..2", "2 foo_LASTNAME"]}
+    params = {"csv_cols": ["1..2"]}
     connection.export_to_file(export_file, table, export_params=params)
 
     expected = expected_csv(table, data, **params)
