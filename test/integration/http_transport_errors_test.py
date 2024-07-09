@@ -52,7 +52,7 @@ def test_error_in_export_callback(connection, statement):
     def export_cb(pipe, dst, **kwargs):
         raise Exception(error_msg)
 
-    with pytest.raises(Exception, matches=error_msg):
+    with pytest.raises(Exception, match=error_msg):
         connection.export_to_callback(export_cb, None, statement)
 
 
