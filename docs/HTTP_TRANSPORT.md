@@ -6,7 +6,7 @@ This is a powerful tool which helps to bypass creation of intermediate Python ob
 
 PyEXASOL offloads HTTP communication and decompression to separate thread using [threading](https://docs.python.org/3/library/threading.html) module. Main thread deals with a simple [pipe](https://docs.python.org/3/library/os.html#os.pipe) opened in binary mode.
 
-You may specify a custom `callback` function to read or write from raw pipe and to apply complex logic. Use `callback_params` to pass additional parameters to `callback` function (e.g. options for pandas).
+You may specify a custom `callback` function to read or write from raw pipe and to apply complex logic. Use `callback_params` to pass additional parameters to `callback` function (e.g. options for pandas or polars).
 
 You may also specify `import_params` or `export_params` to alter `IMPORT` or `EXPORT` query and modify CSV data stream.
 
@@ -28,6 +28,24 @@ Import data from `pandas.DataFrame` into Exasol table. You may use `callback_par
 
 ```python
 C.import_from_pandas(pd, "users")
+```
+
+## Export from Exasol to polars
+Export data from Exasol into `polars.DataFrame`. You may use `callback_param` argument to pass custom options for polars [`read_csv`](https://docs.pola.rs/api/python/stable/reference/api/polars.read_csv.html) function.
+
+```python
+# Read from SQL
+df = C.export_to_polars("SELECT * FROM users")
+
+# Read from table
+df = C.export_to_polars("users")
+```
+
+## Import from polars to Exasol
+Import data from `polars.DataFrame` or `polars.LazyFrame` into Exasol table. You may use `callback_param` argument to pass custom options for polars [`write_csv`](https://docs.pola.rs/api/python/stable/reference/api/polars.DataFrame.write_csv.html) function.
+
+```python
+C.import_from_polars(df, "users")
 ```
 
 ## Import from list (a-la INSERT)
@@ -85,19 +103,19 @@ C.export_to_file(sys.stdout.buffer, "users")
 Please refer to Exasol User Manual to know more about `IMPORT` / `EXPORT` parameters.
 
 ### import_params
-| Name | Example | Description |
-| --- | --- | --- |
-| `column_separator` | `,` | Column separator for CSV |
-| `column_delimiter` | `"` | Column delimiter for CSV (quotting) |
-| `columns` | `['id', 'name']` | List of table columns in data source, useful if column order of data source does not match column order of Exasol table |
+| Name | Example | Description                                                                                                                                                                                                  |
+| --- | --- |--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `column_separator` | `,` | Column separator for CSV                                                                                                                                                                                     |
+| `column_delimiter` | `"` | Column delimiter for CSV (quotting)                                                                                                                                                                          |
+| `columns` | `['id', 'name']` | List of table columns in data source, useful if column order of data source does not match column order of Exasol table                                                                                      |
 | `csv_cols` | `["1..5", "6 FORMAT='999.99'", "8"]` | List of CSV columns with optional [numeric](https://docs.exasol.com/sql_references/formatmodels.htm#NumericFormat) or [date](https://docs.exasol.com/sql_references/formatmodels.htm#DateTimeFormat) formats |
-| `row_separator` | `LF` | Row separator for CSV (line-endings) |
-| `encoding` | `UTF8` | File encoding |
-| `with_column_names` | `True` | Add column names as first line, useful for Pandas |
-| `null` | `\N` | Custom `NULL` value |
-| `delimit` | `AUTO` | Delimiter mode: `AUTO`, `ALWAYS`, `NEVER` |
-| `format` | `gz` | Import file or stream compressed with `gz`, `bzip2`, `zip` |
-| `comment` | `This is a query description` | Add a comment before the beginning of the query |
+| `row_separator` | `LF` | Row separator for CSV (line-endings)                                                                                                                                                                         |
+| `encoding` | `UTF8` | File encoding                                                                                                                                                                                                |
+| `with_column_names` | `True` | Add column names as first line, useful for Pandas and Polars                                                                                                                                                 |
+| `null` | `\N` | Custom `NULL` value                                                                                                                                                                                          |
+| `delimit` | `AUTO` | Delimiter mode: `AUTO`, `ALWAYS`, `NEVER`                                                                                                                                                                    |
+| `format` | `gz` | Import file or stream compressed with `gz`, `bzip2`, `zip`                                                                                                                                                   |
+| `comment` | `This is a query description` | Add a comment before the beginning of the query                                                                                                                                                              |
 
 ### export_params
 | Name | Example | Description |
@@ -160,4 +178,17 @@ def import_from_pandas(pipe, src, **kwargs):
 
 # Run IMPORT using defined callback function
 C.export_from_callback(import_from_pandas, df, 'my_table')
+```
+
+Example of callback importing from Polars into Exasol.
+
+```python
+df = <polars.DataFrame>
+
+def import_from_polars(pipe, src, **kwargs):
+    wrapped_pipe = io.TextIOWrapper(pipe, newline='\n')
+    return src.write_csv(wrapped_pipe, include_header=False, date_format="%Y-%m-%d", datetime_format="%Y-%m-%d %H:%M:%S%.f", **kwargs)
+
+# Run IMPORT using defined callback function
+C.export_from_callback(import_from_polars, df, 'my_table')
 ```

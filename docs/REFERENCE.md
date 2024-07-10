@@ -17,11 +17,13 @@ This page contains complete reference of PyEXASOL public API.
   - [export_to_file()](#export_to_file)
   - [export_to_list()](#export_to_list)
   - [export_to_pandas()](#export_to_pandas)
+  - [export_to_polars()](#export_to_polars)
   - [export_to_callback()](#export_to_callback)
   - [export_parallel()](#export_parallel)
   - [import_from_file()](#import_from_file)
   - [import_from_iterable()](#import_from_iterable)
   - [import_from_pandas()](#import_from_pandas)
+  - [import_from_polars()](#import_from_polars)
   - [import_from_callback()](#import_from_callback)
   - [import_parallel()](#import_parallel)
   - [get_nodes()](#get_nodes)
@@ -236,6 +238,17 @@ Export large amount of data from Exasol to `pandas.DataFrame`. This function may
 
 Return instance of `pandas.DataFrame`
 
+### export_to_polars()
+Export large amount of data from Exasol to `polars.DataFrame`. This function may run out of memory.
+
+| Argument | Example | Description |
+| --- | --- | --- |
+| `query_or_table` | `SELECT * FROM table` `table` `(schema, table)` | SQL query or table for export |
+| `query_params` | `{'table': 'users', 'col1':'bar'}` | (optional) Values for SQL query placeholders |
+| `export_params` | `{'encoding': 'LATIN1'}` | (optional) Custom parameters for EXPORT query |
+
+Return instance of `polars.DataFrame`
+
 ### export_to_callback()
 Export large amount of data to user-defined callback function
 
@@ -287,6 +300,15 @@ Import large amount of data from `pandas.DataFrame` to Exasol.
 | `src` | `[(123, 'a')]` | Source `pandas.DataFrame` instance |
 | `table` | `my_table` `(my_schema, my_table)` | Destination table for IMPORT |
 | `import_params` | `{'column_separator: ','}` | (optional) Custom parameters for IMPORT query |
+
+### import_from_polars()
+Import large amount of data from `polars.DataFrame` or `polars.LazyFrame` to Exasol.
+
+| Argument | Example | Description                                             |
+| --- | --- |---------------------------------------------------------|
+| `src` | `[(123, 'a')]` | Source `polars.DataFrame` or `polars.LazyFrame` instance |
+| `table` | `my_table` `(my_schema, my_table)` | Destination table for IMPORT                            |
+| `import_params` | `{'column_separator: ','}` | (optional) Custom parameters for IMPORT query           |
 
 ### import_from_callback()
 Import large amount of data from user-defined callback function to Exasol.
@@ -699,7 +721,7 @@ print(C.ext.get_disk_space_usage())
 
 INSERT small number of rows into table using prepared statement. It provides better performance for **small data sets of 10,000 rows or less** compared to [`import_from_iterable()`](#import_from_iterable).
 
-Please use [`import_from_iterable()`](#import_from_iterable) for larger data sets and better memory efficiency. Please use [`import_from_pandas()`](#import_from_pandas) to import from data frame regardless of its size.
+Please use [`import_from_iterable()`](#import_from_iterable) for larger data sets and better memory efficiency. Please use [`import_from_pandas()`](#import_from_pandas) or [`import_from_polars()`](#import_from_polars)  to import from data frame regardless of its size.
 
 You may use `columns` argument to specify custom order of columns for insertion. If some columns are not included in this list, NULL or DEFAULT value will be used instead.
 

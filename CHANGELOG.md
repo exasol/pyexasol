@@ -1,6 +1,7 @@
 # Changelog
 
 ## [Unreleased]
+- Added polars support
 
 ## [0.26.0] - 2024-07-04
 

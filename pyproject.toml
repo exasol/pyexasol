@@ -56,6 +56,7 @@ packaging = "*"
 # Once this issue has been resolved, we should be able remove this explicit dependency.
 numpy = { version = ">1.26.0,<2", optional = true }
 pandas = { version = "^2", optional = true, extras = ["numpy"] }
+polars = { version = "^1", optional = true }
 ujson = { version = "*", optional = true }
 python-rapidjson = { version = "*", optional = true }
 orjson = { version = ">=3.6", optional = true }
@@ -64,6 +65,7 @@ pproxy = { version = "*", optional = true }
 [tool.poetry.extras]
 numpy = ["numpy"]
 pandas = ["pandas"]
+polars = ["polars"]
 ujson = ["ujson"]
 rapidjson = ["python-rapidjson"]
 orjson = ["orjson"]
@@ -101,6 +103,7 @@ markers = [
     "tls: tests related to tls.",
     "udf: tests related to user defined functions.",
     "pandas: tests related to support of pandas library.",
+    "polars: tests related to support of polars library.",
     "etl: etl related tests, export, load (import) and transform data.",
     "misc: miscellaneous tests which did not fit in the other categories."
 ]

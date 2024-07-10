@@ -39,6 +39,8 @@ python examples/a01_basic.py
 - [b04_parallel_import.py](/examples/b04_parallel_import.py) - multi-process HTTP transport for IMPORT;
 - [b05_parallel_export_import.py](/examples/b05_parallel_export_import.py) - multi-process HTTP transport for EXPORT followed by IMPORT;
 - [b06_http_transport_errors](/examples/b06_http_transport_errors.py) - various ways to break HTTP transport and handle errors;
+- [b07_polars.py](/examples/b07_polars.py) - IMPORT / EXPORT to and from `polars.DataFrame`;
+
 
 ## Examples of misc functions
 

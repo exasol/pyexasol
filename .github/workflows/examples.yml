@@ -57,6 +57,7 @@ jobs:
           poetry run python examples/b04_parallel_import.py
           poetry run python examples/b05_parallel_export_import.py
           poetry run python examples/b06_http_transport_errors.py
+          poetry run python examples/b07_polars.py
           poetry run python examples/c01_redundancy.py
           poetry run python examples/c02_edge_case.py
           poetry run python examples/c03_db2_compat.py

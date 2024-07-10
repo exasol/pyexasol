@@ -19,7 +19,7 @@
 
 PyEXASOL is the officially supported Python connector for [Exasol](https://www.exasol.com). It helps to handle massive volumes of data commonly associated with this DBMS.
 
-You may expect significant performance improvement over ODBC in a single process scenario involving pandas.
+You may expect significant performance improvement over ODBC in a single process scenario involving pandas or polars.
 
 PyEXASOL provides API to read & write multiple data streams in parallel using separate processes, which is necessary to fully utilize hardware and achieve linear scalability. With PyEXASOL you are no longer limited to a single CPU core.
 
@@ -47,7 +47,7 @@ PyEXASOL provides API to read & write multiple data streams in parallel using se
 
 - Based on [WebSocket protocol](https://github.com/exasol/websocket-api);
 - Optimized for minimum overhead;
-- Easy integration with pandas via HTTP transport;
+- Easy integration with pandas and polars via HTTP transport;
 - Compression to reduce network bottleneck;
 
 

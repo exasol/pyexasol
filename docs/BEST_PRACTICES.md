@@ -18,9 +18,11 @@ For large data sets you should always consider [HTTP transport](/docs/HTTP_TRANS
 
 ```python
 pd = C.export_to_pandas('SELECT * FROM table')
+df = C.export_to_polars('SELECT * FROM table')
 C.export_to_file('my_file.csv', 'SELECT * FROM table')
 
 C.import_from_pandas(pd, 'table')
+C.import_from_polars(df, 'table')
 C.import_from_file('my_file.csv', 'table')
 ```
 

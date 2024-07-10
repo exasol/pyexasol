@@ -278,6 +278,14 @@ class ExaConnection(object):
 
         return self.export_to_callback(cb.export_to_pandas, None, query_or_table, query_params, callback_params, export_params)
 
+    def export_to_polars(self, query_or_table, query_params=None, callback_params=None, export_params=None):
+        if not export_params:
+            export_params = {}
+
+        export_params['with_column_names'] = True
+
+        return self.export_to_callback(cb.export_to_polars, None, query_or_table, query_params, callback_params, export_params)
+
     def import_from_file(self, src, table, import_params=None):
         return self.import_from_callback(cb.import_from_file, src, table, None, import_params)
 
@@ -286,6 +294,9 @@ class ExaConnection(object):
 
     def import_from_pandas(self, src, table, callback_params=None, import_params=None):
         return self.import_from_callback(cb.import_from_pandas, src, table, callback_params, import_params)
+
+    def import_from_polars(self, src, table, callback_params=None, import_params=None):
+        return self.import_from_callback(cb.import_from_polars, src, table, callback_params, import_params)
 
     def export_to_callback(self, callback, dst, query_or_table, query_params=None, callback_params=None, export_params=None):
         if not callable(callback):
