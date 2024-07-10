@@ -83,7 +83,8 @@ def test_export_sql_result_to_polars(connection):
         ("Mrs. Teresa Ryan", 2),
         ("Tommy Henderson", 3),
         ("Jessica Christian", 4),
-    ], schema=["USER_NAME", "USER_ID"])
+    ], schema=["USER_NAME", "USER_ID"]
+     , orient='row')
     actual = connection.export_to_polars(query)
 
     assert actual.equals(expected)

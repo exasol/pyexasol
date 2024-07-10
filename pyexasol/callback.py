@@ -48,7 +48,8 @@ def export_to_polars(pipe, dst, **kwargs):
     Custom params for "read_csv" may be passed in **kwargs
     """
     import polars
-    return polars.read_csv(pipe, try_parse_dates=True, **kwargs)
+    wrapped_pipe = io.TextIOWrapper(pipe, newline='\n', encoding='utf-8')
+    return polars.read_csv(wrapped_pipe, **kwargs)
 
 
 def export_to_file(pipe, dst):
@@ -107,7 +108,8 @@ def import_from_polars(pipe, src, **kwargs):
     elif not isinstance(src, polars.DataFrame):
         raise ValueError('Data source is not polars.DataFrame or polars.LazyFrame')
 
-    return src.write_csv(include_header=False, date_format="%Y-%m-%d", datetime_format="%Y-%m-%d %H:%M:%S%.f", **kwargs)
+    wrapped_pipe = io.TextIOWrapper(pipe, newline='\n', encoding='utf-8')
+    return src.write_csv(wrapped_pipe, include_header=False, date_format="%Y-%m-%d", datetime_format="%Y-%m-%d %H:%M:%S%.f", **kwargs)
 
 
 def import_from_file(pipe, src):
