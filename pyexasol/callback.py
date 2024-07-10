@@ -107,9 +107,7 @@ def import_from_polars(pipe, src, **kwargs):
     elif not isinstance(src, polars.DataFrame):
         raise ValueError('Data source is not polars.DataFrame or polars.LazyFrame')
 
-    wrapped_pipe = io.TextIOWrapper(pipe, newline='\n', encoding='utf-8')
-
-    return src.write_csv(wrapped_pipe, include_header=False, date_format="%Y-%m-%d", datetime_format="%Y-%m-%d %H:%M:%S%.f", **kwargs)
+    return src.write_csv(include_header=False, date_format="%Y-%m-%d", datetime_format="%Y-%m-%d %H:%M:%S%.f", **kwargs)
 
 
 def import_from_file(pipe, src):
