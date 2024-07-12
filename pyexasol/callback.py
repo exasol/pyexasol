@@ -48,8 +48,7 @@ def export_to_polars(pipe, dst, **kwargs):
     Custom params for "read_csv" may be passed in **kwargs
     """
     import polars
-    wrapped_pipe = io.BufferedReader(pipe)
-    return polars.read_csv(wrapped_pipe, **kwargs)
+    return polars.read_csv(pipe, **kwargs)
 
 
 def export_to_file(pipe, dst):
