@@ -48,7 +48,7 @@ def export_to_polars(pipe, dst, **kwargs):
     Custom params for "read_csv" may be passed in **kwargs
     """
     import polars
-    wrapped_pipe = io.TextIOWrapper(pipe, newline='\n', encoding='utf-8')
+    wrapped_pipe = io.BytesIO(pipe)
     return polars.read_csv(wrapped_pipe, **kwargs)
 
 
@@ -69,7 +69,7 @@ def import_from_iterable(pipe, src, **kwargs):
     if not hasattr(src, '__iter__'):
         raise ValueError('Data source is not iterable')
 
-    wrapped_pipe = io.TextIOWrapper(pipe, newline='\n', encoding='utf-8')
+    wrapped_pipe = io.BytesIO(pipe, newline='\n', encoding='utf-8')
     writer = csv.writer(wrapped_pipe, lineterminator='\n', quoting=csv.QUOTE_NONNUMERIC, **kwargs)
 
     for row in src:
@@ -108,7 +108,7 @@ def import_from_polars(pipe, src, **kwargs):
     elif not isinstance(src, polars.DataFrame):
         raise ValueError('Data source is not polars.DataFrame or polars.LazyFrame')
 
-    wrapped_pipe = io.TextIOWrapper(pipe, newline='\n', encoding='utf-8')
+    wrapped_pipe = io.BytesIO(pipe)
     return src.write_csv(wrapped_pipe, include_header=False, date_format="%Y-%m-%d", datetime_format="%Y-%m-%d %H:%M:%S%.f", **kwargs)
 
 
