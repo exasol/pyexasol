@@ -338,8 +338,8 @@ class ExaTCPServer(socketserver.TCPServer):
 
         r_fd, w_fd = os.pipe()
 
-        self.read_pipe = os.fdopen(r_fd, 'rb', 0)
-        self.write_pipe = os.fdopen(w_fd, 'wb', 0)
+        self.read_pipe = os.fdopen(r_fd, 'rb', 0, closefd=False)
+        self.write_pipe = os.fdopen(w_fd, 'wb', 0, closefd=False)
 
         # GET method calls (IMPORT) require extra protection
         #
