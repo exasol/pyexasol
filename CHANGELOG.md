@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- Relocked dependencies (Internal)
+
 ## [0.26.0] - 2024-07-04
 
 - Added dbapi2 compliant driver interface `exasol.driver.websocket` ontop of pyexasol
