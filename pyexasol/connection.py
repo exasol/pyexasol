@@ -31,7 +31,7 @@ from .script_output import ExaScriptOutputProcess
 from .version import __version__
 
 
-class ResolvedHost(NamedTuple):
+class Host(NamedTuple):
     """This represents a resolved host name with its IP address and port number."""
     hostname: str
     ip_address: str
@@ -740,7 +740,7 @@ class ExaConnection(object):
 
         return attributes
 
-    def _process_dsn(self, dsn: str) -> list[ResolvedHost]:
+    def _process_dsn(self, dsn: str) -> list[Host]:
         """
         Parse DSN, expand ranges and resolve IP addresses for all hostnames
         Return list of (hostname, ip_address, port) tuples in random order
@@ -804,7 +804,7 @@ class ExaConnection(object):
 
         return result
 
-    def _resolve_hostname(self, hostname: str, port: int, fingerprint: Optional[str]) -> list[ResolvedHost]:
+    def _resolve_hostname(self, hostname: str, port: int, fingerprint: Optional[str]) -> list[Host]:
         """
         Resolve all IP addresses for hostname and add port
         It also implicitly checks that all hostnames mentioned in DSN can be resolved
@@ -815,7 +815,7 @@ class ExaConnection(object):
             raise ExaConnectionDsnError(self, f'Could not resolve IP address of hostname [{hostname}] '
                                               f'derived from connection string') from ex
 
-        return [ResolvedHost(hostname, ipaddr, port, fingerprint) for ipaddr in ipaddr_list]
+        return [Host(hostname, ipaddr, port, fingerprint) for ipaddr in ipaddr_list]
 
     def _validate_fingerprint(self, provided_fingerprint):
         server_fingerprint = hashlib.sha256(self._ws.sock.getpeercert(True)).hexdigest().upper()

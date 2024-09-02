@@ -3,7 +3,7 @@ import pytest
 from unittest import mock
 
 from pyexasol.exceptions import ExaConnectionDsnError
-from pyexasol.connection import ResolvedHost
+from pyexasol.connection import Host
 
 # pylint: disable=protected-access/W0212
 
@@ -37,12 +37,12 @@ def test_process_dsn_without_port(connection):
     with mock.patch("socket.gethostbyname_ex") as get_hostname:
         get_hostname.side_effect = [("host1", [], ["ip1"])]
         actual = connection._process_dsn("host1")
-    expected = [ResolvedHost("host1", "ip1", 8563, None)]
+    expected = [Host("host1", "ip1", 8563, None)]
     assert actual == expected
 
 def test_process_dsn_with_fingerprint(connection):
     with mock.patch("socket.gethostbyname_ex") as get_hostname:
         get_hostname.side_effect = [("host1", [], ["ip1"])]
         actual = connection._process_dsn("host1/135a1d2dce102de866f58267521f4232153545a075dc85f8f7596f57e588a181:1234")
-    expected = [ResolvedHost("host1", "ip1", 1234, "135A1D2DCE102DE866F58267521F4232153545A075DC85F8F7596F57E588A181")]
+    expected = [Host("host1", "ip1", 1234, "135A1D2DCE102DE866F58267521F4232153545A075DC85F8F7596F57E588A181")]
     assert actual == expected
