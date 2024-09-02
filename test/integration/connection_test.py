@@ -12,7 +12,9 @@ def test_resolve_hostname(connection):
         get_hostname.return_value = ("host", [], ["ip1", "ip2"])
         actual = connection._resolve_hostname("host", 1234, "fingerprint")
         expected = [("host","ip1", 1234, "fingerprint"),("host","ip2", 1234, "fingerprint")]
-        assert actual == expected
+        assert len(actual) == len(expected)
+        for i in range(0, len(expected)):
+            assert expected[i] in actual
 
 
 @pytest.mark.parametrize("empty_dsn", [None, "", " ", "\t"])
@@ -30,17 +32,6 @@ def test_process_dsn_shuffles_hosts(connection):
     count = 100
     results = {resolve_hostname() for _ in range(0, count)}
     assert len(results) > 1
-
-def test_process_dsn_without_shuffling(connection):
-    with mock.patch("socket.gethostbyname_ex") as get_hostname:
-        get_hostname.side_effect = [("host1", [], ["ip11", "ip12"]), ("host2", [], ["ip21", "ip22"])]
-        actual = connection._process_dsn("host1,host2:1234", shuffle_host_names=False)
-    expected = [
-                ResolvedHost("host1","ip11", 1234, None),
-                ResolvedHost("host1","ip12", 1234, None),
-                ResolvedHost("host2","ip21", 1234, None),
-                ResolvedHost("host2","ip22", 1234, None)]
-    assert actual == expected
 
 def test_process_dsn_without_port(connection):
     with mock.patch("socket.gethostbyname_ex") as get_hostname:

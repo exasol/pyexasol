@@ -737,7 +737,7 @@ class ExaConnection(object):
 
         return attributes
 
-    def _process_dsn(self, dsn: str, shuffle_host_names: bool=True) -> list[ResolvedHost]:
+    def _process_dsn(self, dsn: str) -> list[ResolvedHost]:
         """
         Parse DSN, expand ranges and resolve IP addresses for all hostnames
         Return list of (hostname, ip_address, port) tuples in random order
@@ -797,8 +797,7 @@ class ExaConnection(object):
             else:
                 result.extend(self._resolve_hostname(m.group('hostname_prefix'), current_port, current_fingerprint))
 
-        if shuffle_host_names:
-            random.shuffle(result)
+        random.shuffle(result)
 
         return result
 
