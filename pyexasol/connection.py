@@ -80,6 +80,7 @@ class ExaConnection(object):
             , udf_output_connect_address=None
             , udf_output_dir=None
             , http_proxy=None
+            , resolve_hostnames=True
             , client_name=None
             , client_version=None
             , client_os_username=None
@@ -115,6 +116,7 @@ class ExaConnection(object):
         :param udf_output_connect_address: Specific SCRIPT_OUTPUT_ADDRESS value to connect from Exasol to UDF script output server (default: inherited from TCP server)
         :param udf_output_dir: Directory to store captured UDF script output logs, split by <session_id>_<statement_id>/<vm_num>
         :param http_proxy: HTTP proxy string in Linux http_proxy format (default: None)
+        :param resolve_hostnames: Explicitly resolve host names to IP addresses before connecting. Deactivating this will let the operating system resolve the host name (default: True)
         :param client_name: Custom name of client application displayed in Exasol sessions tables (Default: PyEXASOL)
         :param client_version: Custom version of client application (Default: pyexasol.__version__)
         :param client_os_username: Custom OS username displayed in Exasol sessions table (Default: getpass.getuser())
@@ -155,6 +157,7 @@ class ExaConnection(object):
             'udf_output_dir': udf_output_dir,
 
             'http_proxy': http_proxy,
+            'resolve_hostnames': resolve_hostnames,
 
             'client_name': client_name,
             'client_version': client_version,
@@ -663,19 +666,9 @@ class ExaConnection(object):
         """
         dsn_items = self._process_dsn(self.options['dsn'])
         failed_attempts = 0
-
-        ws_prefix = 'wss://' if self.options['encryption'] else 'ws://'
-        ws_options = self._get_ws_options()
-
         for hostname, ipaddr, port, fingerprint in dsn_items:
-            self.logger.debug(f"Connection attempt [{ipaddr}:{port}]")
-
-            # Use correct hostname matching IP address for each connection attempt
-            if self.options['encryption']:
-                ws_options['sslopt']['server_hostname'] = hostname
-
             try:
-                self._ws = websocket.create_connection(f'{ws_prefix}{ipaddr}:{port}', **ws_options)
+                self._ws = self._create_websocket_connection(hostname, ipaddr, port)
             except Exception as e:
                 self.logger.debug(f'Failed to connect [{ipaddr}:{port}]: {e}')
 
@@ -696,6 +689,19 @@ class ExaConnection(object):
                     self._validate_fingerprint(fingerprint)
 
                 return
+
+    def _create_websocket_connection(self, hostname:str, ipaddr:str, port:int) -> websocket.WebSocket:
+        ws_prefix = 'wss://' if self.options['encryption'] else 'ws://'
+        ws_options = self._get_ws_options()
+        if self.options["resolve_hostnames"]:
+            # Use correct hostname matching IP address for each connection attempt
+            if self.options['encryption']:
+                ws_options['sslopt']['server_hostname'] = hostname
+            self.logger.debug(f"Connection attempt [{ipaddr}:{port}]")
+            return websocket.create_connection(f'{ws_prefix}{ipaddr}:{port}', **ws_options)
+        else:
+            self.logger.debug(f"Connection attempt [{hostname}:{port}]")
+            return websocket.create_connection(f'{ws_prefix}{hostname}:{port}', **ws_options)
 
     def _get_ws_options(self):
         options = {
