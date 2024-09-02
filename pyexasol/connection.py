@@ -16,6 +16,7 @@ import zlib
 
 from . import callback as cb
 
+from typing import (NamedTuple, Optional)
 from .exceptions import *
 from .statement import ExaStatement
 from .logger import ExaLogger
@@ -26,6 +27,13 @@ from .meta import ExaMetaData
 from .script_output import ExaScriptOutputProcess
 from .version import __version__
 
+
+class ResolvedHost(NamedTuple):
+    """This represents a resolved host name with its IP address and port number."""
+    hostname: str
+    ip_address: str
+    port: int
+    fingerprint: Optional[str]
 
 class ExaConnection(object):
     cls_statement = ExaStatement
@@ -671,7 +679,7 @@ class ExaConnection(object):
                 failed_attempts += 1
 
                 if failed_attempts == len(dsn_items):
-                    raise ExaConnectionFailedError(self, 'Could not connect to Exasol: ' + str(e))
+                    raise ExaConnectionFailedError(self, 'Could not connect to Exasol: ' + str(e)) from e
             else:
                 self._ws.settimeout(self.options['socket_timeout'])
 
@@ -729,13 +737,13 @@ class ExaConnection(object):
 
         return attributes
 
-    def _process_dsn(self, dsn):
+    def _process_dsn(self, dsn: str, shuffle_host_names: bool=True) -> list[ResolvedHost]:
         """
         Parse DSN, expand ranges and resolve IP addresses for all hostnames
         Return list of (hostname, ip_address, port) tuples in random order
         Randomness is required to guarantee proper distribution of workload across all nodes
         """
-        if len(dsn.strip()) == 0:
+        if dsn is None or len(dsn.strip()) == 0:
             raise ExaConnectionDsnError(self, 'Connection string is empty')
 
         current_port = constant.DEFAULT_PORT
@@ -789,22 +797,23 @@ class ExaConnection(object):
             else:
                 result.extend(self._resolve_hostname(m.group('hostname_prefix'), current_port, current_fingerprint))
 
-        random.shuffle(result)
+        if shuffle_host_names:
+            random.shuffle(result)
 
         return result
 
-    def _resolve_hostname(self, hostname, port, fingerprint):
+    def _resolve_hostname(self, hostname: str, port: int, fingerprint: Optional[str]) -> list[ResolvedHost]:
         """
         Resolve all IP addresses for hostname and add port
         It also implicitly checks that all hostnames mentioned in DSN can be resolved
         """
         try:
-            hostname, alias_list, ipaddr_list = socket.gethostbyname_ex(hostname)
-        except OSError:
+            hostname, _, ipaddr_list = socket.gethostbyname_ex(hostname)
+        except OSError as ex:
             raise ExaConnectionDsnError(self, f'Could not resolve IP address of hostname [{hostname}] '
-                                              f'derived from connection string')
+                                              f'derived from connection string') from ex
 
-        return [(hostname, ipaddr, port, fingerprint) for ipaddr in ipaddr_list]
+        return [ResolvedHost(hostname, ipaddr, port, fingerprint) for ipaddr in ipaddr_list]
 
     def _validate_fingerprint(self, provided_fingerprint):
         server_fingerprint = hashlib.sha256(self._ws.sock.getpeercert(True)).hexdigest().upper()
