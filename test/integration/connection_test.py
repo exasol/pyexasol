@@ -24,13 +24,13 @@ def test_process_empty_dsn_fails(connection, empty_dsn):
 
 def test_process_dsn_shuffles_hosts(connection):
     dsn = "host1:1234,host2:4321"
-    def resolve_hostname():
+    def resolve_hostname(con):
         with mock.patch("socket.gethostbyname_ex") as get_hostname:
             get_hostname.side_effect = [("host1", [], ["ip11", "ip12"]), ("host2", [], ["ip21", "ip22"]),
                                         ("host1", [], ["ip11", "ip12"]), ("host2", [], ["ip21", "ip22"])]
-            return tuple(connection._process_dsn(dsn))
+            return tuple(con._process_dsn(dsn))
     count = 100
-    results = {resolve_hostname() for _ in range(0, count)}
+    results = {resolve_hostname(connection) for _ in range(0, count)}
     assert len(results) > 1
 
 def test_process_dsn_without_port(connection):

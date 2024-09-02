@@ -16,7 +16,10 @@ import zlib
 
 from . import callback as cb
 
-from typing import (NamedTuple, Optional)
+from typing import (
+    NamedTuple,
+    Optional
+)
 from .exceptions import *
 from .statement import ExaStatement
 from .logger import ExaLogger
