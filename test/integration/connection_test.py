@@ -97,6 +97,13 @@ def test_init_ws_connects_without_encryption(connection_mock):
     connection_mock.init_ws()
     connection_mock.assert_websocket_created("ws://ip1:8563", timeout=10, skip_utf8_validation=True, enable_multithread=True)
 
+def test_init_ws_connects_without_encryption_via_hostname(connection_mock):
+    connection_mock.connection.options["encryption"] = False
+    connection_mock.connection.options["resolve_hostnames"] = False
+    connection_mock.simulate_resolve_hostname("localhost", ["ip1"])
+    connection_mock.init_ws()
+    connection_mock.assert_websocket_created("ws://localhost:8563", timeout=10, skip_utf8_validation=True, enable_multithread=True)
+
 def test_init_ws_connects_via_hostname(connection_mock):
     connection_mock.connection.options["resolve_hostnames"] = False
     connection_mock.simulate_resolve_hostname("localhost", ["ip1"])

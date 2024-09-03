@@ -691,17 +691,23 @@ class ExaConnection(object):
                 return
 
     def _create_websocket_connection(self, hostname:str, ipaddr:str, port:int) -> websocket.WebSocket:
-        ws_prefix = 'wss://' if self.options['encryption'] else 'ws://'
         ws_options = self._get_ws_options()
-        if self.options["resolve_hostnames"]:
-            # Use correct hostname matching IP address for each connection attempt
-            if self.options['encryption']:
-                ws_options['sslopt']['server_hostname'] = hostname
-            self.logger.debug(f"Connection attempt [{ipaddr}:{port}]")
-            return websocket.create_connection(f'{ws_prefix}{ipaddr}:{port}', **ws_options)
+        # Use correct hostname matching IP address for each connection attempt
+        if self.options['encryption'] and self.options["resolve_hostnames"]:
+            ws_options['sslopt']['server_hostname'] = hostname
+
+        connection_string = self._get_websocket_connection_string(hostname, ipaddr, port)
+        self.logger.debug(f"Connection attempt {connection_string}")
+        return websocket.create_connection(connection_string, **ws_options)
+
+
+    def _get_websocket_connection_string(self, hostname:str, ipaddr:str, port:int) -> str:
+        host = ipaddr if self.options["resolve_hostnames"] else hostname
+        if self.options["encryption"]:
+            return f"wss://{host}:{port}"
         else:
-            self.logger.debug(f"Connection attempt [{hostname}:{port}]")
-            return websocket.create_connection(f'{ws_prefix}{hostname}:{port}', **ws_options)
+            return f"ws://{host}:{port}"
+
 
     def _get_ws_options(self):
         options = {
