@@ -13,6 +13,14 @@ def connection(dsn, user, password, schema):
 
 
 @pytest.fixture
+def connection_without_resolving_hostnames(dsn, user, password, schema):
+    with pyexasol.connect(
+        dsn=dsn, user=user, password=password, schema=schema, compression=True, resolve_hostnames=False
+    ) as con:
+        yield con
+
+
+@pytest.fixture
 def table_name():
     yield "CLIENT_NAMES"
 
@@ -60,6 +68,17 @@ def csv_file(tmp_path, data):
 def test_import_csv(connection, empty_table, csv_file, data):
     connection.import_from_file(csv_file, empty_table)
     result = connection.execute(f"SELECT * FROM {empty_table};")
+
+    expected = set(data)
+    actual = set(result.fetchall())
+
+    assert actual == expected
+
+
+@pytest.mark.etl
+def test_import_without_resolving_hostname(connection_without_resolving_hostnames, empty_table, csv_file, data):
+    connection_without_resolving_hostnames.import_from_file(csv_file, empty_table)
+    result = connection_without_resolving_hostnames.execute(f"SELECT * FROM {empty_table};")
 
     expected = set(data)
     actual = set(result.fetchall())
