@@ -817,9 +817,9 @@ class ExaConnection(object):
         """
         try:
             hostname, _, ipaddr_list = socket.gethostbyname_ex(hostname)
-        except OSError as ex:
+        except OSError as e:
             raise ExaConnectionDsnError(self, f'Could not resolve IP address of hostname [{hostname}] '
-                                              f'derived from connection string') from ex
+                                              f'derived from connection string') from e
 
         return [Host(hostname, ipaddr, port, fingerprint) for ipaddr in ipaddr_list]
 

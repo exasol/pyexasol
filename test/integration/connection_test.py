@@ -74,7 +74,7 @@ def test_process_dsn_shuffles_hosts(connection_mock):
     results = {resolve_hostname(connection_mock) for _ in range(0, count)}
     assert len(results) > 1
 
-def test_process_dsn_without_port(connection_mock):
+def test_process_dsn_with_fallback_to_default_port(connection_mock):
     connection_mock.simulate_resolve_hostname("host1", ["ip1"])
     actual = connection_mock.process_dsn("host1")
     expected = [Host("host1", "ip1", 8563, None)]
