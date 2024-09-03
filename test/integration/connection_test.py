@@ -67,8 +67,7 @@ def test_process_empty_dsn_fails(connection_mock, empty_dsn):
 def test_process_dsn_shuffles_hosts(connection_mock):
     dsn = "host1:1234,host2:4321"
     def resolve_hostname(con):
-        connection_mock.simulate_resolve_hostnames([("host1", [], ["ip11", "ip12"]), ("host2", [], ["ip21", "ip22"]),
-                                                    ("host1", [], ["ip11", "ip12"]), ("host2", [], ["ip21", "ip22"])])
+        connection_mock.simulate_resolve_hostnames([("host1", [], ["ip11", "ip12"]), ("host2", [], ["ip21", "ip22"])])
         return tuple(con.process_dsn(dsn))
     count = 100
     results = {resolve_hostname(connection_mock) for _ in range(0, count)}
