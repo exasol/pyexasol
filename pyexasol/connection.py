@@ -16,6 +16,10 @@ import zlib
 
 from . import callback as cb
 
+from typing import (
+    NamedTuple,
+    Optional
+)
 from .exceptions import *
 from .statement import ExaStatement
 from .logger import ExaLogger
@@ -26,6 +30,13 @@ from .meta import ExaMetaData
 from .script_output import ExaScriptOutputProcess
 from .version import __version__
 
+
+class Host(NamedTuple):
+    """This represents a resolved host name with its IP address and port number."""
+    hostname: str
+    ip_address: Optional[str]
+    port: int
+    fingerprint: Optional[str]
 
 class ExaConnection(object):
     cls_statement = ExaStatement
@@ -69,6 +80,7 @@ class ExaConnection(object):
             , udf_output_connect_address=None
             , udf_output_dir=None
             , http_proxy=None
+            , resolve_hostnames=True
             , client_name=None
             , client_version=None
             , client_os_username=None
@@ -104,6 +116,7 @@ class ExaConnection(object):
         :param udf_output_connect_address: Specific SCRIPT_OUTPUT_ADDRESS value to connect from Exasol to UDF script output server (default: inherited from TCP server)
         :param udf_output_dir: Directory to store captured UDF script output logs, split by <session_id>_<statement_id>/<vm_num>
         :param http_proxy: HTTP proxy string in Linux http_proxy format (default: None)
+        :param resolve_hostnames: Explicitly resolve host names to IP addresses before connecting. Deactivating this will let the operating system resolve the host name (default: True)
         :param client_name: Custom name of client application displayed in Exasol sessions tables (Default: PyEXASOL)
         :param client_version: Custom version of client application (Default: pyexasol.__version__)
         :param client_os_username: Custom OS username displayed in Exasol sessions table (Default: getpass.getuser())
@@ -144,6 +157,7 @@ class ExaConnection(object):
             'udf_output_dir': udf_output_dir,
 
             'http_proxy': http_proxy,
+            'resolve_hostnames': resolve_hostnames,
 
             'client_name': client_name,
             'client_version': client_version,
@@ -652,30 +666,17 @@ class ExaConnection(object):
         """
         dsn_items = self._process_dsn(self.options['dsn'])
         failed_attempts = 0
-
-        ws_prefix = 'wss://' if self.options['encryption'] else 'ws://'
-        ws_options = self._get_ws_options()
-
         for hostname, ipaddr, port, fingerprint in dsn_items:
-            self.logger.debug(f"Connection attempt [{ipaddr}:{port}]")
-
-            # Use correct hostname matching IP address for each connection attempt
-            if self.options['encryption']:
-                ws_options['sslopt']['server_hostname'] = hostname
-
             try:
-                self._ws = websocket.create_connection(f'{ws_prefix}{ipaddr}:{port}', **ws_options)
+                self._ws = self._create_websocket_connection(hostname, ipaddr, port)
             except Exception as e:
-                self.logger.debug(f'Failed to connect [{ipaddr}:{port}]: {e}')
-
                 failed_attempts += 1
-
                 if failed_attempts == len(dsn_items):
-                    raise ExaConnectionFailedError(self, 'Could not connect to Exasol: ' + str(e))
+                    raise ExaConnectionFailedError(self, 'Could not connect to Exasol: ' + str(e)) from e
             else:
                 self._ws.settimeout(self.options['socket_timeout'])
 
-                self.ws_ipaddr = ipaddr
+                self.ws_ipaddr = ipaddr or hostname
                 self.ws_port = port
 
                 self._ws_send = self._ws.send
@@ -685,6 +686,32 @@ class ExaConnection(object):
                     self._validate_fingerprint(fingerprint)
 
                 return
+
+    def _create_websocket_connection(self, hostname:str, ipaddr:str, port:int) -> websocket.WebSocket:
+        ws_options = self._get_ws_options()
+        # Use correct hostname matching IP address for each connection attempt
+        if self.options['encryption'] and self.options["resolve_hostnames"]:
+            ws_options['sslopt']['server_hostname'] = hostname
+
+        connection_string = self._get_websocket_connection_string(hostname, ipaddr, port)
+        self.logger.debug(f"Connection attempt {connection_string}")
+        try:
+            return websocket.create_connection(connection_string, **ws_options)
+        except Exception as e:
+            self.logger.debug(f'Failed to connect [{connection_string}]: {e}')
+            raise e
+
+    def _get_websocket_connection_string(self, hostname:str, ipaddr:Optional[str], port:int) -> str:
+        host = hostname
+        if self.options["resolve_hostnames"]:
+            if ipaddr is None:
+                raise ValueError("IP address was not resolved")
+            host = ipaddr
+        if self.options["encryption"]:
+            return f"wss://{host}:{port}"
+        else:
+            return f"ws://{host}:{port}"
+
 
     def _get_ws_options(self):
         options = {
@@ -729,13 +756,13 @@ class ExaConnection(object):
 
         return attributes
 
-    def _process_dsn(self, dsn):
+    def _process_dsn(self, dsn: str) -> list[Host]:
         """
         Parse DSN, expand ranges and resolve IP addresses for all hostnames
         Return list of (hostname, ip_address, port) tuples in random order
         Randomness is required to guarantee proper distribution of workload across all nodes
         """
-        if len(dsn.strip()) == 0:
+        if dsn is None or len(dsn.strip()) == 0:
             raise ExaConnectionDsnError(self, 'Connection string is empty')
 
         current_port = constant.DEFAULT_PORT
@@ -787,24 +814,28 @@ class ExaConnection(object):
                     result.extend(self._resolve_hostname(hostname, current_port, current_fingerprint))
             # Just a single hostname or single IP address
             else:
-                result.extend(self._resolve_hostname(m.group('hostname_prefix'), current_port, current_fingerprint))
+                hostname = m.group('hostname_prefix')
+                if self.options["resolve_hostnames"]:
+                    result.extend(self._resolve_hostname(hostname, current_port, current_fingerprint))
+                else:
+                    result.append(Host(hostname, None, current_port, current_fingerprint))
 
         random.shuffle(result)
 
         return result
 
-    def _resolve_hostname(self, hostname, port, fingerprint):
+    def _resolve_hostname(self, hostname: str, port: int, fingerprint: Optional[str]) -> list[Host]:
         """
         Resolve all IP addresses for hostname and add port
         It also implicitly checks that all hostnames mentioned in DSN can be resolved
         """
         try:
-            hostname, alias_list, ipaddr_list = socket.gethostbyname_ex(hostname)
-        except OSError:
+            hostname, _, ipaddr_list = socket.gethostbyname_ex(hostname)
+        except OSError as e:
             raise ExaConnectionDsnError(self, f'Could not resolve IP address of hostname [{hostname}] '
-                                              f'derived from connection string')
+                                              f'derived from connection string') from e
 
-        return [(hostname, ipaddr, port, fingerprint) for ipaddr in ipaddr_list]
+        return [Host(hostname, ipaddr, port, fingerprint) for ipaddr in ipaddr_list]
 
     def _validate_fingerprint(self, provided_fingerprint):
         server_fingerprint = hashlib.sha256(self._ws.sock.getpeercert(True)).hexdigest().upper()

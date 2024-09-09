@@ -41,6 +41,7 @@ PyEXASOL provides API to read & write multiple data streams in parallel using se
 - [DB-API 2.0 compatibility](/docs/DBAPI_COMPAT.md)
 - [Optional dependencies](/docs/DEPENDENCIES.md)
 - [Changelog](/CHANGELOG.md)
+- [Developer Guide](/docs/DEVELOPER_GUIDE.md)
 
 
 ## PyEXASOL main concepts
@@ -116,4 +117,3 @@ Enjoy!
 
 ## Maintained by
 [Exasol](https://www.exasol.com) 2023 — Today 
-

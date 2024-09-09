@@ -2,7 +2,10 @@
 
 ## [Unreleased]
 
+## [0.27.0] - 2024-09-09
+
 - Relocked dependencies (Internal)
+- [#151](https://github.com/exasol/pyexasol/issues/151): Added option to deactivate hostname resolution
 
 ## [0.26.0] - 2024-07-04
 
@@ -12,9 +15,9 @@
 
     This driver facade should only be used if one is certain that using the dbapi2 is the right solution for their scenario, taking all implications into account. For more details on why and who should avoid using dbapi2, please refer to the [DBAPI2 compatibility section](/docs/DBAPI_COMPAT.md) in our documentation.
 
-- Droped support for python 3.7
-- Droped support for Exasol 6.x
-- Droped support for Exasol 7.0.x
+- Dropped support for python 3.7
+- Dropped support for Exasol 6.x
+- Dropped support for Exasol 7.0.x
 - Relocked dependencies (Internal)
 - Switched packaging and project workflow to poetry (internal)
 

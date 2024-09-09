@@ -14,6 +14,14 @@ def connection(dsn, user, password, schema):
 
 
 @pytest.fixture
+def connection_without_resolving_hostnames(dsn, user, password, schema):
+    with pyexasol.connect(
+        dsn=dsn, user=user, password=password, schema=schema, compression=True, resolve_hostnames=False
+    ) as con:
+        yield con
+
+
+@pytest.fixture
 def table_name():
     yield "CLIENT_NAMES"
 
@@ -85,6 +93,17 @@ def expected_csv(csv_dialect):
 def test_export_with_column_names(connection, table, data, export_file, expected_csv):
     params = {"with_column_names": True}
     connection.export_to_file(export_file, table, export_params=params)
+
+    expected = expected_csv(table, data, **params)
+    actual = export_file.read_text()
+
+    assert actual == expected
+
+
+@pytest.mark.etl
+def test_export_without_resolving_hostname(connection_without_resolving_hostnames, table, data, export_file, expected_csv):
+    params = {"with_column_names": True}
+    connection_without_resolving_hostnames.export_to_file(export_file, table, export_params=params)
 
     expected = expected_csv(table, data, **params)
     actual = export_file.read_text()

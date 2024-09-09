@@ -114,6 +114,7 @@ Open new connection and return `ExaConnection` object.
 | `udf_output_connect_address` | `('udf_host', 8580)` | Specific SCRIPT_OUTPUT_ADDRESS value to connect from Exasol to UDF script output server (Default: inherited from TCP server) |
 | `udf_output_dir` | `/tmp` | Path or path-like object pointing to directory for script output log files (Default: `tempfile.gettempdir()`) |
 | `http_proxy` | `http://myproxy.com:3128` | HTTP proxy string in Linux [`http_proxy`](https://www.shellhacks.com/linux-proxy-server-settings-set-proxy-command-line/) format (Default: `None`) |
+| `resolve_hostnames` | `False` | Explicitly resolve host names to IP addresses before connecting. Deactivating this will let the operating system resolve the host name (Default: `True`) |
 | `client_name` | `MyClient` | Custom name of client application displayed in Exasol sessions tables (Default: `PyEXASOL`) |
 | `client_version` | `1.0.0` | Custom version of client application (Default: `pyexasol.__version__`) |
 | `client_os_username` | `john` | Custom OS username displayed in Exasol sessions table (Default: `getpass.getuser()`) |
@@ -121,6 +122,12 @@ Open new connection and return `ExaConnection` object.
 | `websocket_sslopt` | `{'cert_reqs': ssl.CERT_NONE}` | Set custom [SSL options](https://github.com/websocket-client/websocket-client/blob/2222f2c49d71afd74fcda486e3dfd14399e647af/websocket/_http.py#L210-L272) for WebSocket client |
 | `access_token` | `...` | OpenID access token to use for the login process |
 | `refresh_token` | `...` | OpenID refresh token to use for the login process |
+
+### Host Name Resolution
+
+By default pyexasol resolves host names to IP addresses, randomly shuffles the IP addresses and tries to connect until connection succeeds. See the [design documentation](/docs/DESIGN.md#automatic-resolution-and-randomization-of-connection-addresses) for details.
+
+If host name resolution causes problems, you can deactivate it by specifying argument `resolve_hostnames=False`. This may be required when connecting through a proxy that allows connections only to defined host names. In all other cases we recommend to omit the argument.
 
 ## connect_local_config()
 Open new connection and return `ExaConnection` object using local .ini file (usually `~/.pyexasol.ini`) to read credentials and connection parameters. Please read [local config](/docs/LOCAL_CONFIG.md) page for more details.

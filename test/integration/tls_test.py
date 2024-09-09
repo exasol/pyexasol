@@ -61,6 +61,17 @@ def test_connect_with_tls(dsn, user, password, schema):
 
 
 @pytest.mark.tls
+def test_connect_with_tls_without_resolving_hostname(dsn, user, password, schema):
+    expected = 1
+    with pyexasol.connect(
+        dsn=dsn, user=user, password=password, schema=schema, encryption=True, resolve_hostnames=False
+    ) as connection:
+        actual = connection.execute("SELECT 1;").fetchval()
+
+    assert actual == expected
+
+
+@pytest.mark.tls
 def test_connect_with_valid_fingerprint(
     dsn_with_valid_fingerprint, user, password, schema
 ):
