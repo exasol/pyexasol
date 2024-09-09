@@ -125,11 +125,7 @@ Open new connection and return `ExaConnection` object.
 
 ### Host Name Resolution
 
-By default pyexasol resolves host names to IP addresses, randomly shuffles the IP addresses and tries to connect until connection succeeds. This has the following reasons:
-
-1. If at least one hostname is not available, you always get an exception. Otherwise you will get an exception only when randomly choosing a broken hostname, which leads to random errors in production.
-2. With a large cluster with ever growing number of nodes, it makes sense to put all nodes on one hostname, like `myexasol.mlan` instead of having separate host names `myexasol1..64.mlan`. In this case redundancy will not work properly if hostname is not resolved beforehand, since we do not know if it points to one address or to multiple addresses.
-3. For redundancy we do not want to try the same IP address twice. This can only be guaranteed if we connect by IP.
+By default pyexasol resolves host names to IP addresses, randomly shuffles the IP addresses and tries to connect until connection succeeds. See the [design documentation](/docs/DESIGN.md#automatic-resolution-and-randomization-of-connection-addresses) for details.
 
 If host name resolution causes problems, you can deactivate it by specifying argument `resolve_hostnames=False`. This may be required when connecting through a proxy that allows connections only to defined host names. In all other cases we recommend to omit the argument.
 
