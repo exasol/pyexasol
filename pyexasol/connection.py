@@ -34,7 +34,7 @@ from .version import __version__
 class Host(NamedTuple):
     """This represents a resolved host name with its IP address and port number."""
     hostname: str
-    ip_address: str
+    ip_address: Optional[str]
     port: int
     fingerprint: Optional[str]
 
@@ -670,10 +670,7 @@ class ExaConnection(object):
             try:
                 self._ws = self._create_websocket_connection(hostname, ipaddr, port)
             except Exception as e:
-                self.logger.debug(f'Failed to connect [{ipaddr}:{port}]: {e}')
-
                 failed_attempts += 1
-
                 if failed_attempts == len(dsn_items):
                     raise ExaConnectionFailedError(self, 'Could not connect to Exasol: ' + str(e)) from e
             else:
@@ -698,11 +695,17 @@ class ExaConnection(object):
 
         connection_string = self._get_websocket_connection_string(hostname, ipaddr, port)
         self.logger.debug(f"Connection attempt {connection_string}")
-        return websocket.create_connection(connection_string, **ws_options)
+        try:
+            return websocket.create_connection(connection_string, **ws_options)
+        except Exception as e:
+            self.logger.debug(f'Failed to connect [{connection_string}]: {e}')
+            raise e
 
-
-    def _get_websocket_connection_string(self, hostname:str, ipaddr:str, port:int) -> str:
-        host = ipaddr if self.options["resolve_hostnames"] else hostname
+    def _get_websocket_connection_string(self, hostname:str, ipaddr:Optional[str], port:int) -> str:
+        host = hostname
+        if self.options["resolve_hostnames"]:
+            assert ipaddr is not None
+            host = ipaddr
         if self.options["encryption"]:
             return f"wss://{host}:{port}"
         else:
@@ -810,7 +813,11 @@ class ExaConnection(object):
                     result.extend(self._resolve_hostname(hostname, current_port, current_fingerprint))
             # Just a single hostname or single IP address
             else:
-                result.extend(self._resolve_hostname(m.group('hostname_prefix'), current_port, current_fingerprint))
+                hostname = m.group('hostname_prefix')
+                if self.options["resolve_hostnames"]:
+                    result.extend(self._resolve_hostname(hostname, current_port, current_fingerprint))
+                else:
+                    result.append(Host(hostname, None, current_port, current_fingerprint))
 
         random.shuffle(result)
 

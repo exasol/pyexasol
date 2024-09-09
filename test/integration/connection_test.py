@@ -64,6 +64,18 @@ def test_process_empty_dsn_fails(connection_mock, empty_dsn):
     with pytest.raises(ExaConnectionDsnError, match="Connection string is empty"):
         connection_mock.process_dsn(empty_dsn)
 
+def test_process_dsn_resolves_hostname_to_ip_address(connection_mock):
+    connection_mock.simulate_resolve_hostnames([("host1", [], ["ip1"])])
+    actual = connection_mock.process_dsn("host1:1234")
+    expected = [Host("host1", "ip1", 1234, None)]
+    assert expected == actual
+
+def test_process_dsn_does_not_resolve_hostname(connection_mock):
+    connection_mock.connection.options["resolve_hostnames"] = False
+    actual = connection_mock.process_dsn("host1:1234")
+    expected = [Host("host1", None, 1234, None)]
+    assert expected == actual
+
 def test_process_dsn_shuffles_hosts(connection_mock):
     dsn = "host1:1234,host2:4321"
     def resolve_hostname(con):
