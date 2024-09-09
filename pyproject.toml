@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "pyexasol"
-version = "0.26.0"
+version = "0.27.0"
 license = "MIT"
 readme = "README.md"
 description = "Exasol python driver with extra features"
