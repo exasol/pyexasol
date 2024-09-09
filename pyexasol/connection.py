@@ -676,7 +676,7 @@ class ExaConnection(object):
             else:
                 self._ws.settimeout(self.options['socket_timeout'])
 
-                self.ws_ipaddr = ipaddr
+                self.ws_ipaddr = ipaddr or hostname
                 self.ws_port = port
 
                 self._ws_send = self._ws.send
