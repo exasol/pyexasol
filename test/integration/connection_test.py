@@ -33,6 +33,9 @@ class ConnectionMockFixture:
     
     def init_ws(self):
         self.connection._init_ws()
+    
+    def get_websocket_connection_string(self, hostname:str, ipaddr:Optional[str], port:int) -> str:
+        return self.connection._get_websocket_connection_string(hostname, ipaddr, port)
 
 
 @pytest.fixture
@@ -122,3 +125,21 @@ def test_init_ws_connects_via_hostname(connection_mock):
     connection_mock.init_ws()
     ssl_options = {'cert_reqs': ssl.CERT_NONE}
     connection_mock.assert_websocket_created("wss://localhost:8563", timeout=10, skip_utf8_validation=True, enable_multithread=True, sslopt=ssl_options)
+
+def test_get_websocket_connection_string(connection_mock):
+    actual = connection_mock.get_websocket_connection_string("host1", "ip1", 1234)
+    assert "wss://ip1:1234" == actual
+
+def test_get_websocket_connection_string_unencrypted(connection_mock):
+    connection_mock.connection.options["encryption"] = False
+    actual = connection_mock.get_websocket_connection_string("host1", "ip1", 1234)
+    assert "ws://ip1:1234" == actual
+
+def test_get_websocket_connection_string_do_not_resolve_hostname(connection_mock):
+    connection_mock.connection.options["resolve_hostnames"] = False
+    actual = connection_mock.get_websocket_connection_string("host1", "ip1", 1234)
+    assert "wss://host1:1234" == actual
+
+def test_get_websocket_connection_string_missing_ip_address(connection_mock):
+    with pytest.raises(ValueError, match="IP address was not resolved"):
+        connection_mock.get_websocket_connection_string("host1", None, 1234)

@@ -704,7 +704,8 @@ class ExaConnection(object):
     def _get_websocket_connection_string(self, hostname:str, ipaddr:Optional[str], port:int) -> str:
         host = hostname
         if self.options["resolve_hostnames"]:
-            assert ipaddr is not None
+            if ipaddr is None:
+                raise ValueError("IP address was not resolved")
             host = ipaddr
         if self.options["encryption"]:
             return f"wss://{host}:{port}"
