@@ -114,7 +114,7 @@ Open new connection and return `ExaConnection` object.
 | `udf_output_connect_address` | `('udf_host', 8580)` | Specific SCRIPT_OUTPUT_ADDRESS value to connect from Exasol to UDF script output server (Default: inherited from TCP server) |
 | `udf_output_dir` | `/tmp` | Path or path-like object pointing to directory for script output log files (Default: `tempfile.gettempdir()`) |
 | `http_proxy` | `http://myproxy.com:3128` | HTTP proxy string in Linux [`http_proxy`](https://www.shellhacks.com/linux-proxy-server-settings-set-proxy-command-line/) format (Default: `None`) |
-| `resolve_hostnames` | `False` | Explicitly resolve host names to IP addresses before connecting. Deactivating this will let the operating system resolve the host name (default: `True`) |
+| `resolve_hostnames` | `False` | Explicitly resolve host names to IP addresses before connecting. Deactivating this will let the operating system resolve the host name (Default: `True`) |
 | `client_name` | `MyClient` | Custom name of client application displayed in Exasol sessions tables (Default: `PyEXASOL`) |
 | `client_version` | `1.0.0` | Custom version of client application (Default: `pyexasol.__version__`) |
 | `client_os_username` | `john` | Custom OS username displayed in Exasol sessions table (Default: `getpass.getuser()`) |
