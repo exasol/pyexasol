@@ -7,7 +7,7 @@
     :maxdepth: 2
 
     best_practices
-    dbapi_compat
+    dbapi
     dependencies
 
 
