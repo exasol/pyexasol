@@ -3,3 +3,9 @@
 :octicon:`person` User Guide
 ============================
 
+.. toctree::
+    :maxdepth: 2
+
+    best_practices
+
+

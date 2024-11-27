@@ -28,7 +28,7 @@ Documentation of  pyexasol
    :maxdepth: 1
    :hidden:
 
-   user_guide
+   user_guide/index
    developer_guide
    api
    faq
