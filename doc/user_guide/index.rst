@@ -15,10 +15,11 @@
     udf_script_output
     local_config
     parallelism
+    snapshot_transactions
+    dbapi
+    design
     performance
     protocol_version
-    design
-    dbapi
     known_issues
 
 
