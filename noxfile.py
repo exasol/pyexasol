@@ -145,5 +145,4 @@ from exasol.toolbox.nox._documentation import (
     build_docs,
     clean_docs,
     open_docs,
-    build_multiversion
 )
