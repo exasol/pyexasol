@@ -21,9 +21,9 @@ Please note that PyEXASOL does not provide any specific way to send internal Exa
 Examples
 --------
 
-- `b03_parallel_export <https://docs/exasol/examples/latest/python/b03_parallel_export.py>`_ for EXPORT;
-- `b04_parallel_import <https://docs/exasol/examples/latest/python/b04_parallel_import.py>`_ for IMPORT;
-- `b05_parallel_export_import <https://docs/exasol/examples/latest/python/b05_parallel_export_import.py>`_ for EXPORT followed by IMPORT using the same child processes;
+- ``b03_parallel_export.py>`` for EXPORT;
+- ``b04_parallel_import.py>`` for IMPORT;
+- ``b05_parallel_export_import.py`` for EXPORT followed by IMPORT using the same child processes;
 
 Example of EXPORT query executed in Exasol
 ------------------------------------------

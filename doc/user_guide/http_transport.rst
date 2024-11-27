@@ -217,7 +217,7 @@ The comment is inserted as a block comment (`/* <comment> */`). The block commen
 How to write custom EXPORT / IMPORT functions
 =============================================
 
-A full collection of pre-defined callback functions is available in `callback.py`_ module.
+A full collection of pre-defined callback functions is available in ``callback.py`` module.
 
 Example of a callback exporting into a basic Python list.
 
@@ -246,4 +246,3 @@ Example of a callback importing from Pandas into Exasol.
     # Run IMPORT using the defined callback function
     C.export_from_callback(import_from_pandas, df, 'my_table')
 
-.. _callback.py: /pyexasol/callback.py
