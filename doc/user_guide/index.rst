@@ -15,6 +15,7 @@
     local_config
     parallelism
     performance
+    protocol_version
     design
     dbapi
     known_issues
