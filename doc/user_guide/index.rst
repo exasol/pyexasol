@@ -13,6 +13,7 @@
     http_transport
     http_transport_parallel
     local_config
+    parallelism
     design
     dbapi
     known_issues

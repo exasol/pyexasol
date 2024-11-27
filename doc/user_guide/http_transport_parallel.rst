@@ -1,3 +1,5 @@
+.. _http_transport_parallel:
+
 HTTP Transport (parallel)
 =========================
 
