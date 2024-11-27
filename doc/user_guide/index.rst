@@ -12,6 +12,7 @@
     encryption
     http_transport
     http_transport_parallel
+    udf_script_output
     local_config
     parallelism
     performance
