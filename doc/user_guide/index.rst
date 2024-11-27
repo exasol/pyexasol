@@ -10,5 +10,6 @@
     dbapi
     dependencies
     design
+    encryption
 
 
