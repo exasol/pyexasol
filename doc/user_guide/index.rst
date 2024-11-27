@@ -9,5 +9,6 @@
     best_practices
     dbapi
     dependencies
+    design
 
 
