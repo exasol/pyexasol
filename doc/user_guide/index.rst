@@ -6,11 +6,11 @@
 .. toctree::
     :maxdepth: 2
 
-    best_practices
-    dbapi
     dependencies
-    design
-    encryption
+    best_practices
     examples
+    encryption
+    design
+    dbapi
 
 
