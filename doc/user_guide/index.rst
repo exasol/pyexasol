@@ -12,6 +12,7 @@
     encryption
     http_transport
     http_transport_parallel
+    local_config
     design
     dbapi
     known_issues
