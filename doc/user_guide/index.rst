@@ -8,5 +8,6 @@
 
     best_practices
     dbapi_compat
+    dependencies
 
 
