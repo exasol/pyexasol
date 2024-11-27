@@ -16,6 +16,7 @@
     local_config
     parallelism
     snapshot_transactions
+    sql_formatting
     dbapi
     design
     performance
