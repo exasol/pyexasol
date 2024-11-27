@@ -11,6 +11,7 @@
     examples
     encryption
     http_transport
+    http_transport_parallel
     design
     dbapi
 
