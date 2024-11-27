@@ -10,6 +10,7 @@
     best_practices
     examples
     encryption
+    http_transport
     design
     dbapi
 
