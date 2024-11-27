@@ -14,5 +14,6 @@
     http_transport_parallel
     design
     dbapi
+    known_issues
 
 
