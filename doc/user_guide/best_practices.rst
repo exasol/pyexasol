@@ -5,7 +5,7 @@ This page explains how to use PyEXASOL with maximum efficiency.
 
 Enable Compression for WiFi Connections
 ---------------------------------------
-Wireless network bandwidth is usually the main bottleneck for laptops. ``Compression`` flag enables zlib compression both for common fetching and for `HTTP transport </docs/HTTP_TRANSPORT.md>`. It may improve overall performance by factor 4-8x.
+Wireless network bandwidth is usually the main bottleneck for laptops. ``Compression`` flag enables zlib compression both for common fetching and for :ref:`http_transport` It may improve overall performance by factor 4-8x.
 
 .. code-block:: python
 
