@@ -94,28 +94,40 @@ def connect_local_config(config_section, config_path=None, **kwargs) -> ExaConne
 
 def http_transport(ipaddr, port, compression=False, encryption=True) -> ExaHTTPTransportWrapper:
     """
-    Constructor of HTTP Transport wrapper for parallel HTTP Transport (EXPORT or IMPORT)
-    Compression and encryption arguments should match pyexasol.connect()
+    Constructor for HTTP Transport wrapper for parallel HTTP Transport (EXPORT or IMPORT)
 
-    How to use:
-    1) Parent process opens main connection to Exasol with pyexasol.connect()
-    2)
-    2) Parent process creates any number of child processes (possibly on remote host or another container)
-    3) Every child process starts HTTP transport sub-connection with pyexasol.http_transport()
-        and gets "ipaddr:port" string using ExaHTTPTransportWrapper.address
-    4) Every child process sends address string to parent process using any communication method (Pipe, Queue, Redis, etc.)
-    5) Parent process runs .export_parallel() or .import_parallel(), which initiates EXPORT or IMPORT query in Exasol
-    6) Every child process receives or sends a chunk of data using ExaHTTPTransportWrapper.export_*() or .import_*()
-    7) Parent process waits for Exasol query and for child processes to finish
+    Args:
+        ipaddr:
+            IP address of one of Exasol nodes received from :meth:`pyexasol.ExaConnection.get_nodes`
+        port:
+            Port of one of Exasol nodes received from :meth:`pyexasol.ExaConnection.get_nodes`
+        compression:
+            Use zlib compression for HTTP transport, must be the same as `compression` of main connection
+        encryption:
+            Use SSL encryption for HTTP transport, must be the same as `encryption` of main connection
 
-    All child processes should run in parallel.
-    It is NOT possible to process some data first, and process some more data later.
+    Info:
+        Compression and encryption arguments should match :func:`pyexasol.connect`
 
-    If an exception is raised in child process, it will close the pipe used for HTTP transport.
-    Closing the pipe prematurely will cause SQL query to fail and will raise an exception in parent process.
-    Parent process is responsible for closing other child processes and cleaning up.
+        How to use:
 
-    PyEXASOL does not provide a complete solution to manage child processes, only examples.
-    The final solution depends on your hardware, network configuration, cloud provider and container orchestration software.
+        #. Parent process opens main connection to Exasol with pyexasol.connect()
+        #. Parent process creates any number of child processes (possibly on remote host or another container)
+        #. Every child process starts HTTP transport sub-connection with pyexasol.http_transport()
+        #.  and gets "ipaddr:port" string using ExaHTTPTransportWrapper.address
+        #. Every child process sends address string to parent process using any communication method (Pipe, Queue, Redis, etc.)
+        #. Parent process runs .export_parallel() or .import_parallel(), which initiates EXPORT or IMPORT query in Exasol
+        #. Every child process receives or sends a chunk of data using ExaHTTPTransportWrapper.export_*() or .import_*()
+        #. Parent process waits for Exasol query and for child processes to finish
+
+        All child processes should run in parallel.
+        It is NOT possible to process some data first, and process some more data later.
+
+        If an exception is raised in child process, it will close the pipe used for HTTP transport.
+        Closing the pipe prematurely will cause SQL query to fail and will raise an exception in parent process.
+        Parent process is responsible for closing other child processes and cleaning up.
+
+        PyEXASOL does not provide a complete solution to manage child processes, only examples.
+        The final solution depends on your hardware, network configuration, cloud provider and container orchestration software.
     """
     return ExaHTTPTransportWrapper(ipaddr, port, compression, encryption)

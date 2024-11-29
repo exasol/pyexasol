@@ -7,6 +7,8 @@
 
 .. autofunction:: pyexasol.connect_local_config
 
+.. autofunction:: pyexasol.http_transport
+
 .. autoclass:: pyexasol.ExaConnection
    :class-doc-from: init
    :members:
