@@ -234,18 +234,24 @@ class ExaConnection(object):
         self.get_attr()
 
     def execute(self, query, query_params=None) -> ExaStatement:
+
         """
         Execute SQL query with optional query formatting parameters
-        Return ExaStatement object
+
+        Returns:
+            ExaStatement object
         """
         return self.cls_statement(self, query, query_params)
 
     def execute_udf_output(self, query, query_params=None):
         """
         Execute SQL query with UDF script, capture output
-        Return ExaStatement object and list of Path-objects for script output log files
 
-        Exasol should be able to open connection to the machine where current script is running
+        Returns:
+            Return ExaStatement object and list of Path-objects for script output log files
+
+        Attention:
+            Exasol should be able to open connection to the machine where current script is running
         """
         stmt_output_dir = self._get_stmt_output_dir()
 
@@ -432,8 +438,10 @@ class ExaConnection(object):
     def export_parallel(self, exa_address_list, query_or_table, query_params=None, export_params=None):
         """
         Init HTTP transport in child processes first using pyexasol.http_transport()
-        Get internal Exasol address from each child process using .address
-        Pass address strings to parent process, combine into single list and use it for export_parallel() call
+
+        Note:
+            Get internal Exasol address from each child process using .address
+            Pass address strings to parent process, combine into single list and use it for export_parallel() call
         """
         if export_params is None:
             export_params = {}
@@ -452,8 +460,10 @@ class ExaConnection(object):
     def import_parallel(self, exa_address_list, table, import_params=None):
         """
         Init HTTP transport in child processes first using pyexasol.http_transport()
-        Get internal Exasol address from each child process using .address
-        Pass address strings to parent process, combine into single list and use it for import_parallel() call
+
+        Note:
+            Get internal Exasol address from each child process using .address
+            Pass address strings to parent process, combine into single list and use it for import_parallel() call
         """
         if import_params is None:
             import_params = {}
@@ -472,9 +482,12 @@ class ExaConnection(object):
     def protocol_version(self):
         """
         Return WebSocket protocol version of opened connection
-        Return 0 if connection was not established yet (e.g. due to exception handling)
 
-        Actual Protocol version might be downgraded from requested protocol version if Exasol server does not support it
+        Returns:
+            0 if connection was not established yet (e.g. due to exception handling)
+
+        Warnings:
+            Actual Protocol version might be downgraded from requested protocol version if Exasol server does not support it
         """
         return int(self.login_info.get('protocolVersion', 0))
 
@@ -482,8 +495,9 @@ class ExaConnection(object):
         """
         Return last created ExaStatement object
 
-        It is mainly used for HTTP transport to access internal IMPORT / EXPORT query,
-        measure execution time and number of rows
+        Info:
+            It is mainly used for HTTP transport to access internal IMPORT / EXPORT query,
+            measure execution time and number of rows
         """
         if self.last_stmt is None:
             raise ExaRuntimeError(self, 'Last statement not found')
@@ -492,11 +506,13 @@ class ExaConnection(object):
 
     def close(self, disconnect=True):
         """
-        Close connection to Exasol by sending CLOSE websocket frame
+        Close connection to Exasol by sending CLOSE websocket frame.
+
         Send optional "disconnect" command to free resources and close session on Exasol server side properly
 
-        Please note that "disconnect" should always be False when .close() is being called from .req()-like functions
-        to prevent an infinite loop if websocket exception happens during handling of "disconnect" command
+        Info:
+            Please note that "disconnect" should always be False when .close() is being called from .req()-like functions
+            to prevent an infinite loop if websocket exception happens during handling of "disconnect" command
         """
         if self._ws.connected:
             if disconnect:
@@ -528,14 +544,17 @@ class ExaConnection(object):
 
     def get_nodes(self, pool_size=None):
         """
-        Return list of dictionaries describing active Exasol nodes
-        Format: {'ipaddr': <ip_address>, 'port': <port>, 'idx': <incremental index of returned node>}
+        Format: ``{'ipaddr': <ip_address>, 'port': <port>, 'idx': <incremental index of returned node>}``
 
-        If pool_size is bigger than number of nodes, list will wrap around and nodes will repeat with different 'idx'
-        If pool_size is omitted, return every active node once
 
-        It is useful to balance workload for parallel IMPORT and EXPORT
-        Exasol shuffles list for every connection
+        Info:
+
+            - If pool_size is bigger than number of nodes, list will wrap around and nodes will repeat with different 'idx'
+            - If pool_size is omitted, return every active node once
+            - It is useful to balance workload for parallel IMPORT and EXPORT Exasol shuffles list for every connection
+
+        Returns:
+            list of dictionaries describing active Exasol nodes
         """
         ret = self.req({
             'command': 'getHosts',
@@ -611,13 +630,17 @@ class ExaConnection(object):
     def abort_query(self):
         """
         Abort running query
-        This function should be called from a separate thread and has no response
-        Response should be checked in the main thread which started execution of query
 
-        There are three possible outcomes of calling this function:
-        1) Query is aborted normally, connection remains active
-        2) Query was stuck in a state which cannot be aborted, so Exasol has to terminate connection
-        3) Query might be finished successfully before abort call had a chance to take effect
+        Warnings:
+
+            This function should be called from a separate thread and has no response
+            Response should be checked in the main thread which started execution of query
+
+            There are three possible outcomes of calling this function:
+
+            #. Query is aborted normally, connection remains active
+            #. Query was stuck in a state which cannot be aborted, so Exasol has to terminate connection
+            #. Query might be finished successfully before abort call had a chance to take effect
         """
         req = {
             'command': 'abortQuery'
@@ -694,8 +717,10 @@ class ExaConnection(object):
     def _init_ws(self):
         """
         Init websocket connection
-        Connection redundancy is supported
-        Specific Exasol node is randomly selected for every connection attempt
+
+        Info:
+            - Connection redundancy is supported
+            - Specific Exasol node is randomly selected for every connection attempt
         """
         dsn_items = self._process_dsn(self.options['dsn'])
         failed_attempts = 0
@@ -791,9 +816,13 @@ class ExaConnection(object):
 
     def _process_dsn(self, dsn: str) -> list[Host]:
         """
-        Parse DSN, expand ranges and resolve IP addresses for all hostnames
-        Return list of (hostname, ip_address, port) tuples in random order
-        Randomness is required to guarantee proper distribution of workload across all nodes
+        Parse DSN, expand ranges and resolve IP addresses for all hostnames.
+
+        Info:
+            Randomness is required to guarantee proper distribution of workload across all nodes
+
+        Returns:
+            List of (hostname, ip_address, port) tuples in random order
         """
         if dsn is None or len(dsn.strip()) == 0:
             raise ExaConnectionDsnError(self, 'Connection string is empty')
@@ -859,8 +888,10 @@ class ExaConnection(object):
 
     def _resolve_hostname(self, hostname: str, port: int, fingerprint: Optional[str]) -> list[Host]:
         """
-        Resolve all IP addresses for hostname and add port
-        It also implicitly checks that all hostnames mentioned in DSN can be resolved
+        Resolve all IP addresses for hostname and add port.
+        
+        Warnings:
+            - It also implicitly checks that all hostnames mentioned in DSN can be resolved
         """
         try:
             hostname, _, ipaddr_list = socket.gethostbyname_ex(hostname)
@@ -948,11 +979,14 @@ class ExaConnection(object):
 
     def __del__(self):
         """
-        close() is being called automatically in order to:
+        Will close the connection.
 
-        1) send OP_CLOSE frame to Exasol server rather than silently terminating the socket on client side
-        2) make sure connection is closed immediately even if garbage collection was disabled for any reasons
-        3) write debug logs
+        Info:
+            close() is being called automatically in order to:
+
+            #.  send OP_CLOSE frame to Exasol server rather than silently terminating the socket on client side
+            #.  make sure connection is closed immediately even if garbage collection was disabled for any reasons
+            #.  write debug logs
         """
         # Based on our investigations, two scenarios have emerged, one of which does not function correctly:
         #
