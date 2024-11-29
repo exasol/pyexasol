@@ -92,38 +92,71 @@ class ExaConnection(object):
         """
         Exasol connection object
 
-        :param dsn: Connection string, same format as standard JDBC / ODBC drivers (e.g. 10.10.127.1..11:8564)
-        :param user: Username
-        :param password: Password
-        :param schema: Open schema after connection (Default: '', no schema)
-        :param autocommit: Enable autocommit on connection (Default: True)
-        :param snapshot_transactions: Explicitly enable or disable snapshot transactions on connection (Default: None, database default)
-        :param connection_timeout: Socket timeout in seconds used to establish connection (Default: 10)
-        :param socket_timeout: Socket timeout in seconds used for requests after connection was established (Default: 30)
-        :param query_timeout: Maximum execution time of queries before automatic abort, in seconds (Default: 0, no timeout)
-        :param compression: Use zlib compression both for WebSocket and HTTP transport (Default: False)
-        :param encryption: Use SSL to encrypt client-server communications for WebSocket and HTTP transport (Default: True)
-        :param fetch_dict: Fetch result rows as dicts instead of tuples (Default: False)
-        :param fetch_mapper: Use custom mapper function to convert Exasol values into Python objects during fetching (Default: None)
-        :param fetch_size_bytes: Maximum size of data message for single fetch request in bytes (Default: 5Mb)
-        :param lower_ident: Automatically lowercase identifiers (table names, column names, etc.) returned from relevant functions (Default: False)
-        :param quote_ident: Add double quotes and escape identifiers passed to relevant functions (export_*, import_*, ext.*, etc.) (Default: False)
-        :param json_lib: Supported values: rapidjson, ujson, orjson, json (Default: json)
-        :param verbose_error: Display additional information when error occurs (Default: True)
-        :param debug: Output debug information for client-server communication and connection attempts to STDERR
-        :param debug_logdir: Store debug information into files in debug_logdir instead of outputting it to STDERR
-        :param udf_output_bind_address: Specific server_address to bind TCP server for UDF script output (default: ('', 0))
-        :param udf_output_connect_address: Specific SCRIPT_OUTPUT_ADDRESS value to connect from Exasol to UDF script output server (default: inherited from TCP server)
-        :param udf_output_dir: Directory to store captured UDF script output logs, split by <session_id>_<statement_id>/<vm_num>
-        :param http_proxy: HTTP proxy string in Linux http_proxy format (default: None)
-        :param resolve_hostnames: Explicitly resolve host names to IP addresses before connecting. Deactivating this will let the operating system resolve the host name (default: True)
-        :param client_name: Custom name of client application displayed in Exasol sessions tables (Default: PyEXASOL)
-        :param client_version: Custom version of client application (Default: pyexasol.__version__)
-        :param client_os_username: Custom OS username displayed in Exasol sessions table (Default: getpass.getuser())
-        :param protocol_version: Major WebSocket protocol version requested for connection (Default: pyexasol.PROTOCOL_V3)
-        :param websocket_sslopt: Set custom SSL options for WebSocket client (Default: None)
-        :param access_token: OpenID access token to use for the login process
-        :param refresh_token: OpenID refresh token to use for the login process
+        Args:
+            dsn: 
+                Connection string, same format as standard JDBC / ODBC drivers (e.g. 10.10.127.1..11:8564)
+            user: 
+                Username
+            password: 
+                Password
+            schema: 
+                Open schema after connection (Default: '', no schema)
+            autocommit: 
+                Enable autocommit on connection (Default: True)
+            snapshot_transactions: 
+                Explicitly enable or disable snapshot transactions on connection (Default: None, database default)
+            connection_timeout: 
+                Socket timeout in seconds used to establish connection (Default: 10)
+            socket_timeout: 
+                Socket timeout in seconds used for requests after connection was established (Default: 30)
+            query_timeout: 
+                Maximum execution time of queries before automatic abort, in seconds (Default: 0, no timeout)
+            compression: 
+                Use zlib compression both for WebSocket and HTTP transport (Default: False)
+            encryption: 
+                Use SSL to encrypt client-server communications for WebSocket and HTTP transport (Default: True)
+            fetch_dict: 
+                Fetch result rows as dicts instead of tuples (Default: False)
+            fetch_mapper: 
+                Use custom mapper function to convert Exasol values into Python objects during fetching (Default: None)
+            fetch_size_bytes: 
+                Maximum size of data message for single fetch request in bytes (Default: 5Mb)
+            lower_ident: 
+                Automatically lowercase identifiers (table names, column names, etc.) returned from relevant functions (Default: False)
+            quote_ident: 
+                Add double quotes and escape identifiers passed to relevant functions (export_*, import_*, ext.*, etc.) (Default: False)
+            json_lib: 
+                Supported values: rapidjson, ujson, orjson, json (Default: json)
+            verbose_error: 
+                Display additional information when error occurs (Default: True)
+            debug: 
+                Output debug information for client-server communication and connection attempts to STDERR
+            debug_logdir: 
+                Store debug information into files in debug_logdir instead of outputting it to STDERR
+            udf_output_bind_address: 
+                Specific server_address to bind TCP server for UDF script output (default: ('', 0))
+            udf_output_connect_address: 
+                Specific SCRIPT_OUTPUT_ADDRESS value to connect from Exasol to UDF script output server (default: inherited from TCP server)
+            udf_output_dir: 
+                Directory to store captured UDF script output logs, split by <session_id>_<statement_id>/<vm_num>
+            http_proxy: 
+                HTTP proxy string in Linux http_proxy format (default: None)
+            resolve_hostnames: 
+                Explicitly resolve host names to IP addresses before connecting. Deactivating this will let the operating system resolve the host name (default: True)
+            client_name: 
+                Custom name of client application displayed in Exasol sessions tables (Default: PyEXASOL)
+            client_version: 
+                Custom version of client application (Default: pyexasol.__version__)
+            client_os_username: 
+                Custom OS username displayed in Exasol sessions table (Default: getpass.getuser())
+            protocol_version: 
+                Major WebSocket protocol version requested for connection (Default: pyexasol.PROTOCOL_V3)
+            websocket_sslopt: 
+                Set custom SSL options for WebSocket client (Default: None)
+            access_token: 
+                OpenID access token to use for the login process
+            refresh_token: 
+                OpenID refresh token to use for the login process
         """
 
         self.options = {
