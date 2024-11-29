@@ -70,14 +70,20 @@ def connect(**kwargs) -> ExaConnection:
 
 def connect_local_config(config_section, config_path=None, **kwargs) -> ExaConnection:
     """
-    Constructor of connection objects based on local config file
-    Default config path is ~/.pyexasol.ini
+    Constructor for connection objects based on a local config file.
 
-    Extra arguments override values from config
+    Info:
+        - The default config path is ~/.pyexasol.ini
+        - Extra arguments override values from config
 
-    :param config_section: Name of config section (required!)
-    :param config_path: Custom path to local config file
-    :param kwargs: Arguments for "connect()" function
+    Args:
+
+        config_section: 
+            Name of config section (required!)
+        config_path: 
+            Custom path to local config file
+        kwargs:
+            Arguments for "connect()" function
     """
 
     conf = ExaLocalConfig(config_path)
