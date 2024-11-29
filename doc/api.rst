@@ -10,8 +10,7 @@
 .. autofunction:: pyexasol.http_transport
 
 .. autoclass:: pyexasol.ExaConnection
-   :class-doc-from: init
-   :members:
+   :members: __init__
    :undoc-members:
    :show-inheritance:
 
