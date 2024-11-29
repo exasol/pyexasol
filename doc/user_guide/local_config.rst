@@ -23,7 +23,7 @@ except parameters expecting a Python class or function.
 You may specify multiple sections. Each section represents a separate connection config.
 It might be useful if you have multiple Exasol instances.
 
-In order to create a connection using local config, please call function ``connect_local_config <https://../docs/REFERENCE.md#connect_local_config>``.
+In order to create a connection using local config, please call function ``connect_local_config``.
 
 .. code-block:: python
 

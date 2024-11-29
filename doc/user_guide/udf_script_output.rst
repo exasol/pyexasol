@@ -22,13 +22,13 @@ The server runs forever until stopped by the user.
 
 How to use it:
 
-1. Run the server in debug mode::
+#. Run the server in debug mode::
 
         python -m pyexasol_utils.script_output
 
-2. Copy-paste the provided SQL query to your SQL client and execute it;
-3. Run queries with UDF scripts, see output in the terminal;
-4. Stop the server with (Ctrl + C) when you finish debugging;
+#. Copy-paste the provided SQL query to your SQL client and execute it;
+#. Run queries with UDF scripts, see output in the terminal;
+#. Stop the server with (Ctrl + C) when you finish debugging;
 
 Please note: if you have problems getting script output immediately out of VMs, please make sure you **flush** STDOUT / STDERR in your UDF script. Some programming languages (like Python) may buffer output by default.
 
