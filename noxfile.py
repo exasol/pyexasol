@@ -5,6 +5,7 @@ from contextlib import contextmanager
 import nox
 from nox import Session
 
+
 __all__ = [
     "unit_tests",
     "integration_tests",
@@ -138,3 +139,10 @@ def import_data(session: Session) -> None:
         data_directory=data_dir
     )
     loader.load()
+
+# Import documentation related nox tasks from toolbox
+from exasol.toolbox.nox._documentation import (
+    build_docs,
+    clean_docs,
+    open_docs,
+)
