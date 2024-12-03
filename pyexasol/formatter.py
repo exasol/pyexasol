@@ -3,6 +3,22 @@ import re
 
 
 class ExaFormatter(string.Formatter):
+    """
+    :class:`pyexasol.ExaFormatter` is a subclass of :class:`string.Formatter` designed to prevent SQL injections in Exasol dynamic SQL queries.
+    
+    Note:
+        It introduces set of placeholders to prevent SQL injections specifically
+        in Exasol dynamic SQL queries. It also completely disabled `format_spec`
+        section of standard formatting since it has no use in context of
+        SQL queries and may cause more harm than good.
+
+You may access these functions using `.format` property of connection object. Example:
+
+    Examples:
+
+        >>> C = pyexasol.connect(...)
+        ... print(C.format.escape('abc'))
+    """
     safe_ident_regexp = re.compile(r'^[A-Za-z_][A-Za-z0-9_]*$')
     safe_decimal_regexp = re.compile(r'^(\+|-)?[0-9]+(\.[0-9]+)?$')
     safe_float_regexp = re.compile(r'^(\+|-)?[0-9]+(\.[0-9]+((e|E)(\+|-)[0-9]+)?)?$')
@@ -51,18 +67,52 @@ class ExaFormatter(string.Formatter):
 
     @classmethod
     def escape(cls, val):
+        """
+        Takes a raw value and converts it into an and escaped string.
+
+        Args:
+            val: Value to be escaped.
+
+        Returns:
+            A string where all single quotes ``'`` have been replaced
+            with two single quotes ``''``.
+        """
         return str(val).replace("'", "''")
 
     @classmethod
     def escape_ident(cls, val):
+        """
+        Takes a raw value and converts it into an and escaped string.
+
+        Args:
+            val: Value to be escaped.
+
+        Returns:
+            A string where all double quotes ``"`` have been replaced 
+            with two double quotes ``""``.
+        """
         return str(val).replace('"', '""')
 
     @classmethod
     def escape_like(cls, val):
+        """
+        Escape LIKE-patterns.
+
+        Args:
+            val: Value to be escaped.
+
+        Returns:
+            A string where all double quotes ``\\`` have been replaced 
+            with ``\\\\``, where ``%`` have been replaced with ``\%``,
+            where ``_`` have been replaced with ``\_``.
+        """
         return cls.escape(val).replace('\\', '\\\\').replace('%', r'\%').replace('_', r'\_')
 
     @classmethod
     def quote(cls, val):
+        """
+        Escapes a string using :meth:`pyexasol.ExaFormatter.escape` and wraps it in single quotes ``'``.
+        """
         if val is None:
             return 'NULL'
 
@@ -70,6 +120,16 @@ class ExaFormatter(string.Formatter):
 
     @classmethod
     def quote_ident(cls, val):
+        """
+        Escapes a string one or multiple values using :meth:`pyexasol.ExaFormatter.excape_ident` and wraps it in double quotes ``"``.
+
+        Args:
+            val (str or tuple): Raw identifier(s) to be escaped.
+
+        Returns:
+            str: The formatted and quoted identifier, or joined identifiers if 
+            a tuple was provided.
+        """
         if isinstance(val, tuple):
             return '.'.join([cls.quote_ident(x) for x in val])
 
@@ -77,6 +137,21 @@ class ExaFormatter(string.Formatter):
 
     @classmethod
     def safe_ident(cls, val):
+        """
+        Convert a raw indientifer safely.
+
+        Args:
+            val (str or tuple): Raw identifier(s).
+
+        Returns:
+            Validates identifier as string.
+
+        Raises:
+            ValueError If passed values is not a valid identifier (e.g. contains spaces)
+
+        Warning:
+            It puts it into SQL query without any quotting.
+        """
         if isinstance(val, tuple):
             return '.'.join([cls.safe_ident(x) for x in val])
 
@@ -97,6 +172,18 @@ class ExaFormatter(string.Formatter):
 
     @classmethod
     def safe_float(cls, val):
+        """
+        Convert a float  safely to string.
+
+        Args:
+            val: Float value to convert.
+
+        Returns:
+            Validates identifier as string.
+
+        Raises:
+            ValueError: If value is not valid, e.g.: ``+infinity`` or ``-infinity``.
+        """
         if val is None:
             return 'NULL'
 
@@ -109,6 +196,18 @@ class ExaFormatter(string.Formatter):
 
     @classmethod
     def safe_decimal(cls, val):
+        """
+        Convert a decimal safely to string.
+
+        Args:
+            val: Decimal value to convert.
+
+        Returns:
+            Validates identifier as string.
+
+        Raises:
+            ValueError: If value is not valid.
+        """
         if val is None:
             return 'NULL'
 
