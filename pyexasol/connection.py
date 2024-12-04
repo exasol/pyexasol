@@ -433,7 +433,7 @@ class ExaConnection(object):
         Get the name of the current schema.
 
         Returns:
-            Name of currently opened schema. Return empty string if no schema was opened.
+            Name of currently opened schema. Returns an empty string if no schema was opened.
         """
         return self.attr.get('currentSchema', '')
 
