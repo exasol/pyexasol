@@ -138,7 +138,7 @@ You may access these functions using `.format` property of connection object. Ex
     @classmethod
     def safe_ident(cls, val):
         """
-        Convert a raw indientifer safely.
+        Convert a raw identifier safely.
 
         Args:
             val (str or tuple): Raw identifier(s).
