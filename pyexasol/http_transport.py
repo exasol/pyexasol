@@ -259,11 +259,17 @@ class ExaHttpThread(threading.Thread):
 
 class ExaHTTPTransportWrapper(object):
     """
-    Start HTTP server, obtain address ("ipaddr:port" string)
-    Send it to parent process
+    Wrapper for :ref:`http_transport_parallel`.
 
-    Block into "export_*()" or "import_*()" call,
-    wait for incoming connection, process data and exit.
+    You may create this wrapper using :func:`pyexasol.http_transport`.
+
+    Note:
+
+        Starts an HTTP server, obtains the address (the ``"ipaddr:port"`` string),
+        and sends it to the parent process.
+
+        Block into ``export_*()`` or ``import_*()`` call,
+        wait for incoming connection, process data and exit.
     """
     def __init__(self, ipaddr, port, compression=False, encryption=True):
         self.http_thread = ExaHttpThread(ipaddr, port, compression, encryption)
@@ -271,13 +277,42 @@ class ExaHTTPTransportWrapper(object):
 
     @property
     def exa_address(self):
+        """
+        Internal Exasol address as ``ipaddr:port`` string.
+
+        Note:
+            This string should be passed from child processes to parent process
+            and used as an argument for ``export_parallel()`` and
+            ``import_parallel()`` functions.
+        """
         return self.http_thread.exa_address
 
     def get_proxy(self):
-        """ DEPRECATED, please use .exa_address property """
+        """
+        Caution:
+            **DEPRECATED**, please use ``.exa_address`` property
+        """
         return self.http_thread.exa_address
 
     def export_to_callback(self, callback, dst, callback_params=None):
+        """
+        Exports chunk of data using callback function.
+
+        Args:
+            callback:
+                Callback function.
+            dst:
+                Export destination for callback function.
+            callback_params:
+                Dict with additional parameters for callback function.
+
+        Returns:
+            Result of the callback function.
+
+        Note:
+            You may use exactly the same callbacks utilized by standard
+            non-parallel ``export_to_callback()`` function.
+        """
         if not callable(callback):
             raise ValueError('Callback argument is not callable')
 
@@ -299,6 +334,24 @@ class ExaHTTPTransportWrapper(object):
             raise e
 
     def import_from_callback(self, callback, src, callback_params=None):
+        """
+        Import chunk of data using callback function. 
+
+        Args:
+            callback:
+                Callback function.
+            src:
+                Import source for the callback function.
+            callback_params:
+                Dict with additional parameters for the callback function.
+
+        Returns:
+            Result of callback function
+
+        Note:
+            You may use exactly the same callbacks utilized by standard
+            non-parallel ``import_from_callback()`` function.
+        """
         if not callable(callback):
             raise ValueError('Callback argument is not callable')
 
