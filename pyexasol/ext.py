@@ -6,26 +6,46 @@ from .exceptions import ExaRuntimeError
 
 
 class ExaExtension(object):
+    """
+    This class extends the functionality of a simple SQL driver to address common Exasol-related problems.
+
+    Tip:
+        You may access these functions using `.ext` property of connection object.
+
+    Examples:
+        >>> C = pyexasol.connect(...)
+        ... print(C.ext.get_disk_space_usage())
+    """
+
     def __init__(self, connection):
         self.connection = connection
         self.reserved_words = None
 
     def get_columns(self, object_name):
         """
-        DEPRECATED, please use `.meta.sql_columns` instead
+        Get information about columns of table or view.
 
-        Get information about columns of table or view (Websocket format)
-        Object name may be passed as tuple to specify custom schema
+        Args:
+            object_name: Object name may be passed as tuple to specify custom schema.
+
+        Caution: 
+            **DEPRECATED**, please use ``.meta.sql_columns`` instead.
         """
         object_name = self.connection.format.default_format_ident(object_name)
         return self.get_columns_sql(f"SELECT * FROM {object_name}")
 
     def get_columns_sql(self, query, query_params=None):
         """
-        DEPRECATED, please use `.meta.sql_columns` instead
+        Get columns of SQL query without executing it.
 
-        Get columns of SQL query without executing it (Websocket format)
-        It relies on prepared statement which is closed immediately without execution
+        Args:
+            object_name: Object name may be passed as tuple to specify custom schema.
+
+        Caution: 
+            **DEPRECATED**, please use ``.meta.sql_columns`` instead.
+
+        Note:
+            It relies on prepared statement which is closed immediately without execution
         """
         stmt = self.connection.cls_statement(self.connection, query, query_params, prepare=True)
         columns = stmt.columns()
@@ -35,14 +55,27 @@ class ExaExtension(object):
 
     def insert_multi(self, table_name, data, columns=None):
         """
-        INSERT small number of rows into table using prepared statement
-        It provides better performance for small data sets of 10,000 rows or less compared to .import_from_iterable()
+        Insert a samll number of rows into a table using a prepared statement.
 
-        Please use .import_from_iterable() for larger data sets and better memory efficiency
-        Please use .import_from_pandas() to import from data frame regardless of its size
+        Args:
+            table_name:
+                Target table for INSERT.
+            data:
+                Source object implementing ``__iter__`` (e.g. list or tuple).
+            columns:
+                List of column names to specify custom order of columns.
 
-        You may use "columns" argument to specify custom order of columns for insertion
-        If some columns are not included in this list, NULL or DEFAULT value will be used instead
+        Tip:
+            Compared to ``.import_from_iterable``, this method offers better performance for small data sets of 10,000 rows or fewer.
+
+            * Use ``.import_from_iterable`` for larger data sets and better memory efficiency
+            * Use ``.import_from_pandas`` to import from data frame regardless of its size
+
+            You may use "columns" argument to specify custom order of columns for insertion
+            If some columns are not included in this list, ``NULL`` or ``DEFAULT`` value will be used instead
+
+        Note:
+            Please note that data should be presented in a row format. You may use ``zip(*data_cols)`` to convert columnar format into row format.
         """
 
         # Convert possible iterator into list
@@ -70,10 +103,13 @@ class ExaExtension(object):
 
     def get_sys_columns(self, object_name):
         """
-        DEPRECATED, please use `.meta.list_columns` instead
-
         Get information about columns of table or view (SYS format)
-        Object name may be passed as tuple to specify custom schema
+
+        Args:
+            object_name: Object name may be passed as tuple to specify custom schema.
+
+        Caution: 
+            **DEPRECATED**, please use ``.meta.list_columns`` instead.
         """
         if isinstance(object_name, tuple):
             schema = self.connection.format.default_format_ident_value(object_name[0])
@@ -113,10 +149,16 @@ class ExaExtension(object):
 
     def get_sys_tables(self, schema=None, table_name_prefix=''):
         """
-        DEPRECATED, please use `.meta.list_tables` instead
-
         Get information about tables in selected schema(SYS format)
-        Output may be optionally filtered by table name prefix
+
+        Args:
+            schema:
+                -
+            table_name_prefix:
+                Output may be optionally filtered by table name prefix.
+
+        Caution: 
+            **DEPRECATED**, please use ``.meta.list_tables`` instead.
         """
         if schema is None:
             schema = self.connection.current_schema()
@@ -150,10 +192,16 @@ class ExaExtension(object):
 
     def get_sys_views(self, schema=None, view_name_prefix=''):
         """
-        DEPRECATED, please use `.meta.list_views` instead
-
         Get information about views in selected schema(SYS format)
-        Output may be optionally filtered by view name prefix
+
+        Args:
+            schema:
+                -
+            view_name_prefix:
+                Output may be optionally filtered by view name prefix.
+
+        Caution: 
+            **DEPRECATED**, please use ``.meta.list_views`` instead.
         """
         if schema is None:
             schema = self.connection.current_schema()
@@ -187,10 +235,14 @@ class ExaExtension(object):
 
     def get_sys_schemas(self, schema_name_prefix=''):
         """
-        DEPRECATED, please use `.meta.list_schemas` instead
-
         Get information about schemas (SYS format)
-        Output may be optionally filtered by schema name prefix
+
+        Args:
+            schema_name_prefix:
+                Output may be optionally filtered by schema name prefix
+
+        Caution: 
+            **DEPRECATED**, please use ``.meta.list_schemas`` instead.
         """
         schema_name_prefix = self.connection.format.default_format_ident_value(schema_name_prefix)
         schema_name_prefix = self.connection.format.escape_like(schema_name_prefix)
@@ -217,10 +269,13 @@ class ExaExtension(object):
 
     def get_reserved_words(self):
         """
-        DEPRECATED, please use `.meta.list_sql_keywords` instead
+        Get reserved keywords which cannot be used as identifiers without double-quotes.
 
-        Get reserved keywords which cannot be used as identifiers without double-quotes
-        Never hard-code this list! It changes with every Exasol versions
+        Caution: 
+            **DEPRECATED**, please use ``.meta.list_sql_keywords`` instead.
+
+        Warning:
+            Never hard-code this list! It changes with every Exasol versions.
         """
         if self.reserved_words is None:
             sql = """
@@ -236,8 +291,29 @@ class ExaExtension(object):
 
     def get_disk_space_usage(self):
         """
-        Exasol still lacks standard function to measure actual disk space usage
-        We're trying to mitigate this problem by making custom function
+        Get the disk space usage of the exasol DB.
+
+        Returns:
+
+            A dict with 4 keys, providing all disk space details.
+
+            .. list-table:: 
+               :header-rows: 1
+
+               * - Key
+                 - Description
+               * - ``occupied_size``
+                 - How much space is occupied (in bytes)
+               * - ``free_size``
+                 - How much space is available (in bytes)
+               * - ``total_size``
+                 - occupied_size + free_size
+               * - ``occupied_size_percent``
+                 - Percentage of occupied disk space (0-100%)
+
+        Note:
+            Exasol still lacks a standard function to measure actual disk space usage. 
+            We are trying to mitigate this problem by creating a custom function.
         """
         sql = """
             SELECT measure_time,
@@ -263,15 +339,34 @@ class ExaExtension(object):
 
     def export_to_pandas_with_dtype(self, query_or_table, query_params=None):
         """
-        Export to pandas and attempt to guess correct dtypes based on Exasol columns
-        Since pandas has significantly smaller range of allowed values, this function makes many assumptions
-        Please use it as baseline for your own function for complex cases
+        Export to pandas and attempt to guess correct dtypes based on Exasol columns.
 
-        Small decimal -> int32
-        Big decimal -> int64
-        Double -> float64
-        Date, Timestamp -> datetime64[ns]
-        Everything else -> category (!)
+        Args:
+            query_or_table:
+                Query or table to export.
+            query_params:
+                Additional query parameters.
+
+        Note:
+            Since pandas has significantly smaller range of allowed values, this function makes many assumptions
+            Please use it as baseline for your own function for complex cases
+
+            .. list-table::
+               :widths: 25 25
+               :header-rows: 1
+
+               * - Exasol Type
+                 - Pandas Type
+               * - Small decimal
+                 - int32
+               * - Big decimal
+                 - int64
+               * - Double
+                 - float64
+               * - Date, Timestamp
+                 - datetime64[ns]
+               * - Everything else
+                 - category (!)
         """
 
         if query_params:
@@ -328,16 +423,27 @@ class ExaExtension(object):
 
     def explain_last(self, details=False):
         """
-        Returns profiling information for last executed query
-        This function should be called immediately after execute()
+        Args:
+            details (bool): 
+                - ``False``, the function returns the average (AVG) or maximum (MAX) values aggregated for all Exasol nodes.
+                - ``True``, the function returns separate rows for each individual Exasol node, with a column labeled "iproc" representing the node.
 
-        details=False returns AVG or MAX values for all Exasol nodes
-        details=True returns separate rows for each individual Exasol node (column "iproc")
+        Returns:
+            Profiling information for last executed query.
 
-        Details are useful to detect bad data distribution and imbalanced execution
+        Note:
+            This function should be called immediately after ``execute()``
+            ``COMMIT``, ``ROLLBACK`` and ``FLUSH STATISTICS`` queries are ignored.
+        Tip:
+            Details are useful to detect bad data distribution and imbalanced execution
+            If you want to see real values of ``CPU, MEM, HDD, NET`` columns,
+            please enable Exasol profiling first with:
 
-        If you want to see real values of CPU, MEM, HDD, NET columns, please enable Exasol profiling first with:
-        ALTER SESSION SET PROFILE = 'ON';
+            .. code-block:: sql
+
+                ALTER SESSION SET PROFILE = 'ON';
+
+        *Please refer to Exasol User Manuals for explanations about profiling columns.*
         """
         self._execute('FLUSH STATISTICS')
 
