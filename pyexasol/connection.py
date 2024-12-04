@@ -510,7 +510,7 @@ class ExaConnection(object):
 
         Examples:
             >>> con = ExaConnection(...)
-            >>> con.export_to_pandas(
+            >>> myresult = con.export_to_pandas(
             ...    query_or_table="SELECT * FROM table"
             ... )
         """
