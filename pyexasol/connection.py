@@ -484,7 +484,7 @@ class ExaConnection(object):
 
         Examples:
             >>> con = ExaConnection(...)
-            >>> con.export_to_list(
+            >>> myresult = con.export_to_list(
             ...    query_or_table="SELECT * FROM table"
             ... )
         """
