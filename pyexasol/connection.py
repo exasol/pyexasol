@@ -782,7 +782,7 @@ class ExaConnection(object):
         Actual protocol version used by the the established connection.
 
         Returns:
-            ``0`` if connection was not established yet (e.g. due to exception handling)
+            ``0`` if connection was not established yet (e.g. due to exception handling), otherwise protocol version as int.
 
         Warnings:
             Actual Protocol version might be downgraded from requested protocol version if Exasol server does not support it
