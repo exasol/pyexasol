@@ -18,3 +18,7 @@ jobs:
 
   ssl_cert:
     uses: ./.github/workflows/ssl_cert.yml
+
+  publish-docs:
+    name: Publish Documentation
+    uses: ./.github/workflows/gh-pages.yml
