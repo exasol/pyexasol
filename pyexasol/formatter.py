@@ -8,7 +8,7 @@ class ExaFormatter(string.Formatter):
     
     Note:
         It introduces set of placeholders to prevent SQL injections specifically
-        in Exasol dynamic SQL queries. It also completely disabled `format_spec`
+        in Exasol dynamic SQL queries. It also completely disables `format_spec`
         section of standard formatting since it has no use in context of
         SQL queries and may cause more harm than good.
 
