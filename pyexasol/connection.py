@@ -773,7 +773,7 @@ class ExaConnection(object):
         Session id of current session.
 
         Returns:
-            Unique `SESSION_ID` of the current session.
+            Unique `SESSION_ID` of the current session as string.
         """
         return str(self.login_info.get('sessionId', ''))
 
