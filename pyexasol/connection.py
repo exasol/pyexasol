@@ -50,7 +50,7 @@ class ExaConnection(object):
     Note:
 
         It is advisable to use multiprocessing instead of threading and create
-        new connection in each sub-process
+        a new connection in each sub-process
 
         Public Attributes:
             ``attr``: 
