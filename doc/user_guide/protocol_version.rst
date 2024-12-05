@@ -1,3 +1,5 @@
+.. _protocol_version:
+
 WebSocket protocol versions
 ===========================
 

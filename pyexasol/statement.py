@@ -6,7 +6,45 @@ from . import constant
 
 
 class ExaStatement(object):
+    """
+    This class executes and helps to fetch result set of single Exasol SQL statement.
+
+    Warning:
+        Unlike typical `Cursor` object, `ExaStatement` is not reusable.
+
+    Note:
+        :class:`pyexasol.ExaStatement` may fetch result set rows as ``tuples`` (default) 
+        or as ``dict`` (set `fetch_dict=True` in connection options).
+
+        :class:`pyexasol.ExaStatement` may use custom data-type mapper during fetching
+        (set `fetch_mapper=<func>` in connection options).
+        Mapper function accepts two arguments (raw `value` and `dataType` object)
+        and returns custom object or value.
+
+        :class:`pyexasol.ExaStatement` fetches big result sets in chunks.
+        The size of chunk may be adjusted (set `fetch_size_bytes=<int>` in connection options).
+
+        Public Attributes:
+            ``execution_time``:
+                Execution time of SQL statement. It is measured by wall-clock time
+                of WebSocket request, so real execution time is a bit faster.
+    """
     def __init__(self, connection, query=None, query_params=None, prepare=False, meta_nosql=False, **options):
+        """
+        Args:
+            connection:
+                -
+            query:
+                -
+            query_params:
+                -
+            prepare:
+                -
+            meta_nosql:
+                -
+            options:
+                additonal kwargs
+        """
         self.connection = connection
 
         self.query = query if meta_nosql else self._format_query(query, query_params)
@@ -55,6 +93,18 @@ class ExaStatement(object):
             self._execute()
 
     def __iter__(self):
+        """
+        The best way to fetch result set of statement is to use iterator:
+
+        Yields:
+            ``tuple`` or ``dict`` depending on ``fetch_dict`` connection option.
+
+        Examples:
+
+            >>> st = pyexasol.execute('SELECT * FROM table')
+            ... for row in st:
+            ...     print(row)
+        """
         return self
 
     def __next__(self):
@@ -82,6 +132,13 @@ class ExaStatement(object):
         return row
 
     def fetchone(self):
+        """
+        Fetches one row of data.
+
+        Returns:
+            ``tuple`` or ``dict``.
+            ``None`` if all rows were fetched.
+        """
         try:
             row = next(self)
         except StopIteration:
@@ -90,16 +147,55 @@ class ExaStatement(object):
         return row
 
     def fetchmany(self, size=constant.DEFAULT_FETCHMANY_SIZE):
+        """
+        Fetch multiple rows.
+
+        Args:
+            size:
+                Set the specific number of rows to fetch (Default: ``10000``)
+
+        Returns:
+            ``list`` of ``tuples`` or ``list`` of ``dict``.
+            Empty `list` if all rows were fetched previously.
+        """
         return [row for row in itertools.islice(self, size)]
 
     def fetchall(self):
+        """
+        Fetches all remaining rows.
+
+        Returns:
+            ``list`` of ``tuples`` or ``list`` of ``dict``.
+            Empty ``list`` if all rows were fetched previously.
+
+        Warning:
+            This function may exhaust available memory.
+        """
         return [row for row in self]
 
     def fetchcol(self):
+        """
+        Fetches all values from the first column.
+
+        Returns:
+            ``list`` of values.
+            Empty ``list`` if all rows were fetched previously.
+        """
         self.fetch_dict = False
         return [row[0] for row in self]
 
     def fetchval(self):
+        """
+        Fetches first column of first row. 
+
+
+        Returns:
+            Value, ``None`` if all rows were fetched previously.
+
+        Tip:
+            This may be useful for queries returning single value like
+            ``SELECT count(*) FROM table``.
+        """
         self.fetch_dict = False
 
         try:
@@ -110,18 +206,74 @@ class ExaStatement(object):
         return row[0]
 
     def rowcount(self):
+        """
+        Number of selected/processed rows.
+
+        Returns:
+            Total amount of selected rows for statements with result set (``num_rows``).
+            Total amount of processed rows for DML queries (``row_count``).
+        """
         if self.result_type == 'resultSet':
             return self.num_rows_total
         else:
             return self.row_count
 
     def columns(self):
+        """
+        Retrieves column information of returned data.
+
+        Returns:
+            A ``dict`` with keys as ``column names`` and values as ``dataType`` objects.
+
+        Notes:
+
+            The dict will containt the following data:
+
+            .. list-table:: 
+               :header-rows: 1
+
+               * - Names
+                 - Type
+                 - Description
+               * - type
+                 - string
+                 - column data type
+               * - precision
+                 - number
+                 - (optional) column precision
+               * - scale
+                 - number
+                 - (optional) column scale
+               * - size
+                 - number
+                 - (optional) maximum size in bytes of a column value
+               * - characterSet
+                 - string
+                 - (optional) character encoding of a text column
+               * - withLocalTimeZone
+                 - true, false
+                 - (optional) specifies if a timestamp has a local time zone
+               * - fraction
+                 - number
+                 - (optional) fractional part of number
+               * - srid
+                 - number
+                 - (optional) spatial reference system identifier
+        """
         return dict(zip(self.col_names, self.col_types))
 
     def column_names(self):
+        """List of column names."""
         return self.col_names
 
     def close(self):
+        """
+        Closes result set handle if it was opened. 
+
+        Warning:
+            You won't be able to fetch next chunk of large dataset
+            after calling this function, but no other side-effects.
+        """
         self._close_result_set_handle()
         self._close_statement_handle()
 

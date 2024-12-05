@@ -38,21 +38,38 @@ class Host(NamedTuple):
     port: int
     fingerprint: Optional[str]
 
+
 class ExaConnection(object):
+    """
+    Warning:
+        Threads may share the module, but not connections
+        One connection may be used by different threads, just not at the same time
+        :meth:`pyexasol.ExaConnection.abort_query` is an exception,
+        it is meant to be called from another thread
+
+    Note:
+
+        It is advisable to use multiprocessing instead of threading and create
+        a new connection in each sub-process
+
+        Public Attributes:
+            ``attr``: 
+                Read-only `dict` of attributes of current connection.
+
+            ``login_info``:
+                Read-only ``dict`` of login information returned by second
+                response of LOGIN command.
+
+            ``options``:
+                Read-only ``dict`` of arguments passed to
+                :meth:`pyexasol.ExaConnection.connect`.
+    """
     cls_statement = ExaStatement
     cls_formatter = ExaFormatter
     cls_logger = ExaLogger
     cls_extension = ExaExtension
     cls_meta = ExaMetaData
 
-    """
-    Threads may share the module, but not connections
-    One connection may be used by different threads, just not at the same time
-
-    .abort_query() is an exception, it is meant to be called from another thread
-
-    It is advisable to use multiprocessing instead of threading and create new connection in each sub-process
-    """
     threadsafety = 1
 
     def __init__(self
@@ -92,38 +109,103 @@ class ExaConnection(object):
         """
         Exasol connection object
 
-        :param dsn: Connection string, same format as standard JDBC / ODBC drivers (e.g. 10.10.127.1..11:8564)
-        :param user: Username
-        :param password: Password
-        :param schema: Open schema after connection (Default: '', no schema)
-        :param autocommit: Enable autocommit on connection (Default: True)
-        :param snapshot_transactions: Explicitly enable or disable snapshot transactions on connection (Default: None, database default)
-        :param connection_timeout: Socket timeout in seconds used to establish connection (Default: 10)
-        :param socket_timeout: Socket timeout in seconds used for requests after connection was established (Default: 30)
-        :param query_timeout: Maximum execution time of queries before automatic abort, in seconds (Default: 0, no timeout)
-        :param compression: Use zlib compression both for WebSocket and HTTP transport (Default: False)
-        :param encryption: Use SSL to encrypt client-server communications for WebSocket and HTTP transport (Default: True)
-        :param fetch_dict: Fetch result rows as dicts instead of tuples (Default: False)
-        :param fetch_mapper: Use custom mapper function to convert Exasol values into Python objects during fetching (Default: None)
-        :param fetch_size_bytes: Maximum size of data message for single fetch request in bytes (Default: 5Mb)
-        :param lower_ident: Automatically lowercase identifiers (table names, column names, etc.) returned from relevant functions (Default: False)
-        :param quote_ident: Add double quotes and escape identifiers passed to relevant functions (export_*, import_*, ext.*, etc.) (Default: False)
-        :param json_lib: Supported values: rapidjson, ujson, orjson, json (Default: json)
-        :param verbose_error: Display additional information when error occurs (Default: True)
-        :param debug: Output debug information for client-server communication and connection attempts to STDERR
-        :param debug_logdir: Store debug information into files in debug_logdir instead of outputting it to STDERR
-        :param udf_output_bind_address: Specific server_address to bind TCP server for UDF script output (default: ('', 0))
-        :param udf_output_connect_address: Specific SCRIPT_OUTPUT_ADDRESS value to connect from Exasol to UDF script output server (default: inherited from TCP server)
-        :param udf_output_dir: Directory to store captured UDF script output logs, split by <session_id>_<statement_id>/<vm_num>
-        :param http_proxy: HTTP proxy string in Linux http_proxy format (default: None)
-        :param resolve_hostnames: Explicitly resolve host names to IP addresses before connecting. Deactivating this will let the operating system resolve the host name (default: True)
-        :param client_name: Custom name of client application displayed in Exasol sessions tables (Default: PyEXASOL)
-        :param client_version: Custom version of client application (Default: pyexasol.__version__)
-        :param client_os_username: Custom OS username displayed in Exasol sessions table (Default: getpass.getuser())
-        :param protocol_version: Major WebSocket protocol version requested for connection (Default: pyexasol.PROTOCOL_V3)
-        :param websocket_sslopt: Set custom SSL options for WebSocket client (Default: None)
-        :param access_token: OpenID access token to use for the login process
-        :param refresh_token: OpenID refresh token to use for the login process
+        Args:
+            dsn:
+                Connection string, same format as standard JDBC / ODBC drivers
+                (e.g. 10.10.127.1..11:8564)
+            user:
+                Username
+            password: 
+                Password
+            schema: 
+                Open schema after connection
+                (Default: '', no schema)
+            autocommit: 
+                Enable autocommit on connection
+                (Default: True)
+            snapshot_transactions: 
+                Explicitly enable or disable snapshot transactions on connection
+                (Default: None, database default)
+            connection_timeout: 
+                Socket timeout in seconds used to establish connection
+                (Default: 10)
+            socket_timeout: 
+                Socket timeout in seconds used for requests after connection was established
+                (Default: 30)
+            query_timeout: 
+                Maximum execution time of queries before automatic abort, in seconds
+                (Default: 0, no timeout)
+            compression: 
+                Use zlib compression both for WebSocket and HTTP transport
+                (Default: False)
+            encryption: 
+                Use SSL to encrypt client-server communications for WebSocket and HTTP transport
+                (Default: True)
+            fetch_dict: 
+                Fetch result rows as dicts instead of tuples (Default: False)
+            fetch_mapper: 
+                Use custom mapper function to convert Exasol values into
+                Python objects during fetching
+                (Default: None)
+            fetch_size_bytes: 
+                Maximum size of data message for single fetch request in bytes
+                (Default: 5Mb)
+            lower_ident: 
+                Automatically lowercase identifiers (table names, column names, etc.) 
+                returned from relevant functions
+                (Default: False)
+            quote_ident: 
+                Add double quotes and escape identifiers passed to relevant functions 
+                (export_*, import_*, ext.*, etc.)
+                (Default: False)
+            json_lib: 
+                Supported values: rapidjson, ujson, orjson, json
+                (Default: json)
+            verbose_error: 
+                Display additional information when error occurs
+                (Default: True)
+            debug: 
+                Output debug information for client-server communication and
+                connection attempts to STDERR
+            debug_logdir: 
+                Store debug information into files in debug_logdir instead of
+                outputting it to STDERR
+            udf_output_bind_address: 
+                Specific server_address to bind TCP server for UDF script output
+                (default: ('', 0))
+            udf_output_connect_address: 
+                Specific SCRIPT_OUTPUT_ADDRESS value to connect from Exasol to
+                UDF script output server 
+                (default: inherited from TCP server)
+            udf_output_dir: 
+                Directory to store captured UDF script output logs, split by 
+                <session_id>_<statement_id>/<vm_num>
+            http_proxy: 
+                HTTP proxy string in Linux http_proxy format
+                (default: None)
+            resolve_hostnames: 
+                Explicitly resolve host names to IP addresses before connecting.
+                Deactivating this will let the operating system resolve the host name
+                (default: True)
+            client_name: 
+                Custom name of client application displayed in Exasol sessions tables
+                (Default: PyEXASOL)
+            client_version: 
+                Custom version of client application
+                (Default: pyexasol.__version__)
+            client_os_username: 
+                Custom OS username displayed in Exasol sessions table
+                (Default: getpass.getuser())
+            protocol_version: 
+                Major WebSocket protocol version requested for connection
+                (Default: pyexasol.PROTOCOL_V3)
+            websocket_sslopt: 
+                Set custom SSL options for WebSocket client
+                (Default: None)
+            access_token: 
+                OpenID access token to use for the login process
+            refresh_token: 
+                OpenID refresh token to use for the login process
         """
 
         self.options = {
@@ -203,16 +285,54 @@ class ExaConnection(object):
     def execute(self, query, query_params=None) -> ExaStatement:
         """
         Execute SQL query with optional query formatting parameters
-        Return ExaStatement object
+
+        Args:
+            query:
+                SQL query text, possibly with placeholders
+            query_params:
+                 Values for placeholders
+
+        Returns:
+            ExaStatement object
+
+        Examples:
+
+            >>> con = ExaConnection(...)
+            >>> con.execute(
+            ...        query="SELECT * FROM {table!i} WHERE col1={col1}",
+            ...        query_params={'table': 'users', 'col1':'bar'}
+            ...)
         """
         return self.cls_statement(self, query, query_params)
 
     def execute_udf_output(self, query, query_params=None):
         """
         Execute SQL query with UDF script, capture output
-        Return ExaStatement object and list of Path-objects for script output log files
 
-        Exasol should be able to open connection to the machine where current script is running
+        Note:
+            Exasol should be able to open connection to the machine where current script is running.
+            It is usually OK in the same data centre, but it is normally not working
+            if you try to run this function on local laptop.
+
+        Args:
+            query:
+                SQL query text, possibly with placeholders
+            query_params:
+                Values for placeholders |
+
+        Returns:
+            Return tuple with two elements: (1) instance of :class:`pyexasol.ExaStatement`
+            and (2) list of :class:`Path` objects for script output log files.
+
+        Attention:
+            Exasol should be able to open connection to the machine where current script is running
+
+        Examples:
+            >>> con = ExaConnection(...)
+            >>> stmt, output_files = con.execute_udf_output(
+            ...        query="SELECT * FROM {table!i} WHERE col1={col1}",
+            ...        query_params={'table': 'users', 'col1':'bar'}
+            ...)
         """
         stmt_output_dir = self._get_stmt_output_dir()
 
@@ -252,12 +372,27 @@ class ExaConnection(object):
         return stmt, log_files
 
     def commit(self):
+        """Wrapper for query 'COMMIT'"""
         return self.execute('COMMIT')
 
     def rollback(self):
+        """Wrapper for query 'ROLLBACK'"""
         return self.execute('ROLLBACK')
 
     def set_autocommit(self, val):
+        """
+        Set autocommit mode.
+
+        Args:
+            val:
+                Set ``False`` to execute following statements in transaction.
+                Set ``True`` to get back to automatic COMMIT after each statement.
+
+        Note:
+            Autocommit is ``True`` by default because Exasol has to commit indexes and statistics
+            objects even for pure SELECT statements. Lack of default COMMIT may lead to serious
+            performance degradation.
+        """
         if not isinstance(val, bool):
             raise ValueError("Autocommit value must be boolean")
 
@@ -266,25 +401,119 @@ class ExaConnection(object):
         })
 
     def set_query_timeout(self, val):
+        """
+        Set the maximum time in seconds for which a query can run before Exasol kills it automatically. 
+
+        Args:
+            val:
+                Timeout value in seconds.
+                Set value ``0`` to disable timeout.
+
+        Note:
+            It is highly recommended to set timeout for UDF scripts to
+            avoid potential infinite loops and very long transactions.
+        """
         self.set_attr({
             'queryTimeout': int(val)
         })
 
     def open_schema(self, schema):
+        """
+        Wrapper for `OPEN SCHEMA`
+
+        Args:
+            schema: Schema name
+        """
         self.set_attr({
             'currentSchema': self.format.default_format_ident_value(schema)
         })
 
     def current_schema(self):
+        """
+        Get the name of the current schema.
+
+        Returns:
+            Name of currently opened schema. Returns an empty string if no schema was opened.
+        """
         return self.attr.get('currentSchema', '')
 
     def export_to_file(self, dst, query_or_table, query_params=None, export_params=None):
+        """
+        Export large amount of data from Exasol to file or file-like object using fast HTTP transport.
+
+        Note:
+            File must be opened in binary mode.
+
+        Args:
+            dst:
+                Path to file or file-like object.
+            query_or_table:
+                SQL query or table for export.
+            query_params:
+                Values for SQL query placeholders.
+            export_params:
+                Custom parameters for Export query.
+
+        Examples:
+            >>> con = ExaConnection(...)
+            >>> with open('/tmp/file.csv', 'wb') as f:
+            ...     con.export_to_file(
+            ...         dst=f,
+            ...         query_or_table="SELECT * FROM table"
+            ...     )
+        """
         return self.export_to_callback(cb.export_to_file, dst, query_or_table, query_params, None, export_params)
 
     def export_to_list(self, query_or_table, query_params=None, export_params=None):
+        """
+        Export large amount of data from Exasol to basic Python `list` using fast HTTP transport.
+
+        Args:
+            query_or_table:
+                SQL query or table for export.
+            query_params:
+                Values for SQL query placeholders.
+            export_params:
+                Custom parameters for Export query.
+
+        Returns:
+            `list` of `tuples`
+
+        Warnings:
+            - This function may run out of memory
+
+        Examples:
+            >>> con = ExaConnection(...)
+            >>> myresult = con.export_to_list(
+            ...    query_or_table="SELECT * FROM table"
+            ... )
+        """
         return self.export_to_callback(cb.export_to_list, None, query_or_table, query_params, None, export_params)
 
     def export_to_pandas(self, query_or_table, query_params=None, callback_params=None, export_params=None):
+        """
+        Export large amount of data from Exasol to :class:`pandas.DataFrame`.
+
+        Args:
+            query_or_table:
+                SQL query or table for export.
+            query_params:
+                Values for SQL query placeholders.
+            export_params:
+                Custom parameters for Export query.
+
+        Returns:
+            instance of :class:`pandas.DataFrame`
+
+        Warnings:
+            - This function may run out of memory
+
+        Examples:
+            >>> con = ExaConnection(...)
+            >>> myresult = con.export_to_pandas(
+            ...    query_or_table="SELECT * FROM table"
+            ... )
+        """
         if not export_params:
             export_params = {}
 
@@ -293,15 +522,79 @@ class ExaConnection(object):
         return self.export_to_callback(cb.export_to_pandas, None, query_or_table, query_params, callback_params, export_params)
 
     def import_from_file(self, src, table, import_params=None):
+        """
+        Import a large amount of data from a file or file-like object.
+
+        Args:
+            src:
+                Source file or file-like object.
+            table:
+                Destination table for IMPORT.
+            import_params:
+                Custom parameters for import query.
+
+        Note:
+            File must be opened in binary mode.
+        """
         return self.import_from_callback(cb.import_from_file, src, table, None, import_params)
 
     def import_from_iterable(self, src, table, import_params=None):
+        """
+        Import a large amount of data from an ``iterable`` Python object.
+
+        Args:
+            src:
+                Source object implementing ``__iter__``.
+                Iterator must return tuples of values.
+            table:
+                Destination table for IMPORT.
+            import_params:
+                Custom parameters for import query.
+        """
         return self.import_from_callback(cb.import_from_iterable, src, table, None, import_params)
 
     def import_from_pandas(self, src, table, callback_params=None, import_params=None):
+        """
+        Import a large amount of data from ``pandas.DataFrame``.
+
+        Args:
+            src:
+                Source ``pandas.DataFrame`` instance.
+            table:
+                Destination table for IMPORT.
+            import_params:
+                Custom parameters for import query.
+        """
         return self.import_from_callback(cb.import_from_pandas, src, table, callback_params, import_params)
 
     def export_to_callback(self, callback, dst, query_or_table, query_params=None, callback_params=None, export_params=None):
+        """
+        Export large amount of data to user-defined callback function
+
+        Args:
+            callback:
+                Callback function
+            query_or_table:
+                SQL query or table for export.
+            query_params:
+                Values for SQL query placeholders.
+            export_params:
+                Custom parameters for Export query.
+
+        Returns:
+            result of callback function
+
+        Warnings:
+            - This function may run out of memory
+
+        Examples:
+            >>> cb = lamda args: print(args)
+            >>> con = ExaConnection(...)
+            >>> con.export_to_callback(
+            ...    callback=cb,
+            ...    query_or_table="SELECT * FROM table"
+            ... )
+        """
         if not callable(callback):
             raise ValueError('Callback argument is not callable')
 
@@ -351,6 +644,24 @@ class ExaConnection(object):
             raise e
 
     def import_from_callback(self, callback, src, table, callback_params=None, import_params=None):
+        """
+        Import a large amount of data from a user-defined callback function.
+
+        Args:
+            callback: 
+                Callback function.
+            src:
+                Source for the callback function.
+            table:
+                Destination table for IMPORT.
+            callback_params:
+                Dict with additional parameters for callback function
+            import_params:
+                Custom parameters for IMPORT query.
+
+        Raises:
+            ValueError: callback argument isn't callable.
+        """
         if callback_params is None:
             callback_params = {}
 
@@ -398,9 +709,21 @@ class ExaConnection(object):
 
     def export_parallel(self, exa_address_list, query_or_table, query_params=None, export_params=None):
         """
-        Init HTTP transport in child processes first using pyexasol.http_transport()
-        Get internal Exasol address from each child process using .address
-        Pass address strings to parent process, combine into single list and use it for export_parallel() call
+        This function is part of :ref:`http_transport_parallel` API.
+
+        Args:
+            exa_address_list:
+                List of ``ipaddr:port`` strings obtained from HTTP transport ``.address``.
+            query_or_table:
+                SQL query or table for the export.
+            query_params:
+                Values for SQL query placeholders.
+            export_params:
+                Custom parameters for Export query.
+        Note:
+            - Init HTTP transport in child processes first using pyexasol.http_transport()
+            - Get internal Exasol address from each child process using .address
+            - Pass address strings to parent process, combine into single list and use it for export_parallel() call
         """
         if export_params is None:
             export_params = {}
@@ -418,9 +741,21 @@ class ExaConnection(object):
 
     def import_parallel(self, exa_address_list, table, import_params=None):
         """
-        Init HTTP transport in child processes first using pyexasol.http_transport()
-        Get internal Exasol address from each child process using .address
-        Pass address strings to parent process, combine into single list and use it for import_parallel() call
+        This function is part of :ref:`http_transport_parallel` API.
+
+        Args:
+            exa_address_list:
+                List of ``ipaddr:port`` strings obtained from HTTP transport ``.address``.
+            table:
+                Table to import to.
+            import_params:
+                Custom parameters for import.
+
+        Note:
+            - Init HTTP transport in child processes first using pyexasol.http_transport()
+            - Get internal Exasol address from each child process using .address
+            - Pass address strings to parent process, combine into single list and use it for import_parallel() call
+
         """
         if import_params is None:
             import_params = {}
@@ -434,23 +769,46 @@ class ExaConnection(object):
         sql_thread.run_sql()
 
     def session_id(self):
+        """
+        Session id of current session.
+
+        Returns:
+            Unique `SESSION_ID` of the current session as string.
+        """
         return str(self.login_info.get('sessionId', ''))
 
     def protocol_version(self):
         """
-        Return WebSocket protocol version of opened connection
-        Return 0 if connection was not established yet (e.g. due to exception handling)
+        Actual protocol version used by the the established connection.
 
-        Actual Protocol version might be downgraded from requested protocol version if Exasol server does not support it
+        Returns:
+            ``0`` if connection was not established yet (e.g. due to exception handling), otherwise protocol version as int.
+
+        Warnings:
+            Actual Protocol version might be downgraded from requested protocol version if Exasol server does not support it
+
+        Note:
+            The actual protocol version may be lower than the requested protocol version
+            defined by the ``protocol_version`` connection option. For further details,
+            refer to :ref:`protocol_version`.
+
         """
         return int(self.login_info.get('protocolVersion', 0))
 
     def last_statement(self) -> ExaStatement:
         """
-        Return last created ExaStatement object
+        Last created statement object
 
-        It is mainly used for HTTP transport to access internal IMPORT / EXPORT query,
-        measure execution time and number of rows
+        Returns:
+            ExaStatement: last created statement.
+
+        Note:
+            It is mainly used for HTTP transport to access internal IMPORT / EXPORT query,
+            measure execution time and number of rows
+
+        Tip:
+            It is useful while working with `export_*` and `import_*` functions normally
+            returning result of callback function instead of statement object.
         """
         if self.last_stmt is None:
             raise ExaRuntimeError(self, 'Last statement not found')
@@ -459,11 +817,15 @@ class ExaConnection(object):
 
     def close(self, disconnect=True):
         """
-        Close connection to Exasol by sending CLOSE websocket frame
-        Send optional "disconnect" command to free resources and close session on Exasol server side properly
+        Closes connection to database.
 
-        Please note that "disconnect" should always be False when .close() is being called from .req()-like functions
-        to prevent an infinite loop if websocket exception happens during handling of "disconnect" command
+        Args:
+            disconnect: 
+                If ``true`` send optional "disconnect" command to free resources and close session on Exasol server side properly.
+
+        Note:
+            Please note that "disconnect" should always be False when .close() is being called from .req()-like functions
+            to prevent an infinite loop if websocket exception happens during handling of "disconnect" command
         """
         if self._ws.connected:
             if disconnect:
@@ -495,14 +857,23 @@ class ExaConnection(object):
 
     def get_nodes(self, pool_size=None):
         """
-        Return list of dictionaries describing active Exasol nodes
-        Format: {'ipaddr': <ip_address>, 'port': <port>, 'idx': <incremental index of returned node>}
+        List of currently active Exasol nodes which is normally used for :ref:`http_transport_parallel`.
 
-        If pool_size is bigger than number of nodes, list will wrap around and nodes will repeat with different 'idx'
-        If pool_size is omitted, return every active node once
+        Args:
+            pool_size:
+                Return list of specific size.
 
-        It is useful to balance workload for parallel IMPORT and EXPORT
-        Exasol shuffles list for every connection
+        Returns:
+            list of dictionaries describing active Exasol nodes
+
+        Note:
+
+            Format: ``{'ipaddr': <ip_address>, 'port': <port>, 'idx': <incremental index of returned node>}``
+
+            - If pool_size is bigger than number of nodes, list will wrap around and nodes will repeat with different 'idx'
+            - If pool_size is omitted, return every active node once
+            - It is useful to balance workload for parallel IMPORT and EXPORT Exasol shuffles list for every connection
+            - Exasol shuffles list for every connection.
         """
         ret = self.req({
             'command': 'getHosts',
@@ -578,13 +949,17 @@ class ExaConnection(object):
     def abort_query(self):
         """
         Abort running query
-        This function should be called from a separate thread and has no response
-        Response should be checked in the main thread which started execution of query
 
-        There are three possible outcomes of calling this function:
-        1) Query is aborted normally, connection remains active
-        2) Query was stuck in a state which cannot be aborted, so Exasol has to terminate connection
-        3) Query might be finished successfully before abort call had a chance to take effect
+        Warnings:
+
+            This function should be called from a separate thread and has no response
+            Response should be checked in the main thread which started execution of query
+
+            There are three possible outcomes of calling this function:
+
+            #. Query is aborted normally, connection remains active
+            #. Query was stuck in a state which cannot be aborted, so Exasol has to terminate connection
+            #. Query might be finished successfully before abort call had a chance to take effect
         """
         req = {
             'command': 'abortQuery'
@@ -661,8 +1036,10 @@ class ExaConnection(object):
     def _init_ws(self):
         """
         Init websocket connection
-        Connection redundancy is supported
-        Specific Exasol node is randomly selected for every connection attempt
+
+        Note:
+            - Connection redundancy is supported
+            - Specific Exasol node is randomly selected for every connection attempt
         """
         dsn_items = self._process_dsn(self.options['dsn'])
         failed_attempts = 0
@@ -758,9 +1135,13 @@ class ExaConnection(object):
 
     def _process_dsn(self, dsn: str) -> list[Host]:
         """
-        Parse DSN, expand ranges and resolve IP addresses for all hostnames
-        Return list of (hostname, ip_address, port) tuples in random order
-        Randomness is required to guarantee proper distribution of workload across all nodes
+        Parse DSN, expand ranges and resolve IP addresses for all hostnames.
+
+        Note:
+            Randomness is required to guarantee proper distribution of workload across all nodes
+
+        Returns:
+            List of (hostname, ip_address, port) tuples in random order
         """
         if dsn is None or len(dsn.strip()) == 0:
             raise ExaConnectionDsnError(self, 'Connection string is empty')
@@ -826,8 +1207,10 @@ class ExaConnection(object):
 
     def _resolve_hostname(self, hostname: str, port: int, fingerprint: Optional[str]) -> list[Host]:
         """
-        Resolve all IP addresses for hostname and add port
-        It also implicitly checks that all hostnames mentioned in DSN can be resolved
+        Resolve all IP addresses for hostname and add port.
+        
+        Warnings:
+            - It also implicitly checks that all hostnames mentioned in DSN can be resolved
         """
         try:
             hostname, _, ipaddr_list = socket.gethostbyname_ex(hostname)
@@ -915,11 +1298,14 @@ class ExaConnection(object):
 
     def __del__(self):
         """
-        close() is being called automatically in order to:
+        Will close the connection.
 
-        1) send OP_CLOSE frame to Exasol server rather than silently terminating the socket on client side
-        2) make sure connection is closed immediately even if garbage collection was disabled for any reasons
-        3) write debug logs
+        Note:
+            close() is being called automatically in order to:
+
+            #.  send OP_CLOSE frame to Exasol server rather than silently terminating the socket on client side
+            #.  make sure connection is closed immediately even if garbage collection was disabled for any reasons
+            #.  write debug logs
         """
         # Based on our investigations, two scenarios have emerged, one of which does not function correctly:
         #
