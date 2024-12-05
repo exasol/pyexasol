@@ -7,3 +7,7 @@
 ## 🔩 Internal
 
 * Add support for publishing documentation to gh pages
+
+## 📚 Documentation
+
+* Add sphinx based documention

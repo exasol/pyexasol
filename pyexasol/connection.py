@@ -50,7 +50,7 @@ class ExaConnection(object):
     Note:
 
         It is advisable to use multiprocessing instead of threading and create
-        new connection in each sub-process
+        a new connection in each sub-process
 
         Public Attributes:
             ``attr``: 
@@ -329,7 +329,7 @@ class ExaConnection(object):
 
         Examples:
             >>> con = ExaConnection(...)
-            >>> con.execute(
+            >>> stmt, output_files = con.execute_udf_output(
             ...        query="SELECT * FROM {table!i} WHERE col1={col1}",
             ...        query_params={'table': 'users', 'col1':'bar'}
             ...)
@@ -433,7 +433,7 @@ class ExaConnection(object):
         Get the name of the current schema.
 
         Returns:
-            Name of currently opened schema. Return empty string if no schema was opened.
+            Name of currently opened schema. Returns an empty string if no schema was opened.
         """
         return self.attr.get('currentSchema', '')
 
@@ -484,7 +484,7 @@ class ExaConnection(object):
 
         Examples:
             >>> con = ExaConnection(...)
-            >>> con.export_to_list(
+            >>> myresult = con.export_to_list(
             ...    query_or_table="SELECT * FROM table"
             ... )
         """
@@ -510,7 +510,7 @@ class ExaConnection(object):
 
         Examples:
             >>> con = ExaConnection(...)
-            >>> con.export_to_pandas(
+            >>> myresult = con.export_to_pandas(
             ...    query_or_table="SELECT * FROM table"
             ... )
         """
@@ -773,7 +773,7 @@ class ExaConnection(object):
         Session id of current session.
 
         Returns:
-            Unique `SESSION_ID` of the current session.
+            Unique `SESSION_ID` of the current session as string.
         """
         return str(self.login_info.get('sessionId', ''))
 
@@ -782,7 +782,7 @@ class ExaConnection(object):
         Actual protocol version used by the the established connection.
 
         Returns:
-            ``0`` if connection was not established yet (e.g. due to exception handling)
+            ``0`` if connection was not established yet (e.g. due to exception handling), otherwise protocol version as int.
 
         Warnings:
             Actual Protocol version might be downgraded from requested protocol version if Exasol server does not support it

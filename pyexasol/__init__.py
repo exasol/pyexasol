@@ -104,7 +104,7 @@ def http_transport(ipaddr, port, compression=False, encryption=True) -> ExaHTTPT
         compression:
             Use zlib compression for HTTP transport, must be the same as `compression` of main connection
         encryption:
-            Use SSL encryption for HTTP transport, must be the same as `encryption` of main connection
+            Use SSL/TLS encryption for HTTP transport, must be the same as `encryption` of main connection
 
     Info:
         Compression and encryption arguments should match :func:`pyexasol.connect`

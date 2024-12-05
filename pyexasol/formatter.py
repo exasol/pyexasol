@@ -8,7 +8,7 @@ class ExaFormatter(string.Formatter):
     
     Note:
         It introduces set of placeholders to prevent SQL injections specifically
-        in Exasol dynamic SQL queries. It also completely disabled `format_spec`
+        in Exasol dynamic SQL queries. It also completely disables `format_spec`
         section of standard formatting since it has no use in context of
         SQL queries and may cause more harm than good.
 
@@ -121,10 +121,10 @@ You may access these functions using `.format` property of connection object. Ex
     @classmethod
     def quote_ident(cls, val):
         """
-        Escapes a string one or multiple values using :meth:`pyexasol.ExaFormatter.excape_ident` and wraps it in double quotes ``"``.
+        Escapes an object or a tuple of objects using :meth:`pyexasol.ExaFormatter.escape_ident` and wraps it in double quotes ``"``.
 
         Args:
-            val (str or tuple): Raw identifier(s) to be escaped.
+            val: Raw identifier(s) to be escaped.
 
         Returns:
             str: The formatted and quoted identifier, or joined identifiers if 
@@ -138,7 +138,7 @@ You may access these functions using `.format` property of connection object. Ex
     @classmethod
     def safe_ident(cls, val):
         """
-        Convert a raw indientifer safely.
+        Convert a raw identifier safely.
 
         Args:
             val (str or tuple): Raw identifier(s).
@@ -173,7 +173,7 @@ You may access these functions using `.format` property of connection object. Ex
     @classmethod
     def safe_float(cls, val):
         """
-        Convert a float  safely to string.
+        Convert a float safely to string.
 
         Args:
             val: Float value to convert.
