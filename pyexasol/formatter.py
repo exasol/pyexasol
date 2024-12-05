@@ -173,7 +173,7 @@ You may access these functions using `.format` property of connection object. Ex
     @classmethod
     def safe_float(cls, val):
         """
-        Convert a float  safely to string.
+        Convert a float safely to string.
 
         Args:
             val: Float value to convert.
