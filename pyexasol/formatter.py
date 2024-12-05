@@ -124,7 +124,7 @@ You may access these functions using `.format` property of connection object. Ex
         Escapes an object or a tuple of objects using :meth:`pyexasol.ExaFormatter.escape_ident` and wraps it in double quotes ``"``.
 
         Args:
-            val (str or tuple): Raw identifier(s) to be escaped.
+            val: Raw identifier(s) to be escaped.
 
         Returns:
             str: The formatted and quoted identifier, or joined identifiers if 

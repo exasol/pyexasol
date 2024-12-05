@@ -329,7 +329,7 @@ class ExaConnection(object):
 
         Examples:
             >>> con = ExaConnection(...)
-            >>> con.execute(
+            >>> stmt, output_files = con.execute_udf_output(
             ...        query="SELECT * FROM {table!i} WHERE col1={col1}",
             ...        query_params={'table': 'users', 'col1':'bar'}
             ...)
