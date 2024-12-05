@@ -121,7 +121,7 @@ You may access these functions using `.format` property of connection object. Ex
     @classmethod
     def quote_ident(cls, val):
         """
-        Escapes a string one or multiple values using :meth:`pyexasol.ExaFormatter.excape_ident` and wraps it in double quotes ``"``.
+        Escapes an object or a tuple of objects using :meth:`pyexasol.ExaFormatter.escape_ident` and wraps it in double quotes ``"``.
 
         Args:
             val (str or tuple): Raw identifier(s) to be escaped.
