@@ -2,14 +2,15 @@
 Simple benchmark for Exasol
 
 """
+
 import multiprocessing
 import os
 import pathlib
-import pyexasol
 import queue
 import sys
 import time
 
+import pyexasol
 
 BUSY_LOOP_DELAY = 0.2
 STARTUP_WORKER_DELAY = 1
@@ -25,15 +26,21 @@ class ExaBenchWorker(multiprocessing.Process):
         super().__init__()
 
     def run(self):
-        C = pyexasol.connect(dsn=args.dsn, user=args.user, password=args.password, schema=args.schema, autocommit=False)
+        C = pyexasol.connect(
+            dsn=args.dsn,
+            user=args.user,
+            password=args.password,
+            schema=args.schema,
+            autocommit=False,
+        )
         self.queue.put(C.session_id())
 
-        sql_comment = f'/* bench_run_id={self.proc_num} */'
+        sql_comment = f"/* bench_run_id={self.proc_num} */"
 
         try:
             C.execute(f"ALTER SESSION SET QUERY_CACHE='OFF' {sql_comment}")
 
-            for sql_query in sql_text.split(';'):
+            for sql_query in sql_text.split(";"):
                 formatted_sql_query = sql_query.strip("\n ")
                 if len(formatted_sql_query) == 0:
                     continue
@@ -47,18 +54,38 @@ class ExaBenchWorker(multiprocessing.Process):
             C.close()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     import argparse
 
-    parser = argparse.ArgumentParser(prog=f'python -m pyexasol_utils.bench [action]')
+    parser = argparse.ArgumentParser(prog=f"python -m pyexasol_utils.bench [action]")
 
-    parser.add_argument('action', help='Benchmark action (prepare, set1, set2, etc.), OR path to SQL file with commands')
-    parser.add_argument('--dsn', default=os.environ.get('EXAHOST', ''), help='Exasol DSN (host:port)')
-    parser.add_argument('--user', default=os.environ.get('EXAUID', ''), help='Exasol user name')
-    parser.add_argument('--password', default=os.environ.get('EXAPWD', ''), help='Exasol password')
-    parser.add_argument('--schema', default=os.environ.get('EXASCHEMA', 'PYEXASOL_BENCH'), help='Exasol schema for tests (default: PYEXASOL_BENCH)')
-    parser.add_argument('--scale', default=1.0, type=float, help='Scaling factor for the amount of generated data (default: 1.0)')
-    parser.add_argument('--parallel', default=1, type=int, help='Number of parallel executions')
+    parser.add_argument(
+        "action",
+        help="Benchmark action (prepare, set1, set2, etc.), OR path to SQL file with commands",
+    )
+    parser.add_argument(
+        "--dsn", default=os.environ.get("EXAHOST", ""), help="Exasol DSN (host:port)"
+    )
+    parser.add_argument(
+        "--user", default=os.environ.get("EXAUID", ""), help="Exasol user name"
+    )
+    parser.add_argument(
+        "--password", default=os.environ.get("EXAPWD", ""), help="Exasol password"
+    )
+    parser.add_argument(
+        "--schema",
+        default=os.environ.get("EXASCHEMA", "PYEXASOL_BENCH"),
+        help="Exasol schema for tests (default: PYEXASOL_BENCH)",
+    )
+    parser.add_argument(
+        "--scale",
+        default=1.0,
+        type=float,
+        help="Scaling factor for the amount of generated data (default: 1.0)",
+    )
+    parser.add_argument(
+        "--parallel", default=1, type=int, help="Number of parallel executions"
+    )
 
     args = parser.parse_args()
 
@@ -66,9 +93,11 @@ if __name__ == '__main__':
     C = pyexasol.connect(dsn=args.dsn, user=args.user, password=args.password)
 
     # Prepare schema
-    if args.action == 'prepare':
+    if args.action == "prepare":
         if args.parallel > 1:
-            raise ValueError("Cannot run [prepare.sql] with more than 1 parallel processes")
+            raise ValueError(
+                "Cannot run [prepare.sql] with more than 1 parallel processes"
+            )
 
         if not C.meta.schema_exists(args.schema):
             C.execute("CREATE SCHEMA {schema!i}", {"schema": args.schema})
@@ -81,15 +110,23 @@ if __name__ == '__main__':
         bench_sql_path = pathlib.Path(args.action)
 
         if not bench_sql_path.is_file():
-            raise ValueError("Action argument is neither a standard action, nor path to SQL file")
+            raise ValueError(
+                "Action argument is neither a standard action, nor path to SQL file"
+            )
 
     sql_text = C.format.format(bench_sql_path.read_text(), scale=args.scale)
 
     # Show startup message
-    if args.action == 'prepare':
-        print(f"Running [{bench_sql_path.name}] with scale factor of [{args.scale}]", file=sys.stderr)
+    if args.action == "prepare":
+        print(
+            f"Running [{bench_sql_path.name}] with scale factor of [{args.scale}]",
+            file=sys.stderr,
+        )
     else:
-        print(f"Running [{bench_sql_path.name}] in [{args.parallel}] parallel processes", file=sys.stderr)
+        print(
+            f"Running [{bench_sql_path.name}] in [{args.parallel}] parallel processes",
+            file=sys.stderr,
+        )
 
     # Start worker processes
     process_pool = list()
@@ -136,9 +173,12 @@ if __name__ == '__main__':
         exit(0)
 
     # Output SQL to get results
-    run_id_regex_replace = r"REGEXP_REPLACE(sql_text, '(?s)^.*\/\* bench_run_id=(\d+) \*\/.*$', '\1')"
+    run_id_regex_replace = (
+        r"REGEXP_REPLACE(sql_text, '(?s)^.*\/\* bench_run_id=(\d+) \*\/.*$', '\1')"
+    )
 
-    print(f"""
+    print(
+        f"""
 Durations SQL:
 SELECT session_id
     , stmt_id
@@ -151,9 +191,12 @@ FROM "$EXA_AUDIT_SQL"
 WHERE session_id IN ({','.join(session_id_list)})
     AND stmt_id > 1
 ORDER BY 2,3;
-    """, file=sys.stderr)
+    """,
+        file=sys.stderr,
+    )
 
-    print(f"""
+    print(
+        f"""
 Profiling details SQL:
 SELECT session_id
     , stmt_id
@@ -173,6 +216,8 @@ FROM "$EXA_PROFILE_DETAILS_LAST_DAY"
 WHERE session_id = {session_id_list[-1]}
     AND stmt_id > 1
 ORDER BY 2,4,5;
-    """, file=sys.stderr)
+    """,
+        file=sys.stderr,
+    )
 
     C.close()

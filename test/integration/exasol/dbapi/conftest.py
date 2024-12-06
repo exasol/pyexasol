@@ -15,10 +15,9 @@ def connection(dsn, user, password, schema):
     yield _connection
     _connection.close()
 
+
 @pytest.fixture
 def cursor(connection):
     cursor = connection.cursor()
     yield cursor
     cursor.close()
-
-

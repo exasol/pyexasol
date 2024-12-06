@@ -1,9 +1,9 @@
 import os
-import sys
 import subprocess
+import sys
 
 
-class ExaScriptOutputProcess(object):
+class ExaScriptOutputProcess:
     def __init__(self, host, port, output_dir):
         self.host = host
         self.port = port
@@ -14,22 +14,26 @@ class ExaScriptOutputProcess(object):
         self.proc = None
 
     def start(self):
-        args = [sys.executable,
-                '-m', 'pyexasol_utils.script_output',
-                '--output-dir', str(self.output_dir),
-                '--ppid', str(os.getpid())
-                ]
+        args = [
+            sys.executable,
+            "-m",
+            "pyexasol_utils.script_output",
+            "--output-dir",
+            str(self.output_dir),
+            "--ppid",
+            str(os.getpid()),
+        ]
 
         if self.host:
-            args.append('--host')
+            args.append("--host")
             args.append(self.host)
 
         if self.port:
-            args.append('--port')
+            args.append("--port")
             args.append(str(self.port))
 
         self.proc = subprocess.Popen(args, stdout=subprocess.PIPE)
-        self.output_address = self.proc.stdout.readline().decode().rstrip('\n')
+        self.output_address = self.proc.stdout.readline().decode().rstrip("\n")
 
         self.proc.stdout.close()
 
@@ -49,7 +53,9 @@ class ExaScriptOutputProcess(object):
         code = self.join()
 
         if code != 0:
-            raise RuntimeError(f"Script output server process finished with exitcode: {code}")
+            raise RuntimeError(
+                f"Script output server process finished with exitcode: {code}"
+            )
 
         return code
 

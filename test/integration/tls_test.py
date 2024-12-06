@@ -1,5 +1,7 @@
 import hashlib
+
 import pytest
+
 import pyexasol
 from pyexasol import ExaConnectionFailedError
 
@@ -64,7 +66,12 @@ def test_connect_with_tls(dsn, user, password, schema):
 def test_connect_with_tls_without_resolving_hostname(dsn, user, password, schema):
     expected = 1
     with pyexasol.connect(
-        dsn=dsn, user=user, password=password, schema=schema, encryption=True, resolve_hostnames=False
+        dsn=dsn,
+        user=user,
+        password=password,
+        schema=schema,
+        encryption=True,
+        resolve_hostnames=False,
     ) as connection:
         actual = connection.execute("SELECT 1;").fetchval()
 

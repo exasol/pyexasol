@@ -16,7 +16,6 @@ from functools import wraps
 from typing import Optional
 
 import pyexasol.exceptions
-
 from exasol.driver.websocket._errors import (
     Error,
     NotSupportedError,

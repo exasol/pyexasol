@@ -1,6 +1,8 @@
-import pyexasol
-import pytest
 from inspect import cleandoc
+
+import pytest
+
+import pyexasol
 
 
 @pytest.fixture

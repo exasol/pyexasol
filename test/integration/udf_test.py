@@ -1,6 +1,8 @@
-import pytest
-import pyexasol
 from inspect import cleandoc
+
+import pytest
+
+import pyexasol
 
 
 @pytest.fixture
@@ -53,7 +55,7 @@ def echo(connection, logging_address):
         udf_call = f"SELECT {name}('{text}');"
         stmt, logfiles = connection.execute_udf_output(udf_call)
         result = stmt.fetchval()
-        log = "LOG: " + "".join((log.read_text() for log in logfiles))
+        log = "LOG: " + "".join(log.read_text() for log in logfiles)
         return result, log
 
     yield executor

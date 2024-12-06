@@ -1,12 +1,13 @@
 import pytest
+
 import pyexasol
 from pyexasol import (
-    ExaConnectionError,
     ExaAuthError,
+    ExaCommunicationError,
+    ExaConnectionError,
     ExaQueryError,
     ExaRequestError,
     ExaRuntimeError,
-    ExaCommunicationError
 )
 
 
@@ -17,19 +18,14 @@ def test_bad_dsn(connection):
 
 
 @pytest.mark.exceptions
-@pytest.mark.parametrize("credentials", [
-    {"username": "wrongy"},
-    {"password": "no-tworking"}
-])
+@pytest.mark.parametrize(
+    "credentials", [{"username": "wrongy"}, {"password": "no-tworking"}]
+)
 def test_bad_credentails(credentials, dsn, user, password):
     username = credentials.get("username", user)
     password = credentials.get("password", password)
     with pytest.raises(ExaAuthError):
-        pyexasol.connect(
-            dsn=dsn,
-            user=username,
-            password=password
-        )
+        pyexasol.connect(dsn=dsn, user=username, password=password)
 
 
 @pytest.mark.exceptions
@@ -42,11 +38,7 @@ def test_invalid_sql(connection):
 @pytest.mark.exceptions
 def test_read_from_closed_cursor(dsn, user, password, schema):
     connection = pyexasol.connect(
-        dsn=dsn,
-        user=user,
-        password=password,
-        schema=schema,
-        fetch_size_bytes=1024
+        dsn=dsn, user=user, password=password, schema=schema, fetch_size_bytes=1024
     )
     query = "SELECT * FROM users;"
     cursor = connection.execute(query)

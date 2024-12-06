@@ -1,4 +1,5 @@
 import pytest
+
 from pyexasol.warnings import PyexasolDeprecationWarning
 
 

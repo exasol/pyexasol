@@ -1,8 +1,10 @@
-import io
 import csv
-import pytest
-import pyexasol
+import io
 from inspect import cleandoc
+
+import pytest
+
+import pyexasol
 
 
 @pytest.fixture
@@ -16,7 +18,12 @@ def connection(dsn, user, password, schema):
 @pytest.fixture
 def connection_without_resolving_hostnames(dsn, user, password, schema):
     with pyexasol.connect(
-        dsn=dsn, user=user, password=password, schema=schema, compression=True, resolve_hostnames=False
+        dsn=dsn,
+        user=user,
+        password=password,
+        schema=schema,
+        compression=True,
+        resolve_hostnames=False,
     ) as con:
         yield con
 
@@ -28,13 +35,15 @@ def table_name():
 
 @pytest.fixture
 def empty_table(connection, table_name):
-    ddl = cleandoc(f"""
+    ddl = cleandoc(
+        f"""
     CREATE TABLE IF NOT EXISTS {table_name}
     (
         FIRSTNAME       VARCHAR(255),
         LASTNAME        VARCHAR(255)
     );
-    """)
+    """
+    )
     connection.execute(ddl)
     connection.commit()
 
@@ -101,9 +110,13 @@ def test_export_with_column_names(connection, table, data, export_file, expected
 
 
 @pytest.mark.etl
-def test_export_without_resolving_hostname(connection_without_resolving_hostnames, table, data, export_file, expected_csv):
+def test_export_without_resolving_hostname(
+    connection_without_resolving_hostnames, table, data, export_file, expected_csv
+):
     params = {"with_column_names": True}
-    connection_without_resolving_hostnames.export_to_file(export_file, table, export_params=params)
+    connection_without_resolving_hostnames.export_to_file(
+        export_file, table, export_params=params
+    )
 
     expected = expected_csv(table, data, **params)
     actual = export_file.read_text()

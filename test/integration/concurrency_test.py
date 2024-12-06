@@ -1,6 +1,8 @@
-import pytest
-import pyexasol
 import threading
+
+import pytest
+
+import pyexasol
 from pyexasol import ExaConcurrencyError
 
 

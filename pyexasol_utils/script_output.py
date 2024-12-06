@@ -28,12 +28,13 @@ a) Workload is pure I/O, so GIL should not be a problem.
 b) Potential amount of VM's connected in parallel is huge and may surpass 1000+, which may cause problems with forks.
 
 """
+
+import os
+import pathlib
+import shutil
 import socket
 import socketserver
 import sys
-import os
-import shutil
-import pathlib
 
 
 class ExaScriptOutputServer(socketserver.ThreadingMixIn, socketserver.TCPServer):
@@ -48,7 +49,9 @@ class ExaScriptOutputServer(socketserver.ThreadingMixIn, socketserver.TCPServer)
     initial_ppid = None
 
     def get_output_address(self):
-        return f"{socket.gethostbyname(socket.getfqdn())}:{self.socket.getsockname()[1]}"
+        return (
+            f"{socket.gethostbyname(socket.getfqdn())}:{self.socket.getsockname()[1]}"
+        )
 
     def service_actions(self):
         self.check_orphaned(self.initial_ppid)
@@ -65,7 +68,9 @@ class ExaScriptOutputServer(socketserver.ThreadingMixIn, socketserver.TCPServer)
         current_ppid = os.getppid()
 
         if sys.platform != "win32" and initial_ppid and current_ppid != initial_ppid:
-            raise RuntimeError(f"Current process is orphaned, initial ppid={initial_ppid}, current ppid={current_ppid}")
+            raise RuntimeError(
+                f"Current process is orphaned, initial ppid={initial_ppid}, current ppid={current_ppid}"
+            )
 
 
 class ExaScriptOutputHandler(socketserver.StreamRequestHandler):
@@ -86,14 +91,14 @@ class ExaScriptOutputDebugModeHandler(ExaScriptOutputHandler):
 
     def handle(self):
         if self.server.connected_clients == 1:
-            print('\n-------- NEW STATEMENT --------', flush=True)
+            print("\n-------- NEW STATEMENT --------", flush=True)
 
             # Read and flush line-by-line, show log to user as soon as possible
             for line in self.rfile:
                 sys.stdout.buffer.write(line)
                 sys.stdout.buffer.flush()
         else:
-            dst = open(os.devnull, 'wb')
+            dst = open(os.devnull, "wb")
             shutil.copyfileobj(self.rfile, dst)
             dst.close()
 
@@ -102,8 +107,10 @@ class ExaScriptOutputScriptModeHandler(ExaScriptOutputHandler):
     server: ExaScriptOutputServer
 
     def handle(self):
-        path = self.server.output_dir_path / (str(self.server.total_clients).rjust(5, '0') + '.log')
-        dst = open(path, 'wb')
+        path = self.server.output_dir_path / (
+            str(self.server.total_clients).rjust(5, "0") + ".log"
+        )
+        dst = open(path, "wb")
 
         shutil.copyfileobj(self.rfile, dst)
         dst.close()
@@ -116,19 +123,32 @@ class ExaScriptOutputScriptModeHandler(ExaScriptOutputHandler):
             self.server.shutdown()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     import argparse
     import signal
 
     # Restore original SIGTERM handler
     signal.signal(signal.SIGTERM, signal.SIG_DFL)
 
-    parser = argparse.ArgumentParser(prog=f'python -m pyexasol_utils.script_output')
+    parser = argparse.ArgumentParser(prog=f"python -m pyexasol_utils.script_output")
 
-    parser.add_argument('--host', default='0.0.0.0', help='Specific address to bind TCPServer (default: 0.0.0.0)')
-    parser.add_argument('--port', default=0, help='Specific port to bind TCPServer (default: random port)', type=int)
-    parser.add_argument('--output-dir', default=None, help='Directory to write enumerated log files, one file per VM')
-    parser.add_argument('--ppid', default=0, help='PID of parent process', type=int)
+    parser.add_argument(
+        "--host",
+        default="0.0.0.0",
+        help="Specific address to bind TCPServer (default: 0.0.0.0)",
+    )
+    parser.add_argument(
+        "--port",
+        default=0,
+        help="Specific port to bind TCPServer (default: random port)",
+        type=int,
+    )
+    parser.add_argument(
+        "--output-dir",
+        default=None,
+        help="Directory to write enumerated log files, one file per VM",
+    )
+    parser.add_argument("--ppid", default=0, help="PID of parent process", type=int)
 
     args = parser.parse_args()
 
@@ -137,15 +157,19 @@ if __name__ == '__main__':
         output_dir_path = pathlib.Path(args.output_dir)
 
         if not output_dir_path.is_dir():
-            raise ValueError(f"Output_dir does not exist or not a directory: {output_dir_path}")
+            raise ValueError(
+                f"Output_dir does not exist or not a directory: {output_dir_path}"
+            )
 
         # Start TCP server
-        server = ExaScriptOutputServer((args.host, args.port), ExaScriptOutputScriptModeHandler)
+        server = ExaScriptOutputServer(
+            (args.host, args.port), ExaScriptOutputScriptModeHandler
+        )
         server.output_dir_path = output_dir_path
         server.initial_ppid = args.ppid
 
         # Send output address to the main process
-        sys.stdout.buffer.write(f'{server.get_output_address()}\n'.encode())
+        sys.stdout.buffer.write(f"{server.get_output_address()}\n".encode())
         sys.stdout.buffer.flush()
 
         # Handle incoming connections
@@ -156,10 +180,14 @@ if __name__ == '__main__':
     # Debug mode: display output of one VM into terminal, discard output of other VM's
     else:
         # Start TCP server with debug handler
-        server = ExaScriptOutputServer((args.host, args.port), ExaScriptOutputDebugModeHandler)
+        server = ExaScriptOutputServer(
+            (args.host, args.port), ExaScriptOutputDebugModeHandler
+        )
 
         # Send pre-generated SQL with output address to user terminal
-        sys.stdout.write(f"ALTER SESSION SET SCRIPT_OUTPUT_ADDRESS = '{server.get_output_address()}';\n")
+        sys.stdout.write(
+            f"ALTER SESSION SET SCRIPT_OUTPUT_ADDRESS = '{server.get_output_address()}';\n"
+        )
         sys.stdout.flush()
 
         # Stop server manually with SIGTERM (Ctrl + C, etc.) when debugging is finished

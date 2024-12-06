@@ -5,41 +5,46 @@ import itertools
 import platform
 import random
 import re
-import rsa
 import socket
 import ssl
-import time
 import threading
+import time
 import urllib.parse
-import websocket
 import zlib
-
-from . import callback as cb
-
 from typing import (
     NamedTuple,
-    Optional
+    Optional,
 )
+
+import rsa
+import websocket
+
+from . import callback as cb
 from .exceptions import *
-from .statement import ExaStatement
-from .logger import ExaLogger
-from .formatter import ExaFormatter
 from .ext import ExaExtension
-from .http_transport import ExaSQLExportThread, ExaSQLImportThread, ExaHttpThread
+from .formatter import ExaFormatter
+from .http_transport import (
+    ExaHttpThread,
+    ExaSQLExportThread,
+    ExaSQLImportThread,
+)
+from .logger import ExaLogger
 from .meta import ExaMetaData
 from .script_output import ExaScriptOutputProcess
+from .statement import ExaStatement
 from .version import __version__
 
 
 class Host(NamedTuple):
     """This represents a resolved host name with its IP address and port number."""
+
     hostname: str
     ip_address: Optional[str]
     port: int
     fingerprint: Optional[str]
 
 
-class ExaConnection(object):
+class ExaConnection:
     """
     Warning:
         Threads may share the module, but not connections
@@ -53,7 +58,7 @@ class ExaConnection(object):
         a new connection in each sub-process
 
         Public Attributes:
-            ``attr``: 
+            ``attr``:
                 Read-only `dict` of attributes of current connection.
 
             ``login_info``:
@@ -64,6 +69,7 @@ class ExaConnection(object):
                 Read-only ``dict`` of arguments passed to
                 :meth:`pyexasol.ExaConnection.connect`.
     """
+
     cls_statement = ExaStatement
     cls_formatter = ExaFormatter
     cls_logger = ExaLogger
@@ -72,40 +78,41 @@ class ExaConnection(object):
 
     threadsafety = 1
 
-    def __init__(self
-            , dsn=None
-            , user=None
-            , password=None
-            , schema=''
-            , autocommit=constant.DEFAULT_AUTOCOMMIT
-            , snapshot_transactions=None
-            , connection_timeout=constant.DEFAULT_CONNECTION_TIMEOUT
-            , socket_timeout=constant.DEFAULT_SOCKET_TIMEOUT
-            , query_timeout=constant.DEFAULT_QUERY_TIMEOUT
-            , compression=False
-            , encryption=True
-            , fetch_dict=False
-            , fetch_mapper=None
-            , fetch_size_bytes=constant.DEFAULT_FETCH_SIZE_BYTES
-            , lower_ident=False
-            , quote_ident=False
-            , json_lib='json'
-            , verbose_error=True
-            , debug=False
-            , debug_logdir=None
-            , udf_output_bind_address=None
-            , udf_output_connect_address=None
-            , udf_output_dir=None
-            , http_proxy=None
-            , resolve_hostnames=True
-            , client_name=None
-            , client_version=None
-            , client_os_username=None
-            , protocol_version=constant.PROTOCOL_V3
-            , websocket_sslopt=None
-            , access_token=None
-            , refresh_token=None
-            ):
+    def __init__(
+        self,
+        dsn=None,
+        user=None,
+        password=None,
+        schema="",
+        autocommit=constant.DEFAULT_AUTOCOMMIT,
+        snapshot_transactions=None,
+        connection_timeout=constant.DEFAULT_CONNECTION_TIMEOUT,
+        socket_timeout=constant.DEFAULT_SOCKET_TIMEOUT,
+        query_timeout=constant.DEFAULT_QUERY_TIMEOUT,
+        compression=False,
+        encryption=True,
+        fetch_dict=False,
+        fetch_mapper=None,
+        fetch_size_bytes=constant.DEFAULT_FETCH_SIZE_BYTES,
+        lower_ident=False,
+        quote_ident=False,
+        json_lib="json",
+        verbose_error=True,
+        debug=False,
+        debug_logdir=None,
+        udf_output_bind_address=None,
+        udf_output_connect_address=None,
+        udf_output_dir=None,
+        http_proxy=None,
+        resolve_hostnames=True,
+        client_name=None,
+        client_version=None,
+        client_os_username=None,
+        protocol_version=constant.PROTOCOL_V3,
+        websocket_sslopt=None,
+        access_token=None,
+        refresh_token=None,
+    ):
         """
         Exasol connection object
 
@@ -115,141 +122,132 @@ class ExaConnection(object):
                 (e.g. 10.10.127.1..11:8564)
             user:
                 Username
-            password: 
+            password:
                 Password
-            schema: 
+            schema:
                 Open schema after connection
                 (Default: '', no schema)
-            autocommit: 
+            autocommit:
                 Enable autocommit on connection
                 (Default: True)
-            snapshot_transactions: 
+            snapshot_transactions:
                 Explicitly enable or disable snapshot transactions on connection
                 (Default: None, database default)
-            connection_timeout: 
+            connection_timeout:
                 Socket timeout in seconds used to establish connection
                 (Default: 10)
-            socket_timeout: 
+            socket_timeout:
                 Socket timeout in seconds used for requests after connection was established
                 (Default: 30)
-            query_timeout: 
+            query_timeout:
                 Maximum execution time of queries before automatic abort, in seconds
                 (Default: 0, no timeout)
-            compression: 
+            compression:
                 Use zlib compression both for WebSocket and HTTP transport
                 (Default: False)
-            encryption: 
+            encryption:
                 Use SSL to encrypt client-server communications for WebSocket and HTTP transport
                 (Default: True)
-            fetch_dict: 
+            fetch_dict:
                 Fetch result rows as dicts instead of tuples (Default: False)
-            fetch_mapper: 
+            fetch_mapper:
                 Use custom mapper function to convert Exasol values into
                 Python objects during fetching
                 (Default: None)
-            fetch_size_bytes: 
+            fetch_size_bytes:
                 Maximum size of data message for single fetch request in bytes
                 (Default: 5Mb)
-            lower_ident: 
-                Automatically lowercase identifiers (table names, column names, etc.) 
+            lower_ident:
+                Automatically lowercase identifiers (table names, column names, etc.)
                 returned from relevant functions
                 (Default: False)
-            quote_ident: 
-                Add double quotes and escape identifiers passed to relevant functions 
+            quote_ident:
+                Add double quotes and escape identifiers passed to relevant functions
                 (export_*, import_*, ext.*, etc.)
                 (Default: False)
-            json_lib: 
+            json_lib:
                 Supported values: rapidjson, ujson, orjson, json
                 (Default: json)
-            verbose_error: 
+            verbose_error:
                 Display additional information when error occurs
                 (Default: True)
-            debug: 
+            debug:
                 Output debug information for client-server communication and
                 connection attempts to STDERR
-            debug_logdir: 
+            debug_logdir:
                 Store debug information into files in debug_logdir instead of
                 outputting it to STDERR
-            udf_output_bind_address: 
+            udf_output_bind_address:
                 Specific server_address to bind TCP server for UDF script output
                 (default: ('', 0))
-            udf_output_connect_address: 
+            udf_output_connect_address:
                 Specific SCRIPT_OUTPUT_ADDRESS value to connect from Exasol to
-                UDF script output server 
+                UDF script output server
                 (default: inherited from TCP server)
-            udf_output_dir: 
-                Directory to store captured UDF script output logs, split by 
+            udf_output_dir:
+                Directory to store captured UDF script output logs, split by
                 <session_id>_<statement_id>/<vm_num>
-            http_proxy: 
+            http_proxy:
                 HTTP proxy string in Linux http_proxy format
                 (default: None)
-            resolve_hostnames: 
+            resolve_hostnames:
                 Explicitly resolve host names to IP addresses before connecting.
                 Deactivating this will let the operating system resolve the host name
                 (default: True)
-            client_name: 
+            client_name:
                 Custom name of client application displayed in Exasol sessions tables
                 (Default: PyEXASOL)
-            client_version: 
+            client_version:
                 Custom version of client application
                 (Default: pyexasol.__version__)
-            client_os_username: 
+            client_os_username:
                 Custom OS username displayed in Exasol sessions table
                 (Default: getpass.getuser())
-            protocol_version: 
+            protocol_version:
                 Major WebSocket protocol version requested for connection
                 (Default: pyexasol.PROTOCOL_V3)
-            websocket_sslopt: 
+            websocket_sslopt:
                 Set custom SSL options for WebSocket client
                 (Default: None)
-            access_token: 
+            access_token:
                 OpenID access token to use for the login process
-            refresh_token: 
+            refresh_token:
                 OpenID refresh token to use for the login process
         """
 
         self.options = {
-            'dsn': dsn,
-            'user': user,
-            'password': password,
-            'schema': schema,
-            'autocommit': autocommit,
-            'snapshot_transactions': snapshot_transactions,
-
-            'connection_timeout': connection_timeout,
-            'socket_timeout': socket_timeout,
-            'query_timeout': query_timeout,
-            'compression': compression,
-            'encryption': encryption,
-
-            'fetch_dict': fetch_dict,
-            'fetch_mapper': fetch_mapper,
-            'fetch_size_bytes': fetch_size_bytes,
-            'lower_ident': lower_ident,
-            'quote_ident': quote_ident,
-
-            'json_lib': json_lib,
-
-            'verbose_error': verbose_error,
-            'debug': debug,
-            'debug_logdir': debug_logdir,
-
-            'udf_output_bind_address': udf_output_bind_address,
-            'udf_output_connect_address': udf_output_connect_address,
-            'udf_output_dir': udf_output_dir,
-
-            'http_proxy': http_proxy,
-            'resolve_hostnames': resolve_hostnames,
-
-            'client_name': client_name,
-            'client_version': client_version,
-            'client_os_username': client_os_username,
-
-            'protocol_version': protocol_version,
-            'websocket_sslopt': websocket_sslopt,
-
-            'access_token': access_token,
-            'refresh_token': refresh_token,
+            "dsn": dsn,
+            "user": user,
+            "password": password,
+            "schema": schema,
+            "autocommit": autocommit,
+            "snapshot_transactions": snapshot_transactions,
+            "connection_timeout": connection_timeout,
+            "socket_timeout": socket_timeout,
+            "query_timeout": query_timeout,
+            "compression": compression,
+            "encryption": encryption,
+            "fetch_dict": fetch_dict,
+            "fetch_mapper": fetch_mapper,
+            "fetch_size_bytes": fetch_size_bytes,
+            "lower_ident": lower_ident,
+            "quote_ident": quote_ident,
+            "json_lib": json_lib,
+            "verbose_error": verbose_error,
+            "debug": debug,
+            "debug_logdir": debug_logdir,
+            "udf_output_bind_address": udf_output_bind_address,
+            "udf_output_connect_address": udf_output_connect_address,
+            "udf_output_dir": udf_output_dir,
+            "http_proxy": http_proxy,
+            "resolve_hostnames": resolve_hostnames,
+            "client_name": client_name,
+            "client_version": client_version,
+            "client_os_username": client_os_username,
+            "protocol_version": protocol_version,
+            "websocket_sslopt": websocket_sslopt,
+            "access_token": access_token,
+            "refresh_token": refresh_token,
         }
 
         self.login_info = {}
@@ -337,24 +335,35 @@ class ExaConnection(object):
         stmt_output_dir = self._get_stmt_output_dir()
 
         script_output = ExaScriptOutputProcess(
-            self.options['udf_output_bind_address'][0] if self.options['udf_output_bind_address'] else None,
-            self.options['udf_output_bind_address'][1] if self.options['udf_output_bind_address'] else None,
-            stmt_output_dir
+            (
+                self.options["udf_output_bind_address"][0]
+                if self.options["udf_output_bind_address"]
+                else None
+            ),
+            (
+                self.options["udf_output_bind_address"][1]
+                if self.options["udf_output_bind_address"]
+                else None
+            ),
+            stmt_output_dir,
         )
 
         try:
             script_output.start()
 
             # This option is useful to get around complex network setups, like Exasol running in Docker containers
-            if self.options['udf_output_connect_address']:
+            if self.options["udf_output_connect_address"]:
                 address = f"{self.options['udf_output_connect_address'][0]}:{self.options['udf_output_connect_address'][1]}"
             else:
                 address = script_output.get_output_address()
 
-            self.execute("ALTER SESSION SET SCRIPT_OUTPUT_ADDRESS = {address}", {'address': address})
+            self.execute(
+                "ALTER SESSION SET SCRIPT_OUTPUT_ADDRESS = {address}",
+                {"address": address},
+            )
 
             stmt = self.execute(query, query_params)
-            log_files = sorted(list(stmt_output_dir.glob('*.log')))
+            log_files = sorted(list(stmt_output_dir.glob("*.log")))
 
             if len(log_files) > 0:
                 script_output.join_with_exc()
@@ -373,11 +382,11 @@ class ExaConnection(object):
 
     def commit(self):
         """Wrapper for query 'COMMIT'"""
-        return self.execute('COMMIT')
+        return self.execute("COMMIT")
 
     def rollback(self):
         """Wrapper for query 'ROLLBACK'"""
-        return self.execute('ROLLBACK')
+        return self.execute("ROLLBACK")
 
     def set_autocommit(self, val):
         """
@@ -396,13 +405,11 @@ class ExaConnection(object):
         if not isinstance(val, bool):
             raise ValueError("Autocommit value must be boolean")
 
-        self.set_attr({
-            'autocommit': val
-        })
+        self.set_attr({"autocommit": val})
 
     def set_query_timeout(self, val):
         """
-        Set the maximum time in seconds for which a query can run before Exasol kills it automatically. 
+        Set the maximum time in seconds for which a query can run before Exasol kills it automatically.
 
         Args:
             val:
@@ -413,9 +420,7 @@ class ExaConnection(object):
             It is highly recommended to set timeout for UDF scripts to
             avoid potential infinite loops and very long transactions.
         """
-        self.set_attr({
-            'queryTimeout': int(val)
-        })
+        self.set_attr({"queryTimeout": int(val)})
 
     def open_schema(self, schema):
         """
@@ -424,9 +429,7 @@ class ExaConnection(object):
         Args:
             schema: Schema name
         """
-        self.set_attr({
-            'currentSchema': self.format.default_format_ident_value(schema)
-        })
+        self.set_attr({"currentSchema": self.format.default_format_ident_value(schema)})
 
     def current_schema(self):
         """
@@ -435,9 +438,11 @@ class ExaConnection(object):
         Returns:
             Name of currently opened schema. Returns an empty string if no schema was opened.
         """
-        return self.attr.get('currentSchema', '')
+        return self.attr.get("currentSchema", "")
 
-    def export_to_file(self, dst, query_or_table, query_params=None, export_params=None):
+    def export_to_file(
+        self, dst, query_or_table, query_params=None, export_params=None
+    ):
         """
         Export large amount of data from Exasol to file or file-like object using fast HTTP transport.
 
@@ -462,7 +467,9 @@ class ExaConnection(object):
             ...         query_or_table="SELECT * FROM table"
             ...     )
         """
-        return self.export_to_callback(cb.export_to_file, dst, query_or_table, query_params, None, export_params)
+        return self.export_to_callback(
+            cb.export_to_file, dst, query_or_table, query_params, None, export_params
+        )
 
     def export_to_list(self, query_or_table, query_params=None, export_params=None):
         """
@@ -488,9 +495,17 @@ class ExaConnection(object):
             ...    query_or_table="SELECT * FROM table"
             ... )
         """
-        return self.export_to_callback(cb.export_to_list, None, query_or_table, query_params, None, export_params)
+        return self.export_to_callback(
+            cb.export_to_list, None, query_or_table, query_params, None, export_params
+        )
 
-    def export_to_pandas(self, query_or_table, query_params=None, callback_params=None, export_params=None):
+    def export_to_pandas(
+        self,
+        query_or_table,
+        query_params=None,
+        callback_params=None,
+        export_params=None,
+    ):
         """
         Export large amount of data from Exasol to :class:`pandas.DataFrame`.
 
@@ -517,9 +532,16 @@ class ExaConnection(object):
         if not export_params:
             export_params = {}
 
-        export_params['with_column_names'] = True
+        export_params["with_column_names"] = True
 
-        return self.export_to_callback(cb.export_to_pandas, None, query_or_table, query_params, callback_params, export_params)
+        return self.export_to_callback(
+            cb.export_to_pandas,
+            None,
+            query_or_table,
+            query_params,
+            callback_params,
+            export_params,
+        )
 
     def import_from_file(self, src, table, import_params=None):
         """
@@ -536,7 +558,9 @@ class ExaConnection(object):
         Note:
             File must be opened in binary mode.
         """
-        return self.import_from_callback(cb.import_from_file, src, table, None, import_params)
+        return self.import_from_callback(
+            cb.import_from_file, src, table, None, import_params
+        )
 
     def import_from_iterable(self, src, table, import_params=None):
         """
@@ -551,7 +575,9 @@ class ExaConnection(object):
             import_params:
                 Custom parameters for import query.
         """
-        return self.import_from_callback(cb.import_from_iterable, src, table, None, import_params)
+        return self.import_from_callback(
+            cb.import_from_iterable, src, table, None, import_params
+        )
 
     def import_from_pandas(self, src, table, callback_params=None, import_params=None):
         """
@@ -565,9 +591,19 @@ class ExaConnection(object):
             import_params:
                 Custom parameters for import query.
         """
-        return self.import_from_callback(cb.import_from_pandas, src, table, callback_params, import_params)
+        return self.import_from_callback(
+            cb.import_from_pandas, src, table, callback_params, import_params
+        )
 
-    def export_to_callback(self, callback, dst, query_or_table, query_params=None, callback_params=None, export_params=None):
+    def export_to_callback(
+        self,
+        callback,
+        dst,
+        query_or_table,
+        query_params=None,
+        callback_params=None,
+        export_params=None,
+    ):
         """
         Export large amount of data to user-defined callback function
 
@@ -596,7 +632,7 @@ class ExaConnection(object):
             ... )
         """
         if not callable(callback):
-            raise ValueError('Callback argument is not callable')
+            raise ValueError("Callback argument is not callable")
 
         if callback_params is None:
             callback_params = {}
@@ -607,10 +643,16 @@ class ExaConnection(object):
         if query_params is not None:
             query_or_table = self.format.format(query_or_table, **query_params)
 
-        compression = False if ('format' in export_params) else self.options['compression']
+        compression = (
+            False if ("format" in export_params) else self.options["compression"]
+        )
 
-        http_thread = ExaHttpThread(self.ws_ipaddr, self.ws_port, compression, self.options['encryption'])
-        sql_thread = ExaSQLExportThread(self, compression, query_or_table, export_params)
+        http_thread = ExaHttpThread(
+            self.ws_ipaddr, self.ws_port, compression, self.options["encryption"]
+        )
+        sql_thread = ExaSQLExportThread(
+            self, compression, query_or_table, export_params
+        )
 
         try:
             http_thread.start()
@@ -643,12 +685,14 @@ class ExaConnection(object):
 
             raise e
 
-    def import_from_callback(self, callback, src, table, callback_params=None, import_params=None):
+    def import_from_callback(
+        self, callback, src, table, callback_params=None, import_params=None
+    ):
         """
         Import a large amount of data from a user-defined callback function.
 
         Args:
-            callback: 
+            callback:
                 Callback function.
             src:
                 Source for the callback function.
@@ -668,12 +712,16 @@ class ExaConnection(object):
         if import_params is None:
             import_params = {}
 
-        compression = False if ('format' in import_params) else self.options['compression']
+        compression = (
+            False if ("format" in import_params) else self.options["compression"]
+        )
 
         if not callable(callback):
-            raise ValueError('Callback argument is not callable')
+            raise ValueError("Callback argument is not callable")
 
-        http_thread = ExaHttpThread(self.ws_ipaddr, self.ws_port, compression, self.options['encryption'])
+        http_thread = ExaHttpThread(
+            self.ws_ipaddr, self.ws_port, compression, self.options["encryption"]
+        )
         sql_thread = ExaSQLImportThread(self, compression, table, import_params)
 
         try:
@@ -707,7 +755,9 @@ class ExaConnection(object):
 
             raise e
 
-    def export_parallel(self, exa_address_list, query_or_table, query_params=None, export_params=None):
+    def export_parallel(
+        self, exa_address_list, query_or_table, query_params=None, export_params=None
+    ):
         """
         This function is part of :ref:`http_transport_parallel` API.
 
@@ -728,14 +778,18 @@ class ExaConnection(object):
         if export_params is None:
             export_params = {}
 
-        compression = False if ('format' in export_params) else self.options['compression']
+        compression = (
+            False if ("format" in export_params) else self.options["compression"]
+        )
 
         if query_params is not None:
             query_or_table = self.format.format(query_or_table, **query_params)
 
         # There is no need to actually run a separate thread here, all work is performed in separate processes
         # We simply reuse thread class to keep logic in one place
-        sql_thread = ExaSQLExportThread(self, compression, query_or_table, export_params)
+        sql_thread = ExaSQLExportThread(
+            self, compression, query_or_table, export_params
+        )
         sql_thread.set_exa_address_list(exa_address_list)
         sql_thread.run_sql()
 
@@ -760,7 +814,9 @@ class ExaConnection(object):
         if import_params is None:
             import_params = {}
 
-        compression = False if ('format' in import_params) else self.options['compression']
+        compression = (
+            False if ("format" in import_params) else self.options["compression"]
+        )
 
         # There is no need to actually run a separate thread here, all work is performed in separate processes
         # We simply reuse thread class to keep logic in one place
@@ -775,7 +831,7 @@ class ExaConnection(object):
         Returns:
             Unique `SESSION_ID` of the current session as string.
         """
-        return str(self.login_info.get('sessionId', ''))
+        return str(self.login_info.get("sessionId", ""))
 
     def protocol_version(self):
         """
@@ -793,7 +849,7 @@ class ExaConnection(object):
             refer to :ref:`protocol_version`.
 
         """
-        return int(self.login_info.get('protocolVersion', 0))
+        return int(self.login_info.get("protocolVersion", 0))
 
     def last_statement(self) -> ExaStatement:
         """
@@ -811,7 +867,7 @@ class ExaConnection(object):
             returning result of callback function instead of statement object.
         """
         if self.last_stmt is None:
-            raise ExaRuntimeError(self, 'Last statement not found')
+            raise ExaRuntimeError(self, "Last statement not found")
 
         return self.last_stmt
 
@@ -820,7 +876,7 @@ class ExaConnection(object):
         Closes connection to database.
 
         Args:
-            disconnect: 
+            disconnect:
                 If ``true`` send optional "disconnect" command to free resources and close session on Exasol server side properly.
 
         Note:
@@ -829,28 +885,30 @@ class ExaConnection(object):
         """
         if self._ws.connected:
             if disconnect:
-                self.req({
-                    'command': 'disconnect'
-                })
+                self.req({"command": "disconnect"})
 
-            self.logger.debug('[WebSocket connection close]')
+            self.logger.debug("[WebSocket connection close]")
             self._ws.close()
 
         self.is_closed = True
         self.last_stmt = None
 
     def get_attr(self):
-        ret = self.req({
-            'command': 'getAttributes',
-        })
+        ret = self.req(
+            {
+                "command": "getAttributes",
+            }
+        )
 
-        self.attr = ret['attributes']
+        self.attr = ret["attributes"]
 
     def set_attr(self, new_attr):
-        self.req({
-            'command': 'setAttributes',
-            'attributes': new_attr,
-        })
+        self.req(
+            {
+                "command": "setAttributes",
+                "attributes": new_attr,
+            }
+        )
 
         # At this moment setAttributes response is inconsistent, so attributes must be refreshed after every call
         self.get_attr()
@@ -875,32 +933,44 @@ class ExaConnection(object):
             - It is useful to balance workload for parallel IMPORT and EXPORT Exasol shuffles list for every connection
             - Exasol shuffles list for every connection.
         """
-        ret = self.req({
-            'command': 'getHosts',
-            'hostIp': self.ws_ipaddr,
-        })
+        ret = self.req(
+            {
+                "command": "getHosts",
+                "hostIp": self.ws_ipaddr,
+            }
+        )
 
         if pool_size is None:
-            pool_size = ret['responseData']['numNodes']
+            pool_size = ret["responseData"]["numNodes"]
 
         # Key 'host' is deprecated and remains only for backwards compatibility, please use `ipaddr` instead
-        return [{'host': ipaddr, 'ipaddr': ipaddr, 'port': self.ws_port, 'idx': idx} for idx, ipaddr
-                in enumerate(itertools.islice(itertools.cycle(ret['responseData']['nodes']), pool_size), start=1)]
+        return [
+            {"host": ipaddr, "ipaddr": ipaddr, "port": self.ws_port, "idx": idx}
+            for idx, ipaddr in enumerate(
+                itertools.islice(
+                    itertools.cycle(ret["responseData"]["nodes"]), pool_size
+                ),
+                start=1,
+            )
+        ]
 
     def req(self, req):
-        """ Send WebSocket request and wait for response """
+        """Send WebSocket request and wait for response"""
         self.ws_req_count += 1
         local_req_count = self.ws_req_count
 
         # Build request
         send_data = self.json_encode(req)
-        self.logger.debug_json(f'WebSocket request #{local_req_count}', req)
+        self.logger.debug_json(f"WebSocket request #{local_req_count}", req)
 
         # Prevent and discourage attempts to use connection object from another thread simultaneously
         if not self._req_lock.acquire(blocking=False):
-            self.logger.debug(f'[WebSocket request #{local_req_count} WAS NOT SENT]')
-            raise ExaConcurrencyError(self, 'Connection cannot be shared between multiple threads '
-                                            'sending requests simultaneously')
+            self.logger.debug(f"[WebSocket request #{local_req_count} WAS NOT SENT]")
+            raise ExaConcurrencyError(
+                self,
+                "Connection cannot be shared between multiple threads "
+                "sending requests simultaneously",
+            )
 
         # Send request, wait for response
         try:
@@ -917,34 +987,45 @@ class ExaConnection(object):
             self._req_lock.release()
 
         if not recv_data:
-            raise ExaCommunicationError(self, "Empty WebSocket response, connection was likely closed")
+            raise ExaCommunicationError(
+                self, "Empty WebSocket response, connection was likely closed"
+            )
 
         # Parse response
         ret = self.json_decode(recv_data)
-        self.logger.debug_json(f'WebSocket response #{local_req_count}', ret)
+        self.logger.debug_json(f"WebSocket response #{local_req_count}", ret)
 
         # Updated attributes may be returned from any request
-        if 'attributes' in ret:
-            self.attr = {**self.attr, **ret['attributes']}
+        if "attributes" in ret:
+            self.attr = {**self.attr, **ret["attributes"]}
 
-        if ret['status'] == 'ok':
+        if ret["status"] == "ok":
             return ret
 
-        if ret['status'] == 'error':
+        if ret["status"] == "error":
             # Special treatment for "execute" command to prevent very long tracebacks in most common cases
-            if req.get('command') in ['execute', 'createPreparedStatement']:
-                if ret['exception']['sqlCode'] == 'R0001':
+            if req.get("command") in ["execute", "createPreparedStatement"]:
+                if ret["exception"]["sqlCode"] == "R0001":
                     cls_err = ExaQueryTimeoutError
-                elif ret['exception']['sqlCode'] == 'R0003':
+                elif ret["exception"]["sqlCode"] == "R0003":
                     cls_err = ExaQueryAbortError
                 else:
                     cls_err = ExaQueryError
 
-                raise cls_err(self, req['sqlText'], ret['exception']['sqlCode'], ret['exception']['text'])
-            elif req.get('username') is not None:
-                raise ExaAuthError(self, ret['exception']['sqlCode'], ret['exception']['text'])
+                raise cls_err(
+                    self,
+                    req["sqlText"],
+                    ret["exception"]["sqlCode"],
+                    ret["exception"]["text"],
+                )
+            elif req.get("username") is not None:
+                raise ExaAuthError(
+                    self, ret["exception"]["sqlCode"], ret["exception"]["text"]
+                )
             else:
-                raise ExaRequestError(self, ret['exception']['sqlCode'], ret['exception']['text'])
+                raise ExaRequestError(
+                    self, ret["exception"]["sqlCode"], ret["exception"]["text"]
+                )
 
     def abort_query(self):
         """
@@ -961,12 +1042,10 @@ class ExaConnection(object):
             #. Query was stuck in a state which cannot be aborted, so Exasol has to terminate connection
             #. Query might be finished successfully before abort call had a chance to take effect
         """
-        req = {
-            'command': 'abortQuery'
-        }
+        req = {"command": "abortQuery"}
 
         send_data = self.json_encode(req)
-        self.logger.debug_json('WebSocket abort request', req)
+        self.logger.debug_json("WebSocket abort request", req)
 
         try:
             self._ws_send(send_data)
@@ -977,61 +1056,83 @@ class ExaConnection(object):
     def _login(self):
         start_ts = time.time()
 
-        if self.options['access_token'] or self.options['refresh_token']:
+        if self.options["access_token"] or self.options["refresh_token"]:
             auth_params = self._login_token()
         else:
             auth_params = self._login_password()
 
-        self.login_info = self.req({
-            **auth_params,
-            'driverName': f'{constant.DRIVER_NAME} {__version__}',
-            'clientName': self.options['client_name'] if self.options['client_name'] else constant.DRIVER_NAME,
-            'clientVersion': self.options['client_version'] if self.options['client_version'] else __version__,
-            'clientOs': platform.platform(),
-            'clientOsUsername': self.options['client_os_username'] if self.options['client_os_username'] else getpass.getuser(),
-            'clientRuntime': f'Python {platform.python_version()}',
-            'useCompression': self.options['compression'],
-            'attributes': self._get_login_attributes()
-        })['responseData']
+        self.login_info = self.req(
+            {
+                **auth_params,
+                "driverName": f"{constant.DRIVER_NAME} {__version__}",
+                "clientName": (
+                    self.options["client_name"]
+                    if self.options["client_name"]
+                    else constant.DRIVER_NAME
+                ),
+                "clientVersion": (
+                    self.options["client_version"]
+                    if self.options["client_version"]
+                    else __version__
+                ),
+                "clientOs": platform.platform(),
+                "clientOsUsername": (
+                    self.options["client_os_username"]
+                    if self.options["client_os_username"]
+                    else getpass.getuser()
+                ),
+                "clientRuntime": f"Python {platform.python_version()}",
+                "useCompression": self.options["compression"],
+                "attributes": self._get_login_attributes(),
+            }
+        )["responseData"]
 
         self.login_time = time.time() - start_ts
 
-        if self.options['compression']:
-            self._ws_send = lambda x: self._ws.send_binary(zlib.compress(x.encode() if isinstance(x, str) else x, 1))
+        if self.options["compression"]:
+            self._ws_send = lambda x: self._ws.send_binary(
+                zlib.compress(x.encode() if isinstance(x, str) else x, 1)
+            )
             self._ws_recv = lambda: zlib.decompress(self._ws.recv())
 
     def _login_password(self):
-        ret = self.req({
-            'command': 'login',
-            'protocolVersion': self.options['protocol_version'],
-        })
+        ret = self.req(
+            {
+                "command": "login",
+                "protocolVersion": self.options["protocol_version"],
+            }
+        )
 
         auth_params = {
-            'username': self.options['user'],
-            'password': self._encrypt_password(ret['responseData']['publicKeyPem']),
+            "username": self.options["user"],
+            "password": self._encrypt_password(ret["responseData"]["publicKeyPem"]),
         }
 
         return auth_params
 
     def _login_token(self):
-        self.req({
-            'command': 'loginToken',
-            'protocolVersion': self.options['protocol_version'],
-        })
+        self.req(
+            {
+                "command": "loginToken",
+                "protocolVersion": self.options["protocol_version"],
+            }
+        )
 
         auth_params = {}
 
-        if self.options['refresh_token']:
-            auth_params['refreshToken'] = self.options['refresh_token']
+        if self.options["refresh_token"]:
+            auth_params["refreshToken"] = self.options["refresh_token"]
 
-        if self.options['access_token']:
-            auth_params['accessToken'] = self.options['access_token']
+        if self.options["access_token"]:
+            auth_params["accessToken"] = self.options["access_token"]
 
         return auth_params
 
     def _encrypt_password(self, public_key_pem):
         pk = rsa.PublicKey.load_pkcs1(public_key_pem.encode())
-        return base64.b64encode(rsa.encrypt(self.options['password'].encode(), pk)).decode()
+        return base64.b64encode(
+            rsa.encrypt(self.options["password"].encode(), pk)
+        ).decode()
 
     def _init_ws(self):
         """
@@ -1041,7 +1142,7 @@ class ExaConnection(object):
             - Connection redundancy is supported
             - Specific Exasol node is randomly selected for every connection attempt
         """
-        dsn_items = self._process_dsn(self.options['dsn'])
+        dsn_items = self._process_dsn(self.options["dsn"])
         failed_attempts = 0
         for hostname, ipaddr, port, fingerprint in dsn_items:
             try:
@@ -1049,9 +1150,11 @@ class ExaConnection(object):
             except Exception as e:
                 failed_attempts += 1
                 if failed_attempts == len(dsn_items):
-                    raise ExaConnectionFailedError(self, 'Could not connect to Exasol: ' + str(e)) from e
+                    raise ExaConnectionFailedError(
+                        self, "Could not connect to Exasol: " + str(e)
+                    ) from e
             else:
-                self._ws.settimeout(self.options['socket_timeout'])
+                self._ws.settimeout(self.options["socket_timeout"])
 
                 self.ws_ipaddr = ipaddr or hostname
                 self.ws_port = port
@@ -1064,21 +1167,27 @@ class ExaConnection(object):
 
                 return
 
-    def _create_websocket_connection(self, hostname:str, ipaddr:str, port:int) -> websocket.WebSocket:
+    def _create_websocket_connection(
+        self, hostname: str, ipaddr: str, port: int
+    ) -> websocket.WebSocket:
         ws_options = self._get_ws_options()
         # Use correct hostname matching IP address for each connection attempt
-        if self.options['encryption'] and self.options["resolve_hostnames"]:
-            ws_options['sslopt']['server_hostname'] = hostname
+        if self.options["encryption"] and self.options["resolve_hostnames"]:
+            ws_options["sslopt"]["server_hostname"] = hostname
 
-        connection_string = self._get_websocket_connection_string(hostname, ipaddr, port)
+        connection_string = self._get_websocket_connection_string(
+            hostname, ipaddr, port
+        )
         self.logger.debug(f"Connection attempt {connection_string}")
         try:
             return websocket.create_connection(connection_string, **ws_options)
         except Exception as e:
-            self.logger.debug(f'Failed to connect [{connection_string}]: {e}')
+            self.logger.debug(f"Failed to connect [{connection_string}]: {e}")
             raise e
 
-    def _get_websocket_connection_string(self, hostname:str, ipaddr:Optional[str], port:int) -> str:
+    def _get_websocket_connection_string(
+        self, hostname: str, ipaddr: Optional[str], port: int
+    ) -> str:
         host = hostname
         if self.options["resolve_hostnames"]:
             if ipaddr is None:
@@ -1089,47 +1198,51 @@ class ExaConnection(object):
         else:
             return f"ws://{host}:{port}"
 
-
     def _get_ws_options(self):
         options = {
-            'timeout': self.options['connection_timeout'],
-            'skip_utf8_validation': True,
-            'enable_multithread': True,     # Extra lock is necessary to protect abort_query() calls
+            "timeout": self.options["connection_timeout"],
+            "skip_utf8_validation": True,
+            "enable_multithread": True,  # Extra lock is necessary to protect abort_query() calls
         }
 
-        if self.options['encryption']:
+        if self.options["encryption"]:
             # Use "websocket_sslopt" argument to set custom SSL options, which are passed directly to WebSocket client constructor
-            if self.options['websocket_sslopt']:
-                options['sslopt'] = self.options['websocket_sslopt']
+            if self.options["websocket_sslopt"]:
+                options["sslopt"] = self.options["websocket_sslopt"]
             # OpenID tokens are normally used for Exasol SAAS
             # Strict certificate verification is enabled by default
-            elif self.options['access_token'] or self.options['refresh_token']:
-                options['sslopt'] = {'cert_reqs': ssl.CERT_REQUIRED}
+            elif self.options["access_token"] or self.options["refresh_token"]:
+                options["sslopt"] = {"cert_reqs": ssl.CERT_REQUIRED}
             # Certification verification is disabled for other use cases (e.g. Docker container, "on-premises" Exasol setup)
             else:
-                options['sslopt'] = {'cert_reqs': ssl.CERT_NONE}
+                options["sslopt"] = {"cert_reqs": ssl.CERT_NONE}
 
-        if self.options['http_proxy']:
-            proxy_components = urllib.parse.urlparse(self.options['http_proxy'])
+        if self.options["http_proxy"]:
+            proxy_components = urllib.parse.urlparse(self.options["http_proxy"])
 
             if proxy_components.hostname is None:
                 raise ValueError("Could not parse http_proxy")
 
-            options['http_proxy_host'] = proxy_components.hostname
-            options['http_proxy_port'] = proxy_components.port
-            options['http_proxy_auth'] = (proxy_components.username, proxy_components.password)
+            options["http_proxy_host"] = proxy_components.hostname
+            options["http_proxy_port"] = proxy_components.port
+            options["http_proxy_auth"] = (
+                proxy_components.username,
+                proxy_components.password,
+            )
 
         return options
 
     def _get_login_attributes(self):
         attributes = {
-            'currentSchema': str(self.options['schema']),
-            'autocommit': self.options['autocommit'],
-            'queryTimeout': self.options['query_timeout'],
+            "currentSchema": str(self.options["schema"]),
+            "autocommit": self.options["autocommit"],
+            "queryTimeout": self.options["query_timeout"],
         }
 
-        if self.options['snapshot_transactions'] is not None:
-            attributes['snapshotTransactionsEnabled'] = self.options['snapshot_transactions']
+        if self.options["snapshot_transactions"] is not None:
+            attributes["snapshotTransactionsEnabled"] = self.options[
+                "snapshot_transactions"
+            ]
 
         return attributes
 
@@ -1144,120 +1257,164 @@ class ExaConnection(object):
             List of (hostname, ip_address, port) tuples in random order
         """
         if dsn is None or len(dsn.strip()) == 0:
-            raise ExaConnectionDsnError(self, 'Connection string is empty')
+            raise ExaConnectionDsnError(self, "Connection string is empty")
 
         current_port = constant.DEFAULT_PORT
         current_fingerprint = None
 
         result = []
 
-        dsn_re = re.compile(r'^(?P<hostname_prefix>.+?)'
-                            # Optional range (e.g. myxasol1..4.com)
-                            r'(?:(?P<range_start>\d+)\.\.(?P<range_end>\d+)(?P<hostname_suffix>.*?))?'
-                            # Optional fingerprint (e.g. myexasol1..4.com/135a1d2dce102de866f58267521f4232153545a075dc85f8f7596f57e588a181)
-                            r'(?:/(?P<fingerprint>[0-9A-Fa-f]+))?'
-                            # Optional port (e.g. myexasol1..4.com:8564)
-                            r'(?::(?P<port>\d+)?)?$'
-                            )
+        dsn_re = re.compile(
+            r"^(?P<hostname_prefix>.+?)"
+            # Optional range (e.g. myxasol1..4.com)
+            r"(?:(?P<range_start>\d+)\.\.(?P<range_end>\d+)(?P<hostname_suffix>.*?))?"
+            # Optional fingerprint (e.g. myexasol1..4.com/135a1d2dce102de866f58267521f4232153545a075dc85f8f7596f57e588a181)
+            r"(?:/(?P<fingerprint>[0-9A-Fa-f]+))?"
+            # Optional port (e.g. myexasol1..4.com:8564)
+            r"(?::(?P<port>\d+)?)?$"
+        )
 
         # Port is applied backwards, so we iterate the whole list backwards to avoid second loop
-        for part in reversed(dsn.split(',')):
+        for part in reversed(dsn.split(",")):
             if len(part) == 0:
                 continue
 
             m = dsn_re.search(part)
 
             if not m:
-                raise ExaConnectionDsnError(self, f'Could not parse connection string part [{part}]')
+                raise ExaConnectionDsnError(
+                    self, f"Could not parse connection string part [{part}]"
+                )
 
             # Optional port
-            if m.group('port'):
-                current_port = int(m.group('port'))
+            if m.group("port"):
+                current_port = int(m.group("port"))
 
             # Optional fingerprint
-            if m.group('fingerprint'):
-                current_fingerprint = m.group('fingerprint').upper()
+            if m.group("fingerprint"):
+                current_fingerprint = m.group("fingerprint").upper()
 
-                if not self.options['encryption']:
-                    raise ExaConnectionDsnError(self, 'Fingerprint was specified in connection string, but encryption is not enabled')
+                if not self.options["encryption"]:
+                    raise ExaConnectionDsnError(
+                        self,
+                        "Fingerprint was specified in connection string, but encryption is not enabled",
+                    )
 
             # Hostname or IP range was specified, expand it
-            if m.group('range_start'):
-                if int(m.group('range_start')) > int(m.group('range_end')):
-                    raise ExaConnectionDsnError(self,
-                                                f'Connection string part [{part}] contains an invalid range, '
-                                                f'lower bound is higher than upper bound')
+            if m.group("range_start"):
+                if int(m.group("range_start")) > int(m.group("range_end")):
+                    raise ExaConnectionDsnError(
+                        self,
+                        f"Connection string part [{part}] contains an invalid range, "
+                        f"lower bound is higher than upper bound",
+                    )
 
-                zfill_width = len(m.group('range_start'))
+                zfill_width = len(m.group("range_start"))
 
-                for i in range(int(m.group('range_start')), int(m.group('range_end')) + 1):
+                for i in range(
+                    int(m.group("range_start")), int(m.group("range_end")) + 1
+                ):
                     hostname = f"{m.group('hostname_prefix')}{str(i).zfill(zfill_width)}{m.group('hostname_suffix')}"
-                    result.extend(self._resolve_hostname(hostname, current_port, current_fingerprint))
+                    result.extend(
+                        self._resolve_hostname(
+                            hostname, current_port, current_fingerprint
+                        )
+                    )
             # Just a single hostname or single IP address
             else:
-                hostname = m.group('hostname_prefix')
+                hostname = m.group("hostname_prefix")
                 if self.options["resolve_hostnames"]:
-                    result.extend(self._resolve_hostname(hostname, current_port, current_fingerprint))
+                    result.extend(
+                        self._resolve_hostname(
+                            hostname, current_port, current_fingerprint
+                        )
+                    )
                 else:
-                    result.append(Host(hostname, None, current_port, current_fingerprint))
+                    result.append(
+                        Host(hostname, None, current_port, current_fingerprint)
+                    )
 
         random.shuffle(result)
 
         return result
 
-    def _resolve_hostname(self, hostname: str, port: int, fingerprint: Optional[str]) -> list[Host]:
+    def _resolve_hostname(
+        self, hostname: str, port: int, fingerprint: Optional[str]
+    ) -> list[Host]:
         """
         Resolve all IP addresses for hostname and add port.
-        
+
         Warnings:
             - It also implicitly checks that all hostnames mentioned in DSN can be resolved
         """
         try:
             hostname, _, ipaddr_list = socket.gethostbyname_ex(hostname)
         except OSError as e:
-            raise ExaConnectionDsnError(self, f'Could not resolve IP address of hostname [{hostname}] '
-                                              f'derived from connection string') from e
+            raise ExaConnectionDsnError(
+                self,
+                f"Could not resolve IP address of hostname [{hostname}] "
+                f"derived from connection string",
+            ) from e
 
         return [Host(hostname, ipaddr, port, fingerprint) for ipaddr in ipaddr_list]
 
     def _validate_fingerprint(self, provided_fingerprint):
-        server_fingerprint = hashlib.sha256(self._ws.sock.getpeercert(True)).hexdigest().upper()
+        server_fingerprint = (
+            hashlib.sha256(self._ws.sock.getpeercert(True)).hexdigest().upper()
+        )
 
         if provided_fingerprint != server_fingerprint:
-            raise ExaConnectionFailedError(self, f"Provided fingerprint [{provided_fingerprint}] did not match "
-                                                 f"server fingerprint [{server_fingerprint}]")
+            raise ExaConnectionFailedError(
+                self,
+                f"Provided fingerprint [{provided_fingerprint}] did not match "
+                f"server fingerprint [{server_fingerprint}]",
+            )
 
     def _init_logger(self):
         self.logger = self.cls_logger(self, constant.DRIVER_NAME)
-        self.logger.setLevel('DEBUG' if self.options['debug'] else 'WARNING')
+        self.logger.setLevel("DEBUG" if self.options["debug"] else "WARNING")
         self.logger.add_default_handler()
 
     def _init_format(self):
         self.format = self.cls_formatter(self)
 
     def _init_json(self):
-        if self.options['json_lib'] == 'rapidjson':
+        if self.options["json_lib"] == "rapidjson":
             import rapidjson
 
-            self.json_encode = lambda x, indent=False: rapidjson.dumps(x, number_mode=rapidjson.NM_NATIVE, indent=2 if indent else None, ensure_ascii=False)
-            self.json_decode = lambda x: rapidjson.loads(x, number_mode=rapidjson.NM_NATIVE)
+            self.json_encode = lambda x, indent=False: rapidjson.dumps(
+                x,
+                number_mode=rapidjson.NM_NATIVE,
+                indent=2 if indent else None,
+                ensure_ascii=False,
+            )
+            self.json_decode = lambda x: rapidjson.loads(
+                x, number_mode=rapidjson.NM_NATIVE
+            )
 
-        elif self.options['json_lib'] == 'ujson':
+        elif self.options["json_lib"] == "ujson":
             import ujson
 
-            self.json_encode = lambda x, indent=False: ujson.dumps(x, indent=2 if indent else 0, ensure_ascii=False)
+            self.json_encode = lambda x, indent=False: ujson.dumps(
+                x, indent=2 if indent else 0, ensure_ascii=False
+            )
             self.json_decode = lambda x: ujson.loads(x)
 
-        elif self.options['json_lib'] == 'orjson':
+        elif self.options["json_lib"] == "orjson":
             import orjson
 
-            self.json_encode = lambda x, indent=False: orjson.dumps(x, option=orjson.OPT_INDENT_2 | orjson.OPT_APPEND_NEWLINE if indent else 0)
+            self.json_encode = lambda x, indent=False: orjson.dumps(
+                x,
+                option=orjson.OPT_INDENT_2 | orjson.OPT_APPEND_NEWLINE if indent else 0,
+            )
             self.json_decode = lambda x: orjson.loads(x)
 
-        elif self.options['json_lib'] == 'json':
+        elif self.options["json_lib"] == "json":
             import json
 
-            self.json_encode = lambda x, indent=False: json.dumps(x, indent=2 if indent else None, ensure_ascii=False)
+            self.json_encode = lambda x, indent=False: json.dumps(
+                x, indent=2 if indent else None, ensure_ascii=False
+            )
             self.json_decode = lambda x: json.loads(x)
 
         else:
@@ -1273,22 +1430,27 @@ class ExaConnection(object):
         import pathlib
         import tempfile
 
-        if self.options['udf_output_dir']:
-            base_output_dir = self.options['udf_output_dir']
+        if self.options["udf_output_dir"]:
+            base_output_dir = self.options["udf_output_dir"]
         else:
             base_output_dir = tempfile.gettempdir()
 
         # Create unique sub-directory for every statement of every session
         self._udf_output_count += 1
 
-        stmt_output_dir = pathlib.Path(base_output_dir) / f'{self.session_id()}_{self._udf_output_count}'
+        stmt_output_dir = (
+            pathlib.Path(base_output_dir)
+            / f"{self.session_id()}_{self._udf_output_count}"
+        )
         stmt_output_dir.mkdir(parents=True, exist_ok=True)
 
         return stmt_output_dir
 
     def __repr__(self):
-        return f"<{self.__class__.__name__} session_id={self.session_id()}" \
-               f" dsn={self.options['dsn']} user={self.options['user']}>"
+        return (
+            f"<{self.__class__.__name__} session_id={self.session_id()}"
+            f" dsn={self.options['dsn']} user={self.options['user']}>"
+        )
 
     def __enter__(self):
         return self

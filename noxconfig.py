@@ -2,9 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from pathlib import Path
-from typing import (
-    Iterable,
-)
+from typing import Iterable
 
 from exasol.toolbox.nox.plugin import hookimpl
 
@@ -37,21 +35,14 @@ class StopDB:
 
     @hookimpl
     def post_integration_tests_hook(self, session, config, context):
-        session.run(
-            "docker",
-            "kill",
-            "db_container_test",
-            external=True
-        )
+        session.run("docker", "kill", "db_container_test", external=True)
 
 
 @dataclass(frozen=True)
 class Config:
     root: Path = Path(__file__).parent
     doc: Path = Path(__file__).parent / "doc"
-    version_file: Path = (
-        Path(__file__).parent / "pyexasol" / "version.py"
-    )
+    version_file: Path = Path(__file__).parent / "pyexasol" / "version.py"
     path_filters: Iterable[str] = (
         "dist",
         ".eggs",

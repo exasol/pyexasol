@@ -1,13 +1,14 @@
-import os
-import uuid
-import pytest
 import decimal
-import pyexasol
+import logging
+import os
 import subprocess
+import uuid
 from inspect import cleandoc
 from pathlib import Path
 
-import logging
+import pytest
+
+import pyexasol
 
 
 @pytest.fixture(scope="session")
@@ -162,8 +163,7 @@ class DockerDataLoader:
             command,
             check=True,
             text=True,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
+            capture_output=True,
         )
         self._logger.debug("Stderr: %s", result.stderr)
         return result.stdout

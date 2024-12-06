@@ -1,11 +1,14 @@
-import pytest
-import pyexasol
 from inspect import cleandoc
+
+import pytest
+
+import pyexasol
 
 
 @pytest.fixture
 def config(dsn, user, password, schema):
-    yield cleandoc(f"""
+    yield cleandoc(
+        f"""
     [pyexasol]
     dsn = {dsn}
     user = {user}
@@ -14,7 +17,8 @@ def config(dsn, user, password, schema):
     compression = True
     encryption = False
     socket_timeout = 20
-    """)
+    """
+    )
 
 
 @pytest.fixture
