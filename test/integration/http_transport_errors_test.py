@@ -1,7 +1,9 @@
 import os
-import time
-import pytest
 import shutil
+import time
+
+import pytest
+
 import pyexasol
 
 

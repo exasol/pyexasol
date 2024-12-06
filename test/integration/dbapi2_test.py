@@ -1,4 +1,5 @@
 import pytest
+
 from pyexasol import db2
 
 

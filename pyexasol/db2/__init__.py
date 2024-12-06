@@ -8,8 +8,9 @@ It is highly recommended to switch to native interface before any production usa
 There is no "paramstyle" and no proper error handling
 """
 
-from warnings import warn
 from inspect import cleandoc
+from warnings import warn
+
 from ..connection import ExaConnection
 from ..warnings import PyexasolDeprecationWarning
 
@@ -40,7 +41,7 @@ class DB2Connection(ExaConnection):
         return DB2Cursor(self)
 
 
-class DB2Cursor(object):
+class DB2Cursor:
     arraysize = 1
 
     def __init__(self, connection):

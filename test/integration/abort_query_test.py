@@ -1,6 +1,8 @@
-import time
-import pytest
 import threading
+import time
+
+import pytest
+
 from pyexasol import ExaQueryAbortError
 
 

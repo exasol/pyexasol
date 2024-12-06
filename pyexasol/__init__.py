@@ -1,60 +1,64 @@
-
 __all__ = [
-    '__version__',
-    'connect',
-    'connect_local_config',
-    'http_transport',
-    'exasol_mapper',
-    'ExaError',
-    'ExaCommunicationError',
-    'ExaConcurrencyError',
-    'ExaRuntimeError',
-    'ExaRequestError',
-    'ExaAuthError',
-    'ExaQueryError',
-    'ExaQueryAbortError',
-    'ExaQueryTimeoutError',
-    'ExaConnection',
-    'ExaConnectionError',
-    'ExaConnectionDsnError',
-    'ExaConnectionFailedError',
-    'ExaStatement',
-    'ExaFormatter',
-    'ExaLogger',
-    'ExaExtension',
-    'ExaMetaData',
-    'ExaHTTPTransportWrapper',
-    'ExaLocalConfig',
-    'ExaTimeDelta',
-    'PROTOCOL_V1',
-    'PROTOCOL_V2',
-    'PROTOCOL_V3',
+    "__version__",
+    "connect",
+    "connect_local_config",
+    "http_transport",
+    "exasol_mapper",
+    "ExaError",
+    "ExaCommunicationError",
+    "ExaConcurrencyError",
+    "ExaRuntimeError",
+    "ExaRequestError",
+    "ExaAuthError",
+    "ExaQueryError",
+    "ExaQueryAbortError",
+    "ExaQueryTimeoutError",
+    "ExaConnection",
+    "ExaConnectionError",
+    "ExaConnectionDsnError",
+    "ExaConnectionFailedError",
+    "ExaStatement",
+    "ExaFormatter",
+    "ExaLogger",
+    "ExaExtension",
+    "ExaMetaData",
+    "ExaHTTPTransportWrapper",
+    "ExaLocalConfig",
+    "ExaTimeDelta",
+    "PROTOCOL_V1",
+    "PROTOCOL_V2",
+    "PROTOCOL_V3",
 ]
 
 from .connection import ExaConnection
-from .constant import PROTOCOL_V1, PROTOCOL_V2, PROTOCOL_V3
-
+from .constant import (
+    PROTOCOL_V1,
+    PROTOCOL_V2,
+    PROTOCOL_V3,
+)
 from .exceptions import (
-    ExaError,
+    ExaAuthError,
     ExaCommunicationError,
     ExaConcurrencyError,
-    ExaRuntimeError,
-    ExaRequestError,
-    ExaAuthError,
-    ExaQueryError,
-    ExaQueryAbortError,
-    ExaQueryTimeoutError,
-    ExaConnectionError,
     ExaConnectionDsnError,
+    ExaConnectionError,
     ExaConnectionFailedError,
+    ExaError,
+    ExaQueryAbortError,
+    ExaQueryError,
+    ExaQueryTimeoutError,
+    ExaRequestError,
+    ExaRuntimeError,
 )
-
 from .ext import ExaExtension
 from .formatter import ExaFormatter
 from .http_transport import ExaHTTPTransportWrapper
 from .local_config import ExaLocalConfig
 from .logger import ExaLogger
-from .mapper import ExaTimeDelta, exasol_mapper
+from .mapper import (
+    ExaTimeDelta,
+    exasol_mapper,
+)
 from .meta import ExaMetaData
 from .statement import ExaStatement
 from .version import __version__
@@ -78,9 +82,9 @@ def connect_local_config(config_section, config_path=None, **kwargs) -> ExaConne
 
     Args:
 
-        config_section: 
+        config_section:
             Name of config section (required!)
-        config_path: 
+        config_path:
             Custom path to local config file
         kwargs:
             Arguments for "connect()" function
@@ -92,7 +96,9 @@ def connect_local_config(config_section, config_path=None, **kwargs) -> ExaConne
     return connect(**{**conf_args, **kwargs})
 
 
-def http_transport(ipaddr, port, compression=False, encryption=True) -> ExaHTTPTransportWrapper:
+def http_transport(
+    ipaddr, port, compression=False, encryption=True
+) -> ExaHTTPTransportWrapper:
     """
     Constructor for HTTP Transport wrapper for parallel HTTP Transport (EXPORT or IMPORT)
 

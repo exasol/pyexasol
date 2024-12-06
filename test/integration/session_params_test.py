@@ -1,6 +1,8 @@
-import pytest
-import pyexasol
 from importlib.metadata import version
+
+import pytest
+
+import pyexasol
 
 
 @pytest.fixture
