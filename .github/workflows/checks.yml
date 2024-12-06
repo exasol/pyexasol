@@ -28,7 +28,7 @@ jobs:
 
     - name: Run Tests
       run: |
-        poetry run nox -s unit-tests
+        poetry run nox -s test:unit
 
   integration-tests:
     name: Integration Tests
@@ -52,4 +52,4 @@ jobs:
 
     - name: Run Tests
       run: |
-        poetry run nox -s integration-tests
+        poetry run nox -s test:integration

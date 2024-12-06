@@ -3,6 +3,7 @@
 ## ✨Features
 
 * Add support for multiversion documentation
+* Add support for all standard nox tasks provided by `exasol-toolbox`
 
 ## 🔩 Internal
 
@@ -11,3 +12,4 @@
 ## 📚 Documentation
 
 * Add sphinx based documention
+
