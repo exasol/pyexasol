@@ -8,13 +8,14 @@ export OBJC_DISABLE_INITIALIZE_FORK_SAFETY=YES
 Pushing Exasol server with 100+ sessions running in parallel
 """
 
-import pyexasol
-import _config as config
-
 import multiprocessing
+import pprint
 import time
 
-import pprint
+import _config as config
+
+import pyexasol
+
 printer = pprint.PrettyPrinter(indent=4, width=140)
 
 
@@ -26,22 +27,36 @@ class SessionProc(multiprocessing.Process):
         super().__init__()
 
     def run(self):
-        C = pyexasol.connect(dsn=config.dsn, user=config.user, password=config.password, schema=config.schema)
+        C = pyexasol.connect(
+            dsn=config.dsn,
+            user=config.user,
+            password=config.password,
+            schema=config.schema,
+        )
 
-        print(f'START ID: {self.id:03} S: {C.session_id()} SLEEP: {self.sleep_interval:02}, T:{C.login_time} A:{C.ws_req_time}', flush=True)
-        C.execute('SELECT sleep_java({sleep_interval!d})', {'sleep_interval': self.sleep_interval})
-        print(f'STOP  ID: {self.id:03} S: {C.session_id()} SLEEP: {self.sleep_interval:02}', flush=True)
+        print(
+            f"START ID: {self.id:03} S: {C.session_id()} SLEEP: {self.sleep_interval:02}, T:{C.login_time} A:{C.ws_req_time}",
+            flush=True,
+        )
+        C.execute(
+            "SELECT sleep_java({sleep_interval!d})",
+            {"sleep_interval": self.sleep_interval},
+        )
+        print(
+            f"STOP  ID: {self.id:03} S: {C.session_id()} SLEEP: {self.sleep_interval:02}",
+            flush=True,
+        )
 
         C.close()
 
 
 # This condition is required for 'spawn' multiprocessing implementation (Windows)
 # Feel free to skip it for POSIX operating systems
-if __name__ == '__main__':
+if __name__ == "__main__":
     process_settings = [
-        {'amount': 60, 'sleep_interval': 60},
-        {'amount': 50, 'sleep_interval': 20},
-        {'amount': 10, 'sleep_interval': 30},
+        {"amount": 60, "sleep_interval": 60},
+        {"amount": 50, "sleep_interval": 20},
+        {"amount": 10, "sleep_interval": 30},
     ]
 
     id = 0
@@ -49,10 +64,10 @@ if __name__ == '__main__':
 
     # Start all sub-processes, try opening 100+ connections, get blocked
     for p in process_settings:
-        for i in range(p['amount']):
+        for i in range(p["amount"]):
             id = id + 1
 
-            proc = SessionProc(id, p['sleep_interval'])
+            proc = SessionProc(id, p["sleep_interval"])
             proc.start()
 
             pool.append(proc)

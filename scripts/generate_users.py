@@ -1,9 +1,9 @@
-import sys
+import argparse
 import csv
+import datetime
 import decimal
 import random
-import datetime
-import argparse
+import sys
 from pathlib import Path
 
 from faker import Faker
@@ -22,7 +22,7 @@ class UserDataProvider(BaseProvider):
             random.randint(0, 23),
             random.randint(0, 59),
             random.randint(0, 59),
-            random.randint(0, 999) * 1000
+            random.randint(0, 999) * 1000,
         )
         return datetime.datetime.combine(date, time)
 
@@ -30,9 +30,7 @@ class UserDataProvider(BaseProvider):
         return self.random_element([True, False])
 
     def status(self):
-        return self.random_element(
-            ['ACTIVE', 'PENDING', 'SUSPENDED', 'DISABLED']
-        )
+        return self.random_element(["ACTIVE", "PENDING", "SUSPENDED", "DISABLED"])
 
     def decimal(self):
         return decimal.Decimal(random.randint(0, 100)) / 100
@@ -55,24 +53,20 @@ def generate_users(count):
             fake.boolean(),
             fake.decimal(),
             fake.score(),
-            fake.status()
+            fake.status(),
         )
 
 
 def _create_parser():
     parser = argparse.ArgumentParser(
         description="Generate a CSV file containing users",
-        formatter_class=argparse.ArgumentDefaultsHelpFormatter
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
     parser.add_argument(
-        'filename',
-        type=Path,
-        help='file the resulting CSV should be written to.'
+        "filename", type=Path, help="file the resulting CSV should be written to."
     )
     parser.add_argument(
-        '-n', '--count',
-        type=int, default=10000,
-        help='Number of users to create.'
+        "-n", "--count", type=int, default=10000, help="Number of users to create."
     )
 
     return parser
@@ -86,8 +80,8 @@ def main(argv=None):
     parser = _create_parser()
     args = parser.parse_args(argv)
     try:
-        with open(args.filename, 'w', newline='') as f :
-            writer = csv.writer(f, delimiter=',')
+        with open(args.filename, "w", newline="") as f:
+            writer = csv.writer(f, delimiter=",")
             for user in generate_users(count=args.count):
                 writer.writerow(user)
     except Exception as ex:
@@ -96,5 +90,5 @@ def main(argv=None):
     return SUCCESS
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     sys.exit(main())

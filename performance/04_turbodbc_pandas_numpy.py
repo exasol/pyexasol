@@ -1,6 +1,6 @@
-import turbodbc
-import pandas
 import _config as config
+import pandas
+import turbodbc
 
 C = turbodbc.connect(**config.turbodbc_connection_options)
 cur = C.cursor()

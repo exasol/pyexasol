@@ -1,12 +1,14 @@
 from __future__ import annotations
+
+from contextlib import contextmanager
 from pathlib import Path
 from typing import Iterable
-from contextlib import contextmanager
+
 import nox
-from nox import Session
 
 # imports all nox task provided by the toolbox
 from exasol.toolbox.nox.tasks import *  # pylint: disable=wildcard-import disable=unused-wildcard-import
+from nox import Session
 
 # default actions to be run if nothing is explicitly specified with the -s option
 nox.options.sessions = ["project:fix"]
@@ -27,7 +29,7 @@ def _test_command(path: Path) -> Iterable[str]:
         "-v",
         "--log-level=INFO",
         "--log-cli-level=INFO",
-        f"{path}"
+        f"{path}",
     ]
     return base_command + pytest_command
 
@@ -73,8 +75,8 @@ def import_data(session: Session) -> None:
         dsn="127.0.0.1:8563",
         username="sys",
         password="exasol",
-        container_name='db_container_test',
-        data_directory=data_dir
+        container_name="db_container_test",
+        data_directory=data_dir,
     )
     loader.load()
 

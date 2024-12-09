@@ -9,7 +9,6 @@ import ssl
 from functools import wraps
 
 import pyexasol
-
 from exasol.driver.websocket._cursor import Cursor as DefaultCursor
 from exasol.driver.websocket._errors import Error
 

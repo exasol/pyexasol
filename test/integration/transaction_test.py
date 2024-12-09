@@ -1,4 +1,5 @@
 import pytest
+
 import pyexasol
 
 
@@ -6,11 +7,7 @@ import pyexasol
 @pytest.fixture
 def connection(dsn, user, password, schema):
     con = pyexasol.connect(
-        dsn=dsn,
-        user=user,
-        password=password,
-        schema=schema,
-        autocommit=False
+        dsn=dsn, user=user, password=password, schema=schema, autocommit=False
     )
     yield con
     con.close()
