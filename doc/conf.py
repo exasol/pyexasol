@@ -36,6 +36,7 @@ extensions = [
     "sphinx_copybutton",
     "myst_parser",
     "sphinx_design",
+    "exasol.toolbox.sphinx.multiversion",
 ]
 
 intersphinx_mapping = {"python": ("https://docs.python.org/3", None)}

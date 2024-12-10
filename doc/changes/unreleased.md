@@ -11,6 +11,7 @@
 
 ## 🔩 Internal
 
+* Add missing plugin for multiversion documentation
 * Add support for publishing documentation to gh pages
 * Add `.git-blame-ignore-revs` file to workspace
 
