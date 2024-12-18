@@ -10,7 +10,7 @@ jobs:
 
   Version-Check:
     name: Version
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
 
     steps:
       - name: SCM Checkout
@@ -22,18 +22,12 @@ jobs:
         uses: exasol/python-toolbox/.github/actions/python-environment@0.20.0
 
       - name: Check Version(s)
-        run: |
-          echo "Please enable the version check by replacing this output with shell command bellow:"
-          echo ""
-          echo "poetry run version-check <<VERSION_PY>>"
-          echo ""
-          echo "Note: <<VERSION_PY>> needs to point to the version file of the project (version.py)."
-          exit 1
+        run: poetry run version-check `poetry run python -c "from noxconfig import PROJECT_CONFIG; print(PROJECT_CONFIG.version_file)"`
 
   Documentation:
     name: Docs
     needs: [ Version-Check ]
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
 
     steps:
       - name: SCM Checkout
@@ -53,7 +47,7 @@ jobs:
   Lint:
     name: Linting (Python-${{ matrix.python-version }})
     needs: [ Version-Check, build-matrix ]
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     strategy:
       fail-fast: false
       matrix: ${{ fromJson(needs.build-matrix.outputs.matrix) }}
@@ -80,7 +74,7 @@ jobs:
   Type-Check:
     name: Type Checking (Python-${{ matrix.python-version }})
     needs: [ Version-Check, build-matrix ]
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     strategy:
       fail-fast: false
       matrix: ${{ fromJson(needs.build-matrix.outputs.matrix) }}
@@ -100,7 +94,7 @@ jobs:
   Security:
     name: Security Checks (Python-${{ matrix.python-version }})
     needs: [ Version-Check, build-matrix ]
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     strategy:
       fail-fast: false
       matrix: ${{ fromJson(needs.build-matrix.outputs.matrix) }}
@@ -126,7 +120,7 @@ jobs:
 
   Format:
     name: Format Check
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
 
     steps:
       - name: SCM Checkout
@@ -143,7 +137,7 @@ jobs:
   Tests:
     name: Unit-Tests (Python-${{ matrix.python-version }}, Exasol-${{ matrix.exasol-version}})
     needs: [ Documentation, Lint, Type-Check, Security, Format, build-matrix ]
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     env:
       GITHUB_TOKEN: ${{ secrets.ALTERNATIVE_GITHUB_TOKEN ||  secrets.GITHUB_TOKEN }}
     strategy:
@@ -158,6 +152,9 @@ jobs:
         uses: exasol/python-toolbox/.github/actions/python-environment@0.20.0
         with:
           python-version: ${{ matrix.python-version }}
+
+      - name: "Install all extras"
+        run: poetry install --all-extras
 
       - name: Run Tests and Collect Coverage
         run: poetry run nox -s test:unit -- -- --coverage

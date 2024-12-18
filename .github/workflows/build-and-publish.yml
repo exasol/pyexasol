@@ -10,7 +10,7 @@ jobs:
 
   cd-job:
     name: Continuous Delivery
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
 
       - name: SCM Checkout
