@@ -1,0 +1,21 @@
+name: Check Release Tag
+
+on: workflow_call
+
+jobs:
+
+  check-tag-version-job:
+
+    name: Check Tag Version
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: SCM Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python & Poetry Environment
+        uses: exasol/python-toolbox/.github/actions/python-environment@0.20.0
+
+      - name: Check Tag Version
+        # make sure the pushed/created tag matched the project version
+        run: "[[ `poetry version --short` == ${{ github.ref_name }} ]]"

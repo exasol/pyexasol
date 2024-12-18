@@ -1,0 +1,170 @@
+name: Checks
+
+on:
+  workflow_call:
+    secrets:
+      ALTERNATIVE_GITHUB_TOKEN:
+        required: false
+
+jobs:
+
+  Version-Check:
+    name: Version
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: SCM Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Python & Poetry Environment
+        uses: exasol/python-toolbox/.github/actions/python-environment@0.20.0
+
+      - name: Check Version(s)
+        run: |
+          echo "Please enable the version check by replacing this output with shell command bellow:"
+          echo ""
+          echo "poetry run version-check <<VERSION_PY>>"
+          echo ""
+          echo "Note: <<VERSION_PY>> needs to point to the version file of the project (version.py)."
+          exit 1
+
+  Documentation:
+    name: Docs
+    needs: [ Version-Check ]
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: SCM Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python & Poetry Environment
+        uses: exasol/python-toolbox/.github/actions/python-environment@0.20.0
+
+      - name: Build Documentation
+        run: |
+          poetry run python -m nox -s docs:build
+
+  build-matrix:
+    name: Generate Build Matrix
+    uses: ./.github/workflows/matrix-python.yml
+
+  Lint:
+    name: Linting (Python-${{ matrix.python-version }})
+    needs: [ Version-Check, build-matrix ]
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJson(needs.build-matrix.outputs.matrix) }}
+
+    steps:
+      - name: SCM Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python & Poetry Environment
+        uses: exasol/python-toolbox/.github/actions/python-environment@0.20.0
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Run lint
+        run: poetry run nox -s lint:code
+
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v4.4.0
+        with:
+          name: lint-python${{ matrix.python-version }}
+          path: .lint.txt
+          include-hidden-files: true
+
+  Type-Check:
+    name: Type Checking (Python-${{ matrix.python-version }})
+    needs: [ Version-Check, build-matrix ]
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJson(needs.build-matrix.outputs.matrix) }}
+
+    steps:
+      - name: SCM Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python & Poetry Environment
+        uses: exasol/python-toolbox/.github/actions/python-environment@0.20.0
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Run type-check
+        run: poetry run nox -s lint:typing
+
+  Security:
+    name: Security Checks (Python-${{ matrix.python-version }})
+    needs: [ Version-Check, build-matrix ]
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJson(needs.build-matrix.outputs.matrix) }}
+
+    steps:
+      - name: SCM Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python & Poetry Environment
+        uses: exasol/python-toolbox/.github/actions/python-environment@0.20.0
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Run security linter
+        run: poetry run nox -s lint:security
+
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v4.4.0
+        with:
+          name: security-python${{ matrix.python-version }}
+          path: .security.json
+          include-hidden-files: true
+
+  Format:
+    name: Format Check
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: SCM Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python & Poetry Environment
+        uses: exasol/python-toolbox/.github/actions/python-environment@0.20.0
+        with:
+          python-version: "3.9"
+
+      - name: Run format check
+        run: poetry run nox -s project:format
+
+  Tests:
+    name: Unit-Tests (Python-${{ matrix.python-version }}, Exasol-${{ matrix.exasol-version}})
+    needs: [ Documentation, Lint, Type-Check, Security, Format, build-matrix ]
+    runs-on: ubuntu-latest
+    env:
+      GITHUB_TOKEN: ${{ secrets.ALTERNATIVE_GITHUB_TOKEN ||  secrets.GITHUB_TOKEN }}
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJson(needs.build-matrix.outputs.matrix) }}
+
+    steps:
+      - name: SCM Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python & Poetry Environment
+        uses: exasol/python-toolbox/.github/actions/python-environment@0.20.0
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Run Tests and Collect Coverage
+        run: poetry run nox -s test:unit -- -- --coverage
+
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v4.4.0
+        with:
+          name: coverage-python${{ matrix.python-version }}-fast
+          path: .coverage
+          include-hidden-files: true

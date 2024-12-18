@@ -1,0 +1,55 @@
+name: Status Report
+
+on:
+  workflow_call:
+    secrets:
+      ALTERNATIVE_GITHUB_TOKEN:
+        required: false
+
+jobs:
+
+  report:
+    runs-on: ubuntu-latest
+    env:
+      GITHUB_TOKEN: ${{ secrets.ALTERNATIVE_GITHUB_TOKEN ||  secrets.GITHUB_TOKEN }}
+
+    steps:
+      - name: SCM Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Python & Poetry Environment
+        uses: exasol/python-toolbox/.github/actions/python-environment@0.20.0
+
+      - name: Download Artifacts
+        uses: actions/download-artifact@v4.1.8
+        with:
+          path: ./artifacts
+
+      - name: Copy Artifacts into Root Folder
+        working-directory: ./artifacts
+        run: |
+          poetry run coverage combine --keep coverage-python3.9*/.coverage
+          cp .coverage ../
+          cp lint-python3.9/.lint.txt ../
+          cp security-python3.9/.security.json ../
+
+      - name: Generate Report
+        run: poetry run nox -s project:report -- -- --format json | tee metrics.json
+
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v4.4.0
+        with:
+          name: metrics.json
+          path: metrics.json
+
+      - name: Generate GitHub Summary
+        run: |
+          echo -e "# Summary\n" >> $GITHUB_STEP_SUMMARY
+          poetry run nox -s project:report -- -- --format markdown >> $GITHUB_STEP_SUMMARY
+          echo -e "\n\n# Coverage\n" >> $GITHUB_STEP_SUMMARY
+          poetry run coverage report -- --format markdown >> $GITHUB_STEP_SUMMARY
+          echo  -e "\n\n# Static Code Analysis\n" >> $GITHUB_STEP_SUMMARY
+          cat .lint.txt >> $GITHUB_STEP_SUMMARY
+          poetry run tbx security pretty-print .security.json >> $GITHUB_STEP_SUMMARY

@@ -1,0 +1,30 @@
+name: Build Matrix (Exasol)
+
+on:
+  workflow_call:
+    outputs:
+      matrix:
+        description: "Generates the exasol version build matrix"
+        value: ${{ jobs.exasol_versions.outputs.matrix }}
+
+jobs:
+  exasol_versions:
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: SCM Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python & Poetry Environment
+        uses: exasol/python-toolbox/.github/actions/python-environment@0.20.0
+
+      - name: Generate matrix
+        run: poetry run nox -s matrix:exasol
+
+      - id: set-matrix
+        run: |
+          echo "matrix=$(poetry run nox -s matrix:exasol)" >> $GITHUB_OUTPUT
+
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}

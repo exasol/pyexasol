@@ -1,0 +1,46 @@
+name: Slow-Checks
+
+on:
+  workflow_call:
+    secrets:
+      ALTERNATIVE_GITHUB_TOKEN:
+        required: false
+
+jobs:
+
+  build-matrix:
+    name: Generate Build Matrix
+    uses: ./.github/workflows/matrix-all.yml
+
+  Tests:
+    name: Integration-Tests (Python-${{ matrix.python-version }}, Exasol-${{ matrix.exasol-version}})
+    needs: [ build-matrix ]
+    runs-on: ubuntu-latest
+    # Even though the environment "manual-approval" will be created automatically,
+    # it still needs to be configured to require interactive review.
+    # See project settings on GitHub (Settings / Environments / manual-approval).
+    environment: manual-approval
+    env:
+      GITHUB_TOKEN: ${{ secrets.ALTERNATIVE_GITHUB_TOKEN ||  secrets.GITHUB_TOKEN }}
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJson(needs.build-matrix.outputs.matrix) }}
+
+    steps:
+      - name: SCM Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python & Poetry Environment
+        uses: exasol/python-toolbox/.github/actions/python-environment@0.20.0
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Run Tests and Collect Coverage
+        run: poetry run nox -s test:integration -- -- --coverage --db-version ${{ matrix.exasol-version }}
+
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v4.4.0
+        with:
+          name: coverage-python${{ matrix.python-version }}-slow
+          path: .coverage
+          include-hidden-files: true
