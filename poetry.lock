@@ -774,13 +774,13 @@ types-requests = ">=2.31.0.6,<3.0.0.0"
 
 [[package]]
 name = "exasol-toolbox"
-version = "0.19.0"
+version = "0.20.0"
 description = "Your one-stop solution for managing all standard tasks and core workflows of your Python project."
 optional = false
 python-versions = "<4.0,>=3.9"
 files = [
-    {file = "exasol_toolbox-0.19.0-py3-none-any.whl", hash = "sha256:bc29492a552d64d921b5a70985f9ca1821a3eda15ceb382d5750dd574ef94ec3"},
-    {file = "exasol_toolbox-0.19.0.tar.gz", hash = "sha256:32a9bfa867c1f24e113a06c026f4f660fea63fb563805983b084caae2a7e44bd"},
+    {file = "exasol_toolbox-0.20.0-py3-none-any.whl", hash = "sha256:c90e805dbaf0d2ec96a1fab44a00adedb55043179201f2218e10fc8ec811ce11"},
+    {file = "exasol_toolbox-0.20.0.tar.gz", hash = "sha256:f7e0cf6e346b7b3af59a007a274dc1ef48195f03eba87ad6ebf8eb95740fb1ae"},
 ]
 
 [package.dependencies]
@@ -2304,13 +2304,13 @@ files = [
 
 [[package]]
 name = "pyupgrade"
-version = "3.19.0"
+version = "3.19.1"
 description = "A tool to automatically upgrade syntax for newer versions."
 optional = false
 python-versions = ">=3.9"
 files = [
-    {file = "pyupgrade-3.19.0-py2.py3-none-any.whl", hash = "sha256:1364fcae4436a6a236a85960587390ec8a939ad0f65f429346f70a5f201c1489"},
-    {file = "pyupgrade-3.19.0.tar.gz", hash = "sha256:7ed4b7d972ed2788c43994f4a24f949d5bf044342992f3b48e1bed0092ddaa01"},
+    {file = "pyupgrade-3.19.1-py2.py3-none-any.whl", hash = "sha256:8c5b0bfacae5ff30fa136a53eb7f22c34ba007450d4099e9da8089dabb9e67c9"},
+    {file = "pyupgrade-3.19.1.tar.gz", hash = "sha256:d10e8c5f54b8327211828769e98d95d95e4715de632a3414f1eef3f51357b9e2"},
 ]
 
 [package.dependencies]
@@ -3305,4 +3305,4 @@ ujson = ["ujson"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.9"
-content-hash = "8fabf5adeb836347e5b05bbd15617919780028cec5b793b7cad431570a4afda2"
+content-hash = "0a9324c4acf2e663ce0d4509a6cbfd576cd15c357cdd597b2a488d3835b19596"

@@ -1,55 +1,167 @@
-name: CI Checks
+name: Checks
 
-on: 
+on:
   workflow_call:
-
+    secrets:
+      ALTERNATIVE_GITHUB_TOKEN:
+        required: false
 
 jobs:
 
-  unit-tests:
-    name: Unit Tests
+  Version-Check:
+    name: Version
     runs-on: ubuntu-22.04
-    strategy:
-      fail-fast: true
-      matrix:
-        python-version: [ "3.9", "3.10", "3.11", "3.12" ]
 
     steps:
-    - name: SCM Checkout
-      uses: actions/checkout@v4
+      - name: SCM Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-    - name: Setup Python & Poetry Environment
-      uses: exasol/python-toolbox/.github/actions/python-environment@0.13.0
-      with:
-        python-version: ${{ matrix.python-version }} 
+      - name: Setup Python & Poetry Environment
+        uses: exasol/python-toolbox/.github/actions/python-environment@0.20.0
 
-    - name: "Install all extras"
-      run: poetry install --all-extras
+      - name: Check Version(s)
+        run: poetry run version-check `poetry run python -c "from noxconfig import PROJECT_CONFIG; print(PROJECT_CONFIG.version_file)"`
 
-    - name: Run Tests
-      run: |
-        poetry run nox -s test:unit
-
-  integration-tests:
-    name: Integration Tests
+  Documentation:
+    name: Docs
+    needs: [ Version-Check ]
     runs-on: ubuntu-22.04
-    strategy:
-      fail-fast: true
-      matrix:
-        python-version: [ "3.9", "3.10", "3.11", "3.12" ]
 
     steps:
-    - name: SCM Checkout
-      uses: actions/checkout@v4
+      - name: SCM Checkout
+        uses: actions/checkout@v4
 
-    - name: Setup Python & Poetry Environment
-      uses: exasol/python-toolbox/.github/actions/python-environment@0.13.0
-      with:
-        python-version: ${{ matrix.python-version }} 
+      - name: Setup Python & Poetry Environment
+        uses: exasol/python-toolbox/.github/actions/python-environment@0.20.0
 
-    - name: "Install all extras"
-      run: poetry install --all-extras
+      - name: Build Documentation
+        run: |
+          poetry run python -m nox -s docs:build
 
-    - name: Run Tests
-      run: |
-        poetry run nox -s test:integration
+  build-matrix:
+    name: Generate Build Matrix
+    uses: ./.github/workflows/matrix-python.yml
+
+  Lint:
+    name: Linting (Python-${{ matrix.python-version }})
+    needs: [ Version-Check, build-matrix ]
+    runs-on: ubuntu-22.04
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJson(needs.build-matrix.outputs.matrix) }}
+
+    steps:
+      - name: SCM Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python & Poetry Environment
+        uses: exasol/python-toolbox/.github/actions/python-environment@0.20.0
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Run lint
+        run: poetry run nox -s lint:code
+
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v4.4.0
+        with:
+          name: lint-python${{ matrix.python-version }}
+          path: .lint.txt
+          include-hidden-files: true
+
+  Type-Check:
+    name: Type Checking (Python-${{ matrix.python-version }})
+    needs: [ Version-Check, build-matrix ]
+    runs-on: ubuntu-22.04
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJson(needs.build-matrix.outputs.matrix) }}
+
+    steps:
+      - name: SCM Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python & Poetry Environment
+        uses: exasol/python-toolbox/.github/actions/python-environment@0.20.0
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Run type-check
+        run: poetry run nox -s lint:typing
+
+  Security:
+    name: Security Checks (Python-${{ matrix.python-version }})
+    needs: [ Version-Check, build-matrix ]
+    runs-on: ubuntu-22.04
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJson(needs.build-matrix.outputs.matrix) }}
+
+    steps:
+      - name: SCM Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python & Poetry Environment
+        uses: exasol/python-toolbox/.github/actions/python-environment@0.20.0
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Run security linter
+        run: poetry run nox -s lint:security
+
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v4.4.0
+        with:
+          name: security-python${{ matrix.python-version }}
+          path: .security.json
+          include-hidden-files: true
+
+  Format:
+    name: Format Check
+    runs-on: ubuntu-22.04
+
+    steps:
+      - name: SCM Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python & Poetry Environment
+        uses: exasol/python-toolbox/.github/actions/python-environment@0.20.0
+        with:
+          python-version: "3.9"
+
+      - name: Run format check
+        run: poetry run nox -s project:format
+
+  Tests:
+    name: Unit-Tests (Python-${{ matrix.python-version }}, Exasol-${{ matrix.exasol-version}})
+    needs: [ Documentation, Lint, Type-Check, Security, Format, build-matrix ]
+    runs-on: ubuntu-22.04
+    env:
+      GITHUB_TOKEN: ${{ secrets.ALTERNATIVE_GITHUB_TOKEN ||  secrets.GITHUB_TOKEN }}
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJson(needs.build-matrix.outputs.matrix) }}
+
+    steps:
+      - name: SCM Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python & Poetry Environment
+        uses: exasol/python-toolbox/.github/actions/python-environment@0.20.0
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: "Install all extras"
+        run: poetry install --all-extras
+
+      - name: Run Tests and Collect Coverage
+        run: poetry run nox -s test:unit -- -- --coverage
+
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v4.4.0
+        with:
+          name: coverage-python${{ matrix.python-version }}-fast
+          path: .coverage
+          include-hidden-files: true
