@@ -1,7 +1,7 @@
 <h1 align="center">Pyexasol</h1>
 <p align="center">
-<a href="https://github.com/exasol/pyexasol/actions/workflows/ci-master.yml">
-    <img src="https://github.com/exasol/pyexasol/actions/workflows/ci-master.yml/badge.svg" alt="Continuous Integration (master)">
+<a href="https://github.com/exasol/pyexasol/actions/workflows/pr-merge.yml">
+    <img src="https://github.com/exasol/pyexasol/actions/workflows/pr-merge.yml/badge.svg?branch=master" alt="Continuous Integration (master)">
 </a>
 <a href="https://anaconda.org/conda-forge/pyexasol">
     <img src="https://anaconda.org/conda-forge/pyexasol/badges/version.svg" alt="Anaconda">
