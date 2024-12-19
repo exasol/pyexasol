@@ -67,7 +67,6 @@ To prepare for a release, a pull request with the following parameters needs to 
 
 - Updated version numbers
 - Updated the changelog
-- Updated workflow templates (not automated yet)
 
 This can be achieved by running the following command:
 
