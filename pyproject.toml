@@ -1,0 +1,140 @@
+[tool.poetry]
+name = "pyexasol"
+version = "0.27.0"
+license = "MIT"
+readme = "README.md"
+description = "Exasol python driver with extra features"
+
+packages = [
+    { include = "pyexasol" },
+    { include = "pyexasol_utils" },
+    { include = "exasol" }
+]
+authors = [
+    "Vitaly Markov <wild.desu@gmail.com>",
+    "Exasol AG <opensource@exasol.com>"
+]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Intended Audience :: Developers",
+    "Topic :: Database",
+]
+
+keywords = [
+    "exasol",
+    "sql",
+    "database",
+    "performance",
+    "websocket",
+    "import",
+    "export"
+]
+
+
+[tool.poetry.urls]
+"Homepage" = "https://www.exasol.com/"
+"Documentation" = "https://github.com/exasol/pyexasol/"
+"Source" = "https://github.com/exasol/pyexasol"
+"Issues" = "https://github.com/exasol/pyexasol/issues"
+"Changelog" = "https://github.com/exasol/pyexasol/blob/master/CHANGELOG.md"
+
+
+[tool.poetry.dependencies]
+python = "^3.9"
+websocket-client = ">=1.0.1"
+pyopenssl = "*"
+rsa = "*"
+packaging = "*"
+# Currently, it is necessary to pin numpy explicitly.
+# For additional details, refer to: https://github.com/numpy/numpy/issues/26710
+# Once this issue has been resolved, we should be able remove this explicit dependency.
+numpy = { version = ">1.26.0,<2", optional = true }
+pandas = { version = "^2", optional = true, extras = ["numpy"] }
+ujson = { version = "*", optional = true }
+python-rapidjson = { version = "*", optional = true }
+orjson = { version = ">=3.6", optional = true }
+pproxy = { version = "*", optional = true }
+
+[tool.poetry.extras]
+numpy = ["numpy"]
+pandas = ["pandas"]
+ujson = ["ujson"]
+rapidjson = ["python-rapidjson"]
+orjson = ["orjson"]
+examples = ["pproxy"]
+
+[tool.poetry.group.dev.dependencies]
+nox = "^2023.4.22"
+pytest = ">=7.0.0,<9"
+docutils = "0.20.1"
+exasol-integration-test-docker-environment = "^3.0.0"
+faker = "^24.14.1"
+exasol-toolbox = ">=0.20.0"
+
+[tool.black]
+line-length = 88
+verbose = false
+include = "\\.pyi?$"
+
+[tool.coverage.report]
+fail_under = 15
+
+[tool.isort]
+profile = "black"
+force_grid_wrap = 2
+
+[tool.pylint.master]
+fail-under = 6.0
+
+[tool.pylint.format]
+max-line-length = 88
+max-module-lines = 800
+
+[[tool.mypy.overrides]]
+module = [
+    "exasol.*",
+    "pyexasol.*",
+    "examples.*",
+    "performance.*",
+    "pyexasol_utils.*",
+    "noxfile",
+    "noxconfig",
+    "test.unit.*",
+    "test.integration.*",
+]
+ignore_errors = true
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.pytest.ini_options]
+xfail_strict = true
+markers = [
+    "smoke: smoke tests which always should pass.",
+    "basic: basic driver tests.",
+    "fetch_tuple: tests related to fetching tuple based results.",
+    "fetch_dict: tests related to fetching dictionary based results.",
+    "fetch_mapper: tests related to mapping data types.",
+    "format: tests related to f-string based statement formatting.",
+    "transaction: tests related to transaction management.",
+    "exceptions: tests related to exceptions in pyexasol.",
+    "extensions: tests related to pyexasol extensions.",
+    "context_managers: tests related to pyexasol context_managers.",
+    "metadata: tests related to metadata retrieval with pyexasol.",
+    "json: tests related to json serialization in pyexasol.",
+    "dbapi2: tests related to dbapi2 compatibility.",
+    "configuration: tests related to pyexasol settings and configuration.",
+    "edge_cases: tests related to pyexasol and exasol edge cases scenarios.",
+    "tls: tests related to tls.",
+    "udf: tests related to user defined functions.",
+    "pandas: tests related to support of pandas library.",
+    "etl: etl related tests, export, load (import) and transform data.",
+    "misc: miscellaneous tests which did not fit in the other categories."
+]

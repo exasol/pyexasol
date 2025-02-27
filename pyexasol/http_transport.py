@@ -12,6 +12,7 @@ class ExaSQLThread(threading.Thread):
     """
     Thread class which re-throws any Exception to parent thread
     """
+
     def __init__(self, connection, compression):
         self.connection = connection
         self.compression = compression
@@ -52,39 +53,45 @@ class ExaSQLThread(threading.Thread):
     def build_file_list(self):
         files = list()
 
-        if 'format' in self.params:
-            if self.params['format'] not in ['gz', 'bz2', 'zip']:
-                raise ValueError(f"Unsupported compression format: {self.params['format']}")
+        if "format" in self.params:
+            if self.params["format"] not in ["gz", "bz2", "zip"]:
+                raise ValueError(
+                    f"Unsupported compression format: {self.params['format']}"
+                )
 
-            ext = self.params['format']
+            ext = self.params["format"]
         else:
-            ext = 'gz' if self.compression else 'csv'
+            ext = "gz" if self.compression else "csv"
 
-        if self.connection.options['encryption']:
-            prefix = 'https://'
+        if self.connection.options["encryption"]:
+            prefix = "https://"
         else:
-            prefix = 'http://'
+            prefix = "http://"
 
         csv_cols = self.build_csv_cols()
 
         for i, exa_address in enumerate(self.exa_address_list):
-            files.append(f"AT '{prefix}{exa_address}' FILE '{str(i).rjust(3, '0')}.{ext}'{csv_cols}")
+            files.append(
+                f"AT '{prefix}{exa_address}' FILE '{str(i).rjust(3, '0')}.{ext}'{csv_cols}"
+            )
 
         return files
 
     def build_columns_list(self):
-        if 'columns' not in self.params:
-            return ''
+        if "columns" not in self.params:
+            return ""
 
         return f"({','.join([self.connection.format.default_format_ident(c) for c in self.params['columns']])})"
 
     def build_csv_cols(self):
-        if 'csv_cols' not in self.params:
-            return ''
+        if "csv_cols" not in self.params:
+            return ""
 
-        safe_csv_cols_regexp = re.compile(r"^(\d+|\d+\.\.\d+)(\sFORMAT='[^'\n]+')?$", re.IGNORECASE)
+        safe_csv_cols_regexp = re.compile(
+            r"^(\d+|\d+\.\.\d+)(\sFORMAT='[^'\n]+')?$", re.IGNORECASE
+        )
 
-        for c in self.params['csv_cols']:
+        for c in self.params["csv_cols"]:
             if not safe_csv_cols_regexp.match(c):
                 raise ValueError(f"Value [{c}] is not a safe csv_cols part")
 
@@ -96,6 +103,7 @@ class ExaSQLExportThread(ExaSQLThread):
     Build and run EXPORT query into separate thread
     Main thread is busy outputting data in callbacks
     """
+
     def __init__(self, connection, compression, query_or_table, export_params):
         super().__init__(connection, compression)
 
@@ -103,51 +111,68 @@ class ExaSQLExportThread(ExaSQLThread):
         self.params = export_params
 
     def run_sql(self):
-        if isinstance(self.query_or_table, tuple) or str(self.query_or_table).strip().find(' ') == -1:
-            export_source = self.connection.format.default_format_ident(self.query_or_table)
+        if (
+            isinstance(self.query_or_table, tuple)
+            or str(self.query_or_table).strip().find(" ") == -1
+        ):
+            export_source = self.connection.format.default_format_ident(
+                self.query_or_table
+            )
         else:
             # New lines are mandatory to handle queries with single-line comments '--'
             export_query = self.query_or_table.lstrip(" \n").rstrip(" \n;")
-            export_source = f'(\n{export_query}\n)'
+            export_source = f"(\n{export_query}\n)"
 
-            if self.params.get('columns'):
-                raise ValueError("Export option 'columns' is not compatible with SQL query export source")
+            if self.params.get("columns"):
+                raise ValueError(
+                    "Export option 'columns' is not compatible with SQL query export source"
+                )
 
         parts = list()
 
-        if self.params.get('comment'):
-            comment = self.params.get('comment')
-            if '*/' in comment:
-                raise ValueError('Invalid comment, cannot contain */')
+        if self.params.get("comment"):
+            comment = self.params.get("comment")
+            if "*/" in comment:
+                raise ValueError("Invalid comment, cannot contain */")
             parts.append(f"/*{comment}*/")
 
         parts.append(f"EXPORT {export_source}{self.build_columns_list()} INTO CSV")
         parts.extend(self.build_file_list())
 
-        if self.params.get('delimit'):
-            delimit = str(self.params['delimit']).upper()
+        if self.params.get("delimit"):
+            delimit = str(self.params["delimit"]).upper()
 
-            if delimit != 'AUTO' and delimit != 'ALWAYS' and delimit != 'NEVER':
-                raise ValueError('Invalid value for export parameter DELIMIT: ' + delimit)
+            if delimit != "AUTO" and delimit != "ALWAYS" and delimit != "NEVER":
+                raise ValueError(
+                    "Invalid value for export parameter DELIMIT: " + delimit
+                )
 
             parts.append(f"DELIMIT = {delimit}")
 
-        if self.params.get('encoding'):
-            parts.append(f"ENCODING = {self.connection.format.quote(self.params['encoding'])}")
+        if self.params.get("encoding"):
+            parts.append(
+                f"ENCODING = {self.connection.format.quote(self.params['encoding'])}"
+            )
 
-        if self.params.get('null'):
+        if self.params.get("null"):
             parts.append(f"NULL = {self.connection.format.quote(self.params['null'])}")
 
-        if self.params.get('row_separator'):
-            parts.append(f"ROW SEPARATOR = {self.connection.format.quote(self.params['row_separator'])}")
+        if self.params.get("row_separator"):
+            parts.append(
+                f"ROW SEPARATOR = {self.connection.format.quote(self.params['row_separator'])}"
+            )
 
-        if self.params.get('column_separator'):
-            parts.append(f"COLUMN SEPARATOR = {self.connection.format.quote(self.params['column_separator'])}")
+        if self.params.get("column_separator"):
+            parts.append(
+                f"COLUMN SEPARATOR = {self.connection.format.quote(self.params['column_separator'])}"
+            )
 
-        if self.params.get('column_delimiter'):
-            parts.append(f"COLUMN DELIMITER = {self.connection.format.quote(self.params['column_delimiter'])}")
+        if self.params.get("column_delimiter"):
+            parts.append(
+                f"COLUMN DELIMITER = {self.connection.format.quote(self.params['column_delimiter'])}"
+            )
 
-        if self.params.get('with_column_names'):
+        if self.params.get("with_column_names"):
             parts.append("WITH COLUMN NAMES")
 
         self.connection.execute("\n".join(parts))
@@ -158,6 +183,7 @@ class ExaSQLImportThread(ExaSQLThread):
     Build and run EXPORT query into separate thread
     Main thread is busy parsing results in callbacks
     """
+
     def __init__(self, connection, compression, table, import_params):
         super().__init__(connection, compression)
 
@@ -169,40 +195,50 @@ class ExaSQLImportThread(ExaSQLThread):
 
         parts = list()
 
-        if self.params.get('comment'):
-            comment = self.params.get('comment')
-            if '*/' in comment:
-                raise ValueError('Invalid comment, cannot contain */')
+        if self.params.get("comment"):
+            comment = self.params.get("comment")
+            if "*/" in comment:
+                raise ValueError("Invalid comment, cannot contain */")
             parts.append(f"/*{comment}*/")
 
         parts.append(f"IMPORT INTO {table_ident}{self.build_columns_list()} FROM CSV")
         parts.extend(self.build_file_list())
 
-        if self.params.get('encoding'):
-            parts.append(f"ENCODING = {self.connection.format.quote(self.params['encoding'])}")
+        if self.params.get("encoding"):
+            parts.append(
+                f"ENCODING = {self.connection.format.quote(self.params['encoding'])}"
+            )
 
-        if self.params.get('null'):
+        if self.params.get("null"):
             parts.append(f"NULL = {self.connection.format.quote(self.params['null'])}")
 
-        if self.params.get('skip'):
-            parts.append(f"SKIP = {self.connection.format.safe_decimal(self.params['skip'])}")
+        if self.params.get("skip"):
+            parts.append(
+                f"SKIP = {self.connection.format.safe_decimal(self.params['skip'])}"
+            )
 
-        if self.params.get('trim'):
-            trim = str(self.params['trim']).upper()
+        if self.params.get("trim"):
+            trim = str(self.params["trim"]).upper()
 
-            if trim != 'TRIM' and trim != 'LTRIM' and trim != 'RTRIM':
-                raise ValueError('Invalid value for import parameter TRIM: ' + trim)
+            if trim != "TRIM" and trim != "LTRIM" and trim != "RTRIM":
+                raise ValueError("Invalid value for import parameter TRIM: " + trim)
 
             parts.append(trim)
 
-        if self.params.get('row_separator'):
-            parts.append(f"ROW SEPARATOR = {self.connection.format.quote(self.params['row_separator'])}")
+        if self.params.get("row_separator"):
+            parts.append(
+                f"ROW SEPARATOR = {self.connection.format.quote(self.params['row_separator'])}"
+            )
 
-        if self.params.get('column_separator'):
-            parts.append(f"COLUMN SEPARATOR = {self.connection.format.quote(self.params['column_separator'])}")
+        if self.params.get("column_separator"):
+            parts.append(
+                f"COLUMN SEPARATOR = {self.connection.format.quote(self.params['column_separator'])}"
+            )
 
-        if self.params.get('column_delimiter'):
-            parts.append(f"COLUMN DELIMITER = {self.connection.format.quote(self.params['column_delimiter'])}")
+        if self.params.get("column_delimiter"):
+            parts.append(
+                f"COLUMN DELIMITER = {self.connection.format.quote(self.params['column_delimiter'])}"
+            )
 
         self.connection.execute("\n".join(parts))
 
@@ -212,8 +248,14 @@ class ExaHttpThread(threading.Thread):
     HTTP communication and compression / decompression is offloaded to separate thread
     Thread can be used instead of subprocess when compatibility is an issue
     """
+
     def __init__(self, ipaddr, port, compression, encryption):
-        self.server = ExaTCPServer((ipaddr, port), ExaHttpRequestHandler, compression=compression, encryption=encryption)
+        self.server = ExaTCPServer(
+            (ipaddr, port),
+            ExaHttpRequestHandler,
+            compression=compression,
+            encryption=encryption,
+        )
 
         self.read_pipe = self.server.read_pipe
         self.write_pipe = self.server.write_pipe
@@ -224,7 +266,7 @@ class ExaHttpThread(threading.Thread):
 
     @property
     def exa_address(self):
-        return f'{self.server.exa_address_ipaddr}:{self.server.exa_address_port}'
+        return f"{self.server.exa_address_ipaddr}:{self.server.exa_address_port}"
 
     def run(self):
         try:
@@ -257,29 +299,65 @@ class ExaHttpThread(threading.Thread):
         self.read_pipe.close()
 
 
-class ExaHTTPTransportWrapper(object):
+class ExaHTTPTransportWrapper:
     """
-    Start HTTP server, obtain address ("ipaddr:port" string)
-    Send it to parent process
+    Wrapper for :ref:`http_transport_parallel`.
 
-    Block into "export_*()" or "import_*()" call,
-    wait for incoming connection, process data and exit.
+    You may create this wrapper using :func:`pyexasol.http_transport`.
+
+    Note:
+
+        Starts an HTTP server, obtains the address (the ``"ipaddr:port"`` string),
+        and sends it to the parent process.
+
+        Block into ``export_*()`` or ``import_*()`` call,
+        wait for incoming connection, process data and exit.
     """
+
     def __init__(self, ipaddr, port, compression=False, encryption=True):
         self.http_thread = ExaHttpThread(ipaddr, port, compression, encryption)
         self.http_thread.start()
 
     @property
     def exa_address(self):
+        """
+        Internal Exasol address as ``ipaddr:port`` string.
+
+        Note:
+            This string should be passed from child processes to parent process
+            and used as an argument for ``export_parallel()`` and
+            ``import_parallel()`` functions.
+        """
         return self.http_thread.exa_address
 
     def get_proxy(self):
-        """ DEPRECATED, please use .exa_address property """
+        """
+        Caution:
+            **DEPRECATED**, please use ``.exa_address`` property
+        """
         return self.http_thread.exa_address
 
     def export_to_callback(self, callback, dst, callback_params=None):
+        """
+        Exports chunk of data using callback function.
+
+        Args:
+            callback:
+                Callback function.
+            dst:
+                Export destination for callback function.
+            callback_params:
+                Dict with additional parameters for callback function.
+
+        Returns:
+            Result of the callback function.
+
+        Note:
+            You may use exactly the same callbacks utilized by standard
+            non-parallel ``export_to_callback()`` function.
+        """
         if not callable(callback):
-            raise ValueError('Callback argument is not callable')
+            raise ValueError("Callback argument is not callable")
 
         if callback_params is None:
             callback_params = {}
@@ -299,8 +377,26 @@ class ExaHTTPTransportWrapper(object):
             raise e
 
     def import_from_callback(self, callback, src, callback_params=None):
+        """
+        Import chunk of data using callback function.
+
+        Args:
+            callback:
+                Callback function.
+            src:
+                Import source for the callback function.
+            callback_params:
+                Dict with additional parameters for the callback function.
+
+        Returns:
+            Result of callback function
+
+        Note:
+            You may use exactly the same callbacks utilized by standard
+            non-parallel ``import_from_callback()`` function.
+        """
         if not callable(callback):
-            raise ValueError('Callback argument is not callable')
+            raise ValueError("Callback argument is not callable")
 
         if callback_params is None:
             callback_params = {}
@@ -320,7 +416,7 @@ class ExaHTTPTransportWrapper(object):
             raise e
 
     def __repr__(self):
-        return f'<{self.__class__.__name__} exa_address={self.exa_address}>'
+        return f"<{self.__class__.__name__} exa_address={self.exa_address}>"
 
 
 class ExaTCPServer(socketserver.TCPServer):
@@ -333,13 +429,13 @@ class ExaTCPServer(socketserver.TCPServer):
     timeout = 1
 
     def __init__(self, *args, **kwargs):
-        self.compression = kwargs.pop('compression', False)
-        self.encryption = kwargs.pop('encryption', True)
+        self.compression = kwargs.pop("compression", False)
+        self.encryption = kwargs.pop("encryption", True)
 
         r_fd, w_fd = os.pipe()
 
-        self.read_pipe = open(r_fd, 'rb', 0)
-        self.write_pipe = open(w_fd, 'wb', 0)
+        self.read_pipe = open(r_fd, "rb", 0)
+        self.write_pipe = open(w_fd, "wb", 0)
 
         # GET method calls (IMPORT) require extra protection
         #
@@ -362,21 +458,26 @@ class ExaTCPServer(socketserver.TCPServer):
         self.socket.sendall(struct.pack("iii", 0x02212102, 1, 1))
         _, port, ipaddr = struct.unpack("ii16s", self.socket.recv(24))
 
-        self.exa_address_ipaddr = ipaddr.replace(b'\x00', b'').decode()
+        self.exa_address_ipaddr = ipaddr.replace(b"\x00", b"").decode()
         self.exa_address_port = port
 
         if self.encryption:
             context = self.generate_adhoc_ssl_context()
-            self.socket = context.wrap_socket(self.socket, server_side=True, do_handshake_on_connect=False)
+            self.socket = context.wrap_socket(
+                self.socket, server_side=True, do_handshake_on_connect=False
+            )
 
-    def server_activate(self): pass
+    def server_activate(self):
+        pass
 
     def get_request(self):
         return self.socket, self.server_address
 
-    def shutdown_request(self, request): pass
+    def shutdown_request(self, request):
+        pass
 
-    def close_request(self, request): pass
+    def close_request(self, request):
+        pass
 
     def set_sock_opts(self):
         # only large packets are expected for HTTP transport
@@ -402,7 +503,9 @@ class ExaTCPServer(socketserver.TCPServer):
             self.socket.setsockopt(socket.IPPROTO_TCP, socket.TCP_KEEPCNT, keepcnt)
 
         elif sys.platform.startswith("win"):
-            self.socket.ioctl(socket.SIO_KEEPALIVE_VALS, (1, keepidle * 1000, keepintvl * 1000))
+            self.socket.ioctl(
+                socket.SIO_KEEPALIVE_VALS, (1, keepidle * 1000, keepintvl * 1000)
+            )
 
     @staticmethod
     def generate_adhoc_ssl_context():
@@ -410,11 +513,11 @@ class ExaTCPServer(socketserver.TCPServer):
         Create temporary self-signed certificate for encrypted HTTP transport
         Exasol does not check validity of certificates
         """
-        from OpenSSL import crypto
-
         import pathlib
         import ssl
         import tempfile
+
+        from OpenSSL import crypto
 
         k = crypto.PKey()
         k.generate_key(crypto.TYPE_RSA, 2048)
@@ -425,17 +528,17 @@ class ExaTCPServer(socketserver.TCPServer):
         cert.gmtime_adj_notAfter(60 * 60 * 24 * 365)
 
         cert.set_pubkey(k)
-        cert.sign(k, 'sha256')
+        cert.sign(k, "sha256")
 
         # TemporaryDirectory is used instead of NamedTemporaryFile for compatibility with Windows
-        with tempfile.TemporaryDirectory(prefix='pyexasol_ssl_') as tempdir:
+        with tempfile.TemporaryDirectory(prefix="pyexasol_ssl_") as tempdir:
             tempdir = pathlib.Path(tempdir)
 
-            cert_file = open(tempdir / 'cert', 'wb')
+            cert_file = open(tempdir / "cert", "wb")
             cert_file.write(crypto.dump_certificate(crypto.FILETYPE_PEM, cert))
             cert_file.close()
 
-            key_file = open(tempdir / 'key', 'wb')
+            key_file = open(tempdir / "key", "wb")
             key_file.write(crypto.dump_privatekey(crypto.FILETYPE_PEM, k))
             key_file.close()
 
@@ -447,14 +550,16 @@ class ExaTCPServer(socketserver.TCPServer):
 
 
 class ExaHttpRequestHandler(socketserver.StreamRequestHandler):
-    success_headers = b'HTTP/1.1 200 OK\r\n' \
-                      b'Connection: close\r\n' \
-                      b'Transfer-Encoding: chunked\r\n' \
-                      b'\r\n'
+    success_headers = (
+        b"HTTP/1.1 200 OK\r\n"
+        b"Connection: close\r\n"
+        b"Transfer-Encoding: chunked\r\n"
+        b"\r\n"
+    )
 
-    error_headers = b'HTTP/1.1 500 Internal Server Error\r\n' \
-                    b'Connection: close\r\n' \
-                    b'\r\n'
+    error_headers = (
+        b"HTTP/1.1 500 Internal Server Error\r\n" b"Connection: close\r\n" b"\r\n"
+    )
 
     server: ExaTCPServer
 
@@ -462,18 +567,18 @@ class ExaHttpRequestHandler(socketserver.StreamRequestHandler):
         self.server.total_clients += 1
 
         # Extract method from the first header
-        method = str(self.rfile.readline(), 'iso-8859-1').split()[0]
+        method = str(self.rfile.readline(), "iso-8859-1").split()[0]
 
         # Skip all other headers
-        while self.rfile.readline() != b'\r\n':
+        while self.rfile.readline() != b"\r\n":
             pass
 
-        if method == 'PUT':
+        if method == "PUT":
             if self.server.compression:
                 self.method_put_compressed()
             else:
                 self.method_put_raw()
-        elif method == 'GET':
+        elif method == "GET":
             if self.server.compression:
                 self.method_get_compressed()
             else:
@@ -585,8 +690,8 @@ class ExaHttpRequestHandler(socketserver.StreamRequestHandler):
 
         data = self.rfile.read(chunk_len)
 
-        if self.rfile.read(2) != b'\r\n':
-            raise RuntimeError('Invalid chunk delimiter in HTTP stream')
+        if self.rfile.read(2) != b"\r\n":
+            raise RuntimeError("Invalid chunk delimiter in HTTP stream")
 
         return data
 
@@ -596,10 +701,10 @@ class ExaHttpRequestHandler(socketserver.StreamRequestHandler):
         if chunk_len == 0:
             return
 
-        self.wfile.write(b'%X\r\n%b\r\n' % (chunk_len, data))
+        self.wfile.write(b"%X\r\n%b\r\n" % (chunk_len, data))
 
     def write_final_chunk(self):
-        self.wfile.write(b'0\r\n\r\n')
+        self.wfile.write(b"0\r\n\r\n")
 
     def write_success_headers(self):
         self.wfile.write(self.success_headers)

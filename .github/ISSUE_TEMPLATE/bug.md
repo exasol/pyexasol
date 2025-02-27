@@ -8,9 +8,9 @@ assignees: ''
 ---
 
 ### Checklist
-In order to improve the time, how long a bugfix does take, please make sure you address as much as possible of the following checklist.
+In order to speedup fixing the bug, please make sure you address as many items from the following checklist as possible.
 
-- [ ] I have reproduced the issue with at least the latest released version of \<PROJECT-NAME\>.
+- [ ] I have reproduced the issue with the latest released version of pyexasol.
 - [ ] I have added references to issues that sound similar in section _Related Issues_.
 
 **Tip: Adding screenshots, outputs and logs might help to improve clarity.**
@@ -62,7 +62,7 @@ Screenshot: If applicable, add screenshots to help explaining your problem.
 Describe the system and the used configuration.
 -->
 **Desktop:**
- - OS: [e.g. Linux (Fedora 35), Linux (Ubuntu 20.01), MacOs (...), Windows (...)]
+ - OS: [e.g. Linux (Fedora 35), Linux (Ubuntu 20.01), macOS (...), Windows (...)]
  - Python Version [e.g. Python 3.8.0]
  - Package Version [e.g. 22]
 

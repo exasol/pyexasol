@@ -4,13 +4,14 @@ Parallel HTTP transport
 EXPORT into multiple independent processes running in parallel
 """
 
-import pyexasol
+import multiprocessing
+import pprint
+
 import _config as config
 
-import multiprocessing
+import pyexasol
 import pyexasol.callback as cb
 
-import pprint
 printer = pprint.PrettyPrinter(indent=4, width=140)
 
 
@@ -33,7 +34,7 @@ class ExportProc(multiprocessing.Process):
         self.read_pipe.close()
 
         # Init HTTP transport connection
-        http = pyexasol.http_transport(self.node['ipaddr'], self.node['port'])
+        http = pyexasol.http_transport(self.node["ipaddr"], self.node["port"])
 
         # Send internal Exasol address to parent process
         self.write_pipe.send(http.exa_address)
@@ -44,12 +45,14 @@ class ExportProc(multiprocessing.Process):
         print(f"Child process {self.node['idx']} finished, exported rows: {len(pd)}")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     pool_size = 5
     pool = []
     exa_address_list = []
 
-    C = pyexasol.connect(dsn=config.dsn, user=config.user, password=config.password, schema=config.schema)
+    C = pyexasol.connect(
+        dsn=config.dsn, user=config.user, password=config.password, schema=config.schema
+    )
 
     for n in C.get_nodes(pool_size):
         proc = ExportProc(n)
@@ -62,13 +65,17 @@ if __name__ == '__main__':
     printer.pprint(exa_address_list)
 
     try:
-        C.export_parallel(exa_address_list, "SELECT * FROM payments", export_params={'with_column_names': True})
+        C.export_parallel(
+            exa_address_list,
+            "SELECT * FROM payments",
+            export_params={"with_column_names": True},
+        )
     except (Exception, KeyboardInterrupt):
         for p in pool:
             p.terminate()
     else:
         stmt = C.last_statement()
-        print(f'EXPORTED {stmt.rowcount()} rows in {stmt.execution_time}s')
+        print(f"EXPORTED {stmt.rowcount()} rows in {stmt.execution_time}s")
     finally:
         for p in pool:
             p.join()
