@@ -25,5 +25,6 @@
 
 ## 📚 Documentation
 
-* Add sphinx based documention
+* Added sphinx based documentation
+* Added example to highlight how sensitive information from exceptions should be handled 
 
