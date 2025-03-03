@@ -1206,16 +1206,16 @@ class ExaConnection:
         }
 
         if self.options["encryption"]:
-            # Use "websocket_sslopt" argument to set custom SSL options, which are passed directly to WebSocket client constructor
-            if self.options["websocket_sslopt"]:
-                options["sslopt"] = self.options["websocket_sslopt"]
-            # OpenID tokens are normally used for Exasol SAAS
-            # Strict certificate verification is enabled by default
-            elif self.options["access_token"] or self.options["refresh_token"]:
+            # OpenID tokens are normally used for Exasol SAAS, so strict certificate
+            # verification is enabled by default. Use "websocket_sslopt" argument to set
+            # custom SSL options. (security risk) To disable strict certification
+            # verification, set "websocket_sslopt" to "{"cert_reqs": ssl.CERT_NONE}".
+            # This might be needed for specific use cases (e.g. Docker container,
+            # "on-premises" Exasol setup).
+            if self.options["websocket_sslopt"] is None:
                 options["sslopt"] = {"cert_reqs": ssl.CERT_REQUIRED}
-            # Certification verification is disabled for other use cases (e.g. Docker container, "on-premises" Exasol setup)
             else:
-                options["sslopt"] = {"cert_reqs": ssl.CERT_NONE}
+                options["sslopt"] = self.options["websocket_sslopt"]
 
         if self.options["http_proxy"]:
             proxy_components = urllib.parse.urlparse(self.options["http_proxy"])
