@@ -109,7 +109,7 @@ class ExaConnection:
         client_version=None,
         client_os_username=None,
         protocol_version=constant.PROTOCOL_V3,
-        websocket_sslopt=None,
+        websocket_sslopt: Optional[dict] = None,
         access_token=None,
         refresh_token=None,
     ):
