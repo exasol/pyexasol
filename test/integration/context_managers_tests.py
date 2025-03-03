@@ -5,9 +5,13 @@ from pyexasol import ExaQueryError
 
 
 @pytest.mark.context_managers
-def test_context_manager_for_connections(dsn, user, password, schema):
+def test_context_manager_for_connections(dsn, user, password, schema, websocket_sslopt):
     with pyexasol.connect(
-        dsn=dsn, user=user, password=password, schema=schema
+        dsn=dsn,
+        user=user,
+        password=password,
+        schema=schema,
+        websocket_sslopt=websocket_sslopt,
     ) as connection:
         connection.execute("SELECT 1;")
 
@@ -31,10 +35,16 @@ def test_context_manager_for_statements(connection):
 
 @pytest.mark.exceptions
 @pytest.mark.context_managers
-def test_context_manger_closes_everything_on_exception(dsn, user, password, schema):
+def test_context_manger_closes_everything_on_exception(
+    dsn, user, password, schema, websocket_sslopt
+):
     with pytest.raises(ExaQueryError):
         with pyexasol.connect(
-            dsn=dsn, user=user, password=password, schema=schema
+            dsn=dsn,
+            user=user,
+            password=password,
+            schema=schema,
+            websocket_sslopt=websocket_sslopt,
         ) as connection:
             statement = "SELECT * FROM unkown_table_so_query_will_fail LIMIT 5;"
             with connection.execute(statement) as stmt:

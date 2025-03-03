@@ -6,9 +6,14 @@ import pyexasol
 
 
 @pytest.fixture
-def connection(dsn, user, password, schema):
+def connection(dsn, user, password, schema, websocket_sslopt):
     with pyexasol.connect(
-        dsn=dsn, user=user, password=password, schema=schema, compression=True
+        dsn=dsn,
+        user=user,
+        password=password,
+        schema=schema,
+        websocket_sslopt=websocket_sslopt,
+        compression=True,
     ) as con:
         yield con
 

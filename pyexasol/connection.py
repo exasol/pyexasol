@@ -1215,7 +1215,7 @@ class ExaConnection:
             if self.options["websocket_sslopt"] is None:
                 options["sslopt"] = {"cert_reqs": ssl.CERT_REQUIRED}
             else:
-                options["sslopt"] = self.options["websocket_sslopt"]
+                options["sslopt"] = self.options["websocket_sslopt"].copy()
 
         if self.options["http_proxy"]:
             proxy_components = urllib.parse.urlparse(self.options["http_proxy"])

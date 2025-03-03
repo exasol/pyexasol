@@ -4,7 +4,7 @@ import pyexasol
 
 
 @pytest.fixture
-def connection_factory(dsn, user, password, schema):
+def connection_factory(dsn, user, password, schema, websocket_sslopt):
     connections = []
 
     def factory(json_lib):
@@ -13,6 +13,7 @@ def connection_factory(dsn, user, password, schema):
             user=user,
             password=password,
             schema=schema,
+            websocket_sslopt=websocket_sslopt,
             json_lib=json_lib,
         )
         connections.append(con)

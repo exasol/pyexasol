@@ -34,12 +34,13 @@ def query():
 
 
 @pytest.fixture
-def connection(dsn, user, password, schema):
+def connection(dsn, user, password, schema, websocket_sslopt):
     con = db2.connect(
         dsn=dsn,
         user=user,
         password=password,
         schema=schema,
+        websocket_sslopt=websocket_sslopt,
     )
     yield con
     con.close()

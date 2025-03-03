@@ -28,13 +28,19 @@ class QueryThread(threading.Thread):
 
 
 @pytest.mark.exceptions
-def test_concurrency_error(dsn, user, password, schema):
+def test_concurrency_error(dsn, user, password, schema, websocket_sslopt):
 
     # Note all timeouts and sleeps in this test case have been chosen by well-educated guesses
     # TL;DR: Adjust timeouts if required/reasonable
     query_time_in_seconds = 0.5
 
-    con = pyexasol.connect(dsn=dsn, user=user, password=password, schema=schema)
+    con = pyexasol.connect(
+        dsn=dsn,
+        user=user,
+        password=password,
+        schema=schema,
+        websocket_sslopt=websocket_sslopt,
+    )
     q1 = QueryThread(con, timeout=query_time_in_seconds)
     q2 = QueryThread(con, timeout=query_time_in_seconds)
 

@@ -24,7 +24,7 @@ def test_default_session_parameters(connection, session_info_query, pyexasol_ver
 
 @pytest.mark.configuration
 def test_modified_session_parameters(
-    dsn, user, password, schema, connection, session_info_query
+    dsn, user, password, schema, websocket_sslopt, connection, session_info_query
 ):
     client_name = "MyCustomClient"
     client_version = "1.2.3"
@@ -33,6 +33,7 @@ def test_modified_session_parameters(
         dsn=dsn,
         user=user,
         password=password,
+        websocket_sslopt=websocket_sslopt,
         schema=schema,
         client_name=client_name,
         client_version=client_version,

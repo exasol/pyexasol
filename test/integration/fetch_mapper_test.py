@@ -8,12 +8,13 @@ import pyexasol
 
 # For the fetch_mapper tests we need to configure the connection accordingly
 @pytest.fixture
-def connection(dsn, user, password, schema):
+def connection(dsn, user, password, schema, websocket_sslopt):
     con = pyexasol.connect(
         dsn=dsn,
         user=user,
         password=password,
         schema=schema,
+        websocket_sslopt=websocket_sslopt,
         fetch_mapper=pyexasol.exasol_mapper,
     )
     yield con

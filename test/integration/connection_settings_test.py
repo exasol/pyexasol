@@ -6,9 +6,14 @@ import pyexasol
 
 
 @pytest.fixture
-def connection_with_quote_indent(dsn, user, password, schema):
+def connection_with_quote_indent(dsn, user, password, schema, websocket_sslopt):
     connection = pyexasol.connect(
-        dsn=dsn, user=user, password=password, schema=schema, quote_ident=True
+        dsn=dsn,
+        user=user,
+        password=password,
+        schema=schema,
+        quote_ident=True,
+        websocket_sslopt=websocket_sslopt,
     )
     yield connection
     connection.close()

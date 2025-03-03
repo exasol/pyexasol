@@ -48,9 +48,14 @@ def proxy_with_auth(proxy_port, proxy_user, proxy_password):
 
 
 @pytest.mark.configuration
-def test_connect_through_proxy(dsn, user, password, schema, proxy):
+def test_connect_through_proxy(dsn, user, password, schema, websocket_sslopt, proxy):
     with pyexasol.connect(
-        dsn=dsn, user=user, password=password, schema=schema, http_proxy=proxy
+        dsn=dsn,
+        user=user,
+        password=password,
+        schema=schema,
+        websocket_sslopt=websocket_sslopt,
+        http_proxy=proxy,
     ) as connection:
         result = connection.execute("SELECT 1;")
         expected = 1
@@ -60,13 +65,14 @@ def test_connect_through_proxy(dsn, user, password, schema, proxy):
 
 @pytest.mark.configuration
 def test_connect_through_proxy_without_resolving_host_names(
-    dsn, user, password, schema, proxy
+    dsn, user, password, schema, websocket_sslopt, proxy
 ):
     with pyexasol.connect(
         dsn=dsn,
         user=user,
         password=password,
         schema=schema,
+        websocket_sslopt=websocket_sslopt,
         http_proxy=proxy,
         resolve_hostnames=False,
     ) as connection:
@@ -78,10 +84,15 @@ def test_connect_through_proxy_without_resolving_host_names(
 
 @pytest.mark.configuration
 def test_connect_through_proxy_with_authentication(
-    dsn, user, password, schema, proxy_with_auth
+    dsn, user, password, schema, websocket_sslopt, proxy_with_auth
 ):
     with pyexasol.connect(
-        dsn=dsn, user=user, password=password, schema=schema, http_proxy=proxy_with_auth
+        dsn=dsn,
+        user=user,
+        password=password,
+        schema=schema,
+        websocket_sslopt=websocket_sslopt,
+        http_proxy=proxy_with_auth,
     ) as connection:
         result = connection.execute("SELECT 1;")
         expected = 1
