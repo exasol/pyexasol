@@ -88,6 +88,7 @@ data-aria-dark="Switch to auto color mode">
 </ul>
 </li>
 <li><a class="reference internal" href="#use-meta-functions-to-perform-lock-free-meta-data-requests">Use <code class="docutils literal notranslate"><span class="pre">.meta</span></code> Functions to Perform Lock-Free Meta Data Requests</a></li>
+<li><a class="reference internal" href="#consider-what-information-is-logged-from-exceptions">Consider What Information is Logged from Exceptions</a></li>
 </ul>
 </div><div id="ethical-ad-placement" data-ea-publisher="readthedocs"></div></div>
   </aside>
@@ -222,6 +223,48 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="6">
 </span><span data-line="7"><span class="c1"># Get list of views matching specified LIKE-pattern</span>
 </span><span data-line="8"><span class="n">C</span><span class="o">.</span><span class="n">list_views</span><span class="p">(</span><span class="s1">&#39;MY_SCHEMA&#39;</span><span class="p">,</span> <span class="s1">&#39;USER_VIEW_%&#39;</span><span class="p">)</span>
+</span></pre></div>
+</div>
+</section>
+<section id="consider-what-information-is-logged-from-exceptions">
+<h2>Consider What Information is Logged from Exceptions<a class="headerlink" href="#consider-what-information-is-logged-from-exceptions" title="Link to this heading">¶</a></h2>
+<p>Depending on the initial query, sensitive information may be present in the returned exception.
+It is the responsibility of the user to correctly handle this sensitive information, i.e. not save or pass it verbatim into their logging or other services.</p>
+<p>What not to do:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="k">try</span><span class="p">:</span>
+</span><span data-line="2">    <span class="n">stmt</span> <span class="o">=</span> <span class="n">C</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s1">&#39;CREATE USER &quot;MY_USER&quot; IDENTIFIED BY &quot;my_secret_password&quot;&#39;</span><span class="p">)</span>
+</span><span data-line="3">    <span class="c1"># create same user with different password; raises exception</span>
+</span><span data-line="4">    <span class="n">stmt</span> <span class="o">=</span> <span class="n">C</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s1">&#39;CREATE USER &quot;MY_USER&quot; IDENTIFIED BY &quot;my_secret_password2&quot;&#39;</span><span class="p">)</span>
+</span><span data-line="5"><span class="k">except</span> <span class="n">pyexasol</span><span class="o">.</span><span class="n">ExaQueryError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+</span><span data-line="6">    <span class="n">logging</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+</span></pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt;</span>
+</span><span data-line="2"><span class="go">ERROR:root:</span>
+</span><span data-line="3"><span class="go">(</span>
+</span><span data-line="4"><span class="go">    message     =&gt;  user name MY_USER conflicts with another user or role name (Session: 1825312482065121280)</span>
+</span><span data-line="5"><span class="go">    dsn         =&gt;  localhost:8563</span>
+</span><span data-line="6"><span class="go">    user        =&gt;  sys</span>
+</span><span data-line="7"><span class="go">    schema      =&gt;</span>
+</span><span data-line="8"><span class="go">    session_id  =&gt;  1825312482065121280</span>
+</span><span data-line="9"><span class="go">    code        =&gt;  42500</span>
+</span><span data-line="10"><span class="go">    # query contains sensitive information</span>
+</span><span data-line="11"><span class="go">    query       =&gt;  CREATE USER &quot;MY_USER&quot; IDENTIFIED BY &quot;my_secret_password&quot;</span>
+</span><span data-line="12"><span class="go">)</span>
+</span></pre></div>
+</div>
+<p>What to do:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="k">try</span><span class="p">:</span>
+</span><span data-line="2">    <span class="n">stmt</span> <span class="o">=</span> <span class="n">C</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s1">&#39;CREATE USER &quot;MY_USER&quot; IDENTIFIED BY &quot;my_secret_password&quot;&#39;</span><span class="p">)</span>
+</span><span data-line="3">    <span class="n">stmt</span> <span class="o">=</span> <span class="n">C</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s1">&#39;CREATE USER &quot;MY_USER&quot; IDENTIFIED BY &quot;my_secret_password2&quot;&#39;</span><span class="p">)</span>
+</span><span data-line="4"><span class="k">except</span> <span class="n">pyexasol</span><span class="o">.</span><span class="n">ExaQueryError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+</span><span data-line="5">    <span class="n">params</span> <span class="o">=</span> <span class="n">e</span><span class="o">.</span><span class="n">get_params_for_print</span><span class="p">()</span>
+</span><span data-line="6">    <span class="c1"># Mindfully, select which parameter(s) you want to log or include in subsequently raised exceptions.</span>
+</span><span data-line="7">    <span class="n">logging</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;CREATE USER failed to execute in session_id=</span><span class="si">{</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;session_id&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span></pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt;</span>
+</span><span data-line="2"><span class="go">ERROR:root:CREATE USER failed to execute in session_id=1825312482065121280</span>
 </span></pre></div>
 </div>
 </section>

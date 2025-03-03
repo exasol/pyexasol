@@ -125,3 +125,47 @@ Few examples:
 
     # Get list of views matching specified LIKE-pattern
     C.list_views('MY_SCHEMA', 'USER_VIEW_%')
+
+Consider What Information is Logged from Exceptions
+---------------------------------------------------------------
+Depending on the initial query, sensitive information may be present in the returned exception.
+It is the responsibility of the user to correctly handle this sensitive information, i.e. not save or pass it verbatim into their logging or other services.
+
+What not to do:
+
+.. code-block:: python
+
+    try:
+        stmt = C.execute('CREATE USER "MY_USER" IDENTIFIED BY "my_secret_password"')
+        # create same user with different password; raises exception
+        stmt = C.execute('CREATE USER "MY_USER" IDENTIFIED BY "my_secret_password2"')
+    except pyexasol.ExaQueryError as e:
+        logging.error(e)
+
+>>>
+ERROR:root:
+(
+    message     =>  user name MY_USER conflicts with another user or role name (Session: 1825312482065121280)
+    dsn         =>  localhost:8563
+    user        =>  sys
+    schema      =>
+    session_id  =>  1825312482065121280
+    code        =>  42500
+    # query contains sensitive information
+    query       =>  CREATE USER "MY_USER" IDENTIFIED BY "my_secret_password"
+)
+
+What to do:
+
+.. code-block:: python
+
+    try:
+        stmt = C.execute('CREATE USER "MY_USER" IDENTIFIED BY "my_secret_password"')
+        stmt = C.execute('CREATE USER "MY_USER" IDENTIFIED BY "my_secret_password2"')
+    except pyexasol.ExaQueryError as e:
+        params = e.get_params_for_print()
+        # Mindfully, select which parameter(s) you want to log or include in subsequently raised exceptions.
+        logging.error(f"CREATE USER failed to execute in session_id={params['session_id']}")
+
+>>>
+ERROR:root:CREATE USER failed to execute in session_id=1825312482065121280
