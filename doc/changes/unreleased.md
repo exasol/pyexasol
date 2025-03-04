@@ -7,7 +7,8 @@
 
 ## ⚒️ Refactorings
 
-* Reformated entire code base with `black` and `isort`
+* Reformatted entire code base with `black` and `isort`
+* Modified `ExaConnection` so that default is encryption with strict certification validation
 
 ## 🔩 Internal
 

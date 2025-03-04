@@ -12,13 +12,14 @@ def logging_address():
 
 
 @pytest.fixture
-def connection(dsn, user, password, schema, logging_address):
+def connection(dsn, user, password, schema, websocket_sslopt, logging_address):
     _, port = logging_address
     con = pyexasol.connect(
         dsn=dsn,
         user=user,
         password=password,
         schema=schema,
+        websocket_sslopt=websocket_sslopt,
         udf_output_bind_address=("", port),
         udf_output_connect_address=logging_address,
     )

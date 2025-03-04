@@ -21,11 +21,13 @@ def test_bad_dsn(connection):
 @pytest.mark.parametrize(
     "credentials", [{"username": "wrongy"}, {"password": "no-tworking"}]
 )
-def test_bad_credentails(credentials, dsn, user, password):
+def test_bad_credentials(credentials, dsn, user, password, websocket_sslopt):
     username = credentials.get("username", user)
     password = credentials.get("password", password)
     with pytest.raises(ExaAuthError):
-        pyexasol.connect(dsn=dsn, user=username, password=password)
+        pyexasol.connect(
+            dsn=dsn, user=username, password=password, websocket_sslopt=websocket_sslopt
+        )
 
 
 @pytest.mark.exceptions
@@ -36,9 +38,14 @@ def test_invalid_sql(connection):
 
 
 @pytest.mark.exceptions
-def test_read_from_closed_cursor(dsn, user, password, schema):
+def test_read_from_closed_cursor(dsn, user, password, schema, websocket_sslopt):
     connection = pyexasol.connect(
-        dsn=dsn, user=user, password=password, schema=schema, fetch_size_bytes=1024
+        dsn=dsn,
+        user=user,
+        password=password,
+        schema=schema,
+        websocket_sslopt=websocket_sslopt,
+        fetch_size_bytes=1024,
     )
     query = "SELECT * FROM users;"
     cursor = connection.execute(query)
@@ -70,12 +77,15 @@ def test_attempt_to_run_query_on_closed_connection(connection):
 
 
 @pytest.mark.exceptions
-def test_close_closed_connection(connection, dsn, user, password, schema):
+def test_close_closed_connection(
+    connection, dsn, user, password, schema, websocket_sslopt
+):
     con = pyexasol.connect(
         dsn=dsn,
         user=user,
         password=password,
         schema=schema,
+        websocket_sslopt=websocket_sslopt,
     )
 
     connection.execute(f"KILL SESSION {con.session_id()}")
