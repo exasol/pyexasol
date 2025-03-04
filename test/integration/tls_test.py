@@ -7,19 +7,6 @@ from pyexasol import ExaConnectionFailedError
 
 
 @pytest.fixture
-def connection(dsn, user, password, schema, websocket_sslopt):
-    con = pyexasol.connect(
-        dsn=dsn,
-        user=user,
-        password=password,
-        websocket_sslopt=websocket_sslopt,
-        schema=schema,
-    )
-    yield con
-    con.close()
-
-
-@pytest.fixture
 def server_fingerprint(connection):
     cert = connection._ws.sock.getpeercert(True)
     fingerprint = hashlib.sha256(cert).hexdigest().upper()
