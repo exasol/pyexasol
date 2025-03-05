@@ -5,9 +5,10 @@ Similar to other Exasol connectors, PyEXASOL is capable of using TLS cryptograph
 
 Exasol published a few articles describing the details:
 
-- `Using TLS with our analytics database (part 1): understanding the basics <https://www.exasol.com/resource/using-tls-with-our-analytics-database-understanding-the-basics/>`_
-- `Using TLS with our analytics database (part 2): secure communication with Exasol <https://www.exasol.com/resource/using-tls-with-our-analytics-database-secure-communication-with-exasol/>`_
-- `TLS for all Exasol drivers <https://www.exasol.com/support/browse/EXASOL-2936>`_
+- `Database connection encryption at Exasol <https://exasol.my.site.com/s/article/Database-connection-encryption-at-Exasol/>`_
+- `CHANGELOG: TLS for all Exasol drivers <https://exasol.my.site.com/s/article/Changelog-content-6507>`_
+- `CHANGELOG: Database accepts only TLS connections <https://exasol.my.site.com/s/article/Changelog-content-16927>`_
+- `Generating TLS files yourself to avoid providing a fingerprint <https://exasol.my.site.com/s/article/Generating-TLS-files-yourself-to-avoid-providing-a-fingerprint/>`_
 
 Default
 -------
