@@ -4,11 +4,11 @@
 
 * Added support for multi-version documentation
 * Added support for all standard nox tasks provided by `exasol-toolbox`
+* Modified `ExaConnection` so that default is encryption with strict certification validation
 
 ## ⚒️ Refactorings
 
 * Reformatted entire code base with `black` and `isort`
-* Modified `ExaConnection` so that default is encryption with strict certification validation
 
 ## 🔩 Internal
 
