@@ -22,6 +22,7 @@ C = pyexasol.connect(
     password=config.password,
     schema=config.schema,
     http_proxy="http://localhost:8562",
+    websocket_sslopt=config.websocket_sslopt,
 )
 
 stmt = C.execute("SELECT * FROM users ORDER BY user_id LIMIT 5")
@@ -43,6 +44,7 @@ C = pyexasol.connect(
     password=config.password,
     schema=config.schema,
     http_proxy="http://my_user:secret_pass@localhost:8562",
+    websocket_sslopt=config.websocket_sslopt,
 )
 
 stmt = C.execute("SELECT * FROM users ORDER BY user_id LIMIT 5")

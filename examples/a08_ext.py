@@ -18,6 +18,7 @@ C = pyexasol.connect(
     password=config.password,
     schema=config.schema,
     lower_ident=True,
+    websocket_sslopt=config.websocket_sslopt,
 )
 
 cols = C.ext.get_columns("users")
