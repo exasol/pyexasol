@@ -11,10 +11,12 @@ import threading
 import time
 import urllib.parse
 import zlib
+from inspect import cleandoc
 from typing import (
     NamedTuple,
     Optional,
 )
+from warnings import warn
 
 import rsa
 import websocket
@@ -33,6 +35,7 @@ from .meta import ExaMetaData
 from .script_output import ExaScriptOutputProcess
 from .statement import ExaStatement
 from .version import __version__
+from .warnings import PyexasolWarning
 
 
 class Host(NamedTuple):
@@ -1213,6 +1216,21 @@ class ExaConnection:
             # This might be needed for specific use cases (e.g. Docker container,
             # "on-premises" Exasol setup).
             if self.options["websocket_sslopt"] is None:
+                warn(
+                    cleandoc(
+                        """
+                        From PyExasol version ``1.0.0``, the default behavior of 
+                        ExaConnection for encrypted connections is to require strict 
+                        certificate validation with ``websocket_sslopt=None`` being 
+                        mapped to ``{"cert_reqs": ssl.CERT_REQUIRED}``. The prior 
+                        default behavior was to map such cases to 
+                        ``{"cert_reqs": ssl.CERT_NONE}``. For more information about
+                        encryption & best practices, please refer to 
+                        ``doc/user_guide/encryption.rst``.
+                        """
+                    ),
+                    PyexasolWarning,
+                )
                 options["sslopt"] = {"cert_reqs": ssl.CERT_REQUIRED}
             else:
                 options["sslopt"] = self.options["websocket_sslopt"].copy()
