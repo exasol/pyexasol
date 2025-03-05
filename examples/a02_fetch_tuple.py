@@ -12,7 +12,11 @@ printer = pprint.PrettyPrinter(indent=4, width=140)
 
 # Basic connect (default mapper)
 C = pyexasol.connect(
-    dsn=config.dsn, user=config.user, password=config.password, schema=config.schema
+    dsn=config.dsn,
+    user=config.user,
+    password=config.password,
+    schema=config.schema,
+    websocket_sslopt=config.websocket_sslopt,
 )
 
 # Fetch tuples row-by-row as iterator

@@ -19,6 +19,7 @@ C = pyexasol.connect(
     password=config.password,
     schema=config.schema,
     compression=True,
+    websocket_sslopt=config.websocket_sslopt,
 )
 
 # Prepare empty tables

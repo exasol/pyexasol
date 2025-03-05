@@ -25,6 +25,7 @@ C = pyexasol.connect(
     # 172.17.0.1 is an IP address of docker host in Linux
     udf_output_bind_address=("", 8580) if is_travis else None,
     udf_output_connect_address=("172.17.0.1", 8580) if is_travis else None,
+    websocket_sslopt=config.websocket_sslopt,
 )
 
 # Normal script output from multiple VM's

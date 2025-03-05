@@ -18,4 +18,5 @@ C = pyexasol.connect(
     schema=config.schema,
     connection_timeout=2,
     debug=True,
+    websocket_sslopt=config.websocket_sslopt,
 )

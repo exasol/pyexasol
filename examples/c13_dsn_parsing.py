@@ -18,6 +18,7 @@ C = pyexasol.connect(
     schema=config.schema,
     verbose_error=False,
     encryption=True,
+    websocket_sslopt=config.websocket_sslopt,
 )
 
 print("IP range with custom port: ")

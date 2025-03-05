@@ -19,6 +19,7 @@ C = pyexasol.connect(
     password=config.password,
     schema=config.schema,
     encryption=True,
+    websocket_sslopt=config.websocket_sslopt,
 )
 
 # Basic query
@@ -56,6 +57,7 @@ C = pyexasol.connect(
     password=config.password,
     schema=config.schema,
     encryption=True,
+    websocket_sslopt=config.websocket_sslopt,
 )
 print(f"Encrypted connection with fingerprint validation was established")
 
@@ -68,6 +70,7 @@ try:
         password=config.password,
         schema=config.schema,
         encryption=True,
+        websocket_sslopt=config.websocket_sslopt,
     )
 except pyexasol.ExaConnectionFailedError as e:
     print(e)
@@ -79,6 +82,7 @@ try:
         user=config.user,
         password=config.password,
         schema=config.schema,
+        websocket_sslopt=config.websocket_sslopt,
     )
 except pyexasol.ExaConnectionDsnError as e:
     print(e)

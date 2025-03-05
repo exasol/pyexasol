@@ -13,7 +13,11 @@ printer = pprint.PrettyPrinter(indent=4, width=140)
 
 # First connection, read first table, update second table
 C1 = pyexasol.connect(
-    dsn=config.dsn, user=config.user, password=config.password, schema=config.schema
+    dsn=config.dsn,
+    user=config.user,
+    password=config.password,
+    schema=config.schema,
+    websocket_sslopt=config.websocket_sslopt,
 )
 C1.set_autocommit(False)
 
@@ -22,7 +26,11 @@ C1.execute("INSERT INTO TAB2 VALUES (1)")
 
 # Second connection, update first table
 C2 = pyexasol.connect(
-    dsn=config.dsn, user=config.user, password=config.password, schema=config.schema
+    dsn=config.dsn,
+    user=config.user,
+    password=config.password,
+    schema=config.schema,
+    websocket_sslopt=config.websocket_sslopt,
 )
 C2.set_autocommit(False)
 
@@ -37,6 +45,7 @@ C3 = pyexasol.connect(
     schema=config.schema,
     snapshot_transactions=True,
     debug=True,
+    websocket_sslopt=config.websocket_sslopt,
 )
 
 # Exasol locks on this query without snapshot transactions

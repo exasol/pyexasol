@@ -36,6 +36,7 @@ def run_test():
         schema=config.schema,
         debug=False,
         fetch_size_bytes=1024,
+        websocket_sslopt=config.websocket_sslopt,
     )
 
     # Execute statement, read some data
@@ -60,6 +61,7 @@ def run_test():
         schema=config.schema,
         debug=False,
         fetch_size_bytes=1024,
+        websocket_sslopt=config.websocket_sslopt,
     )
 
     st = C.execute("SELECT * FROM users")

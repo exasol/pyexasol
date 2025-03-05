@@ -26,6 +26,7 @@ C = pyexasol.connect(
     password=config.password,
     schema=config.schema,
     debug=False,
+    websocket_sslopt=config.websocket_sslopt,
 )
 
 

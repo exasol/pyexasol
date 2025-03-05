@@ -28,6 +28,7 @@ C = pyexasol.connect(
     password=config.password,
     schema=config.schema,
     fetch_mapper=pyexasol.exasol_mapper,
+    websocket_sslopt=config.websocket_sslopt,
 )
 
 # Fetch objects
