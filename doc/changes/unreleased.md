@@ -3,20 +3,17 @@
 ## Summary
 
 From PyExasol version ``1.0.0``, the default behavior has been changed to use strict 
-certificate verification for encrypted connections (default, ``encryption=True``) in
-``ExaConnection`` and ``pyexasol.connect``. This means that the default 
-``websocket_sslopt=None`` will be mapped to ``{"cert_reqs": ssl.CERT_REQUIRED}``. 
-The prior default behavior was to map such cases to ``{"cert_reqs": ssl.CERT_NONE}``. 
+certificate verification in ``ExaConnection`` and ``pyexasol.connect``. This means that 
+the default ``websocket_sslopt=None`` will be mapped to 
+``{"cert_reqs": ssl.CERT_REQUIRED}``. The prior default behavior was to map such cases 
+to ``{"cert_reqs": ssl.CERT_NONE}``. 
 
 * For many users relying on the previous default behavior for encrypted connections, 
 simply upgrading to version ``1.0.0`` is likely to lead to breaking changes with error 
 messages like: ``[SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed``.
-* SAAS users who used provided OpenID access tokens via ``access_token`` or 
-``refresh_token`` should not be affected by this change, as strict certificate 
-verification was already active for encrypted connections.
 
 Prior to the upgrade:
-1. Please determine what encryption and security measures are appropriate for your 
+1. Please determine which encryption and security measures are appropriate for your 
 organization by reading through ``doc/user_guide/encryption.rst``.
 2. If needed, update your usage of ``pyexasol.connect(...)`` & ``ExaConnection`` to 
 reflect your organization's needs.
