@@ -48,42 +48,27 @@ def proxy_with_auth(proxy_port, proxy_user, proxy_password):
 
 
 @pytest.mark.configuration
-def test_connect_through_proxy(dsn, user, password, schema, proxy):
-    with pyexasol.connect(
-        dsn=dsn, user=user, password=password, schema=schema, http_proxy=proxy
-    ) as connection:
-        result = connection.execute("SELECT 1;")
+def test_connect_through_proxy(connection_factory, proxy):
+    with connection_factory(http_proxy=proxy) as con:
+        result = con.execute("SELECT 1;")
         expected = 1
         actual = result.fetchval()
         assert expected == actual
 
 
 @pytest.mark.configuration
-def test_connect_through_proxy_without_resolving_host_names(
-    dsn, user, password, schema, proxy
-):
-    with pyexasol.connect(
-        dsn=dsn,
-        user=user,
-        password=password,
-        schema=schema,
-        http_proxy=proxy,
-        resolve_hostnames=False,
-    ) as connection:
-        result = connection.execute("SELECT 1;")
+def test_connect_through_proxy_without_resolving_host_names(connection_factory, proxy):
+    with connection_factory(http_proxy=proxy, resolve_hostnames=False) as con:
+        result = con.execute("SELECT 1;")
         expected = 1
         actual = result.fetchval()
         assert expected == actual
 
 
 @pytest.mark.configuration
-def test_connect_through_proxy_with_authentication(
-    dsn, user, password, schema, proxy_with_auth
-):
-    with pyexasol.connect(
-        dsn=dsn, user=user, password=password, schema=schema, http_proxy=proxy_with_auth
-    ) as connection:
-        result = connection.execute("SELECT 1;")
+def test_connect_through_proxy_with_authentication(connection_factory, proxy_with_auth):
+    with connection_factory(http_proxy=proxy_with_auth) as con:
+        result = con.execute("SELECT 1;")
         expected = 1
         actual = result.fetchval()
         assert expected == actual

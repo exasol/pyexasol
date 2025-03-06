@@ -13,6 +13,7 @@ C = pyexasol.connect(
     password=config.password,
     schema=config.schema,
     autocommit=False,
+    websocket_sslopt=config.websocket_sslopt,
 )
 
 # Another way to change autocommit after connection

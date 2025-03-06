@@ -60,7 +60,11 @@ if __name__ == "__main__":
     exa_address_list = []
 
     C = pyexasol.connect(
-        dsn=config.dsn, user=config.user, password=config.password, schema=config.schema
+        dsn=config.dsn,
+        user=config.user,
+        password=config.password,
+        schema=config.schema,
+        websocket_sslopt=config.websocket_sslopt,
     )
 
     C.execute("TRUNCATE TABLE parallel_import")

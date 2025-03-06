@@ -18,6 +18,7 @@ C = pyexasol.connect(
     password=config.password,
     schema=config.schema,
     fetch_dict=True,
+    websocket_sslopt=config.websocket_sslopt,
 )
 
 st = C.execute("SELECT * FROM EXA_DBA_SESSIONS WHERE session_id=CURRENT_SESSION")
@@ -35,6 +36,7 @@ C = pyexasol.connect(
     client_name="MyCustomClient",
     client_version="1.2.3",
     client_os_username="small_cat",
+    websocket_sslopt=config.websocket_sslopt,
 )
 
 st = C.execute("SELECT * FROM EXA_DBA_SESSIONS WHERE session_id=CURRENT_SESSION")

@@ -30,7 +30,11 @@ class QueryThread(threading.Thread):
 
 # Basic connect
 C = pyexasol.connect(
-    dsn=config.dsn, user=config.user, password=config.password, schema=config.schema
+    dsn=config.dsn,
+    user=config.user,
+    password=config.password,
+    schema=config.schema,
+    websocket_sslopt=config.websocket_sslopt,
 )
 
 # Start query thread
