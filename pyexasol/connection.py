@@ -1209,12 +1209,7 @@ class ExaConnection:
         }
 
         if self.options["encryption"]:
-            # OpenID tokens are normally used for Exasol SAAS, so strict certificate
-            # verification is enabled by default. Use "websocket_sslopt" argument to set
-            # custom SSL options. (security risk) To disable strict certification
-            # verification, set "websocket_sslopt" to "{"cert_reqs": ssl.CERT_NONE}".
-            # This might be needed for specific use cases (e.g. Docker container,
-            # "on-premises" Exasol setup).
+            # refer to the ``doc/user_guide/encryption.rst``
             if self.options["websocket_sslopt"] is None:
                 warn(
                     cleandoc(
