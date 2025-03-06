@@ -8,31 +8,14 @@ import pyexasol
 
 
 @pytest.fixture
-def connection(dsn, user, password, schema, websocket_sslopt):
-    with pyexasol.connect(
-        dsn=dsn,
-        user=user,
-        password=password,
-        schema=schema,
-        websocket_sslopt=websocket_sslopt,
-        compression=True,
-    ) as con:
+def connection(connection_factory):
+    with connection_factory(compression=True) as con:
         yield con
 
 
 @pytest.fixture
-def connection_without_resolving_hostnames(
-    dsn, user, password, schema, websocket_sslopt
-):
-    with pyexasol.connect(
-        dsn=dsn,
-        user=user,
-        password=password,
-        schema=schema,
-        websocket_sslopt=websocket_sslopt,
-        compression=True,
-        resolve_hostnames=False,
-    ) as con:
+def connection_without_resolving_hostnames(connection_factory):
+    with connection_factory(compression=True, resolve_hostnames=False) as con:
         yield con
 
 

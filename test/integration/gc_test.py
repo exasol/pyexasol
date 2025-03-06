@@ -26,29 +26,15 @@ def test_exa_statement_gets_garbage_collected(connection):
 
 
 @pytest.mark.misc
-def test_exa_connection_gets_garbage_collected(
-    dsn, user, password, schema, websocket_sslopt
-):
+def test_exa_connection_gets_garbage_collected(connection_factory):
     # create connection
-    con = pyexasol.connect(
-        dsn=dsn,
-        user=user,
-        password=password,
-        schema=schema,
-        websocket_sslopt=websocket_sslopt,
-    )
+    con = connection_factory()
     stmt_ref = weakref.ref(con)
 
     assert stmt_ref() is not None
 
     # replace binding to old connection object
-    con = pyexasol.connect(
-        dsn=dsn,
-        user=user,
-        password=password,
-        schema=schema,
-        websocket_sslopt=websocket_sslopt,
-    )
+    con = connection_factory()
 
     # collect unreferenced objects
     gc.collect()

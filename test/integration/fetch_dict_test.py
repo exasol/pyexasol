@@ -5,15 +5,8 @@ import pyexasol
 
 # For the fetch_dict tests we need to configure the connection accordingly (fetch_dict=True)
 @pytest.fixture
-def connection(dsn, user, password, schema, websocket_sslopt):
-    con = pyexasol.connect(
-        dsn=dsn,
-        user=user,
-        password=password,
-        schema=schema,
-        websocket_sslopt=websocket_sslopt,
-        fetch_dict=True,
-    )
+def connection(connection_factory):
+    con = connection_factory(fetch_dict=True)
     yield con
     con.close()
 

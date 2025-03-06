@@ -12,22 +12,22 @@ from pyexasol import (
 
 
 @pytest.mark.exceptions
-def test_bad_dsn(connection):
+def test_bad_dsn(connection_factory):
     with pytest.raises(ExaConnectionError):
-        pyexasol.connect(dsn="ThisIsBroken")
+        connection_factory(dsn="ThisIsBroken")
 
 
 @pytest.mark.exceptions
 @pytest.mark.parametrize(
-    "credentials", [{"username": "wrongy"}, {"password": "no-tworking"}]
+    "keyword,value",
+    [
+        pytest.param("user", "wrongy", id="user-is-incorrect"),
+        pytest.param("password", "no-tworking", id="password-is-incorrect"),
+    ],
 )
-def test_bad_credentials(credentials, dsn, user, password, websocket_sslopt):
-    username = credentials.get("username", user)
-    password = credentials.get("password", password)
+def test_bad_credentials(connection_factory, keyword, value):
     with pytest.raises(ExaAuthError):
-        pyexasol.connect(
-            dsn=dsn, user=username, password=password, websocket_sslopt=websocket_sslopt
-        )
+        connection_factory(**{keyword: value})
 
 
 @pytest.mark.exceptions
@@ -38,17 +38,10 @@ def test_invalid_sql(connection):
 
 
 @pytest.mark.exceptions
-def test_read_from_closed_cursor(dsn, user, password, schema, websocket_sslopt):
-    connection = pyexasol.connect(
-        dsn=dsn,
-        user=user,
-        password=password,
-        schema=schema,
-        websocket_sslopt=websocket_sslopt,
-        fetch_size_bytes=1024,
-    )
+def test_read_from_closed_cursor(connection_factory):
+    con = connection_factory(fetch_size_bytes=1024)
     query = "SELECT * FROM users;"
-    cursor = connection.execute(query)
+    cursor = con.execute(query)
     cursor.fetchone()
     cursor.close()
     with pytest.raises(ExaRequestError):
@@ -77,17 +70,8 @@ def test_attempt_to_run_query_on_closed_connection(connection):
 
 
 @pytest.mark.exceptions
-def test_close_closed_connection(
-    connection, dsn, user, password, schema, websocket_sslopt
-):
-    con = pyexasol.connect(
-        dsn=dsn,
-        user=user,
-        password=password,
-        schema=schema,
-        websocket_sslopt=websocket_sslopt,
-    )
-
+def test_close_closed_connection(connection_factory, connection):
+    con = connection_factory()
     connection.execute(f"KILL SESSION {con.session_id()}")
     with pytest.raises(ExaCommunicationError):
         con.close()

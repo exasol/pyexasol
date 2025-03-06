@@ -56,21 +56,13 @@ def query():
 
 
 @pytest.mark.misc
-def test_snapshot_mode(
-    disable_snapshots, dsn, user, password, schema, websocket_sslopt
-):
+def test_snapshot_mode(disable_snapshots, connection_factory):
     query = (
         "SELECT session_value  FROM EXA_PARAMETERS "
         "WHERE parameter_name = 'SNAPSHOT_MODE';"
     )
 
-    with pyexasol.connect(
-        dsn=dsn,
-        user=user,
-        password=password,
-        schema=schema,
-        websocket_sslopt=websocket_sslopt,
-    ) as con:
+    with connection_factory() as con:
         mode = con.execute(query).fetchval()
 
     expected = "OFF"
@@ -78,14 +70,7 @@ def test_snapshot_mode(
 
     assert actual == expected
 
-    with pyexasol.connect(
-        dsn=dsn,
-        user=user,
-        password=password,
-        schema=schema,
-        websocket_sslopt=websocket_sslopt,
-        snapshot_transactions=True,
-    ) as con:
+    with connection_factory(snapshot_transactions=True) as con:
         mode = con.execute(query).fetchval()
 
     expected = "SYSTEM TABLES"

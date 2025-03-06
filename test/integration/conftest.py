@@ -10,6 +10,7 @@ from pathlib import Path
 import pytest
 
 import pyexasol
+from pyexasol import ExaConnection
 
 
 @pytest.fixture(scope="session")
@@ -40,14 +41,24 @@ def websocket_sslopt():
 
 
 @pytest.fixture
-def connection(dsn, user, password, schema, websocket_sslopt):
-    con = pyexasol.connect(
-        dsn=dsn,
-        user=user,
-        password=password,
-        schema=schema,
-        websocket_sslopt=websocket_sslopt,
-    )
+def connection_factory(dsn, user, password, schema, websocket_sslopt):
+    def _connection_fixture(**kwargs) -> ExaConnection:
+        defaults = {
+            "dsn": dsn,
+            "user": user,
+            "password": password,
+            "schema": schema,
+            "websocket_sslopt": websocket_sslopt,
+        }
+        config = {**defaults, **kwargs}
+        return pyexasol.connect(**config)
+
+    return _connection_fixture
+
+
+@pytest.fixture
+def connection(connection_factory):
+    con = connection_factory()
     yield con
     con.close()
 
