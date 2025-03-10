@@ -12,6 +12,7 @@
 ## 🔩 Internal
 
 * Relocked dependencies
+  * Due to changes in cryptography's Python support (!=3.9.0 and 3.9.1), we updated our support to Python ^3.9.2. 
 * Added exasol-toolbox workflows and actions
 * Added missing plugin for multi-version documentation
 * Added support for publishing documentation to gh pages

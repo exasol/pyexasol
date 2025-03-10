@@ -46,7 +46,7 @@ keywords = [
 
 
 [tool.poetry.dependencies]
-python = "^3.9"
+python = "^3.9.2"
 websocket-client = ">=1.0.1"
 pyopenssl = "*"
 rsa = "*"
