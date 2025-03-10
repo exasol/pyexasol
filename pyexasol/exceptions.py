@@ -3,7 +3,7 @@ from . import constant
 
 class ExaError(Exception):
     """
-    Generic PyEXASOL error, holds basic information about connection
+    Generic PyExasol error, holds basic information about connection
     """
 
     def __init__(self, connection, message):

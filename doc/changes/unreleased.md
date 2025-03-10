@@ -36,7 +36,7 @@ reflect your organization's needs.
 * Added support for publishing documentation to gh pages
 * Added `.git-blame-ignore-revs` file to workspace
 
-    Note: please make sure to adjust yor git config accordingly (if not done yet)
+    Note: please make sure to adjust your git config accordingly (if not done yet)
 
         ```shell
         git config blame.ignoreRevsFile .git-blame-ignore-revs
@@ -45,5 +45,6 @@ reflect your organization's needs.
 ## 📚 Documentation
 
 * Added sphinx based documentation
-* Added example to highlight how sensitive information from exceptions should be handled 
+* Added example to highlight how sensitive information from exceptions should be handled
+* Harmonized spelling of PyExasol across documentation
 

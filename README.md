@@ -1,4 +1,4 @@
-<h1 align="center">Pyexasol</h1>
+<h1 align="center">PyExasol</h1>
 <p align="center">
 <a href="https://github.com/exasol/pyexasol/actions/workflows/pr-merge.yml">
     <img src="https://github.com/exasol/pyexasol/actions/workflows/pr-merge.yml/badge.svg?branch=master" alt="Continuous Integration (master)">
@@ -17,18 +17,18 @@
 </a>
 </p>
 
-PyEXASOL is the officially supported Python connector for [Exasol](https://www.exasol.com). It helps to handle massive volumes of data commonly associated with this DBMS.
+PyExasol is the officially supported Python connector for [Exasol](https://www.exasol.com). It helps to handle massive volumes of data commonly associated with this DBMS.
 
 You may expect significant performance improvement over ODBC in a single process scenario involving pandas.
 
-PyEXASOL provides API to read & write multiple data streams in parallel using separate processes, which is necessary to fully utilize hardware and achieve linear scalability. With PyEXASOL you are no longer limited to a single CPU core.
+PyExasol provides API to read & write multiple data streams in parallel using separate processes, which is necessary to fully utilize hardware and achieve linear scalability. With PyExasol you are no longer limited to a single CPU core.
 
 ---
 * Documentation: [https://exasol.github.io/pyexasol/](https://exasol.github.io/pyexasol/index.html)
 * Source Code: [https://github.com/exasol/pyexasol](https://github.com/exasol/pyexasol)
 ---
 
-## PyEXASOL main concepts
+## PyExasol main concepts
 
 - Based on [WebSocket protocol](https://github.com/exasol/websocket-api);
 - Optimized for minimum overhead;
@@ -44,7 +44,7 @@ PyEXASOL provides API to read & write multiple data streams in parallel using se
 
 ## Getting started
 
-Install PyEXASOL:
+Install PyExasol:
 ```
 pip install pyexasol[pandas]
 ```

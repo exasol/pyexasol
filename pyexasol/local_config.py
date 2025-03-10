@@ -36,7 +36,7 @@ class ExaLocalConfig:
             self.path = self.get_default_path()
 
         if not self.path.exists():
-            raise RuntimeError(f"PyEXASOL config file [{self.path}] not found")
+            raise RuntimeError(f"PyExasol config file [{self.path}] not found")
 
         self.parser = configparser.ConfigParser()
         self.parser.read(self.path, encoding="utf-8")
@@ -46,7 +46,7 @@ class ExaLocalConfig:
 
         if not self.parser.has_section(section):
             raise ValueError(
-                f"Section [{section}] in PyEXASOL config file [{self.path}] not found"
+                f"Section [{section}] in PyExasol config file [{self.path}] not found"
             )
 
         for k in self.parser[section]:

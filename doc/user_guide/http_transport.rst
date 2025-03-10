@@ -7,7 +7,7 @@ The main purpose of HTTP transport is to reduce massive fetching overhead associ
 
 This is a powerful tool which helps to bypass the creation of intermediate Python objects altogether and dramatically increases performance.
 
-PyEXASOL offloads HTTP communication and decompression to a separate thread using the `threading`_ module. The main thread deals with a simple `pipe`_ opened in binary mode.
+PyExasol offloads HTTP communication and decompression to a separate thread using the `threading`_ module. The main thread deals with a simple `pipe`_ opened in binary mode.
 
 You may specify a custom `callback` function to read or write from the raw pipe and to apply complex logic. Use `callback_params` to pass additional parameters to the `callback` function (e.g. options for pandas).
 

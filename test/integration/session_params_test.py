@@ -17,7 +17,7 @@ def session_info_query():
 
 @pytest.mark.configuration
 def test_default_session_parameters(connection, session_info_query, pyexasol_version):
-    expected = {f"PyEXASOL {pyexasol_version}"}
+    expected = {f"{pyexasol.constant.DRIVER_NAME} {pyexasol_version}"}
     actual = set(connection.execute(session_info_query).fetchone())
     assert actual >= expected
 

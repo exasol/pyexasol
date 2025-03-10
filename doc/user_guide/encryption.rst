@@ -1,7 +1,7 @@
 Encryption
 ==========
 
-Similar to other Exasol connectors, PyEXASOL is capable of using TLS cryptographic protocol.
+Similar to other Exasol connectors, PyExasol is capable of using TLS cryptographic protocol.
 
 Exasol published a few articles describing the details:
 
@@ -13,9 +13,9 @@ Exasol published a few articles describing the details:
 
 Default
 -------
-Encryption with certification validation is ENABLED by default starting from PyEXASOL version ``1.0.0``.
+Encryption with certification validation is ENABLED by default starting from PyExasol version ``1.0.0``.
 
-Encryption is ENABLED by default starting from PyEXASOL version ``0.24.0``.
+Encryption is ENABLED by default starting from PyExasol version ``0.24.0``.
 
 Encryption was DISABLED by default in previous versions.
 
@@ -36,7 +36,7 @@ The different authentication methods are listed on `SQL Reference: CREATE USER <
 
 To disable strict certification verification, if needed, in development or testing environments, set ``websocket_sslopt`` to ``{"cert_reqs": ssl.CERT_NONE}``. This is not recommended for production environments, due to the associated increased security risks.
 
-Similar to JDBC / ODBC drivers, PyEXASOL supports fingerprint certificate verification. Please check the examples below.
+Similar to JDBC / ODBC drivers, PyExasol supports fingerprint certificate verification. Please check the examples below.
 
 Specific examples
 -----------------

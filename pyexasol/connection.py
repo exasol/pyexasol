@@ -199,7 +199,7 @@ class ExaConnection:
                 (default: True)
             client_name:
                 Custom name of client application displayed in Exasol sessions tables
-                (Default: PyEXASOL)
+                (Default: PyExasol)
             client_version:
                 Custom version of client application
                 (Default: pyexasol.__version__)

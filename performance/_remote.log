@@ -1,6 +1,6 @@
 Python: 3.6.3 | packaged by conda-forge | (default, Nov  4 2017, 10:10:56)
 [GCC 4.8.2 20140120 (Red Hat 4.8.2-15)]
-PyEXASOL: 0.4.1
+PyExasol: 0.4.1
 PyODBC: 4.0.16
 TurbODBC: 2.4.1
 Creating random data set for tests, 10000000 rows

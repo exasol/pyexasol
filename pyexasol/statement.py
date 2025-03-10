@@ -453,7 +453,7 @@ class ExaStatement:
     def _check_duplicate_col_names(self):
         """
         Exasol allows duplicate names in result sets, but it leads to various problems related to dictionaries
-        PyEXASOL adds additional check to prevent such problems and to allow safe .columns() and fetch_dict=True
+        PyExasol adds additional check to prevent such problems and to allow safe .columns() and fetch_dict=True
         """
         duplicate_col_names = [
             k for (k, v) in collections.Counter(self.col_names).items() if v > 1

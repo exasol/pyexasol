@@ -1,5 +1,5 @@
 """
-Extend core PyEXASOL classes, add custom logic
+Extend core PyExasol classes, add custom logic
 In this example we add print_session_id() custom method to all objects
 """
 

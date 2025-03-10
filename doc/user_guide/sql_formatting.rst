@@ -1,7 +1,7 @@
 SQL Formatting
 ==============
 
-PyEXASOL provides custom Exasol-specific formatter based on standard `Python 3 Formatter <https://docs.python.org/3/library/string.html#string.Formatter>`_.
+PyExasol provides custom Exasol-specific formatter based on standard `Python 3 Formatter <https://docs.python.org/3/library/string.html#string.Formatter>`_.
 
 You're not forced to use this formatter. You can always overload it using `cls_formatter` connection option or format raw SQL yourself.
 
@@ -119,7 +119,7 @@ Result:
 
 IntelliJ IDE User Parameters
 ----------------------------
-It is possible to teach the IDE to recognize PyEXASOL placeholders in SQL strings.
+It is possible to teach the IDE to recognize PyExasol placeholders in SQL strings.
 
 1. Settings -> Tools -> Database -> User Parameters
 2. Add a new pattern: `\\{\\w+(\\!\\w)?\\}`
