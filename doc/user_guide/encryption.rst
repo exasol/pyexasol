@@ -49,12 +49,6 @@ Specific examples
                        , user='user'
                        , password='password')
 
-   .. code-block:: python
-
-      pyexasol.connect(dsn='myexasol:8563'
-                       , user='user'
-                       , password='personal_access_token')
-
 
 2) How to connect with TLS encryption and fingerprint verification:
 
@@ -86,5 +80,13 @@ Specific examples
       pyexasol.connect(dsn='abc.cloud.exasol.com:8563'
                        , user='user'
                        , refresh_token='token'
+                       , encryption=True
+                       )
+
+   .. code-block:: python
+
+      pyexasol.connect(dsn='myexasol:8563'
+                       , user='user'
+                       , password='personal_access_token'
                        , encryption=True
                        )
