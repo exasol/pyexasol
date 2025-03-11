@@ -2,13 +2,17 @@ name: SSL certificate test
 
 on:
   workflow_call:
+    inputs:
+      ubuntu-version:
+        required: true
+        type: string
 
 jobs:
   ssl_cert:
     name: Build SSL-Cert
     # For all containers with versions 7.1.x and older versions 8.y.z of docker-db,
     # there will be a crash if UDFs (User Defined Functions) are utilized.
-    runs-on: ubuntu-20.04
+    runs-on:  ${{ inputs.ubuntu-version }}
     timeout-minutes: 15
     strategy:
       fail-fast: false

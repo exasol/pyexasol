@@ -5,11 +5,15 @@ on:
     secrets:
       ALTERNATIVE_GITHUB_TOKEN:
         required: false
+    inputs:
+      ubuntu-version:
+        required: true
+        type: string
 
 jobs:
 
   report:
-    runs-on: ubuntu-22.04
+    runs-on: ${{ inputs.ubuntu-version }}
     env:
       GITHUB_TOKEN: ${{ secrets.ALTERNATIVE_GITHUB_TOKEN ||  secrets.GITHUB_TOKEN }}
 
