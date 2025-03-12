@@ -9,7 +9,7 @@ In order to use this feature, user has to run a TCP server and provide the addre
 
 Exasol may run UDFs in parallel using a large amount of VMs. Each VM opens an individual connection to the TCP Server and keeps it open until the end of execution. The TCP server must be prepared for a large number of simultaneous connections.
 
-PyEXASOL provides such a TCP server for your convenience. It can work in two different modes:
+PyExasol provides such a TCP server for your convenience. It can work in two different modes:
 
 DEBUG MODE
 ----------

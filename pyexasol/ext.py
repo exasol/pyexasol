@@ -515,7 +515,7 @@ class ExaExtension:
         self._execute("FLUSH STATISTICS")
 
         sql = """
-            SELECT part_id /* PyEXASOL explain_last */
+            SELECT part_id /* PyExasol explain_last */
                 {iproc_col!r}
                 , part_name
                 , part_info

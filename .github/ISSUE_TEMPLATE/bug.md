@@ -10,7 +10,7 @@ assignees: ''
 ### Checklist
 In order to speedup fixing the bug, please make sure you address as many items from the following checklist as possible.
 
-- [ ] I have reproduced the issue with the latest released version of pyexasol.
+- [ ] I have reproduced the issue with the latest released version of PyExasol.
 - [ ] I have added references to issues that sound similar in section _Related Issues_.
 
 **Tip: Adding screenshots, outputs and logs might help to improve clarity.**

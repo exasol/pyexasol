@@ -9,15 +9,9 @@ import pyexasol
 
 
 @pytest.fixture
-def connection_with_compression(dsn, user, password, schema):
-    with pyexasol.connect(
-        dsn=dsn,
-        user=user,
-        password=password,
-        schema=schema,
-        compression=True,
-    ) as connection:
-        yield connection
+def connection_with_compression(connection_factory):
+    with connection_factory(compression=True) as con:
+        yield con
 
 
 @pytest.fixture

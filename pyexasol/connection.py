@@ -11,10 +11,12 @@ import threading
 import time
 import urllib.parse
 import zlib
+from inspect import cleandoc
 from typing import (
     NamedTuple,
     Optional,
 )
+from warnings import warn
 
 import rsa
 import websocket
@@ -33,6 +35,7 @@ from .meta import ExaMetaData
 from .script_output import ExaScriptOutputProcess
 from .statement import ExaStatement
 from .version import __version__
+from .warnings import PyexasolWarning
 
 
 class Host(NamedTuple):
@@ -109,7 +112,7 @@ class ExaConnection:
         client_version=None,
         client_os_username=None,
         protocol_version=constant.PROTOCOL_V3,
-        websocket_sslopt=None,
+        websocket_sslopt: Optional[dict] = None,
         access_token=None,
         refresh_token=None,
     ):
@@ -196,7 +199,7 @@ class ExaConnection:
                 (default: True)
             client_name:
                 Custom name of client application displayed in Exasol sessions tables
-                (Default: PyEXASOL)
+                (Default: PyExasol)
             client_version:
                 Custom version of client application
                 (Default: pyexasol.__version__)
@@ -1206,16 +1209,26 @@ class ExaConnection:
         }
 
         if self.options["encryption"]:
-            # Use "websocket_sslopt" argument to set custom SSL options, which are passed directly to WebSocket client constructor
-            if self.options["websocket_sslopt"]:
-                options["sslopt"] = self.options["websocket_sslopt"]
-            # OpenID tokens are normally used for Exasol SAAS
-            # Strict certificate verification is enabled by default
-            elif self.options["access_token"] or self.options["refresh_token"]:
+            # refer to the ``doc/user_guide/encryption.rst``
+            if self.options["websocket_sslopt"] is None:
+                warn(
+                    cleandoc(
+                        """
+                        From PyExasol version ``1.0.0``, the default behavior of 
+                        ExaConnection for encrypted connections is to require strict 
+                        certificate validation with ``websocket_sslopt=None`` being 
+                        mapped to ``{"cert_reqs": ssl.CERT_REQUIRED}``. The prior 
+                        default behavior was to map such cases to 
+                        ``{"cert_reqs": ssl.CERT_NONE}``. For more information about
+                        encryption & best practices, please refer to 
+                        ``doc/user_guide/encryption.rst``.
+                        """
+                    ),
+                    PyexasolWarning,
+                )
                 options["sslopt"] = {"cert_reqs": ssl.CERT_REQUIRED}
-            # Certification verification is disabled for other use cases (e.g. Docker container, "on-premises" Exasol setup)
             else:
-                options["sslopt"] = {"cert_reqs": ssl.CERT_NONE}
+                options["sslopt"] = self.options["websocket_sslopt"].copy()
 
         if self.options["http_proxy"]:
             proxy_components = urllib.parse.urlparse(self.options["http_proxy"])

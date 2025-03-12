@@ -15,7 +15,6 @@ def config(dsn, user, password, schema):
     password = {password}
     schema = {schema}
     compression = True
-    encryption = False
     socket_timeout = 20
     """
     )
@@ -30,9 +29,11 @@ def config_file(tmpdir, config):
 
 
 @pytest.mark.configuration
-def test_connect_using_config(config_file):
+def test_connect_using_config(config_file, websocket_sslopt):
     connection = pyexasol.connect_local_config(
-        config_section="pyexasol", config_path=config_file
+        config_section="pyexasol",
+        config_path=config_file,
+        websocket_sslopt=websocket_sslopt,
     )
     result = connection.execute("SELECT 1;")
     expected = [(1,)]

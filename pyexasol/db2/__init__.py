@@ -2,7 +2,7 @@
 DB-API 2 compatibility package
 https://www.python.org/dev/peps/pep-0249/
 
-It may be used for a short time to test PyEXASOL with existing applications
+It may be used for a short time to test PyExasol with existing applications
 It is highly recommended to switch to native interface before any production usage
 
 There is no "paramstyle" and no proper error handling

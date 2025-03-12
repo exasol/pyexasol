@@ -5,22 +5,34 @@ on:
     secrets:
       ALTERNATIVE_GITHUB_TOKEN:
         required: false
+    inputs:
+      ubuntu-version:
+        required: true
+        type: string
 
 jobs:
 
   fast-checks:
     name: Fast
     uses: ./.github/workflows/checks.yml
+    with:
+      ubuntu-version: ${{ inputs.ubuntu-version }}
 
   slow-checks:
     name: Slow
     uses: ./.github/workflows/slow-checks.yml
+    with:
+      ubuntu-version: ${{ inputs.ubuntu-version }}
 
   examples:
     uses: ./.github/workflows/examples.yml
+    with:
+      ubuntu-version: ${{ inputs.ubuntu-version }}
 
   ssl_cert:
     uses: ./.github/workflows/ssl_cert.yml
+    with:
+      ubuntu-version: ${{ inputs.ubuntu-version }}
 
   # This job ensures inputs have been executed successfully.
   approve-merge:

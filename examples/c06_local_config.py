@@ -26,7 +26,7 @@ with tempfile.TemporaryDirectory() as tempdir:
         "password": config.password,
         "schema": config.schema,
         "compression": True,
-        "encryption": False,
+        "encryption": True,
         "socket_timeout": 20,
     }
 
@@ -37,7 +37,9 @@ with tempfile.TemporaryDirectory() as tempdir:
     handle.close()
 
     # Open connection using config file
-    C = pyexasol.connect_local_config("test1", config_path=handle.name)
+    C = pyexasol.connect_local_config(
+        "test1", config_path=handle.name, websocket_sslopt=config.websocket_sslopt
+    )
 
     # Basic query
     stmt = C.execute("SELECT * FROM users ORDER BY user_id LIMIT 5")

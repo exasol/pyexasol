@@ -2,18 +2,23 @@ name: Examples
 
 on:
   workflow_call:
+    inputs:
+      ubuntu-version:
+        required: true
+        type: string
 
 jobs:
   examples:
     name: Run Examples
     # For all containers with versions 7.1.x and older versions 8.y.z of docker-db,
     # there will be a crash if UDFs (User Defined Functions) are utilized.
-    runs-on: ubuntu-20.04
+    runs-on:  ${{ inputs.ubuntu-version }}
     timeout-minutes: 30
     strategy:
       fail-fast: false
       matrix:
         python-version: ["3.11"]
+        exasol-version: ["8.31.0"]
     steps:
       - name: "Checkout repo"
         uses: actions/checkout@v2
@@ -30,7 +35,7 @@ jobs:
         run: >
           poetry run itde spawn-test-environment --environment-name test 
           --database-port-forward 8563 --bucketfs-port-forward 2580 
-          --docker-db-image-version 7.1.17 --db-mem-size 4GB
+          --docker-db-image-version ${{ matrix.exasol-version }} --db-mem-size 4GB
 
       - name: "Wait for Exasol container (UDF extraction)"
         run: poetry run python examples/_wait_container.py

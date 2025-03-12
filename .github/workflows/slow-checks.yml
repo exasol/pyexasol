@@ -5,17 +5,23 @@ on:
     secrets:
       ALTERNATIVE_GITHUB_TOKEN:
         required: false
+    inputs:
+      ubuntu-version:
+        required: true
+        type: string
 
 jobs:
 
   build-matrix:
     name: Generate Build Matrix
     uses: ./.github/workflows/matrix-all.yml
+    with:
+      ubuntu-version: ${{ inputs.ubuntu-version }}
 
   Tests:
     name: Integration-Tests (Python-${{ matrix.python-version }}, Exasol-${{ matrix.exasol-version}})
     needs: [ build-matrix ]
-    runs-on: ubuntu-22.04
+    runs-on: ${{ inputs.ubuntu-version }}
     # Even though the environment "manual-approval" will be created automatically,
     # it still needs to be configured to require interactive review.
     # See project settings on GitHub (Settings / Environments / manual-approval).

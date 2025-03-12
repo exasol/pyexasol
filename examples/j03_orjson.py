@@ -18,6 +18,7 @@ C = pyexasol.connect(
     password=config.password,
     schema=config.schema,
     json_lib="orjson",
+    websocket_sslopt=config.websocket_sslopt,
 )
 
 edge_cases = [

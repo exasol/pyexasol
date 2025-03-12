@@ -2,6 +2,10 @@ name: Build Matrix (Python)
 
 on:
   workflow_call:
+    inputs:
+      ubuntu-version:
+        required: true
+        type: string
     outputs:
       matrix:
         description: "Generates the python version build matrix"
@@ -10,7 +14,7 @@ on:
 jobs:
   python_versions:
 
-    runs-on: ubuntu-22.04
+    runs-on: ${{ inputs.ubuntu-version }}
 
     steps:
       - name: SCM Checkout

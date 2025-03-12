@@ -6,7 +6,7 @@ This document contains background information on various design decisions, which
 Automatic Resolution and Randomization of Connection Addresses
 --------------------------------------------------------------
 
-By default pyexasol resolves host names to IP addresses, randomly shuffles the IP addresses and tries to connect until connection succeeds. This has the following reasons:
+By default PyExasol resolves host names to IP addresses, randomly shuffles the IP addresses and tries to connect until connection succeeds. This has the following reasons:
 
 * This will ensure that if at least one hostname is unavailable, an exception will be raised. Otherwise, an exception will occur only when "random" selects a broken hostname, leading to unpredictable errors in production.
 

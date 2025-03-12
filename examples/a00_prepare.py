@@ -68,7 +68,11 @@ def random_ts():
 
 
 C = pyexasol.connect(
-    dsn=config.dsn, user=config.user, password=config.password, autocommit=False
+    dsn=config.dsn,
+    user=config.user,
+    password=config.password,
+    autocommit=False,
+    websocket_sslopt=config.websocket_sslopt,
 )
 
 # Ensure desired format for timestamps, regardless of SYSTEM settings

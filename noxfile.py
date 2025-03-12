@@ -10,6 +10,8 @@ import nox
 from exasol.toolbox.nox.tasks import *  # pylint: disable=wildcard-import disable=unused-wildcard-import
 from nox import Session
 
+import noxconfig
+
 # default actions to be run if nothing is explicitly specified with the -s option
 nox.options.sessions = ["project:fix"]
 
@@ -48,7 +50,7 @@ def start_db(session: Session) -> None:
         "--bucketfs-port-forward",
         "2580",
         "--docker-db-image-version",
-        "7.1.17",
+        noxconfig.DEFAULT_DB_VERSION,
         "--db-mem-size",
         "4GB",
         external=True,

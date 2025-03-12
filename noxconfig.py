@@ -6,13 +6,15 @@ from typing import Iterable
 
 from exasol.toolbox.nox.plugin import hookimpl
 
+DEFAULT_DB_VERSION = "8.31.0"
+
 
 class StartDB:
 
     @hookimpl
     def pre_integration_tests_hook(self, session, config, context):
         port = context.get("port", 8563)
-        db_version = context.get("db_version", "7.1.17")
+        db_version = context.get("db_version", DEFAULT_DB_VERSION)
         session.run(
             "itde",
             "spawn-test-environment",
@@ -50,6 +52,7 @@ class Config:
     )
 
     plugins = [StartDB, StopDB]
+    exasol_versions = [DEFAULT_DB_VERSION]
 
 
 PROJECT_CONFIG = Config()

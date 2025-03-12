@@ -3,7 +3,7 @@
 :octicon:`tools` Developer Guide
 ================================
 
-This guide explains how to develop ``pyexasol`` and run tests.
+This guide explains how to develop PyExasol and run tests.
 
 Initial Setup
 +++++++++++++

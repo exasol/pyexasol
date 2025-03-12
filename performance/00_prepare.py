@@ -11,7 +11,7 @@ import turbodbc
 import pyexasol
 
 print(f"Python: {sys.version}")
-print(f"PyEXASOL: {pyexasol.__version__}")
+print(f"PyExasol: {pyexasol.__version__}")
 print(f"PyODBC: {pyodbc.version}")
 print(f"TurbODBC: {turbodbc.__version__}")
 print(f"Creating random data set for tests, {config.number_of_rows} rows")

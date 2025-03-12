@@ -1,4 +1,4 @@
-Documentation of  pyexasol
+Documentation of PyExasol
 --------------------------
 
 .. grid:: 1 1 3 2
@@ -22,7 +22,7 @@ Documentation of  pyexasol
         :link: faq
         :link-type: ref
 
-        Frequently asked questsions.
+        Frequently asked questions.
 
 .. toctree::
    :maxdepth: 1
