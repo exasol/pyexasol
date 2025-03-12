@@ -83,6 +83,7 @@ try:
         password=config.password,
         schema=config.schema,
         websocket_sslopt=config.websocket_sslopt,
+        encryption=False,
     )
 except pyexasol.ExaConnectionDsnError as e:
     print(e)

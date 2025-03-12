@@ -87,16 +87,18 @@ def test_fetch_all(cursor, query):
 
 
 @pytest.mark.dbapi2
-def test_description(cursor, query):
+def test_description(cursor, query, expected_user_table_column_last_visit_ts):
     stmt, expected_values = query
     cursor.execute(stmt)
     cursor.fetchall()
+
+    expected_size = expected_user_table_column_last_visit_ts.size
 
     expected = {
         ("USER_ID", "DECIMAL", None, None, 18, 0, True),
         ("USER_NAME", "VARCHAR", 255, 255, None, None, True),
         ("REGISTER_DT", "DATE", 4, 4, None, None, True),
-        ("LAST_VISIT_TS", "TIMESTAMP", 8, 8, None, None, True),
+        ("LAST_VISIT_TS", "TIMESTAMP", expected_size, expected_size, None, None, True),
         ("IS_FEMALE", "BOOLEAN", None, None, None, None, True),
         ("USER_RATING", "DECIMAL", None, None, 10, 5, True),
         ("USER_SCORE", "DOUBLE", None, None, None, None, True),

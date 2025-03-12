@@ -18,6 +18,7 @@ jobs:
       fail-fast: false
       matrix:
         python-version: ["3.11"]
+        exasol-version: ["8.31.0"]
     steps:
       - name: "Checkout repo"
         uses: actions/checkout@v2
@@ -34,7 +35,7 @@ jobs:
         run: >
           poetry run itde spawn-test-environment --environment-name test 
           --database-port-forward 8563 --bucketfs-port-forward 2580 
-          --docker-db-image-version 7.1.17 --db-mem-size 4GB
+          --docker-db-image-version ${{ matrix.exasol-version }} --db-mem-size 4GB
 
       - name: "Wait for Exasol container (UDF extraction)"
         run: poetry run python examples/_wait_container.py
