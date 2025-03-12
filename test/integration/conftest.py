@@ -260,6 +260,7 @@ def expected_reserved_words(db_major_version):
         set_shared.update(["CURRENT_CLUSTER", "CURRENT_CLUSTER_UID"])
         return set_shared
 
+
 @pytest.fixture(scope="session")
 def expected_user_table_column_last_visit_ts(db_major_version):
     timestamp_type = namedtuple("timestamp_type", ["size", "sql_type"])

@@ -71,7 +71,9 @@ def test_list_tables_with_filters(connection):
 
 
 @pytest.mark.metadata
-def test_list_columns_with_filters(connection, expected_user_table_column_last_visit_ts):
+def test_list_columns_with_filters(
+    connection, expected_user_table_column_last_visit_ts
+):
     query = connection.meta.execute_meta_nosql(
         "getColumns",
         {

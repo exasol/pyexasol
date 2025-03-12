@@ -27,7 +27,9 @@ class TestExaExtension:
         actual = connection.ext.get_columns_sql("SELECT * FROM users")
         assert expected_user_table_column_info == actual
 
-    def test_get_sys_columns(self, connection, expected_user_table_column_last_visit_ts):
+    def test_get_sys_columns(
+        self, connection, expected_user_table_column_last_visit_ts
+    ):
         expected = [
             {
                 "name": "USER_ID",
