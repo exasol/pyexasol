@@ -39,7 +39,7 @@ printer.pprint(stmt.fetchall())
 # Please note: Exasol stores timestamps with millisecond precision (3 decimal places)
 # Lack of precision is not a bug, it's the documented feature
 
-for i in range(0, 9):
+for i in range(1, 10):
     C.execute(f"ALTER SESSION SET NLS_TIMESTAMP_FORMAT='YYYY-MM-DD HH24:MI:SS.FF{i}'")
     printer.pprint(C.execute("SELECT TIMESTAMP'2018-01-01 03:04:05.123456'").fetchval())
 
