@@ -2,6 +2,10 @@ name: Build Matrix (Exasol)
 
 on:
   workflow_call:
+    inputs:
+      ubuntu-version:
+        required: true
+        type: string
     outputs:
       matrix:
         description: "Generates the exasol version build matrix"
@@ -10,7 +14,7 @@ on:
 jobs:
   exasol_versions:
 
-    runs-on: ubuntu-22.04
+    runs-on: ${{ inputs.ubuntu-version }}
 
     steps:
       - name: SCM Checkout
