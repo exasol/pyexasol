@@ -52,7 +52,7 @@ def websocket_sslopt():
     return {"cert_reqs": ssl.CERT_NONE}
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def connection_factory(dsn, user, password, schema, websocket_sslopt):
     def _connection_fixture(**kwargs) -> ExaConnection:
         defaults = {

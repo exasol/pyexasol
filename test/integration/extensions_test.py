@@ -7,15 +7,8 @@ import pyexasol
 class TestExaExtension:
 
     @pytest.fixture(scope="class")
-    def connection(self, dsn, user, password, schema, websocket_sslopt):
-        con = pyexasol.connect(
-            dsn=dsn,
-            user=user,
-            password=password,
-            schema=schema,
-            websocket_sslopt=websocket_sslopt,
-            lower_ident=True,
-        )
+    def connection(self, connection_factory):
+        con = connection_factory(lower_ident=True)
         yield con
         con.close()
 
