@@ -7,7 +7,6 @@ import uuid
 from collections import namedtuple
 from inspect import cleandoc
 from pathlib import Path
-from typing import NamedTuple
 
 import pytest
 
