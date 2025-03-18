@@ -15,8 +15,14 @@ from pyexasol import ExaConnection
 
 
 @pytest.fixture(scope="session")
-def db_version():
-    return os.environ.get("EXA_DB_VERSION", "8.31.0")
+def db_version(connection_factory):
+    db_version_query = (
+        "SELECT PARAM_VALUE FROM EXA_METADATA "
+        "WHERE PARAM_NAME = 'databaseProductVersion';"
+    )
+    with connection_factory() as conn:
+        version = conn.execute(db_version_query).fetchone()[0]
+    return version
 
 
 @pytest.fixture(scope="session")
