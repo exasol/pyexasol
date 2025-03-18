@@ -2,24 +2,18 @@ name: Examples
 
 on:
   workflow_call:
-    inputs:
-      ubuntu-version:
-        required: true
-        type: string
 
 jobs:
   build-matrix:
     name: Generate Build Matrix
     uses: ./.github/workflows/matrix-exasol.yml
-    with:
-      ubuntu-version: ${{ inputs.ubuntu-version }}
 
   examples:
     name: Run Examples
     needs: [ build-matrix ]
     # For all containers with versions 7.1.x and older versions 8.y.z of docker-db,
     # there will be a crash if UDFs (User Defined Functions) are utilized.
-    runs-on:  ${{ inputs.ubuntu-version }}
+    runs-on:  ubuntu-24.04
     timeout-minutes: 30
     strategy:
       fail-fast: false
@@ -37,6 +31,10 @@ jobs:
 
       - name: "Install all extras"
         run: poetry install --all-extras
+        
+      - name: Fix VM Crash in UDFs
+        id: fix-vm-crash
+        run: sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
 
       - name: "Start test db"
         run: >

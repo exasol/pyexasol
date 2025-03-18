@@ -5,16 +5,12 @@ on:
     secrets:
       PYPI_TOKEN:
           required: true
-    inputs:
-      ubuntu-version:
-        required: true
-        type: string
 
 jobs:
 
   cd-job:
     name: Continuous Delivery
-    runs-on: ${{ inputs.ubuntu-version }}
+    runs-on: ubuntu-24.04
     steps:
 
       - name: SCM Checkout

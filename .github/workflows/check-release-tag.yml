@@ -1,18 +1,13 @@
 name: Check Release Tag
 
-on:
-  workflow_call:
-    inputs:
-      ubuntu-version:
-        required: true
-        type: string
+on: workflow_call
 
 jobs:
 
   check-tag-version-job:
 
     name: Check Tag Version
-    runs-on: ${{ inputs.ubuntu-version }}
+    runs-on: ubuntu-24.04
 
     steps:
       - name: SCM Checkout

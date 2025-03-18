@@ -2,24 +2,18 @@ name: SSL certificate test
 
 on:
   workflow_call:
-    inputs:
-      ubuntu-version:
-        required: true
-        type: string
 
 jobs:
   build-matrix:
     name: Generate Build Matrix
     uses: ./.github/workflows/matrix-exasol.yml
-    with:
-      ubuntu-version: ${{ inputs.ubuntu-version }}
 
   ssl_cert:
     name: Build SSL-Cert
     needs: [ build-matrix ]
     # For all containers with versions 7.1.x and older versions 8.y.z of docker-db,
     # there will be a crash if UDFs (User Defined Functions) are utilized.
-    runs-on:  ${{ inputs.ubuntu-version }}
+    runs-on:  ubuntu-24.04
     timeout-minutes: 15
     strategy:
       fail-fast: false

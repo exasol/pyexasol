@@ -5,16 +5,12 @@ on:
     secrets:
       ALTERNATIVE_GITHUB_TOKEN:
         required: false
-    inputs:
-      ubuntu-version:
-        required: true
-        type: string
 
 jobs:
 
   Version-Check:
     name: Version
-    runs-on: ${{ inputs.ubuntu-version }}
+    runs-on: ubuntu-24.04
 
     steps:
       - name: SCM Checkout
@@ -31,7 +27,7 @@ jobs:
   Documentation:
     name: Docs
     needs: [ Version-Check ]
-    runs-on: ${{ inputs.ubuntu-version }}
+    runs-on: ubuntu-24.04
 
     steps:
       - name: SCM Checkout
@@ -47,13 +43,11 @@ jobs:
   build-matrix:
     name: Generate Build Matrix
     uses: ./.github/workflows/matrix-python.yml
-    with:
-      ubuntu-version: ${{ inputs.ubuntu-version }}
 
   Lint:
     name: Linting (Python-${{ matrix.python-version }})
     needs: [ Version-Check, build-matrix ]
-    runs-on: ${{ inputs.ubuntu-version }}
+    runs-on: ubuntu-24.04
     strategy:
       fail-fast: false
       matrix: ${{ fromJson(needs.build-matrix.outputs.matrix) }}
@@ -80,7 +74,7 @@ jobs:
   Type-Check:
     name: Type Checking (Python-${{ matrix.python-version }})
     needs: [ Version-Check, build-matrix ]
-    runs-on: ${{ inputs.ubuntu-version }}
+    runs-on: ubuntu-24.04
     strategy:
       fail-fast: false
       matrix: ${{ fromJson(needs.build-matrix.outputs.matrix) }}
@@ -100,7 +94,7 @@ jobs:
   Security:
     name: Security Checks (Python-${{ matrix.python-version }})
     needs: [ Version-Check, build-matrix ]
-    runs-on: ${{ inputs.ubuntu-version }}
+    runs-on: ubuntu-24.04
     strategy:
       fail-fast: false
       matrix: ${{ fromJson(needs.build-matrix.outputs.matrix) }}
@@ -126,7 +120,7 @@ jobs:
 
   Format:
     name: Format Check
-    runs-on: ${{ inputs.ubuntu-version }}
+    runs-on: ubuntu-24.04
 
     steps:
       - name: SCM Checkout
@@ -143,7 +137,7 @@ jobs:
   Tests:
     name: Unit-Tests (Python-${{ matrix.python-version }}, Exasol-${{ matrix.exasol-version}})
     needs: [ Documentation, Lint, Type-Check, Security, Format, build-matrix ]
-    runs-on: ${{ inputs.ubuntu-version }}
+    runs-on: ubuntu-24.04
     env:
       GITHUB_TOKEN: ${{ secrets.ALTERNATIVE_GITHUB_TOKEN ||  secrets.GITHUB_TOKEN }}
     strategy:

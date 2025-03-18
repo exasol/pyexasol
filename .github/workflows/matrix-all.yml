@@ -2,10 +2,6 @@ name: Build Matrix (All Versions)
 
 on:
   workflow_call:
-    inputs:
-      ubuntu-version:
-        required: true
-        type: string
     outputs:
       matrix:
         description: "Generates the all versions build matrix"
@@ -14,7 +10,7 @@ on:
 jobs:
   all_versions:
 
-    runs-on: ${{ inputs.ubuntu-version }}
+    runs-on:  ubuntu-24.04
 
     steps:
       - name: SCM Checkout

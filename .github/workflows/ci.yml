@@ -18,11 +18,7 @@ jobs:
   CI:
     uses: ./.github/workflows/merge-gate.yml
     secrets: inherit
-    with:
-      ubuntu-version: ubuntu-22.04
 
   Metrics:
     needs: [ CI ]
     uses: ./.github/workflows/report.yml
-    with:
-      ubuntu-version: ubuntu-22.04
