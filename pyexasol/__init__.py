@@ -133,7 +133,7 @@ def http_transport(
         Closing the pipe prematurely will cause SQL query to fail and will raise an exception in parent process.
         Parent process is responsible for closing other child processes and cleaning up.
 
-        PyEXASOL does not provide a complete solution to manage child processes, only examples.
+        PyExasol does not provide a complete solution to manage child processes, only examples.
         The final solution depends on your hardware, network configuration, cloud provider and container orchestration software.
     """
     return ExaHTTPTransportWrapper(ipaddr, port, compression, encryption)

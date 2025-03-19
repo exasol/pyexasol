@@ -77,6 +77,7 @@ if __name__ == "__main__":
         schema=config.schema,
         compression=True,
         encryption=True,
+        websocket_sslopt=config.websocket_sslopt,
     )
 
     C.execute("TRUNCATE TABLE payments_copy")

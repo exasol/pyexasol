@@ -12,7 +12,11 @@ printer = pprint.PrettyPrinter(indent=4, width=140)
 
 # Basic connect
 C = pyexasol.connect(
-    dsn=config.dsn, user=config.user, password=config.password, quote_ident=True
+    dsn=config.dsn,
+    user=config.user,
+    password=config.password,
+    quote_ident=True,
+    websocket_sslopt=config.websocket_sslopt,
 )
 
 # Open schema

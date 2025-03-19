@@ -28,6 +28,7 @@ def wait_for_connection():
                 user=config.user,
                 password=config.password,
                 query_timeout=QUERY_TIMEOUT,
+                websocket_sslopt=config.websocket_sslopt,
             )
             connection.execute(
                 "CREATE SCHEMA IF NOT EXISTS {schema!i}", {"schema": config.schema}
@@ -48,6 +49,7 @@ def wait_for_java():
                 password=config.password,
                 schema=config.schema,
                 query_timeout=QUERY_TIMEOUT,
+                websocket_sslopt=config.websocket_sslopt,
             )
 
             connection.execute(TEST_JAVA_UDF)

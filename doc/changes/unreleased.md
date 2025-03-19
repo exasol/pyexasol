@@ -1,13 +1,32 @@
 # Unreleased
 
+## Summary
+
+From PyExasol version ``1.0.0``, the default behavior has been changed to use strict 
+certificate verification in ``ExaConnection`` and ``pyexasol.connect``. This means that 
+the default ``websocket_sslopt=None`` will be mapped to 
+``{"cert_reqs": ssl.CERT_REQUIRED}``. The prior default behavior was to map such cases 
+to ``{"cert_reqs": ssl.CERT_NONE}``. 
+
+* For many users relying on the previous default behavior for encrypted connections, 
+simply upgrading to version ``1.0.0`` is likely to lead to breaking changes with error 
+messages like: ``[SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed``.
+
+Prior to the upgrade:
+1. Please determine which encryption and security measures are appropriate for your 
+organization by reading through ``doc/user_guide/encryption.rst``.
+2. If needed, update your usage of ``pyexasol.connect(...)`` & ``ExaConnection`` to 
+reflect your organization's needs.
+
 ## ✨Features
 
 * Added support for multi-version documentation
 * Added support for all standard nox tasks provided by `exasol-toolbox`
+* #179: Modified `ExaConnection` so that default is encryption with strict certification verification
 
 ## ⚒️ Refactorings
 
-* Reformated entire code base with `black` and `isort`
+* Reformatted entire code base with `black` and `isort`
 
 ## 🔩 Internal
 
@@ -18,7 +37,7 @@
 * Added support for publishing documentation to gh pages
 * Added `.git-blame-ignore-revs` file to workspace
 
-    Note: please make sure to adjust yor git config accordingly (if not done yet)
+    Note: please make sure to adjust your git config accordingly (if not done yet)
 
         ```shell
         git config blame.ignoreRevsFile .git-blame-ignore-revs
@@ -27,5 +46,6 @@
 ## 📚 Documentation
 
 * Added sphinx based documentation
-* Added example to highlight how sensitive information from exceptions should be handled 
+* Added example to highlight how sensitive information from exceptions should be handled
+* Harmonized spelling of PyExasol across documentation
 

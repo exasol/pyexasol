@@ -7,7 +7,7 @@ jobs:
   check-tag-version-job:
 
     name: Check Tag Version
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
 
     steps:
       - name: SCM Checkout

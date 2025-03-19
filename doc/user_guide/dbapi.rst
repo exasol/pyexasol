@@ -1,7 +1,7 @@
 DB-API 2.0 Compatibility
 ========================
 
-`PyEXASOL <public interface>`__ is similar to `PEP-249 DB-API 2.0 <https://www.python.org/dev/peps/pep-0249/>`__ specification, but it does not strictly follow it. This page explains the reasons behind this decision and your alternative(s) if you need or want to use a DBAPI2 compatible driver.
+`PyExasol <public interface>`__ is similar to `PEP-249 DB-API 2.0 <https://www.python.org/dev/peps/pep-0249/>`__ specification, but it does not strictly follow it. This page explains the reasons behind this decision and your alternative(s) if you need or want to use a DBAPI2 compatible driver.
 
 Alternatives
 ------------
@@ -9,7 +9,7 @@ Alternatives
 Exasol WebSocket Driver
 ^^^^^^^^^^^^^^^^^^^^^^^
 
-The ``pyexasol`` package includes a DBAPI2 compatible driver facade, located in the ``exasol.driver`` package. However, using pyexasol directly will generally yield better performance when utilizing Exasol in an OLAP manner, which is likely the typical use case.
+The ``pyexasol`` package includes a DBAPI2 compatible driver facade, located in the ``exasol.driver`` package. However, using ``pyexasol`` directly will generally yield better performance when utilizing Exasol in an OLAP manner, which is likely the typical use case.
 
 That said, in specific scenarios, the DBAPI2 API can be advantageous or even necessary. This is particularly true when integrating with "DB-Agnostic" frameworks. In such cases, you can just import and use the DBAPI2 compliant facade as illustrated in the example below.
 

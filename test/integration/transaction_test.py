@@ -5,10 +5,8 @@ import pyexasol
 
 # For the fetch_dict tests we need to configure the connection accordingly (autocommit=False)
 @pytest.fixture
-def connection(dsn, user, password, schema):
-    con = pyexasol.connect(
-        dsn=dsn, user=user, password=password, schema=schema, autocommit=False
-    )
+def connection(connection_factory):
+    con = connection_factory(autocommit=False)
     yield con
     con.close()
 

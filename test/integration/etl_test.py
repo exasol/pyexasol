@@ -6,10 +6,8 @@ import pyexasol
 
 
 @pytest.fixture
-def connection(dsn, user, password, schema):
-    with pyexasol.connect(
-        dsn=dsn, user=user, password=password, schema=schema, compression=True
-    ) as con:
+def connection(connection_factory):
+    with connection_factory(compression=True) as con:
         yield con
 
 

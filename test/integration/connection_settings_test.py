@@ -6,12 +6,10 @@ import pyexasol
 
 
 @pytest.fixture
-def connection_with_quote_indent(dsn, user, password, schema):
-    connection = pyexasol.connect(
-        dsn=dsn, user=user, password=password, schema=schema, quote_ident=True
-    )
-    yield connection
-    connection.close()
+def connection_with_quote_indent(connection_factory):
+    con = connection_factory(quote_ident=True)
+    yield con
+    con.close()
 
 
 @pytest.fixture

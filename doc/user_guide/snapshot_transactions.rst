@@ -10,7 +10,7 @@ This is good for data consistency, but it increases probability of transactions 
 
 The most common locking problem is related to metadata selects from system views (tables, column, object sizes, etc.). JDBC and ODBC drivers provide special non-blocking calls for common metadata requests: getTables(), getColumns(). But there are no such calls for WebSocket drivers.
 
-The only way to access metadata in non-blocking manner with PyEXASOL is an internal feature called "Snapshot Transactions". Details are limited, but we managed to find out a few things:
+The only way to access metadata in non-blocking manner with PyExasol is an internal feature called "Snapshot Transactions". Details are limited, but we managed to find out a few things:
 
 1. ExaPlus client uses snapshot transactions to access system views in separate META-session;
 2. Snapshot transactions are read-only. Connection will crash instantly on any write attempt;

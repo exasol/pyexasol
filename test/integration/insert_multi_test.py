@@ -10,10 +10,8 @@ from pyexasol import ExaRuntimeError
 class TestInsertMultiExtension:
 
     @pytest.fixture(scope="class")
-    def connection(self, dsn, user, password, schema):
-        con = pyexasol.connect(
-            dsn=dsn, user=user, password=password, schema=schema, lower_ident=True
-        )
+    def connection(self, connection_factory):
+        con = connection_factory(lower_ident=True)
         yield con
         con.close()
 

@@ -1,7 +1,7 @@
 Best Practices
 ==============
 
-This page explains how to use PyEXASOL with maximum efficiency.
+This page explains how to use PyExasol with maximum efficiency.
 
 Enable Compression for WiFi Connections
 ---------------------------------------
@@ -38,7 +38,7 @@ Iterator syntax is much shorter and easier to use. Also, there is no need to che
 
 Avoid Using INSERT Prepared Statement to Import Raw Values in SQL
 -----------------------------------------------------------------
-PyEXASOL supports INSERT prepared statements via ``.ext.insert_multi()`` function. It works for small data sets and may provide some performance benefits.
+PyExasol supports INSERT prepared statements via ``.ext.insert_multi()`` function. It works for small data sets and may provide some performance benefits.
 
 However, it is strongly advised to use more efficient ``IMPORT`` command and HTTP transport instead. It has a small overhead to initiate the communication, but large data sets will be transferred and processed much faster. It is also more CPU and memory efficient.
 
@@ -58,7 +58,7 @@ Please note: if you want to INSERT single row only into Exasol, you're probably 
 
 Always Specify Full Connection String for Exasol Cluster
 --------------------------------------------------------
-Unlike standard WebSocket Python driver, PyEXASOL supports full connection strings and node redundancy. For example, connection string `myexasol1..5:8563` will be expanded as:
+Unlike standard WebSocket Python driver, PyExasol supports full connection strings and node redundancy. For example, connection string `myexasol1..5:8563` will be expanded as:
 
 ::
 
@@ -68,18 +68,18 @@ Unlike standard WebSocket Python driver, PyEXASOL supports full connection strin
     myexasol4:8563
     myexasol5:8563
 
-PyEXASOL tries to connect to random node from this list. If it fails, it tries to connect to another random node. The main benefits of this approach are:
+PyExasol tries to connect to random node from this list. If it fails, it tries to connect to another random node. The main benefits of this approach are:
 
 - Multiple connections are evenly distributed across the whole cluster;
 - If one or more nodes are down, but the cluster is still operational due to redundancy, users will be able to connect without any problems or random error messages;
 
 Consider Faster JSON-Parsing Libraries
 --------------------------------------
-PyEXASOL defaults to standard `json <https://docs.python.org/3/library/json.html>` library for best compatibility. It is sufficient for the majority of use-cases. However, if you are unhappy with HTTP transport, and you wish to load large amounts of data using standard fetching, we highly recommend trying faster JSON libraries.
+PyExasol defaults to standard `json <https://docs.python.org/3/library/json.html>` library for best compatibility. It is sufficient for the majority of use-cases. However, if you are unhappy with HTTP transport, and you wish to load large amounts of data using standard fetching, we highly recommend trying faster JSON libraries.
 
 `rapidjson <https://github.com/python-rapidjson/python-rapidjson>`_
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Rapidjson provides significant performance boost and is well maintained by creators. PyEXASOL defaults to ``number_mode=NM_NATIVE``. Exasol server wraps big decimals with quotes and returns as strings, so it should be a safe option.
+Rapidjson provides significant performance boost and is well maintained by creators. PyExasol defaults to ``number_mode=NM_NATIVE``. Exasol server wraps big decimals with quotes and returns as strings, so it should be a safe option.
 
 ``json_lib=[rapidjson]``
 

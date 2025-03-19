@@ -17,6 +17,7 @@ try:
         user=config.user,
         password=config.password,
         schema=config.schema,
+        websocket_sslopt=config.websocket_sslopt,
     )
 except pyexasol.ExaConnectionError as e:
     print(e)
@@ -28,6 +29,7 @@ try:
         user=config.user,
         password="123" + config.password,
         schema=config.schema,
+        websocket_sslopt=config.websocket_sslopt,
     )
 except pyexasol.ExaAuthError as e:
     print(e)
@@ -38,6 +40,7 @@ C = pyexasol.connect(
     password=config.password,
     schema=config.schema,
     fetch_size_bytes=1024 * 10,
+    websocket_sslopt=config.websocket_sslopt,
 )
 
 # Invalid SQL
@@ -107,10 +110,18 @@ except pyexasol.ExaRuntimeError as e:
 
 # Simulate websocket error during close
 C1 = pyexasol.connect(
-    dsn=config.dsn, user=config.user, password=config.password, schema=config.schema
+    dsn=config.dsn,
+    user=config.user,
+    password=config.password,
+    schema=config.schema,
+    websocket_sslopt=config.websocket_sslopt,
 )
 C2 = pyexasol.connect(
-    dsn=config.dsn, user=config.user, password=config.password, schema=config.schema
+    dsn=config.dsn,
+    user=config.user,
+    password=config.password,
+    schema=config.schema,
+    websocket_sslopt=config.websocket_sslopt,
 )
 
 C2.execute(f"KILL SESSION {C1.session_id()}")

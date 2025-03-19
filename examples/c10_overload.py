@@ -1,5 +1,5 @@
 """
-Extend core PyEXASOL classes, add custom logic
+Extend core PyExasol classes, add custom logic
 In this example we add print_session_id() custom method to all objects
 """
 
@@ -60,6 +60,7 @@ C = CustomExaConnection(
     password=config.password,
     schema=config.schema,
     custom_param="test custom param!",
+    websocket_sslopt=config.websocket_sslopt,
 )
 
 stmt = C.execute("SELECT * FROM users ORDER BY user_id LIMIT 5")
@@ -91,7 +92,11 @@ class NamedTupleExaConnection(pyexasol.ExaConnection):
 
 
 C = NamedTupleExaConnection(
-    dsn=config.dsn, user=config.user, password=config.password, schema=config.schema
+    dsn=config.dsn,
+    user=config.user,
+    password=config.password,
+    schema=config.schema,
+    websocket_sslopt=config.websocket_sslopt,
 )
 stmt = C.execute("SELECT * FROM users ORDER BY user_id LIMIT 5")
 print(stmt.fetchone())

@@ -6,8 +6,8 @@ Preparation
 
 Basic preparation steps are required to see examples in action.
 
-1. Install PyEXASOL with *optional dependencies*.
-2. Download `PyEXASOL source code <https://github.com/exasol/pyexasol/archive/master.zip>`_ and unzip it.
+1. Install PyExasol with *optional dependencies*.
+2. Download `PyExasol source code <https://github.com/exasol/pyexasol/archive/master.zip>`_ and unzip it.
 3. Make sure Exasol is installed and dedicated schema for testing is created. You may use free `Exasol Community Edition <https://www.exasol.com/portal/display/DOWNLOAD/Free+Trial>`_ for testing purposes.
 4. Open ``/examples/`` directory and edit file ``_config.py``. Input your Exasol credentials.
 5. Run script to prepare data set for testing:
@@ -232,7 +232,7 @@ Class Extension
 
 .. literalinclude:: ../../examples/c10_overload.py
     :language: python
-    :caption: extend core PyEXASOL classes to add custom logic
+    :caption: extend core PyExasol classes to add custom logic
     
 Quoted Identifiers
 ++++++++++++++++++

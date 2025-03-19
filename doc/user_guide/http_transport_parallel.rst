@@ -16,7 +16,7 @@ How it works on high level
 
 .. image:: /_static/parallel_export.png
 
-Please note that PyEXASOL does not provide any specific way to send internal Exasol address strings from child processes to parent process. You are free to choose your own way of inter-process communication. For example, you may use `multiprocessing.Pipe <https://docs.python.org/3/library/multiprocessing.html?highlight=Pipes#exchanging-objects-between-processes>`_.
+Please note that PyExasol does not provide any specific way to send internal Exasol address strings from child processes to parent process. You are free to choose your own way of inter-process communication. For example, you may use `multiprocessing.Pipe <https://docs.python.org/3/library/multiprocessing.html?highlight=Pipes#exchanging-objects-between-processes>`_.
 
 Examples
 --------

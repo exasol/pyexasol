@@ -17,6 +17,7 @@ C = pyexasol.connect(
     password=config.password,
     schema=config.schema,
     fetch_dict=True,
+    websocket_sslopt=config.websocket_sslopt,
 )
 
 # Fetch tuples row-by-row as iterator
