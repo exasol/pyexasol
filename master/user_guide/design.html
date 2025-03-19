@@ -71,7 +71,7 @@ data-aria-dark="Switch to auto color mode">
 <li class="toctree-l2"><a class="reference internal" href="http_transport_parallel.html">HTTP Transport (parallel)</a></li>
 <li class="toctree-l2"><a class="reference internal" href="udf_script_output.html">UDF Script Output</a></li>
 <li class="toctree-l2"><a class="reference internal" href="local_config.html">Local config</a></li>
-<li class="toctree-l2"><a class="reference internal" href="parallelism.html">Parallelism in PyEXASOL</a></li>
+<li class="toctree-l2"><a class="reference internal" href="parallelism.html">Parallelism in PyExasol</a></li>
 <li class="toctree-l2"><a class="reference internal" href="snapshot_transactions.html">Snapshot transactions</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sql_formatting.html">SQL Formatting</a></li>
 <li class="toctree-l2"><a class="reference internal" href="dbapi.html">DB-API 2.0 Compatibility</a></li>
@@ -174,7 +174,7 @@ data-aria-dark="Switch to auto color mode">
 <p>This document contains background information on various design decisions, which will help current and future maintainers and developers better assess and evaluate potential changes and adjustments to these decisions.</p>
 <section id="automatic-resolution-and-randomization-of-connection-addresses">
 <h2>Automatic Resolution and Randomization of Connection Addresses<a class="headerlink" href="#automatic-resolution-and-randomization-of-connection-addresses" title="Link to this heading">¶</a></h2>
-<p>By default pyexasol resolves host names to IP addresses, randomly shuffles the IP addresses and tries to connect until connection succeeds. This has the following reasons:</p>
+<p>By default PyExasol resolves host names to IP addresses, randomly shuffles the IP addresses and tries to connect until connection succeeds. This has the following reasons:</p>
 <ul class="simple">
 <li><p>This will ensure that if at least one hostname is unavailable, an exception will be raised. Otherwise, an exception will occur only when “random” selects a broken hostname, leading to unpredictable errors in production.</p></li>
 <li><p>When you have a very large cluster with a growing number of nodes, it makes sense to put all nodes under one hostname, like <cite>myexasol.mlan</cite>, instead of having separate hostnames like <cite>myexasol1..64.mlan</cite>, especially when the number constantly changes. In this case, redundancy will not work properly if the hostname is not resolved beforehand, as we do not know if it points to a single address or multiple addresses.</p></li>

@@ -1,6 +1,6 @@
 # 0.10.0 - 2020-01-01
 
-## PyEXASOL code improvements
+## PyExasol code improvements
 
 - Reworked script output code and moved it into `pyexasol_utils` module. The new way to start script output server in debug mode is: `python -m pyexasol_utils.script_output`. Old call will produce the RuntimeException with directions.
 - Removed `.utils` sub-module.

@@ -71,7 +71,7 @@ data-aria-dark="Switch to auto color mode">
 <li class="toctree-l2"><a class="reference internal" href="http_transport_parallel.html">HTTP Transport (parallel)</a></li>
 <li class="toctree-l2"><a class="reference internal" href="udf_script_output.html">UDF Script Output</a></li>
 <li class="toctree-l2"><a class="reference internal" href="local_config.html">Local config</a></li>
-<li class="toctree-l2"><a class="reference internal" href="parallelism.html">Parallelism in PyEXASOL</a></li>
+<li class="toctree-l2"><a class="reference internal" href="parallelism.html">Parallelism in PyExasol</a></li>
 <li class="toctree-l2"><a class="reference internal" href="snapshot_transactions.html">Snapshot transactions</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sql_formatting.html">SQL Formatting</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">DB-API 2.0 Compatibility</a></li>
@@ -179,12 +179,12 @@ data-aria-dark="Switch to auto color mode">
         <article class="yue" role="main">
           <section id="db-api-2-0-compatibility">
 <h1>DB-API 2.0 Compatibility<a class="headerlink" href="#db-api-2-0-compatibility" title="Link to this heading">¶</a></h1>
-<p><a class="reference external" href="publicinterface">PyEXASOL</a> is similar to <a class="reference external" href="https://www.python.org/dev/peps/pep-0249/">PEP-249 DB-API 2.0</a> specification, but it does not strictly follow it. This page explains the reasons behind this decision and your alternative(s) if you need or want to use a DBAPI2 compatible driver.</p>
+<p><a class="reference external" href="publicinterface">PyExasol</a> is similar to <a class="reference external" href="https://www.python.org/dev/peps/pep-0249/">PEP-249 DB-API 2.0</a> specification, but it does not strictly follow it. This page explains the reasons behind this decision and your alternative(s) if you need or want to use a DBAPI2 compatible driver.</p>
 <section id="alternatives">
 <h2>Alternatives<a class="headerlink" href="#alternatives" title="Link to this heading">¶</a></h2>
 <section id="exasol-websocket-driver">
 <h3>Exasol WebSocket Driver<a class="headerlink" href="#exasol-websocket-driver" title="Link to this heading">¶</a></h3>
-<p>The <code class="docutils literal notranslate"><span class="pre">pyexasol</span></code> package includes a DBAPI2 compatible driver facade, located in the <code class="docutils literal notranslate"><span class="pre">exasol.driver</span></code> package. However, using pyexasol directly will generally yield better performance when utilizing Exasol in an OLAP manner, which is likely the typical use case.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">pyexasol</span></code> package includes a DBAPI2 compatible driver facade, located in the <code class="docutils literal notranslate"><span class="pre">exasol.driver</span></code> package. However, using <code class="docutils literal notranslate"><span class="pre">pyexasol</span></code> directly will generally yield better performance when utilizing Exasol in an OLAP manner, which is likely the typical use case.</p>
 <p>That said, in specific scenarios, the DBAPI2 API can be advantageous or even necessary. This is particularly true when integrating with “DB-Agnostic” frameworks. In such cases, you can just import and use the DBAPI2 compliant facade as illustrated in the example below.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="kn">from</span><span class="w"> </span><span class="nn">exasol.driver.websocket.dbapi2</span><span class="w"> </span><span class="kn">import</span> <span class="n">connect</span>
 </span><span data-line="2">

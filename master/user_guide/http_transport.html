@@ -71,7 +71,7 @@ data-aria-dark="Switch to auto color mode">
 <li class="toctree-l2"><a class="reference internal" href="http_transport_parallel.html">HTTP Transport (parallel)</a></li>
 <li class="toctree-l2"><a class="reference internal" href="udf_script_output.html">UDF Script Output</a></li>
 <li class="toctree-l2"><a class="reference internal" href="local_config.html">Local config</a></li>
-<li class="toctree-l2"><a class="reference internal" href="parallelism.html">Parallelism in PyEXASOL</a></li>
+<li class="toctree-l2"><a class="reference internal" href="parallelism.html">Parallelism in PyExasol</a></li>
 <li class="toctree-l2"><a class="reference internal" href="snapshot_transactions.html">Snapshot transactions</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sql_formatting.html">SQL Formatting</a></li>
 <li class="toctree-l2"><a class="reference internal" href="dbapi.html">DB-API 2.0 Compatibility</a></li>
@@ -189,7 +189,7 @@ data-aria-dark="Switch to auto color mode">
 <span id="id1"></span><h1>HTTP Transport<a class="headerlink" href="#http-transport" title="Link to this heading">¶</a></h1>
 <p>The main purpose of HTTP transport is to reduce massive fetching overhead associated with large data sets (1M+ rows). It uses native Exasol commands <cite>EXPORT</cite> and <cite>IMPORT</cite> specifically designed to move large amounts of data. Data is transferred using CSV format with optional zlib compression.</p>
 <p>This is a powerful tool which helps to bypass the creation of intermediate Python objects altogether and dramatically increases performance.</p>
-<p>PyEXASOL offloads HTTP communication and decompression to a separate thread using the <a class="reference external" href="https://docs.python.org/3/library/threading.html">threading</a> module. The main thread deals with a simple <a class="reference external" href="https://docs.python.org/3/library/os.html#os.pipe">pipe</a> opened in binary mode.</p>
+<p>PyExasol offloads HTTP communication and decompression to a separate thread using the <a class="reference external" href="https://docs.python.org/3/library/threading.html">threading</a> module. The main thread deals with a simple <a class="reference external" href="https://docs.python.org/3/library/os.html#os.pipe">pipe</a> opened in binary mode.</p>
 <p>You may specify a custom <cite>callback</cite> function to read or write from the raw pipe and to apply complex logic. Use <cite>callback_params</cite> to pass additional parameters to the <cite>callback</cite> function (e.g. options for pandas).</p>
 <p>You may also specify <cite>import_params</cite> or <cite>export_params</cite> to alter the <cite>IMPORT</cite> or <cite>EXPORT</cite> query and modify the CSV data stream.</p>
 </section>

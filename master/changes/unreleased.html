@@ -71,7 +71,7 @@ data-aria-dark="Switch to auto color mode">
 <li class="toctree-l2"><a class="reference internal" href="../user_guide/http_transport_parallel.html">HTTP Transport (parallel)</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../user_guide/udf_script_output.html">UDF Script Output</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../user_guide/local_config.html">Local config</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../user_guide/parallelism.html">Parallelism in PyEXASOL</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../user_guide/parallelism.html">Parallelism in PyExasol</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../user_guide/snapshot_transactions.html">Snapshot transactions</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../user_guide/sql_formatting.html">SQL Formatting</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../user_guide/dbapi.html">DB-API 2.0 Compatibility</a></li>
@@ -135,6 +135,7 @@ data-aria-dark="Switch to auto color mode">
       <i class="i-lucide close"></i>
     </button>
     <div class="sy-scrollbar sy-rside-inner px-6 xl:top-16 xl:sticky xl:pl-0 pt-6 pb-4"><div class="localtoc"><h3>On this page</h3><ul>
+<li><a class="reference internal" href="#summary">Summary</a></li>
 <li><a class="reference internal" href="#features">&#10024;Features</a></li>
 <li><a class="reference internal" href="#refactorings">&#9874;&#65039; Refactorings</a></li>
 <li><a class="reference internal" href="#internal">&#128297; Internal</a></li>
@@ -174,17 +175,38 @@ data-aria-dark="Switch to auto color mode">
         <article class="yue" role="main">
           <section id="unreleased">
 <h1>Unreleased<a class="headerlink" href="#unreleased" title="Link to this heading">¶</a></h1>
+<section id="summary">
+<h2>Summary<a class="headerlink" href="#summary" title="Link to this heading">¶</a></h2>
+<p>From PyExasol version <code class="docutils literal notranslate"><span class="pre">1.0.0</span></code>, the default behavior has been changed to use strict
+certificate verification in <code class="docutils literal notranslate"><span class="pre">ExaConnection</span></code> and <code class="docutils literal notranslate"><span class="pre">pyexasol.connect</span></code>. This means that
+the default <code class="docutils literal notranslate"><span class="pre">websocket_sslopt=None</span></code> will be mapped to
+<code class="docutils literal notranslate"><span class="pre">{&quot;cert_reqs&quot;:</span> <span class="pre">ssl.CERT_REQUIRED}</span></code>. The prior default behavior was to map such cases
+to <code class="docutils literal notranslate"><span class="pre">{&quot;cert_reqs&quot;:</span> <span class="pre">ssl.CERT_NONE}</span></code>.</p>
+<ul class="simple">
+<li><p>For many users relying on the previous default behavior for encrypted connections,
+simply upgrading to version <code class="docutils literal notranslate"><span class="pre">1.0.0</span></code> is likely to lead to breaking changes with error
+messages like: <code class="docutils literal notranslate"><span class="pre">[SSL:</span> <span class="pre">CERTIFICATE_VERIFY_FAILED]</span> <span class="pre">certificate</span> <span class="pre">verify</span> <span class="pre">failed</span></code>.</p></li>
+</ul>
+<p>Prior to the upgrade:</p>
+<ol class="arabic simple">
+<li><p>Please determine which encryption and security measures are appropriate for your
+organization by reading through <code class="docutils literal notranslate"><span class="pre">doc/user_guide/encryption.rst</span></code>.</p></li>
+<li><p>If needed, update your usage of <code class="docutils literal notranslate"><span class="pre">pyexasol.connect(...)</span></code> &amp; <code class="docutils literal notranslate"><span class="pre">ExaConnection</span></code> to
+reflect your organization’s needs.</p></li>
+</ol>
+</section>
 <section id="features">
 <h2>✨Features<a class="headerlink" href="#features" title="Link to this heading">¶</a></h2>
 <ul class="simple">
 <li><p>Added support for multi-version documentation</p></li>
 <li><p>Added support for all standard nox tasks provided by <code class="docutils literal notranslate"><span class="pre">exasol-toolbox</span></code></p></li>
+<li><p>#179: Modified <code class="docutils literal notranslate"><span class="pre">ExaConnection</span></code> so that default is encryption with strict certification verification</p></li>
 </ul>
 </section>
 <section id="refactorings">
 <h2>⚒️ Refactorings<a class="headerlink" href="#refactorings" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p>Reformated entire code base with <code class="docutils literal notranslate"><span class="pre">black</span></code> and <code class="docutils literal notranslate"><span class="pre">isort</span></code></p></li>
+<li><p>Reformatted entire code base with <code class="docutils literal notranslate"><span class="pre">black</span></code> and <code class="docutils literal notranslate"><span class="pre">isort</span></code></p></li>
 </ul>
 </section>
 <section id="internal">
@@ -199,7 +221,7 @@ data-aria-dark="Switch to auto color mode">
 <li><p>Added missing plugin for multi-version documentation</p></li>
 <li><p>Added support for publishing documentation to gh pages</p></li>
 <li><p>Added <code class="docutils literal notranslate"><span class="pre">.git-blame-ignore-revs</span></code> file to workspace</p>
-<p>Note: please make sure to adjust yor git config accordingly (if not done yet)</p>
+<p>Note: please make sure to adjust your git config accordingly (if not done yet)</p>
 <div class="highlight-none notranslate"><div class="highlight"><pre><span></span><span data-line="1">  ```shell
 </span><span data-line="2">  git config blame.ignoreRevsFile .git-blame-ignore-revs
 </span><span data-line="3">  ```
@@ -213,6 +235,7 @@ data-aria-dark="Switch to auto color mode">
 <ul class="simple">
 <li><p>Added sphinx based documentation</p></li>
 <li><p>Added example to highlight how sensitive information from exceptions should be handled</p></li>
+<li><p>Harmonized spelling of PyExasol across documentation</p></li>
 </ul>
 </section>
 </section>

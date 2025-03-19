@@ -71,7 +71,7 @@ data-aria-dark="Switch to auto color mode">
 <li class="toctree-l2"><a class="reference internal" href="http_transport_parallel.html">HTTP Transport (parallel)</a></li>
 <li class="toctree-l2"><a class="reference internal" href="udf_script_output.html">UDF Script Output</a></li>
 <li class="toctree-l2"><a class="reference internal" href="local_config.html">Local config</a></li>
-<li class="toctree-l2"><a class="reference internal" href="parallelism.html">Parallelism in PyEXASOL</a></li>
+<li class="toctree-l2"><a class="reference internal" href="parallelism.html">Parallelism in PyExasol</a></li>
 <li class="toctree-l2"><a class="reference internal" href="snapshot_transactions.html">Snapshot transactions</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sql_formatting.html">SQL Formatting</a></li>
 <li class="toctree-l2"><a class="reference internal" href="dbapi.html">DB-API 2.0 Compatibility</a></li>
@@ -178,7 +178,7 @@ data-aria-dark="Switch to auto color mode">
 <ul class="simple">
 <li><p><a class="reference external" href="https://github.com/mkleehammer/pyodbc">PyODBC</a></p></li>
 <li><p><a class="reference external" href="https://github.com/blue-yonder/turbodbc">TurbODBC</a></p></li>
-<li><p>PyEXASOL</p></li>
+<li><p>PyExasol</p></li>
 </ul>
 <p>I use Badoo production Exasol cluster for testing:</p>
 <ul class="simple">
@@ -224,12 +224,12 @@ data-aria-dark="Switch to auto color mode">
 </ul>
 </td>
 </tr>
-<tr class="row-even"><td><p>PyEXASOL - fetchall</p></td>
+<tr class="row-even"><td><p>PyExasol - fetchall</p></td>
 <td><p>32</p></td>
 <td><p>39</p></td>
 <td><p>126</p></td>
 </tr>
-<tr class="row-odd"><td><p>PyEXASOL - fetchall+zlib</p></td>
+<tr class="row-odd"><td><p>PyExasol - fetchall+zlib</p></td>
 <td><ul class="simple">
 <li></li>
 </ul>
@@ -256,17 +256,17 @@ data-aria-dark="Switch to auto color mode">
 </ul>
 </td>
 </tr>
-<tr class="row-even"><td><p>PyEXASOL - export_to_pandas</p></td>
+<tr class="row-even"><td><p>PyExasol - export_to_pandas</p></td>
 <td><p>11</p></td>
 <td><p>21</p></td>
 <td><p>77</p></td>
 </tr>
-<tr class="row-odd"><td><p>PyEXASOL - export_to_pandas+zlib</p></td>
+<tr class="row-odd"><td><p>PyExasol - export_to_pandas+zlib</p></td>
 <td><p>28</p></td>
 <td><p>53</p></td>
 <td><p>29</p></td>
 </tr>
-<tr class="row-even"><td><p>PyEXASOL - export_parallel</p></td>
+<tr class="row-even"><td><p>PyExasol - export_parallel</p></td>
 <td><p>5</p></td>
 <td><p>7</p></td>
 <td><ul class="simple">
@@ -282,20 +282,20 @@ data-aria-dark="Switch to auto color mode">
 <h2>Conclusions<a class="headerlink" href="#conclusions" title="Link to this heading">¶</a></h2>
 <ol class="arabic simple">
 <li><p>PyODBC performance is trash (no surprise).</p></li>
-<li><p>PyEXASOL standard fetching is faster than TurbODBC, but it happens mostly due to fewer ops with Python objects and due to zip() magic.</p></li>
+<li><p>PyExasol standard fetching is faster than TurbODBC, but it happens mostly due to fewer ops with Python objects and due to zip() magic.</p></li>
 <li><p>TurbODBC optimized fetching as numpy or arrow is very efficient and consistent, well done!</p></li>
-<li><p>PyEXASOL export to pandas performance may vary depending on the randomness of the data set. It highly depends on pandas CSV reader.</p></li>
-<li><p>PyEXASOL fetch and export with ZLIB compression is very good for slow network scenarios, but it is bad for fast networks.</p></li>
-<li><p>PyEXASOL parallel export beats everything else because it fully utilizes multiple CPU cores.</p></li>
+<li><p>PyExasol export to pandas performance may vary depending on the randomness of the data set. It highly depends on pandas CSV reader.</p></li>
+<li><p>PyExasol fetch and export with ZLIB compression is very good for slow network scenarios, but it is bad for fast networks.</p></li>
+<li><p>PyExasol parallel export beats everything else because it fully utilizes multiple CPU cores.</p></li>
 </ol>
 </section>
 <section id="how-to-run-your-own-test">
 <h2>How to Run Your Own Test<a class="headerlink" href="#how-to-run-your-own-test" title="Link to this heading">¶</a></h2>
-<p>I strongly encourage you to run your own performance tests. You may use test scripts provided with PyEXASOL as the starting point. Make sure to use your production Exasol cluster for tests. Please do not use Exasol running in Docker locally, it eliminates the whole point of testing.</p>
+<p>I strongly encourage you to run your own performance tests. You may use test scripts provided with PyExasol as the starting point. Make sure to use your production Exasol cluster for tests. Please do not use Exasol running in Docker locally, it eliminates the whole point of testing.</p>
 <ol class="arabic">
-<li><p>Install PyODBC, TurbODBC, PyEXASOL, pandas.</p></li>
+<li><p>Install PyODBC, TurbODBC, PyExasol, pandas.</p></li>
 <li><p>Install Exasol ODBC driver.</p></li>
-<li><p>Download <a class="reference external" href="https://github.com/exasol/pyexasol/archive/master.zip">PyEXASOL source code</a> and unzip it.</p></li>
+<li><p>Download <a class="reference external" href="https://github.com/exasol/pyexasol/archive/master.zip">PyExasol source code</a> and unzip it.</p></li>
 <li><p>Open <cite>/performance/</cite> directory and edit the file <cite>_config.py</cite>. Input your Exasol credentials, set table name, and other settings. Set the path to the ODBC driver.</p></li>
 <li><p>(Optional) Run the script to prepare the data set for testing:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1">python<span class="w"> </span>00_prepare.py

@@ -71,7 +71,7 @@ data-aria-dark="Switch to auto color mode">
 <li class="toctree-l2"><a class="reference internal" href="http_transport_parallel.html">HTTP Transport (parallel)</a></li>
 <li class="toctree-l2"><a class="reference internal" href="udf_script_output.html">UDF Script Output</a></li>
 <li class="toctree-l2"><a class="reference internal" href="local_config.html">Local config</a></li>
-<li class="toctree-l2"><a class="reference internal" href="parallelism.html">Parallelism in PyEXASOL</a></li>
+<li class="toctree-l2"><a class="reference internal" href="parallelism.html">Parallelism in PyExasol</a></li>
 <li class="toctree-l2"><a class="reference internal" href="snapshot_transactions.html">Snapshot transactions</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">SQL Formatting</a></li>
 <li class="toctree-l2"><a class="reference internal" href="dbapi.html">DB-API 2.0 Compatibility</a></li>
@@ -173,7 +173,7 @@ data-aria-dark="Switch to auto color mode">
         <article class="yue" role="main">
           <section id="sql-formatting">
 <h1>SQL Formatting<a class="headerlink" href="#sql-formatting" title="Link to this heading">¶</a></h1>
-<p>PyEXASOL provides custom Exasol-specific formatter based on standard <a class="reference external" href="https://docs.python.org/3/library/string.html#string.Formatter">Python 3 Formatter</a>.</p>
+<p>PyExasol provides custom Exasol-specific formatter based on standard <a class="reference external" href="https://docs.python.org/3/library/string.html#string.Formatter">Python 3 Formatter</a>.</p>
 <p>You’re not forced to use this formatter. You can always overload it using <cite>cls_formatter</cite> connection option or format raw SQL yourself.</p>
 <section id="types-of-placeholders">
 <h2>Types of placeholders<a class="headerlink" href="#types-of-placeholders" title="Link to this heading">¶</a></h2>
@@ -290,7 +290,7 @@ Please remember that Exasol empty string is converted to <cite>NULL</cite> by da
 </section>
 <section id="intellij-ide-user-parameters">
 <h2>IntelliJ IDE User Parameters<a class="headerlink" href="#intellij-ide-user-parameters" title="Link to this heading">¶</a></h2>
-<p>It is possible to teach the IDE to recognize PyEXASOL placeholders in SQL strings.</p>
+<p>It is possible to teach the IDE to recognize PyExasol placeholders in SQL strings.</p>
 <ol class="arabic simple">
 <li><p>Settings -&gt; Tools -&gt; Database -&gt; User Parameters</p></li>
 <li><p>Add a new pattern: <cite>\{\w+(\!\w)?\}</cite></p></li>

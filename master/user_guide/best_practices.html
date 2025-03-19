@@ -71,7 +71,7 @@ data-aria-dark="Switch to auto color mode">
 <li class="toctree-l2"><a class="reference internal" href="http_transport_parallel.html">HTTP Transport (parallel)</a></li>
 <li class="toctree-l2"><a class="reference internal" href="udf_script_output.html">UDF Script Output</a></li>
 <li class="toctree-l2"><a class="reference internal" href="local_config.html">Local config</a></li>
-<li class="toctree-l2"><a class="reference internal" href="parallelism.html">Parallelism in PyEXASOL</a></li>
+<li class="toctree-l2"><a class="reference internal" href="parallelism.html">Parallelism in PyExasol</a></li>
 <li class="toctree-l2"><a class="reference internal" href="snapshot_transactions.html">Snapshot transactions</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sql_formatting.html">SQL Formatting</a></li>
 <li class="toctree-l2"><a class="reference internal" href="dbapi.html">DB-API 2.0 Compatibility</a></li>
@@ -183,7 +183,7 @@ data-aria-dark="Switch to auto color mode">
         <article class="yue" role="main">
           <section id="best-practices">
 <h1>Best Practices<a class="headerlink" href="#best-practices" title="Link to this heading">¶</a></h1>
-<p>This page explains how to use PyEXASOL with maximum efficiency.</p>
+<p>This page explains how to use PyExasol with maximum efficiency.</p>
 <section id="enable-compression-for-wifi-connections">
 <h2>Enable Compression for WiFi Connections<a class="headerlink" href="#enable-compression-for-wifi-connections" title="Link to this heading">¶</a></h2>
 <p>Wireless network bandwidth is usually the main bottleneck for laptops. <code class="docutils literal notranslate"><span class="pre">Compression</span></code> flag enables zlib compression both for common fetching and for <a class="reference internal" href="http_transport.html#http-transport"><span class="std std-ref">HTTP Transport</span></a> It may improve overall performance by factor 4-8x.</p>
@@ -215,7 +215,7 @@ data-aria-dark="Switch to auto color mode">
 </section>
 <section id="avoid-using-insert-prepared-statement-to-import-raw-values-in-sql">
 <h2>Avoid Using INSERT Prepared Statement to Import Raw Values in SQL<a class="headerlink" href="#avoid-using-insert-prepared-statement-to-import-raw-values-in-sql" title="Link to this heading">¶</a></h2>
-<p>PyEXASOL supports INSERT prepared statements via <code class="docutils literal notranslate"><span class="pre">.ext.insert_multi()</span></code> function. It works for small data sets and may provide some performance benefits.</p>
+<p>PyExasol supports INSERT prepared statements via <code class="docutils literal notranslate"><span class="pre">.ext.insert_multi()</span></code> function. It works for small data sets and may provide some performance benefits.</p>
 <p>However, it is strongly advised to use more efficient <code class="docutils literal notranslate"><span class="pre">IMPORT</span></code> command and HTTP transport instead. It has a small overhead to initiate the communication, but large data sets will be transferred and processed much faster. It is also more CPU and memory efficient.</p>
 <p>You may use <code class="docutils literal notranslate"><span class="pre">import_from_iterable()</span></code> to insert data from list of rows.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="n">data</span> <span class="o">=</span> <span class="p">[</span>
@@ -231,7 +231,7 @@ data-aria-dark="Switch to auto color mode">
 </section>
 <section id="always-specify-full-connection-string-for-exasol-cluster">
 <h2>Always Specify Full Connection String for Exasol Cluster<a class="headerlink" href="#always-specify-full-connection-string-for-exasol-cluster" title="Link to this heading">¶</a></h2>
-<p>Unlike standard WebSocket Python driver, PyEXASOL supports full connection strings and node redundancy. For example, connection string <cite>myexasol1..5:8563</cite> will be expanded as:</p>
+<p>Unlike standard WebSocket Python driver, PyExasol supports full connection strings and node redundancy. For example, connection string <cite>myexasol1..5:8563</cite> will be expanded as:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="n">myexasol1</span><span class="p">:</span><span class="mi">8563</span>
 </span><span data-line="2"><span class="n">myexasol2</span><span class="p">:</span><span class="mi">8563</span>
 </span><span data-line="3"><span class="n">myexasol3</span><span class="p">:</span><span class="mi">8563</span>
@@ -239,7 +239,7 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="5"><span class="n">myexasol5</span><span class="p">:</span><span class="mi">8563</span>
 </span></pre></div>
 </div>
-<p>PyEXASOL tries to connect to random node from this list. If it fails, it tries to connect to another random node. The main benefits of this approach are:</p>
+<p>PyExasol tries to connect to random node from this list. If it fails, it tries to connect to another random node. The main benefits of this approach are:</p>
 <ul class="simple">
 <li><p>Multiple connections are evenly distributed across the whole cluster;</p></li>
 <li><p>If one or more nodes are down, but the cluster is still operational due to redundancy, users will be able to connect without any problems or random error messages;</p></li>
@@ -247,10 +247,10 @@ data-aria-dark="Switch to auto color mode">
 </section>
 <section id="consider-faster-json-parsing-libraries">
 <h2>Consider Faster JSON-Parsing Libraries<a class="headerlink" href="#consider-faster-json-parsing-libraries" title="Link to this heading">¶</a></h2>
-<p>PyEXASOL defaults to standard <cite>json &lt;https://docs.python.org/3/library/json.html&gt;</cite> library for best compatibility. It is sufficient for the majority of use-cases. However, if you are unhappy with HTTP transport, and you wish to load large amounts of data using standard fetching, we highly recommend trying faster JSON libraries.</p>
+<p>PyExasol defaults to standard <cite>json &lt;https://docs.python.org/3/library/json.html&gt;</cite> library for best compatibility. It is sufficient for the majority of use-cases. However, if you are unhappy with HTTP transport, and you wish to load large amounts of data using standard fetching, we highly recommend trying faster JSON libraries.</p>
 <section id="id1">
 <h3><a class="reference external" href="https://github.com/python-rapidjson/python-rapidjson">rapidjson</a><a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
-<p>Rapidjson provides significant performance boost and is well maintained by creators. PyEXASOL defaults to <code class="docutils literal notranslate"><span class="pre">number_mode=NM_NATIVE</span></code>. Exasol server wraps big decimals with quotes and returns as strings, so it should be a safe option.</p>
+<p>Rapidjson provides significant performance boost and is well maintained by creators. PyExasol defaults to <code class="docutils literal notranslate"><span class="pre">number_mode=NM_NATIVE</span></code>. Exasol server wraps big decimals with quotes and returns as strings, so it should be a safe option.</p>
 <p><code class="docutils literal notranslate"><span class="pre">json_lib=[rapidjson]</span></code></p>
 <p><code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">pyexasol[rapidjson]</span></code></p>
 </section>

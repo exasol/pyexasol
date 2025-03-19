@@ -7,7 +7,7 @@ In this sample test I want to compare:
 
 - `PyODBC <https://github.com/mkleehammer/pyodbc>`_
 - `TurbODBC <https://github.com/blue-yonder/turbodbc>`_
-- PyEXASOL
+- PyExasol
 
 I use Badoo production Exasol cluster for testing:
 
@@ -45,11 +45,11 @@ Results
      - 56
      - 55
      - -
-   * - PyEXASOL - fetchall
+   * - PyExasol - fetchall
      - 32
      - 39
      - 126
-   * - PyEXASOL - fetchall+zlib
+   * - PyExasol - fetchall+zlib
      - -
      - -
      - 92
@@ -61,15 +61,15 @@ Results
      - 14
      - 14
      - -
-   * - PyEXASOL - export_to_pandas
+   * - PyExasol - export_to_pandas
      - 11
      - 21
      - 77
-   * - PyEXASOL - export_to_pandas+zlib
+   * - PyExasol - export_to_pandas+zlib
      - 28
      - 53
      - 29
-   * - PyEXASOL - export_parallel
+   * - PyExasol - export_parallel
      - 5
      - 7
      - -
@@ -78,20 +78,20 @@ Conclusions
 -----------
 
 1. PyODBC performance is trash (no surprise).
-2. PyEXASOL standard fetching is faster than TurbODBC, but it happens mostly due to fewer ops with Python objects and due to zip() magic.
+2. PyExasol standard fetching is faster than TurbODBC, but it happens mostly due to fewer ops with Python objects and due to zip() magic.
 3. TurbODBC optimized fetching as numpy or arrow is very efficient and consistent, well done!
-4. PyEXASOL export to pandas performance may vary depending on the randomness of the data set. It highly depends on pandas CSV reader.
-5. PyEXASOL fetch and export with ZLIB compression is very good for slow network scenarios, but it is bad for fast networks.
-6. PyEXASOL parallel export beats everything else because it fully utilizes multiple CPU cores.
+4. PyExasol export to pandas performance may vary depending on the randomness of the data set. It highly depends on pandas CSV reader.
+5. PyExasol fetch and export with ZLIB compression is very good for slow network scenarios, but it is bad for fast networks.
+6. PyExasol parallel export beats everything else because it fully utilizes multiple CPU cores.
 
 How to Run Your Own Test
 ------------------------
 
-I strongly encourage you to run your own performance tests. You may use test scripts provided with PyEXASOL as the starting point. Make sure to use your production Exasol cluster for tests. Please do not use Exasol running in Docker locally, it eliminates the whole point of testing.
+I strongly encourage you to run your own performance tests. You may use test scripts provided with PyExasol as the starting point. Make sure to use your production Exasol cluster for tests. Please do not use Exasol running in Docker locally, it eliminates the whole point of testing.
 
-1. Install PyODBC, TurbODBC, PyEXASOL, pandas.
+1. Install PyODBC, TurbODBC, PyExasol, pandas.
 2. Install Exasol ODBC driver.
-3. Download `PyEXASOL source code <https://github.com/exasol/pyexasol/archive/master.zip>`_ and unzip it.
+3. Download `PyExasol source code <https://github.com/exasol/pyexasol/archive/master.zip>`_ and unzip it.
 4. Open `/performance/` directory and edit the file `_config.py`. Input your Exasol credentials, set table name, and other settings. Set the path to the ODBC driver.
 5. (Optional) Run the script to prepare the data set for testing:
 

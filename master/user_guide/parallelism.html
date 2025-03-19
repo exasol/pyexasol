@@ -2,7 +2,7 @@
 <html lang="en" data-accent-color="grass" data-content_root="../">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Parallelism in PyEXASOL - pyexasol</title><link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Snapshot transactions" href="snapshot_transactions.html" /><link rel="prev" title="Local config" href="local_config.html" /><script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Parallelism in PyExasol - pyexasol</title><link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Snapshot transactions" href="snapshot_transactions.html" /><link rel="prev" title="Local config" href="local_config.html" /><script>
     function setColorMode(t){let e=document.documentElement;e.setAttribute("data-color-mode",t);let a=window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches,s=t;"auto"===t&&(s=a?"dark":"light"),"light"===s?(e.classList.remove("dark"),e.classList.add("light")):(e.classList.remove("light"),e.classList.add("dark"))}
     setColorMode(localStorage._theme||"auto");
   </script><link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=397bb51e" />
@@ -11,7 +11,7 @@
     <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
     <link media="print" rel="stylesheet" type="text/css" href="../_static/print.css?v=20ff2c19" />
     
-    <meta property="og:type" content="website"/><meta property="og:title" content="Parallelism in PyEXASOL"/>
+    <meta property="og:type" content="website"/><meta property="og:title" content="Parallelism in PyExasol"/>
 <meta name="twitter:card" content="summary"/>
   </head>
 <body><div class="sy-head">
@@ -71,7 +71,7 @@ data-aria-dark="Switch to auto color mode">
 <li class="toctree-l2"><a class="reference internal" href="http_transport_parallel.html">HTTP Transport (parallel)</a></li>
 <li class="toctree-l2"><a class="reference internal" href="udf_script_output.html">UDF Script Output</a></li>
 <li class="toctree-l2"><a class="reference internal" href="local_config.html">Local config</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="#">Parallelism in PyEXASOL</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Parallelism in PyExasol</a></li>
 <li class="toctree-l2"><a class="reference internal" href="snapshot_transactions.html">Snapshot transactions</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sql_formatting.html">SQL Formatting</a></li>
 <li class="toctree-l2"><a class="reference internal" href="dbapi.html">DB-API 2.0 Compatibility</a></li>
@@ -159,7 +159,7 @@ data-aria-dark="Switch to auto color mode">
         <span>/</span>
         <meta itemprop="position" content="2" />
       </li><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
-        <strong itemprop="name">Parallelism in PyEXASOL</strong>
+        <strong itemprop="name">Parallelism in PyExasol</strong>
         <meta itemprop="position" content="3" />
       </li></ol>
     <div class="xl:hidden ml-1">
@@ -173,20 +173,20 @@ data-aria-dark="Switch to auto color mode">
       <div class="min-w-0 max-w-6xl px-6 pb-6 pt-8 xl:px-12">
         <article class="yue" role="main">
           <section id="parallelism-in-pyexasol">
-<h1>Parallelism in PyEXASOL<a class="headerlink" href="#parallelism-in-pyexasol" title="Link to this heading">¶</a></h1>
+<h1>Parallelism in PyExasol<a class="headerlink" href="#parallelism-in-pyexasol" title="Link to this heading">¶</a></h1>
 <section id="fundamentals">
 <h2>Fundamentals:<a class="headerlink" href="#fundamentals" title="Link to this heading">¶</a></h2>
 <ul class="simple">
 <li><p>1 Exasol session can run only 1 SQL query in parallel.</p></li>
-<li><p>1 PyEXASOL connection equals 1 Exasol session.</p></li>
-<li><p><a class="reference external" href="https://www.python.org/dev/peps/pep-0249/#threadsafety">threadsafety</a> level of PyEXASOL is <cite>1</cite> (threads may share the module, but not connections).</p></li>
+<li><p>1 PyExasol connection equals 1 Exasol session.</p></li>
+<li><p><a class="reference external" href="https://www.python.org/dev/peps/pep-0249/#threadsafety">threadsafety</a> level of PyExasol is <cite>1</cite> (threads may share the module, but not connections).</p></li>
 </ul>
 </section>
 <section id="best-practices">
 <h2>Best practices<a class="headerlink" href="#best-practices" title="Link to this heading">¶</a></h2>
 <p>In practice, it means you have two possible options to achieve parallelism:</p>
 <ol class="arabic simple">
-<li><p>Start multiple independent processes using <cite>multiprocessing</cite>, <cite>subprocess</cite> or similar modules. Each process should open its own PyEXASOL connection <strong>after start</strong>.</p></li>
+<li><p>Start multiple independent processes using <cite>multiprocessing</cite>, <cite>subprocess</cite> or similar modules. Each process should open its own PyExasol connection <strong>after start</strong>.</p></li>
 <li><p>Use <a class="reference internal" href="http_transport_parallel.html#http-transport-parallel"><span class="std std-ref">HTTP Transport (parallel)</span></a> to run 1 SQL query, but read or write actual data using multiple processes.</p></li>
 </ol>
 <p>All other options are inefficient or prone to errors.</p>
@@ -194,9 +194,9 @@ data-aria-dark="Switch to auto color mode">
 <section id="known-problems-when-trying-to-use-other-options">
 <h2>Known problems when trying to use other options<a class="headerlink" href="#known-problems-when-trying-to-use-other-options" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p>Re-using one PyEXASOL connection in multiple threads will cause an exception.</p></li>
-<li><p>Opening multiple PyEXASOL connections in multiple threads will work, but you will experience a bottleneck in data processing. Your script will be bound by 1 CPU core due to GIL.</p></li>
-<li><p>Re-using one PyEXASOL connection in multiple processes will fail due to SSL context going out of sync.</p></li>
+<li><p>Re-using one PyExasol connection in multiple threads will cause an exception.</p></li>
+<li><p>Opening multiple PyExasol connections in multiple threads will work, but you will experience a bottleneck in data processing. Your script will be bound by 1 CPU core due to GIL.</p></li>
+<li><p>Re-using one PyExasol connection in multiple processes will fail due to SSL context going out of sync.</p></li>
 </ul>
 </section>
 <section id="parallelism-limitations">

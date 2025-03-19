@@ -2,7 +2,7 @@
 <html lang="en" data-accent-color="grass" data-content_root="../">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Snapshot transactions - pyexasol</title><link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="SQL Formatting" href="sql_formatting.html" /><link rel="prev" title="Parallelism in PyEXASOL" href="parallelism.html" /><script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Snapshot transactions - pyexasol</title><link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="SQL Formatting" href="sql_formatting.html" /><link rel="prev" title="Parallelism in PyExasol" href="parallelism.html" /><script>
     function setColorMode(t){let e=document.documentElement;e.setAttribute("data-color-mode",t);let a=window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches,s=t;"auto"===t&&(s=a?"dark":"light"),"light"===s?(e.classList.remove("dark"),e.classList.add("light")):(e.classList.remove("light"),e.classList.add("dark"))}
     setColorMode(localStorage._theme||"auto");
   </script><link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=397bb51e" />
@@ -71,7 +71,7 @@ data-aria-dark="Switch to auto color mode">
 <li class="toctree-l2"><a class="reference internal" href="http_transport_parallel.html">HTTP Transport (parallel)</a></li>
 <li class="toctree-l2"><a class="reference internal" href="udf_script_output.html">UDF Script Output</a></li>
 <li class="toctree-l2"><a class="reference internal" href="local_config.html">Local config</a></li>
-<li class="toctree-l2"><a class="reference internal" href="parallelism.html">Parallelism in PyEXASOL</a></li>
+<li class="toctree-l2"><a class="reference internal" href="parallelism.html">Parallelism in PyExasol</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">Snapshot transactions</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sql_formatting.html">SQL Formatting</a></li>
 <li class="toctree-l2"><a class="reference internal" href="dbapi.html">DB-API 2.0 Compatibility</a></li>
@@ -178,7 +178,7 @@ data-aria-dark="Switch to auto color mode">
 <li><p><a class="reference external" href="https://exasol.my.site.com/s/article/WAIT-FOR-COMMIT-on-SELECT-statement?language=en_US">WAIT FOR COMMIT on SELECT statement</a></p></li>
 </ul>
 <p>The most common locking problem is related to metadata selects from system views (tables, column, object sizes, etc.). JDBC and ODBC drivers provide special non-blocking calls for common metadata requests: getTables(), getColumns(). But there are no such calls for WebSocket drivers.</p>
-<p>The only way to access metadata in non-blocking manner with PyEXASOL is an internal feature called “Snapshot Transactions”. Details are limited, but we managed to find out a few things:</p>
+<p>The only way to access metadata in non-blocking manner with PyExasol is an internal feature called “Snapshot Transactions”. Details are limited, but we managed to find out a few things:</p>
 <ol class="arabic simple">
 <li><p>ExaPlus client uses snapshot transactions to access system views in separate META-session;</p></li>
 <li><p>Snapshot transactions are read-only. Connection will crash instantly on any write attempt;</p></li>
@@ -205,7 +205,7 @@ data-aria-dark="Switch to auto color mode">
     <a href="parallelism.html">
       <i class="i-lucide chevron-left"></i>
       <div class="page-info">
-        <span>Previous</span><div class="title">Parallelism in PyEXASOL</div></div>
+        <span>Previous</span><div class="title">Parallelism in PyExasol</div></div>
     </a>
   </div><div class="navigation-next">
     <a href="sql_formatting.html">

@@ -71,7 +71,7 @@ data-aria-dark="Switch to auto color mode">
 <li class="toctree-l2"><a class="reference internal" href="../../user_guide/http_transport_parallel.html">HTTP Transport (parallel)</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../user_guide/udf_script_output.html">UDF Script Output</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../user_guide/local_config.html">Local config</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../user_guide/parallelism.html">Parallelism in PyEXASOL</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/parallelism.html">Parallelism in PyExasol</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../user_guide/snapshot_transactions.html">Snapshot transactions</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../user_guide/sql_formatting.html">SQL Formatting</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../user_guide/dbapi.html">DB-API 2.0 Compatibility</a></li>
@@ -664,7 +664,7 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="453">    <span class="k">def</span><span class="w"> </span><span class="nf">_check_duplicate_col_names</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 </span><span data-line="454"><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 </span><span data-line="455"><span class="sd">        Exasol allows duplicate names in result sets, but it leads to various problems related to dictionaries</span>
-</span><span data-line="456"><span class="sd">        PyEXASOL adds additional check to prevent such problems and to allow safe .columns() and fetch_dict=True</span>
+</span><span data-line="456"><span class="sd">        PyExasol adds additional check to prevent such problems and to allow safe .columns() and fetch_dict=True</span>
 </span><span data-line="457"><span class="sd">        &quot;&quot;&quot;</span>
 </span><span data-line="458">        <span class="n">duplicate_col_names</span> <span class="o">=</span> <span class="p">[</span>
 </span><span data-line="459">            <span class="n">k</span> <span class="k">for</span> <span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span> <span class="ow">in</span> <span class="n">collections</span><span class="o">.</span><span class="n">Counter</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">col_names</span><span class="p">)</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">v</span> <span class="o">&gt;</span> <span class="mi">1</span>
