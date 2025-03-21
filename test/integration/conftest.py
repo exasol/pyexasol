@@ -11,10 +11,26 @@ from pathlib import Path
 import pytest
 
 import pyexasol
+from noxconfig import CONTAINER_NAME
 from pyexasol import ExaConnection
 
 _ROOT: Path = Path(__file__).parent
 DATA_DIRECTORY = _ROOT / ".." / "data"
+
+
+@pytest.fixture(scope="session")
+def certificate(tmp_path_factory) -> Path:
+    tmp_dir = tmp_path_factory.mktemp("certificate")
+    file_path = tmp_dir / "rootCA.crt"
+
+    command = ["docker", "cp", f"{CONTAINER_NAME}:/certificates/rootCA.crt", file_path]
+    subprocess.run(
+        command,
+        check=True,
+        text=True,
+        capture_output=True,
+    )
+    return file_path
 
 
 @pytest.fixture(scope="session")
@@ -61,13 +77,15 @@ def schema():
 @pytest.fixture(
     scope="session",
     params=[
-        {"cert_reqs": ssl.CERT_NONE},
-        {"cert_reqs": ssl.CERT_REQUIRED, "ca_certs": DATA_DIRECTORY / "rootCA.crt"},
+        ssl.CERT_NONE,
+        ssl.CERT_REQUIRED,
     ],
     ids=["NO_CERT", "WITH_CERT"],
 )
-def websocket_sslopt(request):
-    return request.param
+def websocket_sslopt(request, certificate):
+    if request.param == ssl.CERT_NONE:
+        return {"cert_reqs": request.param}
+    return {"cert_reqs": request.param, "ca_certs": certificate}
 
 
 @pytest.fixture(scope="session")

@@ -33,12 +33,6 @@ def start_test_db(
         "4GB",
         external=True,
     )
-    session.run(
-        "docker",
-        "cp",
-        f"{CONTAINER_NAME}:/certificates/rootCA.crt",
-        f"{Path(__file__).parent}/test/data/rootCA.crt",
-    )
 
 
 def stop_test_db(session: Session) -> None:
