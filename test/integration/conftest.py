@@ -11,7 +11,6 @@ from pathlib import Path
 import pytest
 
 import pyexasol
-from noxconfig import CONTAINER_NAME
 from pyexasol import ExaConnection
 
 _ROOT: Path = Path(__file__).parent
@@ -19,11 +18,16 @@ DATA_DIRECTORY = _ROOT / ".." / "data"
 
 
 @pytest.fixture(scope="session")
-def certificate(tmp_path_factory) -> Path:
+def container_name():
+    return "db_container_test"
+
+
+@pytest.fixture(scope="session")
+def certificate(tmp_path_factory, container_name) -> Path:
     tmp_dir = tmp_path_factory.mktemp("certificate")
     file_path = tmp_dir / "rootCA.crt"
 
-    command = ["docker", "cp", f"{CONTAINER_NAME}:/certificates/rootCA.crt", file_path]
+    command = ["docker", "cp", f"{container_name}:/certificates/rootCA.crt", file_path]
     subprocess.run(
         command,
         check=True,
@@ -133,12 +137,12 @@ def flush_statistics(connection):
 
 
 @pytest.fixture(scope="session", autouse=True)
-def prepare_database(dsn_resolved, user, password):
+def prepare_database(dsn_resolved, user, password, container_name):
     loader = DockerDataLoader(
         dsn=dsn_resolved,
         username=user,
         password=password,
-        container_name="db_container_test",
+        container_name=container_name,
         data_directory=DATA_DIRECTORY,
     )
     loader.load()
