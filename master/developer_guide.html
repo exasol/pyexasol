@@ -214,6 +214,13 @@ data-aria-dark="Switch to auto color mode">
 <div class="admonition attention">
 <p class="admonition-title">Attention</p>
 <p>As a Docker container with a test databases needs to be started for the integration tests, it may take a bit before the tests themselves start executing. After the tests have been run, the database will be shut down again.</p>
+<p>If you are running Docker inside of a VM and are running the integration tests with <cite>ssl.CERT_REQUIRED</cite>, inside your VM map the <cite>exasol-test-database</cite> to the associated IP address.
+This mapping is required due to how the certificate was created &amp; for hostname resolution.</p>
+<blockquote>
+<div><div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;127.0.0.1 exasol-test-database&quot;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>sudo<span class="w"> </span>tee<span class="w"> </span>-a<span class="w"> </span>/etc/hosts
+</span></pre></div>
+</div>
+</div></blockquote>
 </div>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span data-line="1">nox<span class="w"> </span>-s<span class="w"> </span>test:integration
 </span></pre></div>

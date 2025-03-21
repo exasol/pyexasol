@@ -47,6 +47,13 @@ Integration Tests
 
    As a Docker container with a test databases needs to be started for the integration tests, it may take a bit before the tests themselves start executing. After the tests have been run, the database will be shut down again.
 
+   If you are running Docker inside of a VM and are running the integration tests with `ssl.CERT_REQUIRED`, inside your VM map the `exasol-test-database` to the associated IP address.
+   This mapping is required due to how the certificate was created & for hostname resolution.
+
+    .. code-block:: shell
+
+        echo "127.0.0.1 exasol-test-database" | sudo tee -a /etc/hosts
+
 .. code-block:: shell
 
     nox -s test:integration

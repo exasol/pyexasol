@@ -42,6 +42,7 @@ reflect your organization's needs.
         ```shell
         git config blame.ignoreRevsFile .git-blame-ignore-revs
         ```
+* #181: Modified integration tests to run also with `ssl.CERT_REQUIRED`
 
 ## 📚 Documentation
 
