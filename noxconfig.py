@@ -5,39 +5,54 @@ from pathlib import Path
 from typing import Iterable
 
 from exasol.toolbox.nox.plugin import hookimpl
+from nox import Session
 
+DEFAULT_PORT = 8563
 DEFAULT_DB_VERSION = "8.31.0"
+CONTAINER_SUFFIX = "test"
+CONTAINER_NAME = f"db_container_{CONTAINER_SUFFIX}"
+
+
+def start_test_db(
+    session: Session, port: int = DEFAULT_PORT, db_version: str = DEFAULT_DB_VERSION
+) -> None:
+    # For Docker in a VM setup, refer to the ``doc/user_guide/developer_guide.rst``
+    session.run(
+        "itde",
+        "spawn-test-environment",
+        "--create-certificates",
+        "--environment-name",
+        CONTAINER_SUFFIX,
+        "--database-port-forward",
+        f"{port}",
+        "--bucketfs-port-forward",
+        "2580",
+        "--docker-db-image-version",
+        db_version,
+        "--db-mem-size",
+        "4GB",
+        external=True,
+    )
+
+
+def stop_test_db(session: Session) -> None:
+    session.run("docker", "kill", CONTAINER_NAME, external=True)
 
 
 class StartDB:
 
     @hookimpl
     def pre_integration_tests_hook(self, session, config, context):
-        port = context.get("port", 8563)
+        port = context.get("port", DEFAULT_PORT)
         db_version = context.get("db_version", DEFAULT_DB_VERSION)
-        session.run(
-            "itde",
-            "spawn-test-environment",
-            "--create-certificates",
-            "--environment-name",
-            "test",
-            "--database-port-forward",
-            f"{port}",
-            "--bucketfs-port-forward",
-            "2580",
-            "--docker-db-image-version",
-            db_version,
-            "--db-mem-size",
-            "4GB",
-            external=True,
-        )
+        start_test_db(session=session, port=port, db_version=db_version)
 
 
 class StopDB:
 
     @hookimpl
     def post_integration_tests_hook(self, session, config, context):
-        session.run("docker", "kill", "db_container_test", external=True)
+        stop_test_db(session=session)
 
 
 @dataclass(frozen=True)

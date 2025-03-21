@@ -10,11 +10,13 @@ import nox
 from exasol.toolbox.nox.tasks import *  # pylint: disable=wildcard-import disable=unused-wildcard-import
 from nox import Session
 
-import noxconfig
+from noxconfig import (
+    start_test_db,
+    stop_test_db,
+)
 
 # default actions to be run if nothing is explicitly specified with the -s option
 nox.options.sessions = ["project:fix"]
-
 
 __all__ = [
     "unit_tests",
@@ -39,28 +41,13 @@ def _test_command(path: Path) -> Iterable[str]:
 @nox.session(name="db:start", python=False)
 def start_db(session: Session) -> None:
     """Start a test database"""
-
-    session.run(
-        "itde",
-        "spawn-test-environment",
-        "--environment-name",
-        "test",
-        "--database-port-forward",
-        "8563",
-        "--bucketfs-port-forward",
-        "2580",
-        "--docker-db-image-version",
-        noxconfig.DEFAULT_DB_VERSION,
-        "--db-mem-size",
-        "4GB",
-        external=True,
-    )
+    start_test_db(session=session)
 
 
 @nox.session(name="db:stop", python=False)
 def stop_db(session: Session) -> None:
     """Stop the test database"""
-    session.run("docker", "kill", "db_container_test", external=True)
+    stop_test_db(session=session)
 
 
 @nox.session(name="db:import", python=False)

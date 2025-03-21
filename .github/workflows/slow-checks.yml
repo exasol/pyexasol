@@ -38,6 +38,9 @@ jobs:
       - name: "Install all extras"
         run: poetry install --all-extras
 
+      - name: "Setup custom host"
+        run: echo "127.0.0.1 exasol-test-database" | sudo tee -a /etc/hosts
+
       - name: Run Tests and Collect Coverage
         run: poetry run nox -s test:integration -- -- --coverage --db-version ${{ matrix.exasol-version }}
 

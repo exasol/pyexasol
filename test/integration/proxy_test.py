@@ -1,4 +1,5 @@
 import platform
+import ssl
 import subprocess
 
 import pytest
@@ -56,9 +57,19 @@ def test_connect_through_proxy(connection_factory, proxy):
         assert expected == actual
 
 
-@pytest.mark.configuration
-def test_connect_through_proxy_without_resolving_host_names(connection_factory, proxy):
-    with connection_factory(http_proxy=proxy, resolve_hostnames=False) as con:
+def test_connect_through_proxy_without_resolving_host_names(
+    dsn_resolved, user, password, schema, proxy
+):
+    # cannot run with unresolved host name, as resolution turned off
+    with pyexasol.connect(
+        dsn=dsn_resolved,
+        user=user,
+        password=password,
+        schema=schema,
+        websocket_sslopt={"cert_reqs": ssl.CERT_NONE},
+        http_proxy=proxy,
+        resolve_hostnames=False,
+    ) as con:
         result = con.execute("SELECT 1;")
         expected = 1
         actual = result.fetchval()

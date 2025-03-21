@@ -13,6 +13,29 @@ import pytest
 import pyexasol
 from pyexasol import ExaConnection
 
+_ROOT: Path = Path(__file__).parent
+DATA_DIRECTORY = _ROOT / ".." / "data"
+
+
+@pytest.fixture(scope="session")
+def container_name():
+    return "db_container_test"
+
+
+@pytest.fixture(scope="session")
+def certificate(tmp_path_factory, container_name) -> Path:
+    tmp_dir = tmp_path_factory.mktemp("certificate")
+    file_path = tmp_dir / "rootCA.crt"
+
+    command = ["docker", "cp", f"{container_name}:/certificates/rootCA.crt", file_path]
+    subprocess.run(
+        command,
+        check=True,
+        text=True,
+        capture_output=True,
+    )
+    return file_path
+
 
 @pytest.fixture(scope="session")
 def db_version(connection_factory):
@@ -31,8 +54,13 @@ def db_major_version(db_version):
 
 
 @pytest.fixture(scope="session")
-def dsn():
+def dsn_resolved():
     return os.environ.get("EXAHOST", "localhost:8563")
+
+
+@pytest.fixture(scope="session")
+def dsn():
+    return os.environ.get("EXAHOST", "exasol-test-database:8563")
 
 
 @pytest.fixture(scope="session")
@@ -50,11 +78,18 @@ def schema():
     return os.environ.get("EXASCHEMA", "PYEXASOL_TEST")
 
 
-@pytest.fixture(scope="session")
-def websocket_sslopt():
-    # For CI usage of Docker containers, we disable strict certification
-    # verification.
-    return {"cert_reqs": ssl.CERT_NONE}
+@pytest.fixture(
+    scope="session",
+    params=[
+        ssl.CERT_NONE,
+        ssl.CERT_REQUIRED,
+    ],
+    ids=["NO_CERT", "WITH_CERT"],
+)
+def websocket_sslopt(request, certificate):
+    if request.param == ssl.CERT_NONE:
+        return {"cert_reqs": request.param}
+    return {"cert_reqs": request.param, "ca_certs": certificate}
 
 
 @pytest.fixture(scope="session")
@@ -102,14 +137,13 @@ def flush_statistics(connection):
 
 
 @pytest.fixture(scope="session", autouse=True)
-def prepare_database(dsn, user, password):
-    data_directory = Path(__file__).parent / ".." / "data"
+def prepare_database(dsn_resolved, user, password, container_name):
     loader = DockerDataLoader(
-        dsn=dsn,
+        dsn=dsn_resolved,
         username=user,
         password=password,
-        container_name="db_container_test",
-        data_directory=data_directory,
+        container_name=container_name,
+        data_directory=DATA_DIRECTORY,
     )
     loader.load()
 

@@ -136,10 +136,11 @@ def test_process_dsn_with_fingerprint(connection_mock):
     assert actual == expected
 
 
-def test_init_ws_connects_via_ipaddress(connection_mock):
+def test_init_ws_connects_via_ipaddress(connection_mock, websocket_sslopt):
     connection_mock.simulate_resolve_hostname("localhost", ["ip1"])
     connection_mock.init_ws()
-    ssl_options = {"cert_reqs": ssl.CERT_NONE, "server_hostname": "localhost"}
+    ssl_options = websocket_sslopt.copy()
+    ssl_options["server_hostname"] = "localhost"
     connection_mock.assert_websocket_created(
         "wss://ip1:8563",
         timeout=10,
@@ -158,30 +159,29 @@ def test_init_ws_connects_without_encryption(connection_mock):
     )
 
 
-def test_init_ws_connects_without_encryption_via_hostname(connection_mock):
+def test_init_ws_connects_without_encryption_via_hostname(connection_mock, dsn):
     connection_mock.connection.options["encryption"] = False
     connection_mock.connection.options["resolve_hostnames"] = False
     connection_mock.simulate_resolve_hostname("localhost", ["ip1"])
     connection_mock.init_ws()
     connection_mock.assert_websocket_created(
-        "ws://localhost:8563",
+        f"ws://{dsn}",
         timeout=10,
         skip_utf8_validation=True,
         enable_multithread=True,
     )
 
 
-def test_init_ws_connects_via_hostname(connection_mock):
+def test_init_ws_connects_via_hostname(connection_mock, dsn, websocket_sslopt):
     connection_mock.connection.options["resolve_hostnames"] = False
     connection_mock.simulate_resolve_hostname("localhost", ["ip1"])
     connection_mock.init_ws()
-    ssl_options = {"cert_reqs": ssl.CERT_NONE}
     connection_mock.assert_websocket_created(
-        "wss://localhost:8563",
+        f"wss://{dsn}",
         timeout=10,
         skip_utf8_validation=True,
         enable_multithread=True,
-        sslopt=ssl_options,
+        sslopt=websocket_sslopt,
     )
 
 

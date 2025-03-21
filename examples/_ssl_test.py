@@ -7,7 +7,7 @@ printer = pprint.PrettyPrinter(indent=4, width=140)
 
 
 with pyexasol.connect(
-    dsn="exasol-test-database:8888",
+    dsn="exasol-test-database:8563",
     user="sys",
     password="exasol",
     encryption=True,

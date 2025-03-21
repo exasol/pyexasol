@@ -35,7 +35,7 @@ jobs:
       - name: "Start test db"
         run: >
           poetry run itde spawn-test-environment --environment-name ssl
-          --database-port-forward 8888 --bucketfs-port-forward 2580 
+          --database-port-forward 8563 --bucketfs-port-forward 2580 
           --docker-db-image-version ${{ matrix.exasol-version }} --db-mem-size 4GB
           --create-certificates
 
