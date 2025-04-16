@@ -75,7 +75,7 @@ pytest = ">=7.0.0,<9"
 docutils = "0.20.1"
 exasol-integration-test-docker-environment = "^3.0.0"
 faker = "^24.14.1"
-exasol-toolbox = ">=0.20.0"
+exasol-toolbox = "^1.0.0"
 
 [tool.black]
 line-length = 88

@@ -2,9 +2,6 @@ name: Merge-Gate
 
 on:
   workflow_call:
-    secrets:
-      ALTERNATIVE_GITHUB_TOKEN:
-        required: false
 
 jobs:
 
@@ -25,7 +22,7 @@ jobs:
   # This job ensures inputs have been executed successfully.
   approve-merge:
     name: Allow Merge
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     # If you need additional jobs to be part of the merge gate, add them below
     needs: [ fast-checks, slow-checks, examples, ssl_cert ]
 

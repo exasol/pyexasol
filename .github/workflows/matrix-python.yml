@@ -17,14 +17,14 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Setup Python & Poetry Environment
-        uses: exasol/python-toolbox/.github/actions/python-environment@0.20.0
+        uses: exasol/python-toolbox/.github/actions/python-environment@1.0.1
 
       - name: Generate matrix
-        run: poetry run nox -s matrix:python
+        run: poetry run -- nox -s matrix:python
 
       - id: set-matrix
         run: |
-          echo "matrix=$(poetry run nox -s matrix:python)" >> $GITHUB_OUTPUT
+          echo "matrix=$(poetry run -- nox -s matrix:python)" >> $GITHUB_OUTPUT
 
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
