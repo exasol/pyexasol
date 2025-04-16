@@ -34,7 +34,7 @@ jobs:
 
       - name: "Start test db"
         run: >
-          poetry run itde spawn-test-environment --environment-name ssl
+          poetry run -- itde spawn-test-environment --environment-name ssl
           --database-port-forward 8563 --bucketfs-port-forward 2580 
           --docker-db-image-version ${{ matrix.exasol-version }} --db-mem-size 4GB
           --create-certificates
@@ -46,4 +46,4 @@ jobs:
         run: echo "127.0.0.1 exasol-test-database" | sudo tee -a /etc/hosts
 
       - name: "Run test"
-        run: poetry run python examples/_ssl_test.py
+        run: poetry run -- python examples/_ssl_test.py

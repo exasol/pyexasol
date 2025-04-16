@@ -27,7 +27,7 @@ _ROOT: Path = Path(__file__).parent
 
 
 def _test_command(path: Path) -> Iterable[str]:
-    base_command = ["poetry", "run"]
+    base_command = ["poetry", "run", "--"]
     pytest_command = [
         "pytest",
         "-v",
