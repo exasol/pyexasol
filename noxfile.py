@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import sys
 from pathlib import Path
 from typing import Iterable
 
@@ -23,18 +24,6 @@ __all__ = [
 ]
 
 _ROOT: Path = Path(__file__).parent
-
-
-def _test_command(path: Path) -> Iterable[str]:
-    base_command = ["poetry", "run", "--"]
-    pytest_command = [
-        "pytest",
-        "-v",
-        "--log-level=INFO",
-        "--log-cli-level=INFO",
-        f"{path}",
-    ]
-    return base_command + pytest_command
 
 
 @nox.session(name="db:start", python=False)
@@ -67,6 +56,3 @@ def import_data(session: Session) -> None:
         data_directory=data_dir,
     )
     loader.load()
-
-
-# Import documentation related nox tasks from toolbox
