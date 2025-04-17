@@ -16,14 +16,14 @@ jobs:
           fetch-depth: 0
 
       - name: Setup Python & Poetry Environment
-        uses: exasol/python-toolbox/.github/actions/python-environment@0.20.0
+        uses: exasol/python-toolbox/.github/actions/python-environment@1.0.1
 
       - name: Build Documentation
         run: |
-          poetry run nox -s docs:multiversion
+          poetry run -- nox -s docs:multiversion
 
       - name: Deploy
-        uses: JamesIves/github-pages-deploy-action@v4.6.0
+        uses: JamesIves/github-pages-deploy-action@v4.7.2
         with:
           branch: gh-pages
           folder: .html-documentation

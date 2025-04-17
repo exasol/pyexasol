@@ -1,18 +1,37 @@
-[tool.poetry]
+[project]
 name = "pyexasol"
 version = "0.27.0"
-license = "MIT"
-readme = "README.md"
 description = "Exasol python driver with extra features"
+authors = [
+    {name="Vitaly Markov", email="wild.desu@gmail.com"},
+    {name="Exasol AG", email="opensource@exasol.com"},
+]
+readme = "README.md"
+license = "MIT"
+keywords = [
+    "exasol",
+    "sql",
+    "database",
+    "performance",
+    "websocket",
+    "import",
+    "export"
+]
+dynamic = ["classifiers"]
 
+[project.urls]
+Homepage = "https://www.exasol.com/"
+Documentation = "https://github.com/exasol/pyexasol/"
+Source = "https://github.com/exasol/pyexasol"
+Issues = "https://github.com/exasol/pyexasol/issues"
+Changelog = "https://github.com/exasol/pyexasol/blob/master/CHANGELOG.md"
+
+[tool.poetry]
+requires-poetry = ">=2.1.0"
 packages = [
     { include = "pyexasol" },
     { include = "pyexasol_utils" },
     { include = "exasol" }
-]
-authors = [
-    "Vitaly Markov <wild.desu@gmail.com>",
-    "Exasol AG <opensource@exasol.com>"
 ]
 classifiers = [
     "Development Status :: 5 - Production/Stable",
@@ -25,25 +44,6 @@ classifiers = [
     "Intended Audience :: Developers",
     "Topic :: Database",
 ]
-
-keywords = [
-    "exasol",
-    "sql",
-    "database",
-    "performance",
-    "websocket",
-    "import",
-    "export"
-]
-
-
-[tool.poetry.urls]
-"Homepage" = "https://www.exasol.com/"
-"Documentation" = "https://github.com/exasol/pyexasol/"
-"Source" = "https://github.com/exasol/pyexasol"
-"Issues" = "https://github.com/exasol/pyexasol/issues"
-"Changelog" = "https://github.com/exasol/pyexasol/blob/master/CHANGELOG.md"
-
 
 [tool.poetry.dependencies]
 python = "^3.9.2"
@@ -75,7 +75,7 @@ pytest = ">=7.0.0,<9"
 docutils = "0.20.1"
 exasol-integration-test-docker-environment = "^3.0.0"
 faker = "^24.14.1"
-exasol-toolbox = ">=0.20.0"
+exasol-toolbox = "^1.0.0"
 
 [tool.black]
 line-length = 88
@@ -111,7 +111,7 @@ module = [
 ignore_errors = true
 
 [build-system]
-requires = ["poetry-core"]
+requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.pytest.ini_options]

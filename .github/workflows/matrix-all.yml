@@ -10,21 +10,21 @@ on:
 jobs:
   all_versions:
 
-    runs-on:  ubuntu-24.04
+    runs-on: ubuntu-24.04
 
     steps:
       - name: SCM Checkout
         uses: actions/checkout@v4
 
       - name: Setup Python & Poetry Environment
-        uses: exasol/python-toolbox/.github/actions/python-environment@0.20.0
+        uses: exasol/python-toolbox/.github/actions/python-environment@1.0.1
 
       - name: Generate matrix
-        run: poetry run nox -s matrix:all
+        run: poetry run -- nox -s matrix:all
 
       - id: set-matrix
         run: |
-          echo "matrix=$(poetry run nox -s matrix:all)" >> $GITHUB_OUTPUT
+          echo "matrix=$(poetry run -- nox -s matrix:all)" >> $GITHUB_OUTPUT
 
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}

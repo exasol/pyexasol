@@ -25,7 +25,7 @@ jobs:
         uses: actions/checkout@v2
 
       - name: "Setup Python & Poetry Environment"
-        uses: exasol/python-toolbox/.github/actions/python-environment@0.13.0
+        uses: exasol/python-toolbox/.github/actions/python-environment@1.0.1
         with:
           python-version: ${{ matrix.python-version }}
 
@@ -34,7 +34,7 @@ jobs:
 
       - name: "Start test db"
         run: >
-          poetry run itde spawn-test-environment --environment-name ssl
+          poetry run -- itde spawn-test-environment --environment-name ssl
           --database-port-forward 8563 --bucketfs-port-forward 2580 
           --docker-db-image-version ${{ matrix.exasol-version }} --db-mem-size 4GB
           --create-certificates
@@ -46,4 +46,4 @@ jobs:
         run: echo "127.0.0.1 exasol-test-database" | sudo tee -a /etc/hosts
 
       - name: "Run test"
-        run: poetry run python examples/_ssl_test.py
+        run: poetry run -- python examples/_ssl_test.py
