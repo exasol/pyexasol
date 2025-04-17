@@ -43,6 +43,7 @@ reflect your organization's needs.
         git config blame.ignoreRevsFile .git-blame-ignore-revs
         ```
 * #181: Modified integration tests to run also with `ssl.CERT_REQUIRED`
+* #187: Updated poetry to 2.1.2 & exasol-toolbox to `1.0.1`
 
 ## 📚 Documentation
 
