@@ -1,8 +1,9 @@
-import _config as config
-import pyexasol
 import ssl
 import time
 
+import _config as config
+
+import pyexasol
 
 SLEEP_TIMEOUT = 5
 QUERY_TIMEOUT = 10
@@ -22,8 +23,16 @@ class TEST_JAVA {
 def wait_for_connection():
     while True:
         try:
-            connection = pyexasol.connect(dsn=config.dsn, user=config.user, password=config.password, query_timeout=QUERY_TIMEOUT)
-            connection.execute("CREATE SCHEMA IF NOT EXISTS {schema!i}", {'schema': config.schema})
+            connection = pyexasol.connect(
+                dsn=config.dsn,
+                user=config.user,
+                password=config.password,
+                query_timeout=QUERY_TIMEOUT,
+                websocket_sslopt=config.websocket_sslopt,
+            )
+            connection.execute(
+                "CREATE SCHEMA IF NOT EXISTS {schema!i}", {"schema": config.schema}
+            )
 
             return
         except (pyexasol.ExaError, ssl.SSLError) as e:
@@ -34,7 +43,14 @@ def wait_for_connection():
 def wait_for_java():
     while True:
         try:
-            connection = pyexasol.connect(dsn=config.dsn, user=config.user, password=config.password, schema=config.schema, query_timeout=QUERY_TIMEOUT)
+            connection = pyexasol.connect(
+                dsn=config.dsn,
+                user=config.user,
+                password=config.password,
+                schema=config.schema,
+                query_timeout=QUERY_TIMEOUT,
+                websocket_sslopt=config.websocket_sslopt,
+            )
 
             connection.execute(TEST_JAVA_UDF)
             connection.execute("SELECT test_java(true)")
@@ -45,7 +61,7 @@ def wait_for_java():
             time.sleep(SLEEP_TIMEOUT)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     start_ts = time.time()
 
     # Wait fo connection server to go online

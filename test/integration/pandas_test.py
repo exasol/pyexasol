@@ -1,21 +1,17 @@
-import pytest
-import pyexasol
 from inspect import cleandoc
-import pandas as pd
-from pandas import testing as pd_testing
 from operator import itemgetter
+
+import pandas as pd
+import pytest
+from pandas import testing as pd_testing
+
+import pyexasol
 
 
 @pytest.fixture
-def connection_with_compression(dsn, user, password, schema):
-    with pyexasol.connect(
-        dsn=dsn,
-        user=user,
-        password=password,
-        schema=schema,
-        compression=True,
-    ) as connection:
-        yield connection
+def connection_with_compression(connection_factory):
+    with connection_factory(compression=True) as con:
+        yield con
 
 
 @pytest.fixture
@@ -79,13 +75,16 @@ def test_export_sql_result_to_pandas(connection):
 
     query = "SELECT USER_NAME, USER_ID FROM USERS ORDER BY USER_ID ASC LIMIT 5;"
 
-    expected = pd.DataFrame.from_records(data=[
-        ("Jessica Mccoy", 0),
-        ("Beth James", 1),
-        ("Mrs. Teresa Ryan", 2),
-        ("Tommy Henderson", 3),
-        ("Jessica Christian", 4),
-    ], columns=["USER_NAME", "USER_ID"])
+    expected = pd.DataFrame.from_records(
+        data=[
+            ("Jessica Mccoy", 0),
+            ("Beth James", 1),
+            ("Mrs. Teresa Ryan", 2),
+            ("Tommy Henderson", 3),
+            ("Jessica Christian", 4),
+        ],
+        columns=["USER_NAME", "USER_ID"],
+    )
     actual = connection.export_to_pandas(query)
 
     assert actual.equals(expected)

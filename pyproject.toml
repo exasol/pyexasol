@@ -1,18 +1,37 @@
-[tool.poetry]
+[project]
 name = "pyexasol"
-version = "0.26.0"
-license = "MIT"
-readme = "README.md"
+version = "0.27.0"
 description = "Exasol python driver with extra features"
+authors = [
+    {name="Vitaly Markov", email="wild.desu@gmail.com"},
+    {name="Exasol AG", email="opensource@exasol.com"},
+]
+readme = "README.md"
+license = "MIT"
+keywords = [
+    "exasol",
+    "sql",
+    "database",
+    "performance",
+    "websocket",
+    "import",
+    "export"
+]
+dynamic = ["classifiers"]
 
+[project.urls]
+Homepage = "https://www.exasol.com/"
+Documentation = "https://github.com/exasol/pyexasol/"
+Source = "https://github.com/exasol/pyexasol"
+Issues = "https://github.com/exasol/pyexasol/issues"
+Changelog = "https://github.com/exasol/pyexasol/blob/master/CHANGELOG.md"
+
+[tool.poetry]
+requires-poetry = ">=2.1.0"
 packages = [
     { include = "pyexasol" },
     { include = "pyexasol_utils" },
     { include = "exasol" }
-]
-authors = [
-    "Vitaly Markov <wild.desu@gmail.com>",
-    "Exasol AG <opensource@exasol.com>"
 ]
 classifiers = [
     "Development Status :: 5 - Production/Stable",
@@ -26,27 +45,8 @@ classifiers = [
     "Topic :: Database",
 ]
 
-keywords = [
-    "exasol",
-    "sql",
-    "database",
-    "performance",
-    "websocket",
-    "import",
-    "export"
-]
-
-
-[tool.poetry.urls]
-"Homepage" = "https://www.exasol.com/"
-"Documentation" = "https://github.com/exasol/pyexasol/"
-"Source" = "https://github.com/exasol/pyexasol"
-"Issues" = "https://github.com/exasol/pyexasol/issues"
-"Changelog" = "https://github.com/exasol/pyexasol/blob/master/CHANGELOG.md"
-
-
 [tool.poetry.dependencies]
-python = "^3.9"
+python = "^3.9.2"
 websocket-client = ">=1.0.1"
 pyopenssl = "*"
 rsa = "*"
@@ -77,9 +77,43 @@ pytest = ">=7.0.0,<9"
 docutils = "0.20.1"
 exasol-integration-test-docker-environment = "^3.0.0"
 faker = "^24.14.1"
+exasol-toolbox = "^1.0.0"
+
+[tool.black]
+line-length = 88
+verbose = false
+include = "\\.pyi?$"
+
+[tool.coverage.report]
+fail_under = 15
+
+[tool.isort]
+profile = "black"
+force_grid_wrap = 2
+
+[tool.pylint.master]
+fail-under = 6.0
+
+[tool.pylint.format]
+max-line-length = 88
+max-module-lines = 800
+
+[[tool.mypy.overrides]]
+module = [
+    "exasol.*",
+    "pyexasol.*",
+    "examples.*",
+    "performance.*",
+    "pyexasol_utils.*",
+    "noxfile",
+    "noxconfig",
+    "test.unit.*",
+    "test.integration.*",
+]
+ignore_errors = true
 
 [build-system]
-requires = ["poetry-core"]
+requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.pytest.ini_options]

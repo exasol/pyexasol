@@ -4,22 +4,28 @@ on:
   workflow_call:
 
 jobs:
+  build-matrix:
+    name: Generate Build Matrix
+    uses: ./.github/workflows/matrix-exasol.yml
+
   ssl_cert:
     name: Build SSL-Cert
+    needs: [ build-matrix ]
     # For all containers with versions 7.1.x and older versions 8.y.z of docker-db,
     # there will be a crash if UDFs (User Defined Functions) are utilized.
-    runs-on: ubuntu-20.04
+    runs-on:  ubuntu-24.04
     timeout-minutes: 15
     strategy:
       fail-fast: false
       matrix:
         python-version: ["3.11"]
+        exasol-version: ${{ fromJson(needs.build-matrix.outputs.matrix).exasol-version }}
     steps:
       - name: "Checkout repo"
         uses: actions/checkout@v2
 
       - name: "Setup Python & Poetry Environment"
-        uses: exasol/python-toolbox/.github/actions/python-environment@0.13.0
+        uses: exasol/python-toolbox/.github/actions/python-environment@1.0.1
         with:
           python-version: ${{ matrix.python-version }}
 
@@ -28,9 +34,9 @@ jobs:
 
       - name: "Start test db"
         run: >
-          poetry run itde spawn-test-environment --environment-name ssl
-          --database-port-forward 8888 --bucketfs-port-forward 2580 
-          --docker-db-image-version 7.1.17 --db-mem-size 4GB
+          poetry run -- itde spawn-test-environment --environment-name ssl
+          --database-port-forward 8563 --bucketfs-port-forward 2580 
+          --docker-db-image-version ${{ matrix.exasol-version }} --db-mem-size 4GB
           --create-certificates
 
       - name: "Pull certificate from container"
@@ -40,4 +46,4 @@ jobs:
         run: echo "127.0.0.1 exasol-test-database" | sudo tee -a /etc/hosts
 
       - name: "Run test"
-        run: poetry run python examples/_ssl_test.py
+        run: poetry run -- python examples/_ssl_test.py

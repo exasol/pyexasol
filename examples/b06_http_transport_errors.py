@@ -5,21 +5,29 @@ Edge cases, killing & failing various components at different times
 """
 
 import os
+import pprint
 import shutil
+import threading
 import time
 import traceback
-import threading
 
-import pyexasol
 import _config as config
 
-import pprint
+import pyexasol
+
 printer = pprint.PrettyPrinter(indent=4, width=140)
 
-dev_null = open(os.devnull, 'wb')
+dev_null = open(os.devnull, "wb")
 
 
-C = pyexasol.connect(dsn=config.dsn, user=config.user, password=config.password, schema=config.schema, debug=False)
+C = pyexasol.connect(
+    dsn=config.dsn,
+    user=config.user,
+    password=config.password,
+    schema=config.schema,
+    debug=False,
+    websocket_sslopt=config.websocket_sslopt,
+)
 
 
 ###
@@ -28,14 +36,14 @@ C = pyexasol.connect(dsn=config.dsn, user=config.user, password=config.password,
 
 
 def observer_callback(pipe, dst, **kwargs):
-    print(f'Threads running: {threading.active_count()}')
+    print(f"Threads running: {threading.active_count()}")
     shutil.copyfileobj(pipe, dev_null)
 
     return
 
 
-C.export_to_callback(observer_callback, None, 'SELECT * FROM users LIMIT 1000')
-print('--- Finished Observer callback (normal execution) ---\n')
+C.export_to_callback(observer_callback, None, "SELECT * FROM users LIMIT 1000")
+print("--- Finished Observer callback (normal execution) ---\n")
 
 
 ###
@@ -44,11 +52,11 @@ print('--- Finished Observer callback (normal execution) ---\n')
 
 
 try:
-    C.export_to_callback(observer_callback, None, 'SELECT * FROM usersaaa LIMIT 1000')
+    C.export_to_callback(observer_callback, None, "SELECT * FROM usersaaa LIMIT 1000")
 except Exception as e:
     traceback.print_exc()
 
-print('--- Finished Observer callback (SQL error) ---\n')
+print("--- Finished Observer callback (SQL error) ---\n")
 
 
 ###
@@ -66,11 +74,11 @@ def abort_query_callback(pipe, dst, **kwargs):
 
 
 try:
-    C.export_to_callback(abort_query_callback, None, 'SELECT * FROM users LIMIT 1000')
+    C.export_to_callback(abort_query_callback, None, "SELECT * FROM users LIMIT 1000")
 except pyexasol.ExaError as e:
     traceback.print_exc()
 
-print('--- Finished Abort Query ---\n')
+print("--- Finished Abort Query ---\n")
 
 
 ###
@@ -82,15 +90,15 @@ def runtime_error_callback(pipe, dst, **kwargs):
     pipe.read(10)
     time.sleep(1)
 
-    raise RuntimeError('Test error!')
+    raise RuntimeError("Test error!")
 
 
 try:
-    C.export_to_callback(runtime_error_callback, None, 'SELECT * FROM users LIMIT 1000')
+    C.export_to_callback(runtime_error_callback, None, "SELECT * FROM users LIMIT 1000")
 except Exception as e:
     traceback.print_exc()
 
-print('--- Finished Runtime Error EXPORT Callback ---\n')
+print("--- Finished Runtime Error EXPORT Callback ---\n")
 
 
 ###
@@ -102,15 +110,15 @@ def runtime_error_callback(pipe, src, **kwargs):
     pipe.write(b"a,b,c,d")
     time.sleep(1)
 
-    raise RuntimeError('Test error!')
+    raise RuntimeError("Test error!")
 
 
 try:
-    C.import_from_callback(runtime_error_callback, None, 'users_copy')
+    C.import_from_callback(runtime_error_callback, None, "users_copy")
 except Exception as e:
     traceback.print_exc()
 
-print('--- Finished Runtime Error IMPORT Callback ---\n')
+print("--- Finished Runtime Error IMPORT Callback ---\n")
 
 
 ###
@@ -128,8 +136,10 @@ def close_connection_callback(pipe, dst, **kwargs):
 
 
 try:
-    C.export_to_callback(close_connection_callback, None, 'SELECT * FROM users LIMIT 1000')
+    C.export_to_callback(
+        close_connection_callback, None, "SELECT * FROM users LIMIT 1000"
+    )
 except Exception as e:
     traceback.print_exc()
 
-print('--- Finished Close Connection ---\n')
+print("--- Finished Close Connection ---\n")

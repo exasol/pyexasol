@@ -3,13 +3,21 @@ Basic compatibility with DB-API 2.0
 Suitable for temporary testing only, should not be used in production
 """
 
-import pyexasol.db2
+import pprint
+
 import _config as config
 
-import pprint
+import pyexasol.db2
+
 printer = pprint.PrettyPrinter(indent=4, width=140)
 
-C = pyexasol.db2.connect(dsn=config.dsn, user=config.user, password=config.password, schema=config.schema)
+C = pyexasol.db2.connect(
+    dsn=config.dsn,
+    user=config.user,
+    password=config.password,
+    schema=config.schema,
+    websocket_sslopt=config.websocket_sslopt,
+)
 cur = C.cursor()
 
 # Fetch tuples row-by-row as iterator
@@ -36,5 +44,5 @@ printer.pprint(cur.description)
 printer.pprint(cur.rowcount)
 
 # Autocommit is False by default
-print(C.attr['autocommit'])
+print(C.attr["autocommit"])
 C.commit()

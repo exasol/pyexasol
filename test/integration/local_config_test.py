@@ -1,20 +1,23 @@
-import pytest
-import pyexasol
 from inspect import cleandoc
+
+import pytest
+
+import pyexasol
 
 
 @pytest.fixture
 def config(dsn, user, password, schema):
-    yield cleandoc(f"""
+    yield cleandoc(
+        f"""
     [pyexasol]
     dsn = {dsn}
     user = {user}
     password = {password}
     schema = {schema}
     compression = True
-    encryption = False
     socket_timeout = 20
-    """)
+    """
+    )
 
 
 @pytest.fixture
@@ -26,9 +29,11 @@ def config_file(tmpdir, config):
 
 
 @pytest.mark.configuration
-def test_connect_using_config(config_file):
+def test_connect_using_config(config_file, websocket_sslopt):
     connection = pyexasol.connect_local_config(
-        config_section="pyexasol", config_path=config_file
+        config_section="pyexasol",
+        config_path=config_file,
+        websocket_sslopt=websocket_sslopt,
     )
     result = connection.execute("SELECT 1;")
     expected = [(1,)]

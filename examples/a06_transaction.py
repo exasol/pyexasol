@@ -2,11 +2,19 @@
 Transactions
 """
 
-import pyexasol
 import _config as config
 
+import pyexasol
+
 # Connect with autocommit OFF
-C = pyexasol.connect(dsn=config.dsn, user=config.user, password=config.password, schema=config.schema, autocommit=False)
+C = pyexasol.connect(
+    dsn=config.dsn,
+    user=config.user,
+    password=config.password,
+    schema=config.schema,
+    autocommit=False,
+    websocket_sslopt=config.websocket_sslopt,
+)
 
 # Another way to change autocommit after connection
 C.set_autocommit(False)

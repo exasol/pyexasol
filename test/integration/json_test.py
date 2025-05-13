@@ -1,19 +1,14 @@
 import pytest
+
 import pyexasol
 
 
 @pytest.fixture
-def connection_factory(dsn, user, password, schema):
+def multiple_connection_factory(connection_factory):
     connections = []
 
     def factory(json_lib):
-        con = pyexasol.connect(
-            dsn=dsn,
-            user=user,
-            password=password,
-            schema=schema,
-            json_lib=json_lib,
-        )
+        con = connection_factory(json_lib=json_lib)
         connections.append(con)
         return con
 
@@ -38,8 +33,8 @@ def empty_table(connection, edge_case_ddl):
 
 @pytest.mark.json
 @pytest.mark.parametrize("json_lib", ["orjson", "ujson", "rapidjson"])
-def test_insert(empty_table, connection_factory, edge_cases, json_lib):
-    connection = connection_factory(json_lib)
+def test_insert(empty_table, multiple_connection_factory, edge_cases, json_lib):
+    connection = multiple_connection_factory(json_lib)
     insert_stmt = (
         "INSERT INTO edge_case VALUES"
         "({DEC36_0!d}, {DEC36_36!d}, {DBL!f}, {BL}, {DT}, {TS}, {VAR100}, {VAR2000000})"
@@ -55,8 +50,8 @@ def test_insert(empty_table, connection_factory, edge_cases, json_lib):
 
 @pytest.mark.json
 @pytest.mark.parametrize("json_lib", ["orjson", "ujson", "rapidjson"])
-def test_select(empty_table, connection_factory, edge_cases, json_lib):
-    connection = connection_factory(json_lib)
+def test_select(empty_table, multiple_connection_factory, edge_cases, json_lib):
+    connection = multiple_connection_factory(json_lib)
 
     insert_stmt = (
         "INSERT INTO edge_case VALUES"

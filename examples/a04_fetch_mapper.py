@@ -13,15 +13,23 @@ INTERVAL DAY TO SECOND -> datetime.timedelta (ExaTimeDelta)
 <others>               -> str
 """
 
-import pyexasol
+import pprint
+
 import _config as config
 
-import pprint
+import pyexasol
+
 printer = pprint.PrettyPrinter(indent=4, width=180)
 
 # Basic connect (custom mapper
-C = pyexasol.connect(dsn=config.dsn, user=config.user, password=config.password, schema=config.schema,
-                     fetch_mapper=pyexasol.exasol_mapper)
+C = pyexasol.connect(
+    dsn=config.dsn,
+    user=config.user,
+    password=config.password,
+    schema=config.schema,
+    fetch_mapper=pyexasol.exasol_mapper,
+    websocket_sslopt=config.websocket_sslopt,
+)
 
 # Fetch objects
 stmt = C.execute("SELECT * FROM users ORDER BY user_id LIMIT 5")
@@ -31,12 +39,14 @@ printer.pprint(stmt.fetchall())
 # Please note: Exasol stores timestamps with millisecond precision (3 decimal places)
 # Lack of precision is not a bug, it's the documented feature
 
-for i in range(0, 9):
+for i in range(1, 10):
     C.execute(f"ALTER SESSION SET NLS_TIMESTAMP_FORMAT='YYYY-MM-DD HH24:MI:SS.FF{i}'")
     printer.pprint(C.execute("SELECT TIMESTAMP'2018-01-01 03:04:05.123456'").fetchval())
 
 # Test interval mapping
-stmt = C.execute("SELECT id, from_ts, to_ts, expected_timedelta, cast(to_ts - from_ts as varchar(100)) as expected_interval, to_ts - from_ts AS ts_diff FROM interval_test")
+stmt = C.execute(
+    "SELECT id, from_ts, to_ts, expected_timedelta, cast(to_ts - from_ts as varchar(100)) as expected_interval, to_ts - from_ts AS ts_diff FROM interval_test"
+)
 for row in stmt.fetchall():
     print(f"-------- Interval Test #{row[0]} --------")
     print(f"              FROM: {row[1]}")

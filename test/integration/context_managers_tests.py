@@ -1,20 +1,16 @@
 import pytest
+
 import pyexasol
 from pyexasol import ExaQueryError
 
 
 @pytest.mark.context_managers
-def test_context_manager_for_connections(dsn, user, password, schema):
-    with pyexasol.connect(
-        dsn=dsn,
-        user=user,
-        password=password,
-        schema=schema
-    ) as connection:
-        connection.execute("SELECT 1;")
+def test_context_manager_for_connections(connection_factory):
+    with connection_factory() as con:
+        con.execute("SELECT 1;")
 
     expected = True
-    actual = connection.is_closed
+    actual = con.is_closed
 
     assert actual == expected
 
@@ -33,16 +29,11 @@ def test_context_manager_for_statements(connection):
 
 @pytest.mark.exceptions
 @pytest.mark.context_managers
-def test_context_manger_closes_everything_on_exception(dsn, user, password, schema):
+def test_context_manger_closes_everything_on_exception(connection_factory):
     with pytest.raises(ExaQueryError):
-        with pyexasol.connect(
-            dsn=dsn,
-            user=user,
-            password=password,
-            schema=schema
-        ) as connection:
+        with connection_factory() as con:
             statement = "SELECT * FROM unkown_table_so_query_will_fail LIMIT 5;"
-            with connection.execute(statement) as stmt:
+            with con.execute(statement) as stmt:
                 stmt.fetchall()
 
             expected = True
@@ -50,5 +41,5 @@ def test_context_manger_closes_everything_on_exception(dsn, user, password, sche
             assert actual == expected
 
         expected = True
-        actual = connection.is_closed
+        actual = con.is_closed
         assert actual == expected

@@ -1,53 +1,75 @@
+from inspect import cleandoc
+
 import pytest
-import pyexasol
-
-
-# For the fetch_dict tests we need to configure the connection accordingly (autocommit=False)
-@pytest.fixture
-def connection(dsn, user, password, schema):
-    con = pyexasol.connect(
-        dsn=dsn,
-        user=user,
-        password=password,
-        schema=schema,
-        autocommit=False
-    )
-    yield con
-    con.close()
 
 
 @pytest.mark.transaction
-def test_rollback(connection):
-    count = "SELECT COUNT(*) FROM users;"
-    delete_rows = "TRUNCATE TABLE users;"
-    initial_rowcount = connection.execute(count).fetchval()
+class TestTransaction:
+    @pytest.fixture(scope="class")
+    def connection(self, connection_factory):
+        # We need to configure the connection accordingly (autocommit=False)
+        con = connection_factory(autocommit=False)
+        yield con
+        con.close()
 
-    connection.execute(delete_rows)
-    expected = 0
-    actual = connection.execute(count).fetchval()
-    assert expected == actual
+    @pytest.fixture(scope="class")
+    def table(self, connection):
+        table_name = "cities"
+        ddl = cleandoc(
+            f"""
+        CREATE TABLE IF NOT EXISTS {table_name} (
+            ID DECIMAL(18,0),
+            NAME VARCHAR(255),
+            POSTCODE DECIMAL(18,0)
+        );
+        """
+        )
+        connection.execute(ddl)
+        connection.commit()
 
-    connection.rollback()
+        yield table_name
 
-    actual = connection.execute(count).fetchval()
-    expected = initial_rowcount
+        delete_stmt = f"DROP TABLE IF EXISTS {table_name} CASCADE;"
+        connection.execute(delete_stmt)
+        connection.commit()
 
-    assert expected == actual
+    @pytest.fixture
+    def filled_table(self, connection, table, faker):
+        items = [(i, faker.city(), faker.postcode()) for i in range(0, 1)]
+        connection.ext.insert_multi(table, items)
+        connection.commit()
 
+    def test_rollback(self, connection, table, filled_table):
+        count = f"SELECT COUNT(*) FROM {table};"
+        delete_rows = f"TRUNCATE TABLE {table};"
+        initial_rowcount = connection.execute(count).fetchval()
 
-@pytest.mark.transaction
-def test_commit(connection):
-    count = "SELECT COUNT(*) FROM users;"
-    delete_rows = "TRUNCATE TABLE users;"
-    initial_rowcount = connection.execute(count).fetchval()
+        connection.execute(delete_rows)
+        expected = 0
+        actual = connection.execute(count).fetchval()
+        assert expected == actual
 
-    assert initial_rowcount != 0
+        connection.rollback()
 
-    connection.execute(delete_rows)
-    connection.commit()
-    connection.rollback()
+        actual = connection.execute(count).fetchval()
+        expected = initial_rowcount
 
-    actual = connection.execute(count).fetchval()
-    expected = 0
+        assert expected == actual
 
-    assert expected == actual
+    def test_commit(self, connection, table, filled_table):
+        count = f"SELECT COUNT(*) FROM {table};"
+        delete_rows = f"TRUNCATE TABLE {table};"
+        initial_rowcount = connection.execute(count).fetchval()
+
+        assert initial_rowcount != 0
+
+        connection.execute(delete_rows)
+        connection.commit()
+        connection.rollback()
+
+        actual = connection.execute(count).fetchval()
+        expected = 0
+
+        # prior to assert, undo modification for remaining tests
+
+        assert expected == actual

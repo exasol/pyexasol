@@ -2,12 +2,14 @@
 Attempt to access connection object from multiple threads simultaneously
 """
 
-import pyexasol
-import time
+import pprint
 import threading
+import time
+
 import _config as config
 
-import pprint
+import pyexasol
+
 printer = pprint.PrettyPrinter(indent=4, width=140)
 
 
@@ -19,7 +21,9 @@ class QueryThread(threading.Thread):
     def run(self):
         # Run heavy query
         try:
-            self.connection.execute("SELECT * FROM users a, users b, users c, payments d")
+            self.connection.execute(
+                "SELECT * FROM users a, users b, users c, payments d"
+            )
         except pyexasol.ExaQueryAbortError as e:
             print(e.message)
         except pyexasol.ExaConcurrencyError as e:
@@ -27,7 +31,13 @@ class QueryThread(threading.Thread):
 
 
 # Basic connect
-C = pyexasol.connect(dsn=config.dsn, user=config.user, password=config.password, schema=config.schema)
+C = pyexasol.connect(
+    dsn=config.dsn,
+    user=config.user,
+    password=config.password,
+    schema=config.schema,
+    websocket_sslopt=config.websocket_sslopt,
+)
 
 # Try to run multiple query threads in parallel
 query_thread_1 = QueryThread(C)

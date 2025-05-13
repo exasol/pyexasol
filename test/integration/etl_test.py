@@ -1,13 +1,13 @@
-import pytest
-import pyexasol
 from inspect import cleandoc
+
+import pytest
+
+import pyexasol
 
 
 @pytest.fixture
-def connection(dsn, user, password, schema):
-    with pyexasol.connect(
-        dsn=dsn, user=user, password=password, schema=schema, compression=True
-    ) as con:
+def connection(connection_factory):
+    with connection_factory(compression=True) as con:
         yield con
 
 
@@ -24,7 +24,8 @@ def table(connection):
 @pytest.fixture
 def import_table(connection, table):
     name = f"{table}_IMPORT"
-    ddl = cleandoc(f"""
+    ddl = cleandoc(
+        f"""
     CREATE TABLE IF NOT EXISTS {name}
     (
         user_id         DECIMAL(18,0),
@@ -36,7 +37,8 @@ def import_table(connection, table):
         user_score      DOUBLE,
         status          VARCHAR(50)
     );
-    """)
+    """
+    )
     connection.execute(ddl)
     connection.commit()
 

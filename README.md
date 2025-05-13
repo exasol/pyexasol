@@ -1,7 +1,7 @@
-<h1 align="center">Pyexasol</h1>
+<h1 align="center">PyExasol</h1>
 <p align="center">
-<a href="https://github.com/exasol/pyexasol/actions/workflows/ci-master.yml">
-    <img src="https://github.com/exasol/pyexasol/actions/workflows/ci-master.yml/badge.svg" alt="Continuous Integration (master)">
+<a href="https://github.com/exasol/pyexasol/actions/workflows/pr-merge.yml">
+    <img src="https://github.com/exasol/pyexasol/actions/workflows/pr-merge.yml/badge.svg?branch=master" alt="Continuous Integration (master)">
 </a>
 <a href="https://anaconda.org/conda-forge/pyexasol">
     <img src="https://anaconda.org/conda-forge/pyexasol/badges/version.svg" alt="Anaconda">
@@ -17,33 +17,18 @@
 </a>
 </p>
 
-PyEXASOL is the officially supported Python connector for [Exasol](https://www.exasol.com). It helps to handle massive volumes of data commonly associated with this DBMS.
+PyExasol is the officially supported Python connector for [Exasol](https://www.exasol.com). It helps to handle massive volumes of data commonly associated with this DBMS.
 
 You may expect significant performance improvement over ODBC in a single process scenario involving pandas or polars.
 
-PyEXASOL provides API to read & write multiple data streams in parallel using separate processes, which is necessary to fully utilize hardware and achieve linear scalability. With PyEXASOL you are no longer limited to a single CPU core.
+PyExasol provides API to read & write multiple data streams in parallel using separate processes, which is necessary to fully utilize hardware and achieve linear scalability. With PyExasol you are no longer limited to a single CPU core.
 
+---
+* Documentation: [https://exasol.github.io/pyexasol/](https://exasol.github.io/pyexasol/index.html)
+* Source Code: [https://github.com/exasol/pyexasol](https://github.com/exasol/pyexasol)
+---
 
-## Quick links
-- [Getting started](#getting-started)
-- [Reference](/docs/REFERENCE.md)
-- [Examples](/docs/EXAMPLES.md)
-- [Best practices](/docs/BEST_PRACTICES.md)
-- [Local config (.ini file)](/docs/LOCAL_CONFIG.md)
-- [SQL formatting](/docs/SQL_FORMATTING.md)
-- [HTTP Transport](/docs/HTTP_TRANSPORT.md)
-- [HTTP Transport (multiprocessing)](/docs/HTTP_TRANSPORT_PARALLEL.md)
-- [Parallelism](/docs/PARALLELISM.md)
-- [SSL encryption](/docs/ENCRYPTION.md)
-- [WebSocket protocol versions](/docs/PROTOCOL_VERSION.md)
-- [Performance tests](/docs/PERFORMANCE.md)
-- [UDF scripts output](/docs/SCRIPT_OUTPUT.md)
-- [DB-API 2.0 compatibility](/docs/DBAPI_COMPAT.md)
-- [Optional dependencies](/docs/DEPENDENCIES.md)
-- [Changelog](/CHANGELOG.md)
-
-
-## PyEXASOL main concepts
+## PyExasol main concepts
 
 - Based on [WebSocket protocol](https://github.com/exasol/websocket-api);
 - Optimized for minimum overhead;
@@ -59,7 +44,7 @@ PyEXASOL provides API to read & write multiple data streams in parallel using se
 
 ## Getting started
 
-Install PyEXASOL:
+Install PyExasol:
 ```
 pip install pyexasol[pandas]
 ```
@@ -86,7 +71,7 @@ df = C.export_to_pandas("SELECT * FROM EXA_ALL_USERS")
 print(df.head())
 ```
 
-You may set up [local config](/docs/LOCAL_CONFIG.md) to store your personal Exasol credentials and connection options:
+You may set up `local config` to store your personal Exasol credentials and connection options:
 ```python
 import pyexasol
 
@@ -116,4 +101,3 @@ Enjoy!
 
 ## Maintained by
 [Exasol](https://www.exasol.com) 2023 — Today 
-

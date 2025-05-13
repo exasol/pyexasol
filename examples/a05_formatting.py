@@ -2,27 +2,35 @@
 Format values and identifiers using query_params and pyexasol formatter
 """
 
-import pyexasol
+import pprint
+
 import _config as config
 
-import pprint
+import pyexasol
+
 printer = pprint.PrettyPrinter(indent=4, width=40)
 
 # Basic connect
-C = pyexasol.connect(dsn=config.dsn, user=config.user, password=config.password, schema=config.schema)
+C = pyexasol.connect(
+    dsn=config.dsn,
+    user=config.user,
+    password=config.password,
+    schema=config.schema,
+    websocket_sslopt=config.websocket_sslopt,
+)
 
 # SQL with formatting
 params = {
-    'random_value': 'abc',
-    'null_value': None,
-    'table_name_1': 'users',
-    'table_name_2': (config.schema, 'PAYMENTS'),
-    'user_rating': '0.5',
-    'user_score': 1e1,
-    'is_female': 'TRUE',
-    'user_statuses': ['ACTIVE', 'PASSIVE', 'SUSPENDED'],
-    'exclude_user_score': [10, 20],
-    'limit': 10
+    "random_value": "abc",
+    "null_value": None,
+    "table_name_1": "users",
+    "table_name_2": (config.schema, "PAYMENTS"),
+    "user_rating": "0.5",
+    "user_score": 1e1,
+    "is_female": "TRUE",
+    "user_statuses": ["ACTIVE", "PASSIVE", "SUSPENDED"],
+    "exclude_user_score": [10, 20],
+    "limit": 10,
 }
 
 query = """

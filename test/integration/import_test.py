@@ -1,14 +1,20 @@
 import csv
-import pytest
-import pyexasol
 from inspect import cleandoc
+
+import pytest
+
+import pyexasol
 
 
 @pytest.fixture
-def connection(dsn, user, password, schema):
-    with pyexasol.connect(
-        dsn=dsn, user=user, password=password, schema=schema, compression=True
-    ) as con:
+def connection(connection_factory):
+    with connection_factory(compression=True) as con:
+        yield con
+
+
+@pytest.fixture
+def connection_without_resolving_hostnames(connection_factory):
+    with connection_factory(compression=True, resolve_hostnames=False) as con:
         yield con
 
 
@@ -19,13 +25,15 @@ def table_name():
 
 @pytest.fixture
 def empty_table(connection, table_name):
-    ddl = cleandoc(f"""
+    ddl = cleandoc(
+        f"""
     CREATE TABLE IF NOT EXISTS {table_name}
     (
         FIRSTNAME       VARCHAR(255),
         LASTNAME        VARCHAR(255)
     );
-    """)
+    """
+    )
     connection.execute(ddl)
     connection.commit()
 
@@ -60,6 +68,21 @@ def csv_file(tmp_path, data):
 def test_import_csv(connection, empty_table, csv_file, data):
     connection.import_from_file(csv_file, empty_table)
     result = connection.execute(f"SELECT * FROM {empty_table};")
+
+    expected = set(data)
+    actual = set(result.fetchall())
+
+    assert actual == expected
+
+
+@pytest.mark.etl
+def test_import_without_resolving_hostname(
+    connection_without_resolving_hostnames, empty_table, csv_file, data
+):
+    connection_without_resolving_hostnames.import_from_file(csv_file, empty_table)
+    result = connection_without_resolving_hostnames.execute(
+        f"SELECT * FROM {empty_table};"
+    )
 
     expected = set(data)
     actual = set(result.fetchall())

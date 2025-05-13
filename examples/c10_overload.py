@@ -1,14 +1,15 @@
 """
-Extend core PyEXASOL classes, add custom logic
+Extend core PyExasol classes, add custom logic
 In this example we add print_session_id() custom method to all objects
 """
 
-import pyexasol
+import collections
+import pprint
+
 import _config as config
 
-import collections
+import pyexasol
 
-import pprint
 printer = pprint.PrettyPrinter(indent=4, width=140)
 
 
@@ -46,15 +47,21 @@ class CustomExaConnection(pyexasol.ExaConnection):
     cls_meta = CustomExaMetaData
 
     def __init__(self, **kwargs):
-        if 'custom_param' in kwargs:
+        if "custom_param" in kwargs:
             print(f"Custom connection parameter: {kwargs['custom_param']}")
-            del kwargs['custom_param']
+            del kwargs["custom_param"]
 
         super().__init__(**kwargs)
 
 
-C = CustomExaConnection(dsn=config.dsn, user=config.user, password=config.password, schema=config.schema,
-                        custom_param='test custom param!')
+C = CustomExaConnection(
+    dsn=config.dsn,
+    user=config.user,
+    password=config.password,
+    schema=config.schema,
+    custom_param="test custom param!",
+    websocket_sslopt=config.websocket_sslopt,
+)
 
 stmt = C.execute("SELECT * FROM users ORDER BY user_id LIMIT 5")
 
@@ -77,14 +84,20 @@ class NamedTupleExaStatement(pyexasol.ExaStatement):
 
     def _init_result_set(self, res):
         super()._init_result_set(res)
-        self.cls_row = collections.namedtuple('Row', self.col_names)
+        self.cls_row = collections.namedtuple("Row", self.col_names)
 
 
 class NamedTupleExaConnection(pyexasol.ExaConnection):
     cls_statement = NamedTupleExaStatement
 
 
-C = NamedTupleExaConnection(dsn=config.dsn, user=config.user, password=config.password, schema=config.schema)
+C = NamedTupleExaConnection(
+    dsn=config.dsn,
+    user=config.user,
+    password=config.password,
+    schema=config.schema,
+    websocket_sslopt=config.websocket_sslopt,
+)
 stmt = C.execute("SELECT * FROM users ORDER BY user_id LIMIT 5")
 print(stmt.fetchone())
 print(stmt.fetchone())

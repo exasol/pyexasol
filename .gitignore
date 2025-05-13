@@ -1,7 +1,12 @@
+.coverage
+.lint.txt
+.lint.json
+.security.json
+
 __pycache__/
 *.py[cod]
 *.mypy_cache/
-
+.html-documentation
 
 dist/
 build/

@@ -3,22 +3,31 @@ Extension functions
 Metadata functions are deprecated in favor of new "meta"-functions
 """
 
-import pyexasol
+import pprint
+
 import _config as config
 
-import pprint
+import pyexasol
+
 printer = pprint.PrettyPrinter(indent=4, width=140)
 
 # Basic connect
-C = pyexasol.connect(dsn=config.dsn, user=config.user, password=config.password, schema=config.schema, lower_ident=True)
+C = pyexasol.connect(
+    dsn=config.dsn,
+    user=config.user,
+    password=config.password,
+    schema=config.schema,
+    lower_ident=True,
+    websocket_sslopt=config.websocket_sslopt,
+)
 
-cols = C.ext.get_columns('users')
+cols = C.ext.get_columns("users")
 printer.pprint(cols)
 
-cols = C.ext.get_columns_sql('SELECT * FROM users')
+cols = C.ext.get_columns_sql("SELECT * FROM users")
 printer.pprint(cols)
 
-cols = C.ext.get_sys_columns('users')
+cols = C.ext.get_sys_columns("users")
 printer.pprint(cols)
 
 tables = C.ext.get_sys_tables()

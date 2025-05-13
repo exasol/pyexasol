@@ -9,7 +9,6 @@ import ssl
 from functools import wraps
 
 import pyexasol
-
 from exasol.driver.websocket._cursor import Cursor as DefaultCursor
 from exasol.driver.websocket._errors import Error
 
@@ -95,7 +94,9 @@ class Connection:
             "client_version": client_version,
             "protocol_version": 3,
             "websocket_sslopt": (
-                {"cert_reqs": ssl.CERT_REQUIRED} if certificate_validation else None
+                {"cert_reqs": ssl.CERT_REQUIRED}
+                if certificate_validation
+                else {"cert_reqs": ssl.CERT_NONE}
             ),
             "access_token": None,
             "refresh_token": None,

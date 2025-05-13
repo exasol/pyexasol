@@ -2,7 +2,7 @@ import configparser
 import pathlib
 
 
-class ExaLocalConfig(object):
+class ExaLocalConfig:
     """
     Parse local config file
     Prepare arguments for pyexasol.connect() method
@@ -11,22 +11,22 @@ class ExaLocalConfig(object):
     You may pass such arguments directly in code using **kwargs
     """
 
-    default_filename = '.pyexasol.ini'
+    default_filename = ".pyexasol.ini"
 
     arg_types = {
-        'autocommit': bool,
-        'snapshot_transactions': bool,
-        'socket_timeout': int,
-        'query_timeout': int,
-        'compression': bool,
-        'encryption': bool,
-        'fetch_dict': bool,
-        'fetch_size_bytes': int,
-        'lower_ident': bool,
-        'quote_ident': bool,
-        'verbose_error': bool,
-        'debug': bool,
-        'udf_output_port': int,
+        "autocommit": bool,
+        "snapshot_transactions": bool,
+        "socket_timeout": int,
+        "query_timeout": int,
+        "compression": bool,
+        "encryption": bool,
+        "fetch_dict": bool,
+        "fetch_size_bytes": int,
+        "lower_ident": bool,
+        "quote_ident": bool,
+        "verbose_error": bool,
+        "debug": bool,
+        "udf_output_port": int,
     }
 
     def __init__(self, config_path=None):
@@ -36,16 +36,18 @@ class ExaLocalConfig(object):
             self.path = self.get_default_path()
 
         if not self.path.exists():
-            raise RuntimeError(f"PyEXASOL config file [{self.path}] not found")
+            raise RuntimeError(f"PyExasol config file [{self.path}] not found")
 
         self.parser = configparser.ConfigParser()
-        self.parser.read(self.path, encoding='utf-8')
+        self.parser.read(self.path, encoding="utf-8")
 
     def get_args(self, section):
         args = dict()
 
         if not self.parser.has_section(section):
-            raise ValueError(f'Section [{section}] in PyEXASOL config file [{self.path}] not found')
+            raise ValueError(
+                f"Section [{section}] in PyExasol config file [{self.path}] not found"
+            )
 
         for k in self.parser[section]:
             t = self.get_arg_type(k)

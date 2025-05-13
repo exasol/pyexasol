@@ -1,6 +1,8 @@
-import pytest
-import pyexasol
 from inspect import cleandoc
+
+import pytest
+
+import pyexasol
 
 
 @pytest.fixture
@@ -10,19 +12,13 @@ def logging_address():
 
 
 @pytest.fixture
-def connection(dsn, user, password, schema, logging_address):
+def connection(connection_factory, logging_address):
     _, port = logging_address
-    con = pyexasol.connect(
-        dsn=dsn,
-        user=user,
-        password=password,
-        schema=schema,
+    con = connection_factory(
         udf_output_bind_address=("", port),
         udf_output_connect_address=logging_address,
     )
-
     yield con
-
     con.close()
 
 
@@ -53,7 +49,7 @@ def echo(connection, logging_address):
         udf_call = f"SELECT {name}('{text}');"
         stmt, logfiles = connection.execute_udf_output(udf_call)
         result = stmt.fetchval()
-        log = "LOG: " + "".join((log.read_text() for log in logfiles))
+        log = "LOG: " + "".join(log.read_text() for log in logfiles)
         return result, log
 
     yield executor

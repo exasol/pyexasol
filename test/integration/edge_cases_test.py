@@ -15,7 +15,7 @@ def empty_table(connection, edge_case_ddl):
 
 
 @pytest.fixture
-def poplulate_edge_case_table(connection, empty_table, edge_cases):
+def populate_edge_case_table(connection, empty_table, edge_cases):
     table = "edge_case"
     stmt = (
         f"INSERT INTO {table} VALUES ({{DEC36_0!d}}, {{DEC36_36!d}}, {{DBL!f}}, "
@@ -45,7 +45,7 @@ def test_insert(connection, empty_table, edge_cases):
 
 
 @pytest.mark.edge_cases
-def test_select_and_fetch(connection, edge_cases, poplulate_edge_case_table):
+def test_select_and_fetch(connection, edge_cases, populate_edge_case_table):
     query = (
         "SELECT DEC36_0, DEC36_36, DBL, BL, DT, TS, VAR100, "
         "LENGTH(var2000000) AS len_var FROM edge_case"

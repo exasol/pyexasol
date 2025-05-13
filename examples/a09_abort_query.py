@@ -2,12 +2,14 @@
 Abort long running query from another thread
 """
 
-import pyexasol
-import time
+import pprint
 import threading
+import time
+
 import _config as config
 
-import pprint
+import pyexasol
+
 printer = pprint.PrettyPrinter(indent=4, width=140)
 
 
@@ -19,13 +21,21 @@ class QueryThread(threading.Thread):
     def run(self):
         try:
             # Run heavy query
-            self.connection.execute("SELECT * FROM users a, users b, users c, payments d")
+            self.connection.execute(
+                "SELECT * FROM users a, users b, users c, payments d"
+            )
         except pyexasol.ExaQueryAbortError as e:
             print(e.message)
 
 
 # Basic connect
-C = pyexasol.connect(dsn=config.dsn, user=config.user, password=config.password, schema=config.schema)
+C = pyexasol.connect(
+    dsn=config.dsn,
+    user=config.user,
+    password=config.password,
+    schema=config.schema,
+    websocket_sslopt=config.websocket_sslopt,
+)
 
 # Start query thread
 query_thread = QueryThread(C)

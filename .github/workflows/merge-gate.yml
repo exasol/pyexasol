@@ -1,0 +1,33 @@
+name: Merge-Gate
+
+on:
+  workflow_call:
+
+jobs:
+
+  fast-checks:
+    name: Fast
+    uses: ./.github/workflows/checks.yml
+
+  slow-checks:
+    name: Slow
+    uses: ./.github/workflows/slow-checks.yml
+
+  examples:
+    uses: ./.github/workflows/examples.yml
+
+  ssl_cert:
+    uses: ./.github/workflows/ssl_cert.yml
+
+  # This job ensures inputs have been executed successfully.
+  approve-merge:
+    name: Allow Merge
+    runs-on: ubuntu-24.04
+    # If you need additional jobs to be part of the merge gate, add them below
+    needs: [ fast-checks, slow-checks, examples, ssl_cert ]
+
+    # Each job requires a step, so we added this dummy step.
+    steps:
+      - name: Approve
+        run: |
+          echo "Merge Approved"

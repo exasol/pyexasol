@@ -2,28 +2,32 @@
 Prepare tables and data for performance tests
 """
 
-import pyexasol
+import sys
+
+import _config as config
 import pyodbc
 import turbodbc
 
-import _config as config
-import sys
+import pyexasol
 
-print(f'Python: {sys.version}')
-print(f'PyEXASOL: {pyexasol.__version__}')
-print(f'PyODBC: {pyodbc.version}')
-print(f'TurbODBC: {turbodbc.__version__}')
-print(f'Creating random data set for tests, {config.number_of_rows} rows')
-print(f'Please wait, it may take a few minutes')
+print(f"Python: {sys.version}")
+print(f"PyExasol: {pyexasol.__version__}")
+print(f"PyODBC: {pyodbc.version}")
+print(f"TurbODBC: {turbodbc.__version__}")
+print(f"Creating random data set for tests, {config.number_of_rows} rows")
+print(f"Please wait, it may take a few minutes")
 
 
-C = pyexasol.connect(dsn=config.dsn, user=config.user, password=config.password, autocommit=False)
+C = pyexasol.connect(
+    dsn=config.dsn, user=config.user, password=config.password, autocommit=False
+)
 
 # Create schema if not exist and open it
-C.execute("CREATE SCHEMA IF NOT EXISTS {schema!i}", {'schema': config.schema})
+C.execute("CREATE SCHEMA IF NOT EXISTS {schema!i}", {"schema": config.schema})
 C.open_schema(config.schema)
 
-C.execute("""
+C.execute(
+    """
     CREATE OR REPLACE TABLE p_high_random
     (
         user_id         DECIMAL(18,0),
@@ -35,9 +39,11 @@ C.execute("""
         user_score      DOUBLE,
         status          VARCHAR(50)
     )
-""")
+"""
+)
 
-C.execute("""
+C.execute(
+    """
     CREATE OR REPLACE TABLE p_low_random
     (
         user_id         DECIMAL(18,0),
@@ -49,9 +55,11 @@ C.execute("""
         user_score      DOUBLE,
         status          VARCHAR(50)
     )
-""")
+"""
+)
 
-C.execute("""
+C.execute(
+    """
     INSERT INTO p_high_random
     SELECT FLOOR(RANDOM() * POWER(10, 10)) AS user_id
       , CHR(65 + FLOOR(RANDOM() * 26))
@@ -68,9 +76,12 @@ C.execute("""
       , REPLACE(REPLACE(REPLACE(REPLACE(FLOOR(RANDOM() * 4), '0', 'ACTIVE'), '1', 'PENDING'), '2', 'SUSPENDED'), '3', 'DISABLED') AS status
     FROM dual
     CONNECT BY level <= {number_of_rows!d}
-""", {'number_of_rows': config.number_of_rows})
+""",
+    {"number_of_rows": config.number_of_rows},
+)
 
-C.execute("""
+C.execute(
+    """
     INSERT INTO p_low_random
     SELECT FLOOR(RANDOM() * 10) AS user_id
       , CHR(65 + FLOOR(RANDOM() * 3))
@@ -87,7 +98,9 @@ C.execute("""
       , REPLACE(REPLACE(REPLACE(REPLACE(FLOOR(RANDOM() * 4), '0', 'ACTIVE'), '1', 'PENDING'), '2', 'SUSPENDED'), '3', 'DISABLED') AS status
     FROM dual
     CONNECT BY level <= {number_of_rows!d}
-""", {'number_of_rows': config.number_of_rows})
+""",
+    {"number_of_rows": config.number_of_rows},
+)
 
 C.commit()
 print("Test data was prepared")

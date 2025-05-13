@@ -2,14 +2,15 @@
 DB-API 2 compatibility package
 https://www.python.org/dev/peps/pep-0249/
 
-It may be used for a short time to test PyEXASOL with existing applications
+It may be used for a short time to test PyExasol with existing applications
 It is highly recommended to switch to native interface before any production usage
 
 There is no "paramstyle" and no proper error handling
 """
 
-from warnings import warn
 from inspect import cleandoc
+from warnings import warn
+
 from ..connection import ExaConnection
 from ..warnings import PyexasolDeprecationWarning
 
@@ -40,7 +41,7 @@ class DB2Connection(ExaConnection):
         return DB2Cursor(self)
 
 
-class DB2Cursor(object):
+class DB2Cursor:
     arraysize = 1
 
     def __init__(self, connection):
