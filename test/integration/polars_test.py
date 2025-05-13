@@ -1,7 +1,9 @@
+from inspect import cleandoc
+
 import polars as pl
 import pytest
+
 import pyexasol
-from inspect import cleandoc
 
 
 @pytest.fixture
@@ -77,14 +79,17 @@ def test_export_sql_result_to_polars(connection):
 
     query = "SELECT USER_NAME, USER_ID FROM USERS ORDER BY USER_ID ASC LIMIT 5;"
 
-    expected = pl.from_records(data=[
-        ("Jessica Mccoy", 0),
-        ("Beth James", 1),
-        ("Mrs. Teresa Ryan", 2),
-        ("Tommy Henderson", 3),
-        ("Jessica Christian", 4),
-    ], schema=["USER_NAME", "USER_ID"]
-     , orient='row')
+    expected = pl.from_records(
+        data=[
+            ("Jessica Mccoy", 0),
+            ("Beth James", 1),
+            ("Mrs. Teresa Ryan", 2),
+            ("Tommy Henderson", 3),
+            ("Jessica Christian", 4),
+        ],
+        schema=["USER_NAME", "USER_ID"],
+        orient="row",
+    )
     actual = connection.export_to_polars(query)
 
     assert actual.equals(expected)
