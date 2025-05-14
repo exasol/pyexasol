@@ -43,6 +43,16 @@ def export_to_pandas(pipe, dst, **kwargs):
     return pandas.read_csv(pipe, skip_blank_lines=False, **kwargs)
 
 
+def export_to_polars(pipe, dst, **kwargs):
+    """
+    Basic example how to export into Polars DataFrame
+    Custom params for "read_csv" may be passed in **kwargs
+    """
+    import polars
+
+    return polars.read_csv(pipe, **kwargs)
+
+
 def export_to_file(pipe, dst):
     """
     Basic example how to export into file or file-like object opened in binary mode
@@ -101,6 +111,27 @@ def import_from_pandas(pipe, src, **kwargs):
             quoting=csv.QUOTE_NONNUMERIC,
             **kwargs
         )
+
+
+def import_from_polars(pipe, src, **kwargs):
+    """
+    Basic example how to import from Polars DataFrame or LazyFrame
+    Custom params for "write_csv" may be passed in **kwargs
+    """
+    import polars
+
+    if isinstance(src, polars.LazyFrame):
+        src = src.collect()
+    elif not isinstance(src, polars.DataFrame):
+        raise ValueError("Data source is not polars.DataFrame or polars.LazyFrame")
+
+    return src.write_csv(
+        pipe,
+        include_header=False,
+        date_format="%Y-%m-%d",
+        datetime_format="%Y-%m-%d %H:%M:%S%.f",
+        **kwargs
+    )
 
 
 def import_from_file(pipe, src):

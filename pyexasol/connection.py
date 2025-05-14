@@ -546,6 +546,50 @@ class ExaConnection:
             export_params,
         )
 
+    def export_to_polars(
+        self,
+        query_or_table,
+        query_params=None,
+        callback_params=None,
+        export_params=None,
+    ):
+        """
+        Export large amount of data from Exasol to :class:`polars.DataFrame`.
+
+        Args:
+            query_or_table:
+                SQL query or table for export.
+            query_params:
+                Values for SQL query placeholders.
+            export_params:
+                Custom parameters for Export query.
+
+        Returns:
+            instance of :class:`polars.DataFrame`
+
+        Warnings:
+            - This function may run out of memory
+
+        Examples:
+            >>> con = ExaConnection(...)
+            >>> myresult = con.export_to_pandas(
+            ...    query_or_table="SELECT * FROM table"
+            ... )
+        """
+        if not export_params:
+            export_params = {}
+
+        export_params["with_column_names"] = True
+
+        return self.export_to_callback(
+            cb.export_to_polars,
+            None,
+            query_or_table,
+            query_params,
+            callback_params,
+            export_params,
+        )
+
     def import_from_file(self, src, table, import_params=None):
         """
         Import a large amount of data from a file or file-like object.
@@ -596,6 +640,22 @@ class ExaConnection:
         """
         return self.import_from_callback(
             cb.import_from_pandas, src, table, callback_params, import_params
+        )
+
+    def import_from_polars(self, src, table, callback_params=None, import_params=None):
+        """
+        Import a large amount of data from ``polars.DataFrame``.
+
+        Args:
+            src:
+                Source ``polars.DataFrame`` instance.
+            table:
+                Destination table for IMPORT.
+            import_params:
+                Custom parameters for import query.
+        """
+        return self.import_from_callback(
+            cb.import_from_polars, src, table, callback_params, import_params
         )
 
     def export_to_callback(

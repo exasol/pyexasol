@@ -1,0 +1,17 @@
+name: Continuous Integration (Master)
+
+on:
+  push:
+    branches:
+      - "polars2"
+
+  ci-job:
+    name: Checks
+    uses: ./.github/workflows/checks.yml
+    secrets: inherit
+
+  examples:
+    uses: ./.github/workflows/examples.yml
+
+  ssl_cert:
+    uses: ./.github/workflows/ssl_cert.yml
