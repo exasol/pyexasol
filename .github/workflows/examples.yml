@@ -20,12 +20,14 @@ jobs:
       matrix:
         python-version: ["3.11"]
         exasol-version: ${{ fromJson(needs.build-matrix.outputs.matrix).exasol-version }}
+    permissions:
+      contents: read
     steps:
       - name: "Checkout repo"
         uses: actions/checkout@v2
 
       - name: "Setup Python & Poetry Environment"
-        uses: exasol/python-toolbox/.github/actions/python-environment@1.0.1
+        uses: exasol/python-toolbox/.github/actions/python-environment@1.3.0
         with:
           python-version: ${{ matrix.python-version }}
 
