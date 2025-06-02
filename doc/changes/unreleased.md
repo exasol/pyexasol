@@ -45,6 +45,7 @@ reflect your organization's needs.
 * #181: Modified integration tests to run also with `ssl.CERT_REQUIRED`
 * #187: Updated poetry to 2.1.2 & exasol-toolbox to `1.0.1`
 * Relocked dependencies to resolve CVE-2025-43859 for transistive dependence `h11`
+* Relocked dependencies for transistive dependencies to resolve CVE-2025-47287 `tornado` and CVE-2025-47273 for `setuptools`
 
 ## 📚 Documentation
 
