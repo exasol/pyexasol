@@ -444,7 +444,11 @@ class ExaConnection:
         return self.attr.get("currentSchema", "")
 
     def export_to_file(
-        self, dst, query_or_table, query_params=None, export_params=None
+        self,
+        dst,
+        query_or_table,
+        query_params: Optional[dict] = None,
+        export_params: Optional[dict] = None,
     ):
         """
         Export large amount of data from Exasol to file or file-like object using fast HTTP transport.
@@ -474,7 +478,12 @@ class ExaConnection:
             cb.export_to_file, dst, query_or_table, query_params, None, export_params
         )
 
-    def export_to_list(self, query_or_table, query_params=None, export_params=None):
+    def export_to_list(
+        self,
+        query_or_table,
+        query_params: Optional[dict] = None,
+        export_params: Optional[dict] = None,
+    ):
         """
         Export large amount of data from Exasol to basic Python `list` using fast HTTP transport.
 
@@ -506,8 +515,8 @@ class ExaConnection:
         self,
         query_or_table,
         query_params=None,
-        callback_params=None,
-        export_params=None,
+        callback_params: Optional[dict] = None,
+        export_params: Optional[dict] = None,
     ):
         """
         Export large amount of data from Exasol to :class:`pandas.DataFrame`.
@@ -546,7 +555,7 @@ class ExaConnection:
             export_params,
         )
 
-    def import_from_file(self, src, table, import_params=None):
+    def import_from_file(self, src, table, import_params: Optional[dict] = None):
         """
         Import a large amount of data from a file or file-like object.
 
@@ -565,7 +574,7 @@ class ExaConnection:
             cb.import_from_file, src, table, None, import_params
         )
 
-    def import_from_iterable(self, src, table, import_params=None):
+    def import_from_iterable(self, src, table, import_params: Optional[dict] = None):
         """
         Import a large amount of data from an ``iterable`` Python object.
 
@@ -582,7 +591,13 @@ class ExaConnection:
             cb.import_from_iterable, src, table, None, import_params
         )
 
-    def import_from_pandas(self, src, table, callback_params=None, import_params=None):
+    def import_from_pandas(
+        self,
+        src,
+        table,
+        callback_params: Optional[dict] = None,
+        import_params: Optional[dict] = None,
+    ):
         """
         Import a large amount of data from ``pandas.DataFrame``.
 
@@ -604,8 +619,8 @@ class ExaConnection:
         dst,
         query_or_table,
         query_params=None,
-        callback_params=None,
-        export_params=None,
+        callback_params: Optional[dict] = None,
+        export_params: Optional[dict] = None,
     ):
         """
         Export large amount of data to user-defined callback function
@@ -627,7 +642,7 @@ class ExaConnection:
             - This function may run out of memory
 
         Examples:
-            >>> cb = lamda args: print(args)
+            >>> cb = lambda args: print(args)
             >>> con = ExaConnection(...)
             >>> con.export_to_callback(
             ...    callback=cb,
@@ -638,10 +653,10 @@ class ExaConnection:
             raise ValueError("Callback argument is not callable")
 
         if callback_params is None:
-            callback_params = {}
+            callback_params: dict = {}
 
         if export_params is None:
-            export_params = {}
+            export_params: dict = {}
 
         if query_params is not None:
             query_or_table = self.format.format(query_or_table, **query_params)
@@ -689,7 +704,12 @@ class ExaConnection:
             raise e
 
     def import_from_callback(
-        self, callback, src, table, callback_params=None, import_params=None
+        self,
+        callback,
+        src,
+        table,
+        callback_params: Optional[dict] = None,
+        import_params: Optional[dict] = None,
     ):
         """
         Import a large amount of data from a user-defined callback function.
@@ -710,10 +730,10 @@ class ExaConnection:
             ValueError: callback argument isn't callable.
         """
         if callback_params is None:
-            callback_params = {}
+            callback_params: dict = {}
 
         if import_params is None:
-            import_params = {}
+            import_params: dict = {}
 
         compression = (
             False if ("format" in import_params) else self.options["compression"]

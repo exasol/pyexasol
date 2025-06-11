@@ -22,9 +22,9 @@ class ExaSQLThread(threading.Thread, ABC):
         self.connection = connection
         self.compression = compression
 
-        self.params = {}
+        self.params: dict = {}
         self.http_thread = None
-        self.exa_address_list = []
+        self.exa_address_list: list = []
         self.exc = None
 
         super().__init__()
@@ -35,6 +35,27 @@ class ExaSQLThread(threading.Thread, ABC):
 
     def set_exa_address_list(self, exa_address_list) -> None:
         self.exa_address_list = exa_address_list
+
+    @property
+    def certificate(self) -> Optional[str]:
+        """
+        Pyexasol uses a self-signed certificate for import & export.
+        From DB version 8.32, this type of certificate is no longer supported,
+        as we require a globally trusted certificate.
+
+        To avoid an issue, users should specify either:
+        * `IGNORE CERTIFICATE` - to disables certificate verification
+        * `PUBLIC KEY 'sha256//*******'` - to specify the public key for certificate verification
+        """
+
+        if certificate := self.params.get("certificate"):
+            if certificate.upper() == "IGNORE CERTIFICATE":
+                return "IGNORE CERTIFICATE"
+            if certificate.upper().startswith("PUBLIC KEY 'SHA256//"):
+                return certificate
+            else:
+                raise ValueError(f"Invalid certificate option: {certificate}")
+        return None
 
     @property
     def comment(self) -> Optional[str]:
@@ -153,11 +174,11 @@ class ExaSQLExportThread(ExaSQLThread):
     Main thread is busy outputting data in callbacks
     """
 
-    def __init__(self, connection, compression, query_or_table, export_params):
+    def __init__(self, connection, compression, query_or_table, export_params: dict):
         super().__init__(connection, compression)
 
         self.query_or_table = query_or_table
-        self.params = export_params
+        self.params: dict = export_params
 
     @property
     def delimit(self) -> Optional[str]:
@@ -210,6 +231,7 @@ class ExaSQLExportThread(ExaSQLThread):
             self.column_separator,
             self.column_delimiter,
             self.with_column_names,
+            self.certificate,
         ]:
             if attribute:
                 parts.append(attribute)
@@ -223,11 +245,11 @@ class ExaSQLImportThread(ExaSQLThread):
     Main thread is busy parsing results in callbacks
     """
 
-    def __init__(self, connection, compression, table, import_params):
+    def __init__(self, connection, compression, table, import_params: dict):
         super().__init__(connection, compression)
 
         self.table = table
-        self.params = import_params
+        self.params: dict = import_params
 
     @property
     def skip(self) -> Optional[str]:
@@ -262,6 +284,7 @@ class ExaSQLImportThread(ExaSQLThread):
             self.row_separator,
             self.column_separator,
             self.column_delimiter,
+            self.certificate,
         ]:
             if attribute:
                 parts.append(attribute)

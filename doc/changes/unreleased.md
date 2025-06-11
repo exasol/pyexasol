@@ -23,6 +23,9 @@ reflect your organization's needs.
 * Added support for multi-version documentation
 * Added support for all standard nox tasks provided by `exasol-toolbox`
 * #179: Modified `ExaConnection` so that default is encryption with strict certification verification
+* #194: Added option to specify `certificate` in import and export, which is needed 
+for DB versions 8.32+ as pyexasol uses a self-signed certificate which is not a globally trusted certificate. A user can
+instead supply `IGNORE CERTIFICATE` or `PUBLIC KEY 'sha256//*******'`
 
 ## ⚒️ Refactorings
 
