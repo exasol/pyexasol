@@ -24,14 +24,14 @@ class ExaSQLThread(threading.Thread):
 
         super().__init__()
 
-    def set_http_thread(self, http_thread):
+    def set_http_thread(self, http_thread) -> None:
         self.http_thread = http_thread
         self.exa_address_list = [http_thread.exa_address]
 
-    def set_exa_address_list(self, exa_address_list):
+    def set_exa_address_list(self, exa_address_list) -> None:
         self.exa_address_list = exa_address_list
 
-    def run(self):
+    def run(self) -> None:
         try:
             self.run_sql()
         except BaseException as e:
@@ -41,16 +41,16 @@ class ExaSQLThread(threading.Thread):
             if self.http_thread:
                 self.http_thread.terminate()
 
-    def run_sql(self):
+    def run_sql(self) -> None:
         pass
 
-    def join_with_exc(self, *args):
+    def join_with_exc(self, *args) -> None:
         super().join(*args)
 
         if self.exc:
             raise self.exc
 
-    def build_file_list(self):
+    def build_file_list(self) -> list[str]:
         files = list()
 
         if "format" in self.params:
@@ -77,13 +77,13 @@ class ExaSQLThread(threading.Thread):
 
         return files
 
-    def build_columns_list(self):
+    def build_columns_list(self) -> str:
         if "columns" not in self.params:
             return ""
 
         return f"({','.join([self.connection.format.default_format_ident(c) for c in self.params['columns']])})"
 
-    def build_csv_cols(self):
+    def build_csv_cols(self) -> str:
         if "csv_cols" not in self.params:
             return ""
 
