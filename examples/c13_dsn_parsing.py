@@ -4,8 +4,7 @@ Demonstration of DSN (Connection string) expansion and related exceptions
 
 import pprint
 
-import _config as config
-
+import examples._config as config
 import pyexasol
 
 printer = pprint.PrettyPrinter(indent=4, width=140)

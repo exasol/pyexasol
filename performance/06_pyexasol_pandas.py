@@ -1,5 +1,4 @@
-import _config as config
-
+import performance._config as config
 import pyexasol
 
 C = pyexasol.connect(

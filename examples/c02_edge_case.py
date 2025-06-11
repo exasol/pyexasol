@@ -5,8 +5,7 @@ Try to read and write minimum and maximum possible values, test various edge cas
 import decimal
 import pprint
 
-import _config as config
-
+import examples._config as config
 import pyexasol
 
 printer = pprint.PrettyPrinter(indent=4, width=140)

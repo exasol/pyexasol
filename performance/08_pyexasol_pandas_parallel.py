@@ -1,7 +1,6 @@
 import multiprocessing
 
-import _config as config
-
+import performance._config as config
 import pyexasol
 import pyexasol.callback as cb
 

@@ -7,8 +7,7 @@ EXPORT into multiple independent processes running in parallel
 import multiprocessing
 import pprint
 
-import _config as config
-
+import examples._config as config
 import pyexasol
 import pyexasol.callback as cb
 

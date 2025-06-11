@@ -8,8 +8,7 @@ import pprint
 import random
 import string
 
-import _config as config
-
+import examples._config as config
 import pyexasol
 from pyexasol import ExaTimeDelta
 

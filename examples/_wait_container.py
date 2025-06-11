@@ -1,8 +1,7 @@
 import ssl
 import time
 
-import _config as config
-
+import examples._config as config
 import pyexasol
 
 SLEEP_TIMEOUT = 5

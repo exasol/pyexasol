@@ -8,8 +8,7 @@ import os
 import shutil
 import tempfile
 
-import _config as config
-
+import examples._config as config
 import pyexasol
 
 # Connect with compression enabled

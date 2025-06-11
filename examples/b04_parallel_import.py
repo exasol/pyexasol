@@ -7,9 +7,9 @@ IMPORT from multiple independent processes running in parallel
 import multiprocessing
 import pprint
 
-import _config as config
 import pandas
 
+import examples._config as config
 import pyexasol
 import pyexasol.callback as cb
 

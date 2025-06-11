@@ -1,5 +1,6 @@
-import _config as config
 import turbodbc
+
+import performance._config as config
 
 C = turbodbc.connect(**config.turbodbc_connection_options)
 cur = C.cursor()
