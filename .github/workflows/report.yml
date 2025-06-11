@@ -19,7 +19,7 @@ jobs:
           fetch-depth: 0
 
       - name: Setup Python & Poetry Environment
-        uses: exasol/python-toolbox/.github/actions/python-environment@1.3.0
+        uses: exasol/python-toolbox/.github/actions/python-environment@1.4.0
 
       - name: Download Artifacts
         uses: actions/download-artifact@v4.2.1
@@ -27,14 +27,7 @@ jobs:
           path: ./artifacts
 
       - name: Copy Artifacts into Root Folder
-        working-directory: ./artifacts
-        run: |
-          poetry run -- coverage combine --keep coverage-python3.9*/.coverage
-          # Errors during copying are ignored because they are checked in the next step
-          cp .coverage ../ || true
-          cp lint-python3.9/.lint.txt ../ || true
-          cp lint-python3.9/.lint.json ../ || true
-          cp security-python3.9/.security.json ../ || true
+        run: poetry run -- nox -s artifacts:copy -- artifacts
 
       - name: Validate Artifacts
         run: poetry run -- nox -s artifacts:validate

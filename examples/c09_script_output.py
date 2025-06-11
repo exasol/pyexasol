@@ -7,8 +7,7 @@ May not work on laptops due to firewall and network security restrictions
 import os
 import pprint
 
-import _config as config
-
+import examples._config as config
 import pyexasol
 
 printer = pprint.PrettyPrinter(indent=4, width=140)

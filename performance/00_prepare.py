@@ -4,10 +4,10 @@ Prepare tables and data for performance tests
 
 import sys
 
-import _config as config
 import pyodbc
 import turbodbc
 
+import performance._config as config
 import pyexasol
 
 print(f"Python: {sys.version}")

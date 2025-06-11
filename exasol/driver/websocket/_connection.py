@@ -7,6 +7,7 @@ This module provides `PEP-249`_ DBAPI compliant connection implementation.
 
 import ssl
 from functools import wraps
+from typing import Optional
 
 import pyexasol
 from exasol.driver.websocket._cursor import Cursor as DefaultCursor
@@ -39,9 +40,9 @@ class Connection:
 
     def __init__(
         self,
-        dsn: str = None,
-        username: str = None,
-        password: str = None,
+        dsn: Optional[str] = None,
+        username: Optional[str] = None,
+        password: Optional[str] = None,
         schema: str = "",
         autocommit: bool = True,
         tls: bool = True,

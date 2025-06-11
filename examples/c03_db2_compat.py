@@ -5,8 +5,7 @@ Suitable for temporary testing only, should not be used in production
 
 import pprint
 
-import _config as config
-
+import examples._config as config
 import pyexasol.db2
 
 printer = pprint.PrettyPrinter(indent=4, width=140)

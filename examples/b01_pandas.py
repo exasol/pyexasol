@@ -5,8 +5,7 @@ EXPORT and IMPORT from Exasol to Pandas DataFrames
 Make sure to enable compression for Wifi connections to improve performance
 """
 
-import _config as config
-
+import examples._config as config
 import pyexasol
 
 # Connect with compression enabled

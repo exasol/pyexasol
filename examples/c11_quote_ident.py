@@ -4,8 +4,7 @@ Major cases when 'quote_ident' connection option takes effect
 
 import pprint
 
-import _config as config
-
+import examples._config as config
 import pyexasol
 
 printer = pprint.PrettyPrinter(indent=4, width=140)

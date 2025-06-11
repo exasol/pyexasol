@@ -12,8 +12,7 @@ import multiprocessing
 import pprint
 import time
 
-import _config as config
-
+import examples._config as config
 import pyexasol
 
 printer = pprint.PrettyPrinter(indent=4, width=140)

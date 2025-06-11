@@ -5,7 +5,7 @@ Usage: python -m pyexasol <command> <options>
 import argparse
 
 parser = argparse.ArgumentParser(prog=f"python -m pyexasol")
-subparsers = parser.add_subparsers(title=None, dest="command", metavar="<command>")
+subparsers = parser.add_subparsers(dest="command", metavar="<command>")
 subparsers.required = True
 
 subparsers.add_parser("script_output")

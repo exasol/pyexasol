@@ -2,8 +2,7 @@
 Transactions
 """
 
-import _config as config
-
+import examples._config as config
 import pyexasol
 
 # Connect with autocommit OFF

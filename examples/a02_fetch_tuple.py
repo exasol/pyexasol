@@ -4,8 +4,7 @@ Fetch rows as tuples
 
 import pprint
 
-import _config as config
-
+import examples._config as config
 import pyexasol
 
 printer = pprint.PrettyPrinter(indent=4, width=140)

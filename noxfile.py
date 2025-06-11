@@ -1,8 +1,6 @@
 from __future__ import annotations
 
-import sys
 from pathlib import Path
-from typing import Iterable
 
 import nox
 
@@ -46,7 +44,8 @@ def import_data(session: Session) -> None:
     path = _ROOT / "test" / "integration"
     data_dir = _ROOT / "test" / "data"
     sys.path.append(f"{path}")
-    from conftest import DockerDataLoader
+
+    from pyexasol_utils.docker_util import DockerDataLoader
 
     loader = DockerDataLoader(
         dsn="127.0.0.1:8563",

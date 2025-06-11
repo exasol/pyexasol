@@ -1,5 +1,6 @@
-import _config as config
 import pyodbc
+
+import performance._config as config
 
 C = pyodbc.connect(**config.odbc_connection_options)
 cur = C.cursor()
