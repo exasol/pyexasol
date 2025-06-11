@@ -6,9 +6,13 @@ import struct
 import sys
 import threading
 import zlib
+from abc import (
+    ABC,
+    abstractmethod,
+)
 
 
-class ExaSQLThread(threading.Thread):
+class ExaSQLThread(threading.Thread, ABC):
     """
     Thread class which re-throws any Exception to parent thread
     """
@@ -41,7 +45,9 @@ class ExaSQLThread(threading.Thread):
             if self.http_thread:
                 self.http_thread.terminate()
 
+    @abstractmethod
     def run_sql(self) -> None:
+        """Abstract method that must be implemented by subclasses"""
         pass
 
     def join_with_exc(self, *args) -> None:
