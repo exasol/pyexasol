@@ -27,6 +27,7 @@ reflect your organization's needs.
 ## ⚒️ Refactorings
 
 * Reformatted entire code base with `black` and `isort`
+* #194: Refactored `ExaSQLThread` and its children to reduce duplication and added types 
 
 ## 🔩 Internal
 
