@@ -27,6 +27,7 @@ reflect your organization's needs.
 ## ⚒️ Refactorings
 
 * Reformatted entire code base with `black` and `isort`
+* #194: Refactored `ExaSQLThread` and its children to reduce duplication and added types 
 
 ## 🔩 Internal
 
@@ -44,7 +45,7 @@ reflect your organization's needs.
         ```
 * #181: Modified integration tests to run also with `ssl.CERT_REQUIRED`
 * #187: Updated poetry to 2.1.2 & exasol-toolbox to `1.0.1`
-* Relocked dependencies to resolve CVE-2025-43859 for transistive dependence `h11`
+* Relocked dependencies to resolve CVE-2025-43859 for transitive dependency `h11`
 * Relocked dependencies for transitive dependencies to resolve CVE-2025-47287 `tornado` and CVE-2025-47273 for `setuptools`
 * Relocked dependencies for transitive dependency to resolve CVE-2024-47081  `requests`
 
@@ -53,4 +54,3 @@ reflect your organization's needs.
 * Added sphinx based documentation
 * Added example to highlight how sensitive information from exceptions should be handled
 * Harmonized spelling of PyExasol across documentation
-
