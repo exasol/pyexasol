@@ -44,7 +44,7 @@ class ExaSQLThread(threading.Thread, ABC):
         as we require a globally trusted certificate.
 
         To avoid an issue, users should specify either:
-        * `IGNORE CERTIFICATE` - to disables certificate verification
+        * `IGNORE CERTIFICATE` - to disable certificate verification
         * `PUBLIC KEY 'sha256//*******'` - to specify the public key for certificate verification
         """
 

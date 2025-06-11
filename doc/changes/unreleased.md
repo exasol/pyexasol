@@ -2,6 +2,7 @@
 
 ## Summary
 
+### Websocket in connection
 From PyExasol version ``1.0.0``, the default behavior has been changed to use strict 
 certificate verification in ``ExaConnection`` and ``pyexasol.connect``. This means that 
 the default ``websocket_sslopt=None`` will be mapped to 
@@ -17,6 +18,29 @@ Prior to the upgrade:
 organization by reading through ``doc/user_guide/encryption.rst``.
 2. If needed, update your usage of ``pyexasol.connect(...)`` & ``ExaConnection`` to 
 reflect your organization's needs.
+
+### IMPORT & EXPORT
+With Exasol DB versions x & x, the default behavior has changed. Previously, the default
+behavior of the database was to have TLS certificate validation deactivated for IMPORT 
+and EXPORT queries, leaving connections potentially vulnerable to security risks like 
+man-in-the-middle attacks. Users needed to explicitly enable TLS certificate validation 
+using custom parameters or SQL syntax. Now, TLS Certificate Validation is activated by 
+default for IMPORT and EXPORT queries, ensuring secure data transfers by validating 
+certificates for external file connections like HTTPS and FTPS.
+
+To deactivate TLS certificate validation manually:
+* Use the database parameter -etlCheckCertsDefault=0. This restores the previous behavior of no certificate validation for external connections.
+* (recommendation) Use the IGNORE CERTIFICATE / PUBLIC KEY on the SQL query to deactivate certificate validation for that query.
+
+Pyexasol uses a self-signed certificate for IMPORT & EXPORT, which means that it will
+fail the default enabled TLS certificate validation, as it is not a globally trusted certificate.
+Thus, with `pyexasol.connection().export*` and `pyexasol.connection().import*` methods,
+users will need to specify one of the following for the `value` in their `export_params={"certificate":<value>}`
+or `import_params={"certificate":<value>}`:
+* `IGNORE CERTIFICATE` - to disable certificate verification
+* `PUBLIC KEY 'sha256//*******'` - to specify the public key for certificate verification which only works from 8.32+
+
+Users who fail to make this changes will see errors like `SSL certificate problem: unable to get local issuer certificate`.
 
 ## ✨Features
 
