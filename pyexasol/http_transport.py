@@ -116,7 +116,7 @@ class ExaSQLExportThread(ExaSQLThread):
         self.query_or_table = query_or_table
         self.params = export_params
 
-    def run_sql(self):
+    def run_sql(self) -> None:
         if (
             isinstance(self.query_or_table, tuple)
             or str(self.query_or_table).strip().find(" ") == -1
@@ -196,7 +196,7 @@ class ExaSQLImportThread(ExaSQLThread):
         self.table = table
         self.params = import_params
 
-    def run_sql(self):
+    def run_sql(self) -> None:
         table_ident = self.connection.format.default_format_ident(self.table)
 
         parts = list()
@@ -271,7 +271,7 @@ class ExaHttpThread(threading.Thread):
         super().__init__()
 
     @property
-    def exa_address(self):
+    def exa_address(self) -> str:
         return f"{self.server.exa_address_ipaddr}:{self.server.exa_address_port}"
 
     def run(self):
