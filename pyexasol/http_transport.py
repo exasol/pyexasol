@@ -6,9 +6,14 @@ import struct
 import sys
 import threading
 import zlib
+from abc import (
+    ABC,
+    abstractmethod,
+)
+from typing import Optional
 
 
-class ExaSQLThread(threading.Thread):
+class ExaSQLThread(threading.Thread, ABC):
     """
     Thread class which re-throws any Exception to parent thread
     """
@@ -17,21 +22,84 @@ class ExaSQLThread(threading.Thread):
         self.connection = connection
         self.compression = compression
 
-        self.params = {}
+        self.params: dict = {}
         self.http_thread = None
-        self.exa_address_list = []
+        self.exa_address_list: list = []
         self.exc = None
 
         super().__init__()
 
-    def set_http_thread(self, http_thread):
+    def set_http_thread(self, http_thread) -> None:
         self.http_thread = http_thread
         self.exa_address_list = [http_thread.exa_address]
 
-    def set_exa_address_list(self, exa_address_list):
+    def set_exa_address_list(self, exa_address_list) -> None:
         self.exa_address_list = exa_address_list
 
-    def run(self):
+    @property
+    def certificate(self) -> Optional[str]:
+        """
+        Pyexasol uses a self-signed certificate for import & export.
+        From DB version 8.32, this type of certificate is no longer supported,
+        as we require a globally trusted certificate.
+
+        To avoid an issue, users should specify either:
+        * `IGNORE CERTIFICATE` - to disable certificate verification
+        * `PUBLIC KEY 'sha256//*******'` - to specify the public key for certificate verification
+        """
+
+        if certificate := self.params.get("certificate"):
+            if certificate.upper() == "IGNORE CERTIFICATE":
+                return "IGNORE CERTIFICATE"
+            if certificate.upper().startswith("PUBLIC KEY 'SHA256//"):
+                return certificate
+            else:
+                raise ValueError(f"Invalid certificate option: {certificate}")
+        return None
+
+    @property
+    def comment(self) -> Optional[str]:
+        if comment := self.params.get("comment"):
+            if "*/" in comment:
+                raise ValueError("Invalid comment, cannot contain */")
+            return f"/*{comment}*/"
+        return None
+
+    @property
+    def encoding(self) -> Optional[str]:
+        if encoding := self.params.get("encoding"):
+            return f"ENCODING = {self.connection.format.quote(encoding)}"
+        return None
+
+    @property
+    def null(self) -> Optional[str]:
+        if null := self.params.get("null"):
+            return f"NULL = {self.connection.format.quote(null)}"
+        return None
+
+    @property
+    def column_delimiter(self) -> Optional[str]:
+        if column_delimiter := self.params.get("column_delimiter"):
+            return (
+                f"COLUMN DELIMITER = {self.connection.format.quote(column_delimiter)}"
+            )
+        return None
+
+    @property
+    def column_separator(self) -> Optional[str]:
+        if column_separator := self.params.get("column_separator"):
+            return (
+                f"COLUMN_SEPARATOR = {self.connection.format.quote(column_separator)}"
+            )
+        return None
+
+    @property
+    def row_separator(self) -> Optional[str]:
+        if row_separator := self.params.get("row_separator"):
+            return f"ROW SEPARATOR = {self.connection.format.quote(row_separator)}"
+        return None
+
+    def run(self) -> None:
         try:
             self.run_sql()
         except BaseException as e:
@@ -41,16 +109,18 @@ class ExaSQLThread(threading.Thread):
             if self.http_thread:
                 self.http_thread.terminate()
 
-    def run_sql(self):
+    @abstractmethod
+    def run_sql(self) -> None:
+        """Abstract method that must be implemented by subclasses"""
         pass
 
-    def join_with_exc(self, *args):
+    def join_with_exc(self, *args) -> None:
         super().join(*args)
 
         if self.exc:
             raise self.exc
 
-    def build_file_list(self):
+    def build_file_list(self) -> list[str]:
         files = list()
 
         if "format" in self.params:
@@ -77,13 +147,13 @@ class ExaSQLThread(threading.Thread):
 
         return files
 
-    def build_columns_list(self):
+    def build_columns_list(self) -> str:
         if "columns" not in self.params:
             return ""
 
         return f"({','.join([self.connection.format.default_format_ident(c) for c in self.params['columns']])})"
 
-    def build_csv_cols(self):
+    def build_csv_cols(self) -> str:
         if "csv_cols" not in self.params:
             return ""
 
@@ -104,13 +174,31 @@ class ExaSQLExportThread(ExaSQLThread):
     Main thread is busy outputting data in callbacks
     """
 
-    def __init__(self, connection, compression, query_or_table, export_params):
+    def __init__(self, connection, compression, query_or_table, export_params: dict):
         super().__init__(connection, compression)
 
         self.query_or_table = query_or_table
-        self.params = export_params
+        self.params: dict = export_params
 
-    def run_sql(self):
+    @property
+    def delimit(self) -> Optional[str]:
+        if delimit := self.params.get("delimit"):
+            delimit = str(delimit).upper()
+            if delimit not in ("AUTO", "ALWAYS", "NEVER"):
+                raise ValueError(
+                    "Invalid value for export parameter DELIMIT: " + delimit
+                )
+            return f"DELIMIT = {delimit}"
+        return None
+
+    @property
+    def with_column_names(self) -> Optional[str]:
+        """Only possible for CSV files"""
+        if self.params.get("with_column_names"):
+            return "WITH COLUMN NAMES"
+        return None
+
+    def run_sql(self) -> None:
         if (
             isinstance(self.query_or_table, tuple)
             or str(self.query_or_table).strip().find(" ") == -1
@@ -129,51 +217,24 @@ class ExaSQLExportThread(ExaSQLThread):
                 )
 
         parts = list()
-
-        if self.params.get("comment"):
-            comment = self.params.get("comment")
-            if "*/" in comment:
-                raise ValueError("Invalid comment, cannot contain */")
-            parts.append(f"/*{comment}*/")
+        if comment := self.comment:
+            parts.append(comment)
 
         parts.append(f"EXPORT {export_source}{self.build_columns_list()} INTO CSV")
         parts.extend(self.build_file_list())
 
-        if self.params.get("delimit"):
-            delimit = str(self.params["delimit"]).upper()
-
-            if delimit != "AUTO" and delimit != "ALWAYS" and delimit != "NEVER":
-                raise ValueError(
-                    "Invalid value for export parameter DELIMIT: " + delimit
-                )
-
-            parts.append(f"DELIMIT = {delimit}")
-
-        if self.params.get("encoding"):
-            parts.append(
-                f"ENCODING = {self.connection.format.quote(self.params['encoding'])}"
-            )
-
-        if self.params.get("null"):
-            parts.append(f"NULL = {self.connection.format.quote(self.params['null'])}")
-
-        if self.params.get("row_separator"):
-            parts.append(
-                f"ROW SEPARATOR = {self.connection.format.quote(self.params['row_separator'])}"
-            )
-
-        if self.params.get("column_separator"):
-            parts.append(
-                f"COLUMN SEPARATOR = {self.connection.format.quote(self.params['column_separator'])}"
-            )
-
-        if self.params.get("column_delimiter"):
-            parts.append(
-                f"COLUMN DELIMITER = {self.connection.format.quote(self.params['column_delimiter'])}"
-            )
-
-        if self.params.get("with_column_names"):
-            parts.append("WITH COLUMN NAMES")
+        for attribute in [
+            self.delimit,
+            self.encoding,
+            self.null,
+            self.row_separator,
+            self.column_separator,
+            self.column_delimiter,
+            self.with_column_names,
+            self.certificate,
+        ]:
+            if attribute:
+                parts.append(attribute)
 
         self.connection.execute("\n".join(parts))
 
@@ -184,69 +245,57 @@ class ExaSQLImportThread(ExaSQLThread):
     Main thread is busy parsing results in callbacks
     """
 
-    def __init__(self, connection, compression, table, import_params):
+    def __init__(self, connection, compression, table, import_params: dict):
         super().__init__(connection, compression)
 
         self.table = table
-        self.params = import_params
+        self.params: dict = import_params
 
-    def run_sql(self):
+    @property
+    def skip(self) -> Optional[str]:
+        if skip := self.params.get("skip"):
+            return f"SKIP = {self.connection.format.safe_decimal(skip)}"
+        return None
+
+    @property
+    def trim(self) -> Optional[str]:
+        if trim := self.params.get("trim"):
+            trim = str(trim).upper()
+            if trim not in ("TRIM", "LTRIM", "RTRIM"):
+                raise ValueError(f"Invalid value for import parameter TRIM: {trim}")
+            return trim
+        return None
+
+    def run_sql(self) -> None:
         table_ident = self.connection.format.default_format_ident(self.table)
 
         parts = list()
-
-        if self.params.get("comment"):
-            comment = self.params.get("comment")
-            if "*/" in comment:
-                raise ValueError("Invalid comment, cannot contain */")
-            parts.append(f"/*{comment}*/")
+        if comment := self.comment:
+            parts.append(comment)
 
         parts.append(f"IMPORT INTO {table_ident}{self.build_columns_list()} FROM CSV")
         parts.extend(self.build_file_list())
 
-        if self.params.get("encoding"):
-            parts.append(
-                f"ENCODING = {self.connection.format.quote(self.params['encoding'])}"
-            )
-
-        if self.params.get("null"):
-            parts.append(f"NULL = {self.connection.format.quote(self.params['null'])}")
-
-        if self.params.get("skip"):
-            parts.append(
-                f"SKIP = {self.connection.format.safe_decimal(self.params['skip'])}"
-            )
-
-        if self.params.get("trim"):
-            trim = str(self.params["trim"]).upper()
-
-            if trim != "TRIM" and trim != "LTRIM" and trim != "RTRIM":
-                raise ValueError("Invalid value for import parameter TRIM: " + trim)
-
-            parts.append(trim)
-
-        if self.params.get("row_separator"):
-            parts.append(
-                f"ROW SEPARATOR = {self.connection.format.quote(self.params['row_separator'])}"
-            )
-
-        if self.params.get("column_separator"):
-            parts.append(
-                f"COLUMN SEPARATOR = {self.connection.format.quote(self.params['column_separator'])}"
-            )
-
-        if self.params.get("column_delimiter"):
-            parts.append(
-                f"COLUMN DELIMITER = {self.connection.format.quote(self.params['column_delimiter'])}"
-            )
+        for attribute in [
+            self.encoding,
+            self.null,
+            self.skip,
+            self.trim,
+            self.row_separator,
+            self.column_separator,
+            self.column_delimiter,
+            self.certificate,
+        ]:
+            if attribute:
+                parts.append(attribute)
 
         self.connection.execute("\n".join(parts))
 
 
 class ExaHttpThread(threading.Thread):
     """
-    HTTP communication and compression / decompression is offloaded to separate thread
-    Thread can be used instead of subprocess when compatibility is an issue
+    HTTP communication and compression / decompression is offloaded to a separate
+    thread. A thread can be used instead of a subprocess when compatibility is an issue.
     """
 
     def __init__(self, ipaddr, port, compression, encryption):
@@ -265,7 +314,7 @@ class ExaHttpThread(threading.Thread):
         super().__init__()
 
     @property
-    def exa_address(self):
+    def exa_address(self) -> str:
         return f"{self.server.exa_address_ipaddr}:{self.server.exa_address_port}"
 
     def run(self):
