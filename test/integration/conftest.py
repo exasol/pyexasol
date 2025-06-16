@@ -39,18 +39,14 @@ def certificate(tmp_path_factory, container_name) -> Path:
 
 @pytest.fixture(scope="session")
 def db_version(connection_factory):
-    db_version_query = (
-        "SELECT PARAM_VALUE FROM EXA_METADATA "
-        "WHERE PARAM_NAME = 'databaseProductVersion';"
-    )
     with connection_factory() as conn:
-        version = conn.execute(db_version_query).fetchone()[0]
+        version = conn.release_version
     return version
 
 
 @pytest.fixture(scope="session")
-def db_major_version(db_version):
-    return db_version.split(".")[0]
+def db_major_version(db_version) -> int:
+    return db_version.major
 
 
 @pytest.fixture(scope="session")
@@ -293,9 +289,9 @@ def expected_reserved_words(db_major_version):
     }
     # fmt: on
 
-    if db_major_version == "7":
+    if db_major_version == 7:
         return set_shared
-    elif db_major_version == "8":
+    elif db_major_version == 8:
         set_shared.update(["CURRENT_CLUSTER", "CURRENT_CLUSTER_UID"])
         return set_shared
 
@@ -304,9 +300,9 @@ def expected_reserved_words(db_major_version):
 def expected_user_table_column_last_visit_ts(db_major_version):
     timestamp_type = namedtuple("timestamp_type", ["size", "sql_type"])
 
-    if db_major_version == "7":
+    if db_major_version == 7:
         return timestamp_type(size=8, sql_type="TIMESTAMP")
-    elif db_major_version == "8":
+    elif db_major_version == 8:
         return timestamp_type(size=16, sql_type="TIMESTAMP(3)")
 
 
