@@ -54,8 +54,25 @@ def dsn_resolved():
     return os.environ.get("EXAHOST", "localhost:8563")
 
 
+@pytest.fixture(
+    scope="session",
+    params=[
+        pytest.param(ssl.CERT_NONE, id="NO_CERT", marks=pytest.mark.no_cert),
+        pytest.param(ssl.CERT_REQUIRED, id="WITH_CERT", marks=pytest.mark.with_cert),
+    ],
+)
+def certification_type(request):
+    if request.param == ssl.CERT_NONE:
+        return ssl.CERT_NONE
+    return ssl.CERT_REQUIRED
+
+
 @pytest.fixture(scope="session")
-def dsn():
+def dsn(certification_type):
+    if certification_type == ssl.CERT_NONE:
+        return os.environ.get("EXAHOST", "localhost:8563")
+    # The host name is different for this case. As it is required to be the same
+    # host name that the certificate is signed. This comes from the ITDE.
     return os.environ.get("EXAHOST", "exasol-test-database:8563")
 
 
@@ -74,18 +91,12 @@ def schema():
     return os.environ.get("EXASCHEMA", "PYEXASOL_TEST")
 
 
-@pytest.fixture(
-    scope="session",
-    params=[
-        ssl.CERT_NONE,
-        ssl.CERT_REQUIRED,
-    ],
-    ids=["NO_CERT", "WITH_CERT"],
-)
-def websocket_sslopt(request, certificate):
-    if request.param == ssl.CERT_NONE:
-        return {"cert_reqs": request.param}
-    return {"cert_reqs": request.param, "ca_certs": certificate}
+@pytest.fixture(scope="session")
+def websocket_sslopt(certification_type, certificate):
+    websocket_dict = {"cert_reqs": certification_type}
+    if certification_type == ssl.CERT_REQUIRED:
+        websocket_dict["ca_certs"] = certificate
+    return websocket_dict
 
 
 @pytest.fixture(scope="session")
