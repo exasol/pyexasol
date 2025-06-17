@@ -6,6 +6,7 @@ import struct
 import sys
 import threading
 import zlib
+from ssl import SSLContext
 from typing import Optional
 
 
@@ -509,14 +510,14 @@ class ExaTCPServer(socketserver.TCPServer):
             )
 
     @staticmethod
-    def generate_adhoc_ssl_context():
+    def generate_adhoc_ssl_context() -> SSLContext:
         """
         Create temporary self-signed certificate for encrypted HTTP transport
         Exasol does not check validity of certificates
         """
-        import pathlib
         import ssl
         import tempfile
+        from pathlib import Path
 
         from OpenSSL import crypto
 
@@ -533,13 +534,13 @@ class ExaTCPServer(socketserver.TCPServer):
 
         # TemporaryDirectory is used instead of NamedTemporaryFile for compatibility with Windows
         with tempfile.TemporaryDirectory(prefix="pyexasol_ssl_") as tempdir:
-            tempdir = pathlib.Path(tempdir)
+            directory = Path(tempdir)
 
-            cert_file = open(tempdir / "cert", "wb")
+            cert_file = open(directory / "cert", "wb")
             cert_file.write(crypto.dump_certificate(crypto.FILETYPE_PEM, cert))
             cert_file.close()
 
-            key_file = open(tempdir / "key", "wb")
+            key_file = open(directory / "key", "wb")
             key_file.write(crypto.dump_privatekey(crypto.FILETYPE_PEM, k))
             key_file.close()
 
