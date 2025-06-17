@@ -1,3 +1,4 @@
+import hashlib
 import os
 import re
 import socket
@@ -268,7 +269,10 @@ class ExaHttpThread(threading.Thread):
 
     @property
     def exa_address(self) -> str:
-        return f"{self.server.exa_address_ipaddr}:{self.server.exa_address_port}"
+        address = f"{self.server.exa_address_ipaddr}:{self.server.exa_address_port}"
+        if public_key := self.server.exa_address_public_key:
+            address = f"{address}/{public_key}"
+        return address
 
     def run(self):
         try:
@@ -426,6 +430,7 @@ class ExaHTTPTransportWrapper:
 class ExaTCPServer(socketserver.TCPServer):
     exa_address_ipaddr: str
     exa_address_port: int
+    exa_address_public_key: Optional[str] = None
 
     total_clients: int = 0
     is_terminated: bool = False
@@ -466,10 +471,11 @@ class ExaTCPServer(socketserver.TCPServer):
         self.exa_address_port = port
 
         if self.encryption:
-            context = self.generate_adhoc_ssl_context()
+            context, public_key_sha = self.generate_adhoc_ssl_context()
             self.socket = context.wrap_socket(
                 self.socket, server_side=True, do_handshake_on_connect=False
             )
+            self.exa_address_public_key = public_key_sha
 
     def server_activate(self):
         pass
@@ -512,7 +518,7 @@ class ExaTCPServer(socketserver.TCPServer):
             )
 
     @staticmethod
-    def generate_adhoc_ssl_context() -> SSLContext:
+    def generate_adhoc_ssl_context() -> tuple[SSLContext, str]:
         """
         Create temporary self-signed certificate for encrypted HTTP transport
         Exasol does not check validity of certificates
@@ -534,6 +540,9 @@ class ExaTCPServer(socketserver.TCPServer):
         cert.set_pubkey(k)
         cert.sign(k, "sha256")
 
+        public_key_pem = crypto.dump_publickey(crypto.FILETYPE_PEM, k)
+        public_key_sha256 = hashlib.sha256(public_key_pem).hexdigest()
+
         # TemporaryDirectory is used instead of NamedTemporaryFile for compatibility with Windows
         with tempfile.TemporaryDirectory(prefix="pyexasol_ssl_") as tempdir:
             directory = Path(tempdir)
@@ -550,7 +559,7 @@ class ExaTCPServer(socketserver.TCPServer):
             context.verify_mode = ssl.CERT_NONE
             context.load_cert_chain(certfile=cert_file.name, keyfile=key_file.name)
 
-            return context
+            return context, public_key_sha256
 
 
 class ExaHttpRequestHandler(socketserver.StreamRequestHandler):
