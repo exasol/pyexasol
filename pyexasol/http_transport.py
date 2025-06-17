@@ -316,7 +316,9 @@ class ExaHTTPTransportWrapper:
         wait for incoming connection, process data and exit.
     """
 
-    def __init__(self, ipaddr, port, compression=False, encryption=True):
+    def __init__(
+        self, ipaddr: str, port: int, compression: bool = False, encryption: bool = True
+    ):
         self.http_thread = ExaHttpThread(ipaddr, port, compression, encryption)
         self.http_thread.start()
 
