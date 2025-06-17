@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 from pathlib import Path
 
 import nox
@@ -55,3 +56,22 @@ def import_data(session: Session) -> None:
         data_directory=data_dir,
     )
     loader.load()
+
+@nox.session(name="run:examples", python=False)
+def run_examples(session: Session) -> None:
+    """Execute examples, assuming a DB already is ready"""
+    path = _ROOT / "examples"
+
+    errors = []
+    for file in sorted(path.glob('[abcj]*.py')):
+        try:
+            session.run("python", file)
+        except Exception:
+            errors.append(file.name)
+
+    if len(errors) > 0:
+        escape_red = "\033[31m"
+        print(escape_red + "Errors running examples:")
+        for error in errors:
+            print(f"- {error}")
+        session.error(1)
