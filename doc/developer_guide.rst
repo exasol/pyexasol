@@ -54,6 +54,17 @@ Integration Tests
 
         echo "127.0.0.1 exasol-test-database" | sudo tee -a /etc/hosts
 
+.. important::
+
+    To (temporarily) skip integration tests that require `ssl.CERT_REQUIRED`, you can deselect those
+    tests by using:
+
+
+    .. code-block:: shell
+
+        poetry run -- nox -s test:integration -- -m "not with_cert"
+
+
 .. code-block:: shell
 
     nox -s test:integration
@@ -134,7 +145,3 @@ One of the release steps failed (Partial Release)
     **Scenario**: Publishing of the release on Github was successfully but during the PyPi release, the upload step got interrupted.
 
     **Solution**: Manually push the package to PyPi
-
-
-
-

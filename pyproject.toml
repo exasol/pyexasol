@@ -72,8 +72,8 @@ examples = ["pproxy"]
 [tool.poetry.group.dev.dependencies]
 nox = "^2023.4.22"
 pytest = ">=7.0.0,<9"
-docutils = "0.20.1"
-exasol-integration-test-docker-environment = "^3.0.0"
+docutils = "^0.21.2"
+exasol-integration-test-docker-environment = "^4.0.0"
 faker = "^24.14.1"
 exasol-toolbox = "^1.4.0"
 types-ujson = "^5.10.0.20250326"
