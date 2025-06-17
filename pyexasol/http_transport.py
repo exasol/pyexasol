@@ -6,6 +6,7 @@ import struct
 import sys
 import threading
 import zlib
+from typing import Optional
 
 
 class ExaSQLThread(threading.Thread):
@@ -423,14 +424,14 @@ class ExaTCPServer(socketserver.TCPServer):
     exa_address_ipaddr: str
     exa_address_port: int
 
-    total_clients = 0
-    is_terminated = False
+    total_clients: int = 0
+    is_terminated: bool = False
 
-    timeout = 1
+    timeout: Optional[int] = 1
 
     def __init__(self, *args, **kwargs):
-        self.compression = kwargs.pop("compression", False)
-        self.encryption = kwargs.pop("encryption", True)
+        self.compression: bool = kwargs.pop("compression", False)
+        self.encryption: bool = kwargs.pop("encryption", True)
 
         r_fd, w_fd = os.pipe()
 
