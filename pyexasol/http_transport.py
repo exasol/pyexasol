@@ -246,11 +246,11 @@ class ExaSQLImportThread(ExaSQLThread):
 
 class ExaHttpThread(threading.Thread):
     """
-    HTTP communication and compression / decompression is offloaded to separate thread
-    Thread can be used instead of subprocess when compatibility is an issue
+    HTTP communication and compression / decompression is offloaded to a separate
+    thread. A thread can be used instead of a subprocess when compatibility is an issue.
     """
 
-    def __init__(self, ipaddr, port, compression, encryption):
+    def __init__(self, ipaddr: str, port: int, compression: bool, encryption: bool):
         self.server = ExaTCPServer(
             (ipaddr, port),
             ExaHttpRequestHandler,
@@ -266,7 +266,7 @@ class ExaHttpThread(threading.Thread):
         super().__init__()
 
     @property
-    def exa_address(self):
+    def exa_address(self) -> str:
         return f"{self.server.exa_address_ipaddr}:{self.server.exa_address_port}"
 
     def run(self):
