@@ -23,6 +23,7 @@ reflect your organization's needs.
 * Added support for multi-version documentation
 * Added support for all standard nox tasks provided by `exasol-toolbox`
 * #179: Modified `ExaConnection` so that default is encryption with strict certification verification
+* #190: Added nox task to run examples
 
 ## ⚒️ Refactorings
 
