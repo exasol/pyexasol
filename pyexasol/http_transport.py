@@ -1,3 +1,4 @@
+import base64
 import hashlib
 import os
 import re
@@ -9,6 +10,8 @@ import threading
 import zlib
 from ssl import SSLContext
 from typing import Optional
+
+from packaging.version import Version
 
 
 class ExaSQLThread(threading.Thread):
@@ -71,13 +74,23 @@ class ExaSQLThread(threading.Thread):
         else:
             prefix = "http://"
 
+        is_8_32_or_greater = False
+        if release_version := self.connection.release_version:
+            is_8_32_or_greater = release_version >= Version("8.32.0")
+        pattern_sha_256 = r"/([0-9a-fA-F]{64})"
+
         csv_cols = self.build_csv_cols()
-
         for i, exa_address in enumerate(self.exa_address_list):
-            files.append(
-                f"AT '{prefix}{exa_address}' FILE '{str(i).rjust(3, '0')}.{ext}'{csv_cols}"
-            )
-
+            statement = f"AT '{prefix}{exa_address}' FILE '{str(i).rjust(3, '0')}.{ext}'{csv_cols}"
+            if is_8_32_or_greater:
+                match = re.search(pattern_sha_256, exa_address)
+                if not match:
+                    raise ValueError(
+                        "For Exasol DBs >=8.32, xxx. Needs encryption activated "
+                        "and internal Pyexasol certificate used"
+                    )
+                statement += f" PUBLIC KEY '{match.group(1)}'"
+            files.append(statement)
         return files
 
     def build_columns_list(self):
@@ -541,7 +554,16 @@ class ExaTCPServer(socketserver.TCPServer):
         cert.sign(k, "sha256")
 
         public_key_pem = crypto.dump_publickey(crypto.FILETYPE_PEM, k)
-        public_key_sha256 = hashlib.sha256(public_key_pem).hexdigest()
+        # public_key_sha256 = hashlib.sha256(public_key_pem).hexdigest()
+        public_key_base64_lines = [
+            line
+            for line in public_key_pem.decode().splitlines()
+            if not line.startswith("-----")
+        ]
+        public_key_base64 = "".join(public_key_base64_lines)
+        public_key_sha256 = hashlib.sha256(
+            base64.b64encode(public_key_base64.encode())
+        ).hexdigest()
 
         # TemporaryDirectory is used instead of NamedTemporaryFile for compatibility with Windows
         with tempfile.TemporaryDirectory(prefix="pyexasol_ssl_") as tempdir:
@@ -555,9 +577,14 @@ class ExaTCPServer(socketserver.TCPServer):
             key_file.write(crypto.dump_privatekey(crypto.FILETYPE_PEM, k))
             key_file.close()
 
+            public_key = open(directory / "public_key", "wb")
+            public_key.write(crypto.dump_publickey(crypto.FILETYPE_PEM, k))
+            public_key.close()
+
             context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
             context.verify_mode = ssl.CERT_NONE
             context.load_cert_chain(certfile=cert_file.name, keyfile=key_file.name)
+            # public_key_sha256 = input("sha256")
 
             return context, public_key_sha256
 
