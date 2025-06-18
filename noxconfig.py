@@ -8,7 +8,7 @@ from exasol.toolbox.nox.plugin import hookimpl
 from nox import Session
 
 DEFAULT_PORT = 8563
-DEFAULT_DB_VERSION = "8.31.0"
+DEFAULT_DB_VERSION = "8.32.0"
 CONTAINER_SUFFIX = "test"
 CONTAINER_NAME = f"db_container_{CONTAINER_SUFFIX}"
 
@@ -68,7 +68,7 @@ class Config:
     )
     python_versions = ["3.9", "3.10", "3.11", "3.12", "3.13"]
     plugins = [StartDB, StopDB]
-    exasol_versions = [DEFAULT_DB_VERSION]
+    exasol_versions = ["8.31.0", DEFAULT_DB_VERSION]
 
 
 PROJECT_CONFIG = Config()

@@ -1,3 +1,4 @@
+import base64
 import hashlib
 import os
 import re
@@ -9,6 +10,8 @@ import threading
 import zlib
 from ssl import SSLContext
 from typing import Optional
+
+from packaging.version import Version
 
 
 class ExaSQLThread(threading.Thread):
@@ -26,6 +29,18 @@ class ExaSQLThread(threading.Thread):
         self.exc = None
 
         super().__init__()
+
+    @staticmethod
+    def _extract_public_key_from_exa_address(exa_address: str) -> Optional[str]:
+        """
+        Extract public key from exa address, where the expected pattern is:
+            ip_address:port/sha256_base64_encoded_string
+        """
+        pattern = r"\/([a-zA-Z0-9_\-+\/]+=)"
+        match = re.search(pattern, exa_address)
+        if match:
+            return match.group(1)
+        return None
 
     def set_http_thread(self, http_thread):
         self.http_thread = http_thread
@@ -71,13 +86,22 @@ class ExaSQLThread(threading.Thread):
         else:
             prefix = "http://"
 
+        is_8_32_or_greater = False
+        if exasol_db_version := self.connection.exasol_db_version:
+            is_8_32_or_greater = exasol_db_version >= Version("8.32.0")
+
         csv_cols = self.build_csv_cols()
-
         for i, exa_address in enumerate(self.exa_address_list):
-            files.append(
-                f"AT '{prefix}{exa_address}' FILE '{str(i).rjust(3, '0')}.{ext}'{csv_cols}"
-            )
-
+            statement = f"AT '{prefix}{exa_address}'"
+            if self.connection.options["encryption"] and is_8_32_or_greater:
+                if sha256_public_key := self._extract_public_key_from_exa_address(
+                    exa_address
+                ):
+                    statement += f" PUBLIC KEY 'sha256//{sha256_public_key}'"
+                else:
+                    raise ValueError("TBD")
+            statement += f" FILE '{str(i).rjust(3, '0')}.{ext}'{csv_cols}"
+            files.append(statement)
         return files
 
     def build_columns_list(self):
@@ -327,7 +351,7 @@ class ExaHTTPTransportWrapper:
         self.http_thread.start()
 
     @property
-    def exa_address(self):
+    def exa_address(self) -> str:
         """
         Internal Exasol address as ``ipaddr:port`` string.
 
@@ -523,10 +547,12 @@ class ExaTCPServer(socketserver.TCPServer):
         Create temporary self-signed certificate for encrypted HTTP transport
         Exasol does not check validity of certificates
         """
+        import base64
         import ssl
         import tempfile
         from pathlib import Path
 
+        from cryptography.hazmat.primitives import serialization
         from OpenSSL import crypto
 
         k = crypto.PKey()
@@ -540,9 +566,6 @@ class ExaTCPServer(socketserver.TCPServer):
         cert.set_pubkey(k)
         cert.sign(k, "sha256")
 
-        public_key_pem = crypto.dump_publickey(crypto.FILETYPE_PEM, k)
-        public_key_sha256 = hashlib.sha256(public_key_pem).hexdigest()
-
         # TemporaryDirectory is used instead of NamedTemporaryFile for compatibility with Windows
         with tempfile.TemporaryDirectory(prefix="pyexasol_ssl_") as tempdir:
             directory = Path(tempdir)
@@ -554,6 +577,27 @@ class ExaTCPServer(socketserver.TCPServer):
             key_file = open(directory / "key", "wb")
             key_file.write(crypto.dump_privatekey(crypto.FILETYPE_PEM, k))
             key_file.close()
+
+            public_key_path = directory / "public_key"
+            public_key = open(public_key_path, "wb")
+            public_key.write(crypto.dump_publickey(crypto.FILETYPE_PEM, k))
+            public_key.close()
+
+            with open(public_key_path, "rb") as f:
+                public_key = serialization.load_pem_public_key(f.read())
+
+            # Convert to DER format
+            der_data = public_key.public_bytes(
+                encoding=serialization.Encoding.DER,
+                format=serialization.PublicFormat.SubjectPublicKeyInfo,
+            )
+
+            # Generate SHA256 hash in binary format
+            sha256_hash = hashlib.sha256(der_data).digest()
+
+            # Convert to Base64
+            base64_encoded = base64.b64encode(sha256_hash)
+            public_key_sha256 = base64_encoded.decode("utf-8")
 
             context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
             context.verify_mode = ssl.CERT_NONE
