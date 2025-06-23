@@ -856,9 +856,12 @@ class ExaConnection:
         return int(self.login_info.get("protocolVersion", 0))
 
     @property
-    def release_version(self) -> Optional[Version]:
+    def exasol_db_version(self) -> Optional[Version]:
         """
-        Exasol release version of current session.
+        Version of the Exasol database of the current session.
+
+        The login information is returned by the second response of LOGIN command
+        and calls this "releaseVersion".
         """
         if release_version := self.login_info.get("releaseVersion"):
             return Version(release_version)

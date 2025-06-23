@@ -40,7 +40,7 @@ def certificate(tmp_path_factory, container_name) -> Path:
 @pytest.fixture(scope="session")
 def db_version(connection_factory):
     with connection_factory() as conn:
-        version = conn.release_version
+        version = conn.exasol_db_version
     return version
 
 
