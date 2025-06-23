@@ -1,4 +1,3 @@
-import base64
 import hashlib
 import os
 import re
@@ -547,60 +546,76 @@ class ExaTCPServer(socketserver.TCPServer):
         Create temporary self-signed certificate for encrypted HTTP transport
         Exasol does not check validity of certificates
         """
-        import base64
-        import ssl
-        import tempfile
+        from base64 import b64encode
+        from datetime import (
+            datetime,
+            timedelta,
+            timezone,
+        )
         from pathlib import Path
+        from ssl import (
+            CERT_NONE,
+            PROTOCOL_TLS_SERVER,
+        )
+        from tempfile import TemporaryDirectory
 
-        from cryptography.hazmat.primitives import serialization
-        from OpenSSL import crypto
+        from cryptography import x509
+        from cryptography.hazmat.primitives import (
+            hashes,
+            serialization,
+        )
+        from cryptography.hazmat.primitives.asymmetric import rsa
+        from cryptography.x509.oid import NameOID
 
-        k = crypto.PKey()
-        k.generate_key(crypto.TYPE_RSA, 2048)
+        key_pair = rsa.generate_private_key(
+            public_exponent=65537,
+            key_size=2048,
+        )
 
-        cert = crypto.X509()
-        cert.set_serial_number(1)
-        cert.gmtime_adj_notBefore(0)
-        cert.gmtime_adj_notAfter(60 * 60 * 24 * 365)
+        name = x509.Name(
+            [
+                x509.NameAttribute(NameOID.COMMON_NAME, "exasol-tls.com"),
+            ]
+        )
+        cert = (
+            x509.CertificateBuilder()
+            .serial_number(x509.random_serial_number())
+            .not_valid_before(datetime.now(timezone.utc))
+            .not_valid_after(datetime.now(timezone.utc) + timedelta(days=365))
+            .public_key(key_pair.public_key())
+            .subject_name(name)
+            .issuer_name(name)
+            .sign(key_pair, hashes.SHA256())
+        )
 
-        cert.set_pubkey(k)
-        cert.sign(k, "sha256")
+        der_data = key_pair.public_key().public_bytes(
+            encoding=serialization.Encoding.DER,
+            format=serialization.PublicFormat.SubjectPublicKeyInfo,
+        )
+        sha256_hash = hashlib.sha256(der_data).digest()
+        base64_encoded = b64encode(sha256_hash)
+        public_key_sha256 = base64_encoded.decode("utf-8")
 
         # TemporaryDirectory is used instead of NamedTemporaryFile for compatibility with Windows
-        with tempfile.TemporaryDirectory(prefix="pyexasol_ssl_") as tempdir:
+        with TemporaryDirectory(prefix="pyexasol_ssl_") as tempdir:
             directory = Path(tempdir)
 
             cert_file = open(directory / "cert", "wb")
-            cert_file.write(crypto.dump_certificate(crypto.FILETYPE_PEM, cert))
+            cert_file.write(cert.public_bytes(serialization.Encoding.PEM))
             cert_file.close()
 
             key_file = open(directory / "key", "wb")
-            key_file.write(crypto.dump_privatekey(crypto.FILETYPE_PEM, k))
+            key_file.write(
+                key_pair.private_bytes(
+                    encoding=serialization.Encoding.PEM,
+                    format=serialization.PrivateFormat.TraditionalOpenSSL,
+                    encryption_algorithm=serialization.NoEncryption(),
+                )
+            )
             key_file.close()
 
-            public_key_path = directory / "public_key"
-            public_key = open(public_key_path, "wb")
-            public_key.write(crypto.dump_publickey(crypto.FILETYPE_PEM, k))
-            public_key.close()
-
-            with open(public_key_path, "rb") as f:
-                public_key = serialization.load_pem_public_key(f.read())
-
-            # Convert to DER format
-            der_data = public_key.public_bytes(
-                encoding=serialization.Encoding.DER,
-                format=serialization.PublicFormat.SubjectPublicKeyInfo,
-            )
-
-            # Generate SHA256 hash in binary format
-            sha256_hash = hashlib.sha256(der_data).digest()
-
-            # Convert to Base64
-            base64_encoded = base64.b64encode(sha256_hash)
-            public_key_sha256 = base64_encoded.decode("utf-8")
-
-            context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
-            context.verify_mode = ssl.CERT_NONE
+            context = SSLContext(PROTOCOL_TLS_SERVER)
+            context.verify_mode = CERT_NONE
             context.load_cert_chain(certfile=cert_file.name, keyfile=key_file.name)
 
             return context, public_key_sha256
