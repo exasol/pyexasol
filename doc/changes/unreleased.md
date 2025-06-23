@@ -49,7 +49,7 @@ reflect your organization's needs.
 * Relocked dependencies for transitive dependencies to resolve CVE-2025-47287 `tornado` and CVE-2025-47273 for `setuptools`
 * Relocked dependencies for transitive dependency to resolve CVE-2024-47081  `requests`
 * #194: Adapted integration tests so that tests with `ssl.CERT_REQUIRED` can be deselected
-* #200: Relocked dependencies to resolve CVEs for transitive dependence `urllib3`
+* #200: Activated Sonar for CI & Relocked dependencies to resolve CVEs for transitive dependence `urllib3`
 
 ## 📚 Documentation
 

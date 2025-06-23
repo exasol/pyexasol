@@ -60,6 +60,7 @@ class Config:
     root: Path = Path(__file__).parent
     doc: Path = Path(__file__).parent / "doc"
     version_file: Path = Path(__file__).parent / "pyexasol" / "version.py"
+    source: Path = Path("pyexasol")
     path_filters: Iterable[str] = (
         "dist",
         ".eggs",
