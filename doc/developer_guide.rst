@@ -24,6 +24,14 @@ Once you have set up all dependencies and activated the poetry shell, all furthe
 
 To execute a specific task, run ``nox -s <task name>``. For example, ``nox -s test:unit``.
 
+In our CI, PyExasol is checked for various formatting & type checks with nox tasks.
+To run these more easily locally, we've added a `.pre-commit-config.yaml`,
+which you can activate with `pre-commit <https://pre-commit.com/>`_
+
+    .. code-block:: shell
+
+        poetry run -- pre-commit install --hook-type pre-commit --hook-type pre-push
+
 Running tests
 ++++++++++++++
 
