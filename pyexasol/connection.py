@@ -20,6 +20,7 @@ from warnings import warn
 
 import rsa
 import websocket
+from packaging.version import Version
 
 from . import callback as cb
 from .exceptions import *
@@ -827,7 +828,7 @@ class ExaConnection:
         sql_thread.set_exa_address_list(exa_address_list)
         sql_thread.run_sql()
 
-    def session_id(self):
+    def session_id(self) -> str:
         """
         Session id of current session.
 
@@ -836,9 +837,9 @@ class ExaConnection:
         """
         return str(self.login_info.get("sessionId", ""))
 
-    def protocol_version(self):
+    def protocol_version(self) -> int:
         """
-        Actual protocol version used by the the established connection.
+        Actual protocol version used by the established connection.
 
         Returns:
             ``0`` if connection was not established yet (e.g. due to exception handling), otherwise protocol version as int.
@@ -853,6 +854,18 @@ class ExaConnection:
 
         """
         return int(self.login_info.get("protocolVersion", 0))
+
+    @property
+    def exasol_db_version(self) -> Optional[Version]:
+        """
+        Version of the Exasol database of the current session.
+
+        The login information is returned by the second response of LOGIN command
+        and calls this "releaseVersion".
+        """
+        if release_version := self.login_info.get("releaseVersion"):
+            return Version(release_version)
+        return None
 
     def last_statement(self) -> ExaStatement:
         """
@@ -1215,13 +1228,13 @@ class ExaConnection:
                 warn(
                     cleandoc(
                         """
-                        From PyExasol version ``1.0.0``, the default behavior of 
-                        ExaConnection for encrypted connections is to require strict 
-                        certificate validation with ``websocket_sslopt=None`` being 
-                        mapped to ``{"cert_reqs": ssl.CERT_REQUIRED}``. The prior 
-                        default behavior was to map such cases to 
+                        From PyExasol version ``1.0.0``, the default behavior of
+                        ExaConnection for encrypted connections is to require strict
+                        certificate validation with ``websocket_sslopt=None`` being
+                        mapped to ``{"cert_reqs": ssl.CERT_REQUIRED}``. The prior
+                        default behavior was to map such cases to
                         ``{"cert_reqs": ssl.CERT_NONE}``. For more information about
-                        encryption & best practices, please refer to 
+                        encryption & best practices, please refer to
                         ``doc/user_guide/encryption.rst``.
                         """
                     ),

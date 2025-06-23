@@ -39,18 +39,14 @@ def certificate(tmp_path_factory, container_name) -> Path:
 
 @pytest.fixture(scope="session")
 def db_version(connection_factory):
-    db_version_query = (
-        "SELECT PARAM_VALUE FROM EXA_METADATA "
-        "WHERE PARAM_NAME = 'databaseProductVersion';"
-    )
     with connection_factory() as conn:
-        version = conn.execute(db_version_query).fetchone()[0]
+        version = conn.exasol_db_version
     return version
 
 
 @pytest.fixture(scope="session")
-def db_major_version(db_version):
-    return db_version.split(".")[0]
+def db_major_version(db_version) -> int:
+    return db_version.major
 
 
 @pytest.fixture(scope="session")
@@ -58,8 +54,25 @@ def dsn_resolved():
     return os.environ.get("EXAHOST", "localhost:8563")
 
 
+@pytest.fixture(
+    scope="session",
+    params=[
+        pytest.param(ssl.CERT_NONE, id="NO_CERT", marks=pytest.mark.no_cert),
+        pytest.param(ssl.CERT_REQUIRED, id="WITH_CERT", marks=pytest.mark.with_cert),
+    ],
+)
+def certification_type(request):
+    if request.param == ssl.CERT_NONE:
+        return ssl.CERT_NONE
+    return ssl.CERT_REQUIRED
+
+
 @pytest.fixture(scope="session")
-def dsn():
+def dsn(certification_type):
+    if certification_type == ssl.CERT_NONE:
+        return os.environ.get("EXAHOST", "localhost:8563")
+    # The host name is different for this case. As it is required to be the same
+    # host name that the certificate is signed. This comes from the ITDE.
     return os.environ.get("EXAHOST", "exasol-test-database:8563")
 
 
@@ -78,18 +91,12 @@ def schema():
     return os.environ.get("EXASCHEMA", "PYEXASOL_TEST")
 
 
-@pytest.fixture(
-    scope="session",
-    params=[
-        ssl.CERT_NONE,
-        ssl.CERT_REQUIRED,
-    ],
-    ids=["NO_CERT", "WITH_CERT"],
-)
-def websocket_sslopt(request, certificate):
-    if request.param == ssl.CERT_NONE:
-        return {"cert_reqs": request.param}
-    return {"cert_reqs": request.param, "ca_certs": certificate}
+@pytest.fixture(scope="session")
+def websocket_sslopt(certification_type, certificate):
+    websocket_dict = {"cert_reqs": certification_type}
+    if certification_type == ssl.CERT_REQUIRED:
+        websocket_dict["ca_certs"] = certificate
+    return websocket_dict
 
 
 @pytest.fixture(scope="session")
@@ -293,9 +300,9 @@ def expected_reserved_words(db_major_version):
     }
     # fmt: on
 
-    if db_major_version == "7":
+    if db_major_version == 7:
         return set_shared
-    elif db_major_version == "8":
+    elif db_major_version == 8:
         set_shared.update(["CURRENT_CLUSTER", "CURRENT_CLUSTER_UID"])
         return set_shared
 
@@ -304,9 +311,9 @@ def expected_reserved_words(db_major_version):
 def expected_user_table_column_last_visit_ts(db_major_version):
     timestamp_type = namedtuple("timestamp_type", ["size", "sql_type"])
 
-    if db_major_version == "7":
+    if db_major_version == 7:
         return timestamp_type(size=8, sql_type="TIMESTAMP")
-    elif db_major_version == "8":
+    elif db_major_version == 8:
         return timestamp_type(size=16, sql_type="TIMESTAMP(3)")
 
 
