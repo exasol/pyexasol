@@ -9,7 +9,7 @@ jobs:
     uses: ./.github/workflows/matrix-exasol.yml
 
   ssl_cert:
-    name: Build SSL-Cert
+    name: Build SSL-Cert (Python-${{ matrix.python-version }}, Exasol-${{ matrix.exasol-version}})
     needs: [ build-matrix ]
     # For all containers with versions 7.1.x and older versions 8.y.z of docker-db,
     # there will be a crash if UDFs (User Defined Functions) are utilized.
@@ -27,7 +27,7 @@ jobs:
         uses: actions/checkout@v2
 
       - name: "Setup Python & Poetry Environment"
-        uses: exasol/python-toolbox/.github/actions/python-environment@1.4.0
+        uses: exasol/python-toolbox/.github/actions/python-environment@1.5.0
         with:
           python-version: ${{ matrix.python-version }}
 
@@ -37,7 +37,7 @@ jobs:
       - name: "Start test db"
         run: >
           poetry run -- itde spawn-test-environment --environment-name ssl
-          --database-port-forward 8563 --bucketfs-port-forward 2580 
+          --database-port-forward 8563 --bucketfs-port-forward 2580
           --docker-db-image-version ${{ matrix.exasol-version }} --db-mem-size 4GB
           --create-certificates
 
