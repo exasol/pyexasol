@@ -669,19 +669,25 @@ class ExaTCPServer(socketserver.TCPServer):
             key_size=2048,
         )
 
-        name = x509.Name(
+        # For a self-signed certificate, subject and issuer are identical.
+        subject = issuer = x509.Name(
             [
-                x509.NameAttribute(NameOID.COMMON_NAME, "exasol-tls.com"),
+                x509.NameAttribute(NameOID.COUNTRY_NAME, "DE"),
+                x509.NameAttribute(NameOID.STATE_OR_PROVINCE_NAME, "Franconia"),
+                x509.NameAttribute(NameOID.LOCALITY_NAME, "Nuremberg"),
+                x509.NameAttribute(NameOID.ORGANIZATION_NAME, "Exasol AG"),
+                x509.NameAttribute(NameOID.COMMON_NAME, "exasol.com"),
             ]
         )
+        today = datetime.now(timezone.utc)
         cert = (
             x509.CertificateBuilder()
-            .serial_number(x509.random_serial_number())
-            .not_valid_before(datetime.now(timezone.utc))
-            .not_valid_after(datetime.now(timezone.utc) + timedelta(days=365))
+            .subject_name(subject)
+            .issuer_name(issuer)
             .public_key(key_pair.public_key())
-            .subject_name(name)
-            .issuer_name(name)
+            .serial_number(x509.random_serial_number())
+            .not_valid_before(today)
+            .not_valid_after(today + timedelta(days=365))
             .sign(key_pair, hashes.SHA256())
         )
 
