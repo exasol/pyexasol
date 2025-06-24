@@ -60,12 +60,13 @@ class Config:
     root: Path = Path(__file__).parent
     doc: Path = Path(__file__).parent / "doc"
     version_file: Path = Path(__file__).parent / "pyexasol" / "version.py"
+    source: Path = Path("pyexasol")
     path_filters: Iterable[str] = (
         "dist",
         ".eggs",
         "venv",
     )
-
+    python_versions = ["3.9", "3.10", "3.11", "3.12", "3.13"]
     plugins = [StartDB, StopDB]
     exasol_versions = [DEFAULT_DB_VERSION]
 
