@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import hashlib
 import os
 import re
@@ -7,10 +9,245 @@ import struct
 import sys
 import threading
 import zlib
+from dataclasses import dataclass
 from ssl import SSLContext
-from typing import Optional
+from typing import (
+    TYPE_CHECKING,
+    Optional,
+)
 
 from packaging.version import Version
+
+if TYPE_CHECKING:
+    from pyexasol import ExaConnection
+
+
+@dataclass
+class SqlQuery:
+    connection: ExaConnection
+    compression: bool
+    # set these values in param dictionary to ExaConnection
+    columns: Optional[list[str]] = None
+    column_delimiter: Optional[str] = None
+    column_separator: Optional[str] = None
+    comment: Optional[str] = None
+    csv_cols: Optional[list[str]] = None
+    encoding: Optional[str] = None
+    format: Optional[str] = None
+    null: Optional[str] = None
+    row_separator: Optional[str] = None
+
+    def _build_columns_str(self) -> str:
+        if not self.columns:
+            return ""
+        return f"({','.join([self.connection.format.default_format_ident(c) for c in self.columns])})"
+
+    def _build_csv_cols(self) -> str:
+        if not self.csv_cols:
+            return ""
+
+        safe_csv_cols_regexp = re.compile(
+            r"^(\d+|\d+\.\.\d+)(\sFORMAT='[^'\n]+')?$", re.IGNORECASE
+        )
+        for c in self.csv_cols:
+            if not safe_csv_cols_regexp.match(c):
+                raise ValueError(f"Value [{c}] is not a safe csv_cols part")
+
+        return f"({','.join(self.csv_cols)})"
+
+    def _get_file_ext(self) -> str:
+        if not self.format:
+            if self.compression:
+                return "gz"
+            return "csv"
+        if self.format not in ("gz", "bz2", "zip"):
+            raise ValueError(f"Unsupported compression format: {self.format}")
+        return self.format
+
+    def _get_file_list(self, exa_address_list: list[str]) -> list[str]:
+        file_ext = self._get_file_ext()
+        prefix = self._get_prefix()
+
+        csv_cols = self._build_csv_cols()
+        files = []
+        for i, exa_address in enumerate(exa_address_list):
+            statement = f"AT '{prefix}{exa_address}'"
+            if self._requires_tls_public_key():
+                if not (sha256_public_key := self._get_public_key(exa_address)):
+                    # TODO set message for
+                    raise ValueError("TBD")
+                statement += f" PUBLIC KEY 'sha256//{sha256_public_key}'"
+            statement += f" FILE '{str(i).rjust(3, '0')}.{file_ext}'{csv_cols}"
+            files.append(statement)
+        return files
+
+    def _get_prefix(self) -> str:
+        if self.connection.options["encryption"]:
+            return "https://"
+        return "http://"
+
+    @staticmethod
+    def _get_public_key(exa_address: str) -> Optional[str]:
+        """
+        Extract public key from exa address, where the expected pattern is:
+            ip_address:port/sha256_base64_encoded_string
+        """
+        pattern = r"\/([a-zA-Z0-9_\-+\/]+=)"
+        match = re.search(pattern, exa_address)
+        if match:
+            return match.group(1)
+        return None
+
+    @staticmethod
+    def _get_query_str(query_lines: list[Optional[str]]) -> str:
+        filtered_query_lines = [
+            query_line for query_line in query_lines if query_line is not None
+        ]
+        return "\n".join(filtered_query_lines)
+
+    def _requires_tls_public_key(self) -> bool:
+        if (
+            exasol_db_version := self.connection.exasol_db_version
+        ) and exasol_db_version >= Version("8.32.0"):
+            if self.connection.options["encryption"]:
+                return True
+        return False
+
+    @property
+    def _column_delimiter(self) -> Optional[str]:
+        if self.column_delimiter:
+            return f"COLUMN DELIMITER = {self.connection.format.quote(self.column_delimiter)}"
+        return None
+
+    @property
+    def _column_separator(self) -> Optional[str]:
+        if self.column_separator:
+            return f"COLUMN SEPARATOR = {self.connection.format.quote(self.column_separator)}"
+        return None
+
+    @property
+    def _comment(self) -> Optional[str]:
+        if self.comment:
+            if "*/" in self.comment:
+                raise ValueError("Invalid comment, cannot contain */")
+            return f"/*{self.comment}*/"
+        return None
+
+    @property
+    def _encoding(self) -> Optional[str]:
+        if self.encoding:
+            return f"ENCODING = {self.connection.format.quote(self.encoding)}"
+        return None
+
+    @property
+    def _null(self) -> Optional[str]:
+        if self.null:
+            return f"NULL = {self.connection.format.quote(self.null)}"
+        return None
+
+    @property
+    def _row_separator(self) -> Optional[str]:
+        if self.row_separator:
+            return f"ROW SEPARATOR = {self.connection.format.quote(self.row_separator)}"
+        return None
+
+
+@dataclass
+class ImportQuery(SqlQuery):
+    # set these values in param dictionary to ExaConnection
+    skip: Optional[str] = None
+    trim: Optional[str] = None
+
+    def build_query(self, source: str, exa_address_list: list[str]) -> str:
+        query_lines = [
+            self._comment,
+            self._get_import(source=source),
+            *self._get_file_list(exa_address_list=exa_address_list),
+            self._encoding,
+            self._null,
+            self._skip,
+            self._trim,
+            self._row_separator,
+            self._column_separator,
+            self._column_delimiter,
+        ]
+        return self._get_query_str(query_lines)
+
+    @staticmethod
+    def load_from_dict(
+        connection: ExaConnection, compression: bool, params: dict
+    ) -> ImportQuery:
+        return ImportQuery(connection=connection, compression=compression, **params)
+
+    def _get_import(self, source: str) -> str:
+        columns_list = self._build_columns_str()
+        return f"IMPORT INTO {source}{columns_list} FROM CSV"
+
+    @property
+    def _skip(self) -> Optional[str]:
+        if self.skip:
+            return f"SKIP = {self.connection.format.safe_decimal(self.skip)}"
+        return None
+
+    @property
+    def _trim(self) -> Optional[str]:
+        if not self.trim:
+            return None
+
+        trim = str(self.trim).upper()
+        if trim not in ("TRIM", "LTRIM", "RTRIM"):
+            raise ValueError(f"Invalid value for import parameter TRIM: {trim}")
+        return trim
+
+
+@dataclass
+class ExportQuery(SqlQuery):
+    # set these values in param dictionary to ExaConnection
+    delimit: Optional[str] = None
+    with_column_names: Optional[str] = None
+
+    def build_query(self, source: str, exa_address_list: list[str]) -> str:
+        query_lines = [
+            self._comment,
+            self._get_export(source=source),
+            *self._get_file_list(exa_address_list=exa_address_list),
+            self._delimit,
+            self._encoding,
+            self._null,
+            self._row_separator,
+            self._column_separator,
+            self._column_delimiter,
+            self._with_column_names,
+        ]
+        return self._get_query_str(query_lines)
+
+    @staticmethod
+    def load_from_dict(
+        connection: ExaConnection, compression: bool, params: dict
+    ) -> ExportQuery:
+        return ExportQuery(connection=connection, compression=compression, **params)
+
+    def _get_export(self, source: str) -> str:
+        columns_list = self._build_columns_str()
+        return f"EXPORT {source}{columns_list} INTO CSV"
+
+    @property
+    def _delimit(self) -> Optional[str]:
+        if not self.delimit:
+            return None
+
+        delimit = str(self.delimit).upper()
+        if delimit not in ("AUTO", "ALWAYS", "NEVER"):
+            raise ValueError(f"Invalid value for export parameter DELIMIT: {delimit}")
+        return delimit
+
+    @property
+    def _with_column_names(self) -> Optional[str]:
+        # TODO slight difference now as just previously had to be present
+        # without check on value
+        if self.with_column_names:
+            return "WITH COLUMN NAMES"
+        return None
 
 
 class ExaSQLThread(threading.Thread):
@@ -67,62 +304,6 @@ class ExaSQLThread(threading.Thread):
         if self.exc:
             raise self.exc
 
-    def build_file_list(self):
-        files = list()
-
-        if "format" in self.params:
-            if self.params["format"] not in ["gz", "bz2", "zip"]:
-                raise ValueError(
-                    f"Unsupported compression format: {self.params['format']}"
-                )
-
-            ext = self.params["format"]
-        else:
-            ext = "gz" if self.compression else "csv"
-
-        if self.connection.options["encryption"]:
-            prefix = "https://"
-        else:
-            prefix = "http://"
-
-        is_8_32_or_greater = False
-        if exasol_db_version := self.connection.exasol_db_version:
-            is_8_32_or_greater = exasol_db_version >= Version("8.32.0")
-
-        csv_cols = self.build_csv_cols()
-        for i, exa_address in enumerate(self.exa_address_list):
-            statement = f"AT '{prefix}{exa_address}'"
-            if self.connection.options["encryption"] and is_8_32_or_greater:
-                if sha256_public_key := self._extract_public_key_from_exa_address(
-                    exa_address
-                ):
-                    statement += f" PUBLIC KEY 'sha256//{sha256_public_key}'"
-                else:
-                    raise ValueError("TBD")
-            statement += f" FILE '{str(i).rjust(3, '0')}.{ext}'{csv_cols}"
-            files.append(statement)
-        return files
-
-    def build_columns_list(self):
-        if "columns" not in self.params:
-            return ""
-
-        return f"({','.join([self.connection.format.default_format_ident(c) for c in self.params['columns']])})"
-
-    def build_csv_cols(self):
-        if "csv_cols" not in self.params:
-            return ""
-
-        safe_csv_cols_regexp = re.compile(
-            r"^(\d+|\d+\.\.\d+)(\sFORMAT='[^'\n]+')?$", re.IGNORECASE
-        )
-
-        for c in self.params["csv_cols"]:
-            if not safe_csv_cols_regexp.match(c):
-                raise ValueError(f"Value [{c}] is not a safe csv_cols part")
-
-        return f"({','.join(self.params['csv_cols'])})"
-
 
 class ExaSQLExportThread(ExaSQLThread):
     """
@@ -154,54 +335,10 @@ class ExaSQLExportThread(ExaSQLThread):
                     "Export option 'columns' is not compatible with SQL query export source"
                 )
 
-        parts = list()
-
-        if self.params.get("comment"):
-            comment = self.params.get("comment")
-            if "*/" in comment:
-                raise ValueError("Invalid comment, cannot contain */")
-            parts.append(f"/*{comment}*/")
-
-        parts.append(f"EXPORT {export_source}{self.build_columns_list()} INTO CSV")
-        parts.extend(self.build_file_list())
-
-        if self.params.get("delimit"):
-            delimit = str(self.params["delimit"]).upper()
-
-            if delimit != "AUTO" and delimit != "ALWAYS" and delimit != "NEVER":
-                raise ValueError(
-                    "Invalid value for export parameter DELIMIT: " + delimit
-                )
-
-            parts.append(f"DELIMIT = {delimit}")
-
-        if self.params.get("encoding"):
-            parts.append(
-                f"ENCODING = {self.connection.format.quote(self.params['encoding'])}"
-            )
-
-        if self.params.get("null"):
-            parts.append(f"NULL = {self.connection.format.quote(self.params['null'])}")
-
-        if self.params.get("row_separator"):
-            parts.append(
-                f"ROW SEPARATOR = {self.connection.format.quote(self.params['row_separator'])}"
-            )
-
-        if self.params.get("column_separator"):
-            parts.append(
-                f"COLUMN SEPARATOR = {self.connection.format.quote(self.params['column_separator'])}"
-            )
-
-        if self.params.get("column_delimiter"):
-            parts.append(
-                f"COLUMN DELIMITER = {self.connection.format.quote(self.params['column_delimiter'])}"
-            )
-
-        if self.params.get("with_column_names"):
-            parts.append("WITH COLUMN NAMES")
-
-        self.connection.execute("\n".join(parts))
+        export_query = ExportQuery.load_from_dict(
+            connection=self.connection, compression=self.compression, params=self.params
+        ).build_query(source=export_source, exa_address_list=self.exa_address_list)
+        self.connection.execute(export_query)
 
 
 class ExaSQLImportThread(ExaSQLThread):
@@ -219,54 +356,10 @@ class ExaSQLImportThread(ExaSQLThread):
     def run_sql(self):
         table_ident = self.connection.format.default_format_ident(self.table)
 
-        parts = list()
-
-        if self.params.get("comment"):
-            comment = self.params.get("comment")
-            if "*/" in comment:
-                raise ValueError("Invalid comment, cannot contain */")
-            parts.append(f"/*{comment}*/")
-
-        parts.append(f"IMPORT INTO {table_ident}{self.build_columns_list()} FROM CSV")
-        parts.extend(self.build_file_list())
-
-        if self.params.get("encoding"):
-            parts.append(
-                f"ENCODING = {self.connection.format.quote(self.params['encoding'])}"
-            )
-
-        if self.params.get("null"):
-            parts.append(f"NULL = {self.connection.format.quote(self.params['null'])}")
-
-        if self.params.get("skip"):
-            parts.append(
-                f"SKIP = {self.connection.format.safe_decimal(self.params['skip'])}"
-            )
-
-        if self.params.get("trim"):
-            trim = str(self.params["trim"]).upper()
-
-            if trim != "TRIM" and trim != "LTRIM" and trim != "RTRIM":
-                raise ValueError("Invalid value for import parameter TRIM: " + trim)
-
-            parts.append(trim)
-
-        if self.params.get("row_separator"):
-            parts.append(
-                f"ROW SEPARATOR = {self.connection.format.quote(self.params['row_separator'])}"
-            )
-
-        if self.params.get("column_separator"):
-            parts.append(
-                f"COLUMN SEPARATOR = {self.connection.format.quote(self.params['column_separator'])}"
-            )
-
-        if self.params.get("column_delimiter"):
-            parts.append(
-                f"COLUMN DELIMITER = {self.connection.format.quote(self.params['column_delimiter'])}"
-            )
-
-        self.connection.execute("\n".join(parts))
+        import_query = ImportQuery.load_from_dict(
+            connection=self.connection, compression=self.compression, params=self.params
+        ).build_query(source=table_ident, exa_address_list=self.exa_address_list)
+        self.connection.execute(import_query)
 
 
 class ExaHttpThread(threading.Thread):
@@ -344,7 +437,11 @@ class ExaHTTPTransportWrapper:
     """
 
     def __init__(
-        self, ipaddr: str, port: int, compression: bool = False, encryption: bool = True
+        self,
+        ipaddr: str,
+        port: int,
+        compression: bool = False,
+        encryption: bool = True,
     ):
         self.http_thread = ExaHttpThread(ipaddr, port, compression, encryption)
         self.http_thread.start()
@@ -458,7 +555,7 @@ class ExaTCPServer(socketserver.TCPServer):
     total_clients: int = 0
     is_terminated: bool = False
 
-    timeout: Optional[int] = 1
+    timeout: int | None = 1
 
     def __init__(self, *args, **kwargs):
         self.compression: bool = kwargs.pop("compression", False)

@@ -69,6 +69,10 @@ class Config:
     python_versions = ["3.9", "3.10", "3.11", "3.12", "3.13"]
     plugins = [StartDB, StopDB]
     exasol_versions = ["8.31.0", DEFAULT_DB_VERSION]
+    # need --keep-runtime-typing, as pydantic with python3.9 does not accept str | None
+    # format, and it is not resolved with from __future__ import annotations. pyupgrade
+    # will keep switching Optional[str] to str | None leading to issues.
+    pyupgrade_args = ("--py39-plus", "--keep-runtime-typing")
 
 
 PROJECT_CONFIG = Config()
