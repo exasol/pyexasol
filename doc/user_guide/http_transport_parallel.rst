@@ -9,7 +9,7 @@ How it works on high level
 --------------------------
 
 1. Parent process opens main connection to Exasol and spawns multiple child processes.
-2. Each child process connects to individual Exasol node using ``http_transport()`` method, gets internal Exasol address (``ipaddr:port`` string) using the ``.address`` property, and sends it to the parent process.
+2. Each child process connects to individual Exasol node using ``http_transport()`` method, gets internal Exasol address (``ipaddr:port/public_key`` string) using the ``.exa_address`` property, and sends it to the parent process.
 3. Parent process collects list of internal Exasol addresses from child processes and runs ``export_parallel()`` or ``import_parallel()`` function to execute SQL query.
 4. Each child process runs a callback function and reads or sends a chunk of data from or to Exasol.
 5. Parent process waits for the SQL query and child processes to finish.
