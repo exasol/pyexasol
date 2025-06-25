@@ -14,6 +14,7 @@ from ssl import SSLContext
 from typing import (
     TYPE_CHECKING,
     Optional,
+    Union,
 )
 
 from packaging.version import Version
@@ -157,7 +158,7 @@ class SqlQuery:
 @dataclass
 class ImportQuery(SqlQuery):
     # set these values in param dictionary to ExaConnection
-    skip: Optional[str] = None
+    skip: Optional[Union[str, int]] = None
     trim: Optional[str] = None
 
     def build_query(self, source: str, exa_address_list: list[str]) -> str:
@@ -245,8 +246,6 @@ class ExportQuery(SqlQuery):
 
     @property
     def _with_column_names(self) -> Optional[str]:
-        # TODO slight difference now as just previously had to be present
-        # without check on value
         if self.with_column_names:
             return "WITH COLUMN NAMES"
         return None

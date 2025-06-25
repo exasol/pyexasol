@@ -8,13 +8,18 @@ from pyexasol import (
     ExaConnection,
     ExaFormatter,
 )
-from pyexasol.http_transport import SqlQuery
+from pyexasol.http_transport import (
+    ExportQuery,
+    ImportQuery,
+    SqlQuery,
+)
 
 
 @pytest.fixture
 def connection():
     mock = Mock(ExaConnection)
     mock.options = {"encryption": True, "quote_ident": "'"}
+    mock.exasol_db_version = Version("8.32.0")
     mock.format = ExaFormatter(connection=mock)
     return mock
 
@@ -24,13 +29,23 @@ def sql_query(connection):
     return SqlQuery(connection=connection, compression=True)
 
 
+@pytest.fixture
+def import_sql_query(connection):
+    return ImportQuery(connection=connection, compression=True)
+
+
+@pytest.fixture
+def export_sql_query(connection):
+    return ExportQuery(connection=connection, compression=True)
+
+
 class TestSqlQuery:
     @staticmethod
     @pytest.mark.parametrize(
         "columns,expected",
         [(None, ""), (["LASTNAME", "FIRSTNAME"], '("LASTNAME","FIRSTNAME")')],
     )
-    def test_build_columns_str(sql_query, columns, expected) -> str:
+    def test_build_columns_str(sql_query, columns, expected):
         sql_query.columns = columns
         assert sql_query._build_columns_str() == expected
 
@@ -229,3 +244,125 @@ class TestSqlQuery:
     def test_row_separator(sql_query, row_separator, expected):
         sql_query.row_separator = row_separator
         assert sql_query._row_separator == expected
+
+
+class TestImportQuery:
+    @staticmethod
+    def test_build_query(import_sql_query, connection):
+        result = import_sql_query.build_query(
+            source="TABLE",
+            exa_address_list=[
+                "127.18.0.2:8364/YHistZoLhU9+FKoSEHHbNGtC/Ee4KT75DDBO+s5OG8o="
+            ],
+        )
+        assert (
+            result
+            == "IMPORT INTO TABLE FROM CSV\nAT 'https://127.18.0.2:8364/YHistZoLhU9+FKoSEHHbNGtC/Ee4KT75DDBO+s5OG8o=' PUBLIC KEY 'sha256//YHistZoLhU9+FKoSEHHbNGtC/Ee4KT75DDBO+s5OG8o=' FILE '000.gz'"
+        )
+
+    @staticmethod
+    def test_load_from_dict(connection):
+        ImportQuery.load_from_dict(
+            connection=connection, compression=False, params={"skip": 2}
+        )
+
+    @staticmethod
+    @pytest.mark.parametrize(
+        "columns,expected",
+        [
+            (
+                ["LASTNAME", "FIRSTNAME"],
+                'IMPORT INTO TABLE("LASTNAME","FIRSTNAME") FROM CSV',
+            ),
+            (None, "IMPORT INTO TABLE FROM CSV"),
+        ],
+    )
+    def test_get_import(import_sql_query, columns, expected):
+        import_sql_query.columns = columns
+        result = import_sql_query._get_import(source="TABLE")
+        assert result == expected
+
+    @staticmethod
+    @pytest.mark.parametrize(
+        "skip,expected", [("1", "SKIP = 1"), (1, "SKIP = 1"), (None, None)]
+    )
+    def test_skip(import_sql_query, skip, expected):
+        import_sql_query.skip = skip
+        assert import_sql_query._skip == expected
+
+    @staticmethod
+    @pytest.mark.parametrize(
+        "trim,expected", [("trim", "TRIM"), ("TriM", "TRIM"), (None, None)]
+    )
+    def test_trim(import_sql_query, trim, expected):
+        import_sql_query.trim = trim
+        assert import_sql_query._trim == expected
+
+    @staticmethod
+    def test_trim_raises_exception(import_sql_query):
+        import_sql_query.trim = "not_a_valid_trim"
+        with pytest.raises(ValueError, match="Invalid value for import parameter TRIM"):
+            assert import_sql_query._trim
+
+
+class TestExportQuery:
+    @staticmethod
+    def test_build_query(export_sql_query, connection):
+        result = export_sql_query.build_query(
+            source="TABLE",
+            exa_address_list=[
+                "127.18.0.2:8364/YHistZoLhU9+FKoSEHHbNGtC/Ee4KT75DDBO+s5OG8o="
+            ],
+        )
+        assert (
+            result
+            == "EXPORT TABLE INTO CSV\nAT 'https://127.18.0.2:8364/YHistZoLhU9+FKoSEHHbNGtC/Ee4KT75DDBO+s5OG8o=' PUBLIC KEY 'sha256//YHistZoLhU9+FKoSEHHbNGtC/Ee4KT75DDBO+s5OG8o=' FILE '000.gz'"
+        )
+
+    #
+    @staticmethod
+    def test_load_from_dict(connection):
+        ExportQuery.load_from_dict(
+            connection=connection, compression=False, params={"delimit": "auto"}
+        )
+
+    @staticmethod
+    @pytest.mark.parametrize(
+        "columns,expected",
+        [
+            (
+                ["LASTNAME", "FIRSTNAME"],
+                'EXPORT TABLE("LASTNAME","FIRSTNAME") INTO CSV',
+            ),
+            (None, "EXPORT TABLE INTO CSV"),
+        ],
+    )
+    def test_get_export(export_sql_query, columns, expected):
+        export_sql_query.columns = columns
+        result = export_sql_query._get_export(source="TABLE")
+        assert result == expected
+
+    @staticmethod
+    @pytest.mark.parametrize(
+        "delimit,expected", [("auto", "AUTO"), ("AutO", "AUTO"), (None, None)]
+    )
+    def test_delimit(export_sql_query, delimit, expected):
+        export_sql_query.delimit = delimit
+        assert export_sql_query._delimit == expected
+
+    @staticmethod
+    def test_delimit_raises_exception(export_sql_query):
+        export_sql_query.delimit = "not_a_valid_delimit"
+        with pytest.raises(
+            ValueError, match="Invalid value for export parameter DELIMIT"
+        ):
+            assert export_sql_query._delimit
+
+    @staticmethod
+    @pytest.mark.parametrize(
+        "with_column_names,expected",
+        [("with_column_names", "WITH COLUMN NAMES"), (None, None)],
+    )
+    def test_with_column_names(export_sql_query, with_column_names, expected):
+        export_sql_query.with_column_names = with_column_names
+        assert export_sql_query._with_column_names == expected
