@@ -39,7 +39,7 @@ Thus, from PyExasol version `1.0.0`, we have adapted the default behavior of `Ex
 ```sql
     EXPORT my_table INTO CSV
     AT '127.18.0.2:8364/YHistZoLhU9+FKoSEHHbNGtC/Ee4KT75DDBO+s5OG8o='
-    PUBLIC KEY 'sha256//YHistZoLhU9+FKoSEHHbNGtC/Ee4KT75DDBO+s5OG8o=' FILE '000.gz''
+    PUBLIC KEY 'sha256//YHistZoLhU9+FKoSEHHbNGtC/Ee4KT75DDBO+s5OG8o=' FILE '000.gz'
     WITH COLUMN HEADERS
 ```
 
