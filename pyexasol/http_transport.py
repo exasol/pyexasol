@@ -55,48 +55,34 @@ class SqlQuery:
 
         return f"({','.join(self.csv_cols)})"
 
-    def _get_file_ext(self) -> str:
-        if not self.format:
-            if self.compression:
-                return "gz"
-            return "csv"
-        if self.format not in ("gz", "bz2", "zip"):
-            raise ValueError(f"Unsupported compression format: {self.format}")
-        return self.format
+    @staticmethod
+    def _extract_public_key(exa_address: str) -> str:
+        """
+        Extract public key from exa address, where the expected pattern is:
+            ip_address:port/public_key
+        The value for public key is expected to be a SHA-256 hash of the public key,
+        which is then base64-encoded.
+        """
+        pattern = r"\/([a-zA-Z0-9_\-+\/]+=)"
+        match = re.search(pattern, exa_address)
+        if match:
+            return match.group(1)
+        raise ValueError(f"Could not extract public key from exa_address {exa_address}")
 
     def _get_file_list(self, exa_address_list: list[str]) -> list[str]:
-        file_ext = self._get_file_ext()
-        prefix = self._get_prefix()
+        file_ext = self._file_ext
+        prefix = self._url_prefix
 
         csv_cols = self._build_csv_cols()
         files = []
         for i, exa_address in enumerate(exa_address_list):
             statement = f"AT '{prefix}{exa_address}'"
             if self._requires_tls_public_key():
-                if not (sha256_public_key := self._get_public_key(exa_address)):
-                    # TODO set message for
-                    raise ValueError("TBD")
+                sha256_public_key = self._extract_public_key(exa_address)
                 statement += f" PUBLIC KEY 'sha256//{sha256_public_key}'"
             statement += f" FILE '{str(i).rjust(3, '0')}.{file_ext}'{csv_cols}"
             files.append(statement)
         return files
-
-    def _get_prefix(self) -> str:
-        if self.connection.options["encryption"]:
-            return "https://"
-        return "http://"
-
-    @staticmethod
-    def _get_public_key(exa_address: str) -> Optional[str]:
-        """
-        Extract public key from exa address, where the expected pattern is:
-            ip_address:port/sha256_base64_encoded_string
-        """
-        pattern = r"\/([a-zA-Z0-9_\-+\/]+=)"
-        match = re.search(pattern, exa_address)
-        if match:
-            return match.group(1)
-        return None
 
     @staticmethod
     def _get_query_str(query_lines: list[Optional[str]]) -> str:
@@ -140,10 +126,26 @@ class SqlQuery:
         return None
 
     @property
+    def _file_ext(self) -> str:
+        if not self.format:
+            if self.compression:
+                return "gz"
+            return "csv"
+        if self.format not in ("gz", "bz2", "zip"):
+            raise ValueError(f"Unsupported compression format: {self.format}")
+        return self.format
+
+    @property
     def _null(self) -> Optional[str]:
         if self.null:
             return f"NULL = {self.connection.format.quote(self.null)}"
         return None
+
+    @property
+    def _url_prefix(self) -> str:
+        if self.connection.options["encryption"]:
+            return "https://"
+        return "http://"
 
     @property
     def _row_separator(self) -> Optional[str]:
@@ -265,18 +267,6 @@ class ExaSQLThread(threading.Thread):
         self.exc = None
 
         super().__init__()
-
-    @staticmethod
-    def _extract_public_key_from_exa_address(exa_address: str) -> Optional[str]:
-        """
-        Extract public key from exa address, where the expected pattern is:
-            ip_address:port/sha256_base64_encoded_string
-        """
-        pattern = r"\/([a-zA-Z0-9_\-+\/]+=)"
-        match = re.search(pattern, exa_address)
-        if match:
-            return match.group(1)
-        return None
 
     def set_http_thread(self, http_thread):
         self.http_thread = http_thread
