@@ -152,8 +152,8 @@ import_params
      - `This is a query description`
      - Add a comment before the beginning of the query
 
-.. _numeric: https://docs.exasol.com/sql_references/formatmodels.htm#NumericFormat
-.. _date: https://docs.exasol.com/sql_references/formatmodels.htm#DateTimeFormat
+.. _numeric: https://docs.exasol.com/db/latest/sql_references/formatmodels.htm#Numericformatmodels
+.. _date: https://docs.exasol.com/db/latest/sql_references/formatmodels.htm#Datetimeformatmodels
 
 export_params
 -------------
@@ -227,9 +227,9 @@ Example of a callback exporting into a basic Python list.
     def export_to_list(pipe, dst, **kwargs):
         wrapped_pipe = io.TextIOWrapper(pipe, newline='\n')
         reader = csv.reader(wrapped_pipe, lineterminator='\n', **kwargs)
-    
+
         return [row for row in reader]
-    
+
     # Run EXPORT using the defined callback function
     C.export_to_callback(export_to_list, None, 'my_table')
 
@@ -245,4 +245,3 @@ Example of a callback importing from Pandas into Exasol.
 
     # Run IMPORT using the defined callback function
     C.export_from_callback(import_from_pandas, df, 'my_table')
-
