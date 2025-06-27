@@ -5,6 +5,8 @@ Exasol allows capturing combined output (STDOUT + STDERR) of UDF scripts. It is 
 
 In order to use this feature, user has to run a TCP server and provide the address via session parameters. For example::
 
+.. code-block:: sql
+
     ALTER SESSION SET SCRIPT_OUTPUT_ADDRESS = 'myserver:16442';
 
 Exasol may run UDFs in parallel using a large amount of VMs. Each VM opens an individual connection to the TCP Server and keeps it open until the end of execution. The TCP server must be prepared for a large number of simultaneous connections.
@@ -23,8 +25,9 @@ The server runs forever until stopped by the user.
 How to use it:
 
 #. Run the server in debug mode::
+    .. code-block:: bash
 
-        python -m pyexasol_utils.script_output
+            python -m pyexasol_utils.script_output
 
 #. Copy-paste the provided SQL query to your SQL client and execute it;
 #. Run queries with UDF scripts, see output in the terminal;
@@ -47,6 +50,8 @@ How to use it:
 3. Read and process files returned by the function.
 
 Example::
+
+.. code-block:: python
 
     stmt, log_files = C.execute_udf_output("SELECT my_script(user_id) FROM table")
 

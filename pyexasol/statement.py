@@ -292,7 +292,7 @@ class ExaStatement:
 
         Warning:
             You won't be able to fetch next chunk of large dataset
-            after calling this function, but no other side-effects.
+            after calling this function, but no other side effects.
         """
         self._close_result_set_handle()
         self._close_statement_handle()

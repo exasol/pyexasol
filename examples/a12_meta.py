@@ -1,5 +1,5 @@
 """
-Lock-free meta data requests
+Lock-free metadata requests
 """
 
 import pprint

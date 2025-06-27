@@ -245,8 +245,8 @@ class ExaSQLImportThread(ExaSQLThread):
 
 class ExaHttpThread(threading.Thread):
     """
-    HTTP communication and compression / decompression is offloaded to separate thread
-    Thread can be used instead of subprocess when compatibility is an issue
+    HTTP communication and compression / decompression is offloaded to a separate thread.
+    A thread can be used instead of a subprocess when compatibility is an issue.
     """
 
     def __init__(self, ipaddr, port, compression, encryption):

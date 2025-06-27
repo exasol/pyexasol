@@ -53,7 +53,7 @@ rsa = "*"
 packaging = "*"
 # Currently, it is necessary to pin numpy explicitly.
 # For additional details, refer to: https://github.com/numpy/numpy/issues/26710
-# Once this issue has been resolved, we should be able remove this explicit dependency.
+# Once this issue has been resolved, we should be able to remove this explicit dependency.
 numpy = { version = ">1.26.0,<2", optional = true }
 pandas = { version = "^2", optional = true, extras = ["numpy"] }
 ujson = { version = "*", optional = true }
@@ -75,7 +75,7 @@ pytest = ">=7.0.0,<9"
 docutils = "^0.21.2"
 exasol-integration-test-docker-environment = "^4.0.0"
 faker = "^24.14.1"
-exasol-toolbox = "^1.5.0"
+exasol-toolbox = "^1.6.0"
 types-ujson = "^5.10.0.20250326"
 
 [tool.black]

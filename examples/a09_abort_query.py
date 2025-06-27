@@ -1,5 +1,5 @@
 """
-Abort long running query from another thread
+Abort long-running query from another thread
 """
 
 import pprint

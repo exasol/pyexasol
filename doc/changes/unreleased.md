@@ -56,3 +56,4 @@ reflect your organization's needs.
 * Added sphinx based documentation
 * Added example to highlight how sensitive information from exceptions should be handled
 * Harmonized spelling of PyExasol across documentation
+* #204: Fixed broken links and some typos

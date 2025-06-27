@@ -1,7 +1,7 @@
 DB-API 2.0 Compatibility
 ========================
 
-`PyExasol <public interface>`__ is similar to `PEP-249 DB-API 2.0 <https://www.python.org/dev/peps/pep-0249/>`__ specification, but it does not strictly follow it. This page explains the reasons behind this decision and your alternative(s) if you need or want to use a DBAPI2 compatible driver.
+`PyExasol <https://github.com/exasol/pyexasol/blob/master/exasol/driver/websocket/dbapi2.py>`__ is similar to `PEP-249 DB-API 2.0 <https://peps.python.org/pep-0249/>`__ specification, but it does not strictly follow it. This page explains the reasons behind this decision and your alternative(s) if you need or want to use a DBAPI2 compatible driver.
 
 Alternatives
 ------------
@@ -14,11 +14,11 @@ The ``pyexasol`` package includes a DBAPI2 compatible driver facade, located in 
 That said, in specific scenarios, the DBAPI2 API can be advantageous or even necessary. This is particularly true when integrating with "DB-Agnostic" frameworks. In such cases, you can just import and use the DBAPI2 compliant facade as illustrated in the example below.
 
 .. code-block:: python
-    
+
     from exasol.driver.websocket.dbapi2 import connect
-    
+
     connection = connect(dsn='', username='sys', password='exasol', schema='TEST')
-    
+
     with connection.cursor() as cursor:
         cursor.execute("SELECT 1;")
 
@@ -43,7 +43,7 @@ When people use DB-API 2.0 drivers, they tend to skip manuals and automatically 
 
 A good example is `TurboODBC <https://github.com/blue-yonder/turbodbc>`__. Very few know that it is possible to fetch data as `NumPy arrays <https://turbodbc.readthedocs.io/en/latest/pages/advanced_usage.html#numpy-support>`__ and as `Apache Arrow <https://turbodbc.readthedocs.io/en/latest/pages/advanced_usage.html#apache-arrow-support>`__.
 
-Minor intentional incompatibilities with DB-API 2.0 force users to look through the manual and to learn about `better ways <../../docs/BEST_PRACTICES.md>`__ of getting the job done.
+Minor intentional incompatibilities with DB-API 2.0 force users to look through the manual and to learn about :ref:`Best Practices` of getting the job done.
 
 Exasol Specific Problems with DB-API 2.0
 ----------------------------------------
@@ -67,7 +67,7 @@ Ideas for Migration
 Find ``cursor()`` calls:
 
 .. code-block:: python
-    
+
     cur = C.cursor()
     cur.execute('SELECT * FROM table')
     data = cur.fetchall()
@@ -75,33 +75,33 @@ Find ``cursor()`` calls:
 Replace with:
 
 .. code-block:: python
-    
+
     st = C.execute('SELECT * FROM table')
     data = st.fetchall()
 
 Find ``.description``
 
 .. code-block:: python
-    
+
     columns = list(map(str.lower, next(zip(*cur.description))))
 
 Replace with:
 
 .. code-block:: python
-    
+
     columns = st.column_names()
 
 Find all reads into pandas:
 
 .. code-block:: python
-    
+
     cur.execute('SELECT * FROM table')
     pandas.DataFrame(cur.fetchall(), columns=columns)
 
 Replace with:
 
 .. code-block:: python
-    
+
     C.export_to_pandas('SELECT * FROM table')
-    
+
 ...etc.
