@@ -117,7 +117,7 @@ Metadata Requests
 
 .. literalinclude:: ../../examples/a12_meta.py
     :language: python
-    :caption: lock-free meta data requests
+    :caption: lock-free metadata requests
 
 No-SQL Metadata
 +++++++++++++++
