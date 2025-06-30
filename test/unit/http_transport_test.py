@@ -45,9 +45,9 @@ class TestSqlQuery:
         "columns,expected",
         [(None, ""), (["LASTNAME", "FIRSTNAME"], '("LASTNAME","FIRSTNAME")')],
     )
-    def test_build_columns_str(sql_query, columns, expected):
+    def test_column_spec(sql_query, columns, expected):
         sql_query.columns = columns
-        assert sql_query._build_columns_str() == expected
+        assert sql_query._column_spec == expected
 
     @staticmethod
     @pytest.mark.parametrize(
@@ -250,7 +250,7 @@ class TestImportQuery:
     @staticmethod
     def test_build_query(import_sql_query, connection):
         result = import_sql_query.build_query(
-            source="TABLE",
+            table="TABLE",
             exa_address_list=[
                 "127.18.0.2:8364/YHistZoLhU9+FKoSEHHbNGtC/Ee4KT75DDBO+s5OG8o="
             ],
@@ -279,7 +279,7 @@ class TestImportQuery:
     )
     def test_get_import(import_sql_query, columns, expected):
         import_sql_query.columns = columns
-        result = import_sql_query._get_import(source="TABLE")
+        result = import_sql_query._get_import(table="TABLE")
         assert result == expected
 
     @staticmethod
@@ -310,7 +310,7 @@ class TestExportQuery:
     @staticmethod
     def test_build_query(export_sql_query, connection):
         result = export_sql_query.build_query(
-            source="TABLE",
+            table="TABLE",
             exa_address_list=[
                 "127.18.0.2:8364/YHistZoLhU9+FKoSEHHbNGtC/Ee4KT75DDBO+s5OG8o="
             ],
@@ -340,7 +340,7 @@ class TestExportQuery:
     )
     def test_get_export(export_sql_query, columns, expected):
         export_sql_query.columns = columns
-        result = export_sql_query._get_export(source="TABLE")
+        result = export_sql_query._get_export(table="TABLE")
         assert result == expected
 
     @staticmethod

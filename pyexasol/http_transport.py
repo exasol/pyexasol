@@ -38,11 +38,6 @@ class SqlQuery:
     null: Optional[str] = None
     row_separator: Optional[str] = None
 
-    def _build_columns_str(self) -> str:
-        if not self.columns:
-            return ""
-        return f"({','.join([self.connection.format.default_format_ident(c) for c in self.columns])})"
-
     def _build_csv_cols(self) -> str:
         if not self.csv_cols:
             return ""
@@ -97,6 +92,20 @@ class SqlQuery:
             and version >= Version("8.32.0")
             and self.connection.options["encryption"]
         )
+
+    @property
+    def _column_spec(self) -> str:
+        """
+        Return either empty string or comma-separated list of columns in parentheses,
+        e.g. '("A", "B")'
+        """
+        if not self.columns:
+            return ""
+        formatted = [
+            self.connection.format.default_format_ident(c) for c in self.columns
+        ]
+        comma_sep = ",".join(formatted)
+        return f"({comma_sep})"
 
     @property
     def _column_delimiter(self) -> Optional[str]:
@@ -161,10 +170,10 @@ class ImportQuery(SqlQuery):
     skip: Optional[Union[str, int]] = None
     trim: Optional[str] = None
 
-    def build_query(self, source: str, exa_address_list: list[str]) -> str:
+    def build_query(self, table: str, exa_address_list: list[str]) -> str:
         query_lines = [
             self._comment,
-            self._get_import(source=source),
+            self._get_import(table=table),
             *self._get_file_list(exa_address_list=exa_address_list),
             self._encoding,
             self._null,
@@ -182,9 +191,8 @@ class ImportQuery(SqlQuery):
     ) -> ImportQuery:
         return ImportQuery(connection=connection, compression=compression, **params)
 
-    def _get_import(self, source: str) -> str:
-        columns_list = self._build_columns_str()
-        return f"IMPORT INTO {source}{columns_list} FROM CSV"
+    def _get_import(self, table: str) -> str:
+        return f"IMPORT INTO {table}{self._column_spec} FROM CSV"
 
     @property
     def _skip(self) -> Optional[str]:
@@ -209,10 +217,10 @@ class ExportQuery(SqlQuery):
     delimit: Optional[str] = None
     with_column_names: Optional[str] = None
 
-    def build_query(self, source: str, exa_address_list: list[str]) -> str:
+    def build_query(self, table: str, exa_address_list: list[str]) -> str:
         query_lines = [
             self._comment,
-            self._get_export(source=source),
+            self._get_export(table=table),
             *self._get_file_list(exa_address_list=exa_address_list),
             self._delimit,
             self._encoding,
@@ -230,9 +238,8 @@ class ExportQuery(SqlQuery):
     ) -> ExportQuery:
         return ExportQuery(connection=connection, compression=compression, **params)
 
-    def _get_export(self, source: str) -> str:
-        columns_list = self._build_columns_str()
-        return f"EXPORT {source}{columns_list} INTO CSV"
+    def _get_export(self, table: str) -> str:
+        return f"EXPORT {table}{self._column_spec} INTO CSV"
 
     @property
     def _delimit(self) -> Optional[str]:
@@ -311,13 +318,13 @@ class ExaSQLExportThread(ExaSQLThread):
             isinstance(self.query_or_table, tuple)
             or str(self.query_or_table).strip().find(" ") == -1
         ):
-            export_source = self.connection.format.default_format_ident(
+            export_table = self.connection.format.default_format_ident(
                 self.query_or_table
             )
         else:
             # New lines are mandatory to handle queries with single-line comments '--'
             export_query = self.query_or_table.lstrip(" \n").rstrip(" \n;")
-            export_source = f"(\n{export_query}\n)"
+            export_table = f"(\n{export_query}\n)"
 
             if self.params.get("columns"):
                 raise ValueError(
@@ -326,7 +333,7 @@ class ExaSQLExportThread(ExaSQLThread):
 
         export_query = ExportQuery.load_from_dict(
             connection=self.connection, compression=self.compression, params=self.params
-        ).build_query(source=export_source, exa_address_list=self.exa_address_list)
+        ).build_query(table=export_table, exa_address_list=self.exa_address_list)
         self.connection.execute(export_query)
 
 
@@ -343,11 +350,11 @@ class ExaSQLImportThread(ExaSQLThread):
         self.params = import_params
 
     def run_sql(self):
-        table_ident = self.connection.format.default_format_ident(self.table)
+        table = self.connection.format.default_format_ident(self.table)
 
         import_query = ImportQuery.load_from_dict(
             connection=self.connection, compression=self.compression, params=self.params
-        ).build_query(source=table_ident, exa_address_list=self.exa_address_list)
+        ).build_query(table=table, exa_address_list=self.exa_address_list)
         self.connection.execute(import_query)
 
 
