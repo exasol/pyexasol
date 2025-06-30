@@ -16,7 +16,7 @@ messages like: `[SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed`.
 
 Prior to the upgrade:
 1. Please determine which encryption and security measures are appropriate for your
-organization by reading through `doc/user_guide/encryption.rst`.
+organization by reading through [user_guide/encryption](https://exasol.github.io/pyexasol/master/user_guide/encryption.html).
 2. If needed, update your usage of `pyexasol.connect(...)` & `ExaConnection` to
 reflect your organization's needs.
 
@@ -31,7 +31,7 @@ Starting with Exasol version 8.32.0, TLS Certificate Validation is activated
 by default for `IMPORT` and `EXPORT` queries, ensuring secure data transfers
 by validating certificates for external file connections like HTTPS and
 FTPS. For more details, see
-`CHANGELOG: TLS Certificate Verification for Loader File Connections <https://exasol.my.site.com/s/article/Changelog-content-16273>`__.
+[CHANGELOG: TLS Certificate Verification for Loader File Connections](https://exasol.my.site.com/s/article/Changelog-content-16273).
 
 Pyexasol uses a self-signed certificate for the encrypted `http_transport`
 methods, which means that such queries would fail the TLS certificate
