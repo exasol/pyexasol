@@ -91,12 +91,12 @@ class SqlQuery:
         return "\n".join(filtered_query_lines)
 
     def _requires_tls_public_key(self) -> bool:
-        if (
-            exasol_db_version := self.connection.exasol_db_version
-        ) and exasol_db_version >= Version("8.32.0"):
-            if self.connection.options["encryption"]:
-                return True
-        return False
+        version = self.connection.exasol_db_version
+        return (
+            version
+            and version >= Version("8.32.0")
+            and self.connection.options["encryption"]
+        )
 
     @property
     def _column_delimiter(self) -> Optional[str]:
@@ -114,7 +114,9 @@ class SqlQuery:
     def _comment(self) -> Optional[str]:
         if self.comment:
             if "*/" in self.comment:
-                raise ValueError("Invalid comment, cannot contain */")
+                raise ValueError(
+                    f'Invalid comment "{self.comment}". Comment must not contain "*/".'
+                )
             return f"/*{self.comment}*/"
         return None
 
