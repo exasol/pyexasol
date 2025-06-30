@@ -284,7 +284,8 @@ class TestImportQuery:
 
     @staticmethod
     @pytest.mark.parametrize(
-        "skip,expected", [("1", "SKIP = 1"), (1, "SKIP = 1"), (None, None)]
+        "skip,expected",
+        [("1", "SKIP = 1"), (1, "SKIP = 1"), ("2", "SKIP = 2"), (None, None)],
     )
     def test_skip(import_sql_query, skip, expected):
         import_sql_query.skip = skip
