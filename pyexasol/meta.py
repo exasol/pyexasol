@@ -4,10 +4,11 @@ from .exceptions import ExaRuntimeError
 
 class ExaMetaData:
     """
-    This class implements lock-free metadata requests using ``/*snapshot execution*/`` SQL hint described in `Snapshot Mode <https://docs.exasol.com/db/latest/database_concepts/snapshot_mode.htm>_`.
+    This class implements lock-free metadata requests using ``/*snapshot execution*/``
+    SQL hint, as described further in https://docs.exasol.com/db/latest/database_concepts/snapshot_mode.htm.
 
     Note:
-        If you still get locks, please make sure to update Exasol server to the latest minor version
+        If you still get locks, please make sure to update Exasol server to the latest minor version.
 
     Examples:
 
