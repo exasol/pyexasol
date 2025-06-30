@@ -22,23 +22,28 @@ reflect your organization's needs.
 
 ### IMPORT & EXPORT
 
-In Exasol DB versions prior to version 8.32.0, the behavior of the database was to have TLS
-certificate validation deactivated for IMPORT
-and EXPORT queries, leaving connections potentially vulnerable to security risks like
-man-in-the-middle attacks. Users needed to explicitly enable TLS certificate validation
-using custom parameters or SQL syntax. Now, TLS Certificate Validation is activated by
-default for IMPORT and EXPORT queries, ensuring secure data transfers by validating
-certificates for external file connections like HTTPS and FTPS. For more details, see
-`CHANGELOG: TLS Certificate Verification for Loader File Connections <https://exasol.my.site.com/s/article/Changelog-content-16273>`_.
+In Exasol DB versions prior to version 8.32.0, the behavior of the database
+was to have TLS certificate validation deactivated for `IMPORT` and `EXPORT`
+queries, leaving connections potentially vulnerable to security risks like
+man-in-the-middle attacks. Users needed to explicitly enable TLS certificate
+validation using custom parameters or SQL syntax.
+Starting with Exasol version 8.32.0, TLS Certificate Validation is activated
+by default for `IMPORT` and `EXPORT` queries, ensuring secure data transfers
+by validating certificates for external file connections like HTTPS and
+FTPS. For more details, see
+`CHANGELOG: TLS Certificate Verification for Loader File Connections <https://exasol.my.site.com/s/article/Changelog-content-16273>`__.
 
-Pyexasol uses a self-signed certificate for the encrypted `http_transport` methods, which means that such queries would
-fail the default enabled TLS certificate validation (from Exasol DB version 8.32.0), as the provided certificate is not a globally trusted certificate.
-Thus, from PyExasol version `1.0.0`, we have adapted the default behavior of `ExaSQLThread` to include clauses like
-`PUBLIC KEY 'sha256//<sha256_base64_encoded_public_key>'` in these statements. Here's an example of an EXPORT query sent to an Exasol DB:
+Pyexasol uses a self-signed certificate for the encrypted `http_transport`
+methods, which means that such queries would fail the TLS certificate
+validation enabled by default (from Exasol DB version 8.32.0), as the provided
+certificate is not a *globally trusted certificate*.  Thus, from version
+`1.0.0`, PyExasol adapts the default behavior of its `ExaSQLThread` to include
+clauses like `PUBLIC KEY 'sha256//<sha256_base64_encoded_public_key>'` in
+these statements. Here's an example of an `EXPORT` query sent to an Exasol DB:
 
 ```sql
     EXPORT my_table INTO CSV
-    AT '127.18.0.2:8364/YHistZoLhU9+FKoSEHHbNGtC/Ee4KT75DDBO+s5OG8o='
+    AT '127.18.0.2:8364'
     PUBLIC KEY 'sha256//YHistZoLhU9+FKoSEHHbNGtC/Ee4KT75DDBO+s5OG8o=' FILE '000.gz'
     WITH COLUMN HEADERS
 ```
@@ -58,7 +63,7 @@ Thus, from PyExasol version `1.0.0`, we have adapted the default behavior of `Ex
 
 ## 🔩 Internal
 
-* Relocked dependencies
+Relocked dependencies
   * Due to changes in cryptography's Python support (!=3.9.0 and 3.9.1), we updated our support to Python ^3.9.2.
 * Added exasol-toolbox workflows and actions
 * Added missing plugin for multi-version documentation
@@ -67,9 +72,10 @@ Thus, from PyExasol version `1.0.0`, we have adapted the default behavior of `Ex
 
     Note: please make sure to adjust your git config accordingly (if not done yet)
 
-        ``shell
-        git config blame.ignoreRevsFile .git-blame-ignore-revs
-        ``
+```bash
+      git config blame.ignoreRevsFile .git-blame-ignore-revs
+```
+
 * #181: Modified integration tests to run also with `ssl.CERT_REQUIRED`
 * #187: Updated poetry to 2.1.2 & exasol-toolbox to `1.0.1`
 * Relocked dependencies to resolve CVE-2025-43859 for transitive dependence `h11`
