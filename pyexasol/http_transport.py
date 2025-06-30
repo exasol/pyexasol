@@ -88,7 +88,7 @@ class SqlQuery:
     def _requires_tls_public_key(self) -> bool:
         version = self.connection.exasol_db_version
         return (
-            version
+            version is not None
             and version >= Version("8.32.0")
             and self.connection.options["encryption"]
         )
