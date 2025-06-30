@@ -79,8 +79,8 @@ class SqlQuery:
         for i, exa_address in enumerate(exa_address_list):
             statement = f"AT '{prefix}{exa_address}'"
             if self._requires_tls_public_key():
-                sha256_public_key = self._extract_public_key(exa_address)
-                statement += f" PUBLIC KEY 'sha256//{sha256_public_key}'"
+                public_key = self._extract_public_key(exa_address)
+                statement += f" PUBLIC KEY 'sha256//{public_key}'"
             statement += f" FILE '{str(i).rjust(3, '0')}.{file_ext}'{csv_cols}"
             files.append(statement)
         return files
