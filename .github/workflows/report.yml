@@ -19,7 +19,7 @@ jobs:
           fetch-depth: 0
 
       - name: Setup Python & Poetry Environment
-        uses: exasol/python-toolbox/.github/actions/python-environment@1.5.0
+        uses: exasol/python-toolbox/.github/actions/python-environment@1.6.0
 
       - name: Download Artifacts
         uses: actions/download-artifact@v4.2.1
@@ -33,7 +33,9 @@ jobs:
         run: poetry run -- nox -s artifacts:validate
 
       - name: Upload to sonar
-        run: poetry run -- nox -s sonar:check -- ${{ secrets.SONAR_TOKEN }}
+        env:
+          SONAR_TOKEN: "${{ secrets.SONAR_TOKEN }}"
+        run: poetry run -- nox -s sonar:check
 
       - name: Generate Report
         run: poetry run -- nox -s project:report -- --format json | tee metrics.json

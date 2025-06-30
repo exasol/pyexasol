@@ -1,5 +1,5 @@
 """
-No SQL lock-free meta data requests introduced in Exasol 7.0, WebSocket protocol v2
+No SQL lock-free metadata requests introduced in Exasol 7.0, WebSocket protocol v2
 """
 
 import pprint

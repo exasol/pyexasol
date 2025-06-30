@@ -2,5 +2,4 @@
 
 ## ExaExtension
 
-- Metadata functions (starting with `.ext.get_sys_*`) are now using `/*snapshot execution*/` SQL hint described in [IDEA-476](https://www.exasol.com/support/browse/IDEA-476) to prevent locks.
-
+- Metadata functions (starting with `.ext.get_sys_*`) are now using `/*snapshot execution*/` SQL hint described in [Snapshot Mode](https://docs.exasol.com/db/latest/database_concepts/snapshot_mode.htm) to prevent locks.

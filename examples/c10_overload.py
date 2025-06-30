@@ -38,7 +38,7 @@ class CustomExaMetaData(pyexasol.ExaMetaData):
 
 
 class CustomExaConnection(pyexasol.ExaConnection):
-    # Set custom sub-classes here
+    # Set custom subclasses here
     cls_statement = CustomExaStatement
     cls_formatter = CustomExaFormatter
     cls_logger = CustomExaLogger

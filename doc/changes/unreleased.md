@@ -83,3 +83,4 @@ Thus, from PyExasol version `1.0.0`, we have adapted the default behavior of `Ex
 * Added sphinx based documentation
 * Added example to highlight how sensitive information from exceptions should be handled
 * Harmonized spelling of PyExasol across documentation
+* #204: Fixed broken links and some typos

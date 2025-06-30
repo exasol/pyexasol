@@ -1,3 +1,5 @@
+.. _Best Practices:
+
 Best Practices
 ==============
 
@@ -85,8 +87,8 @@ Rapidjson provides significant performance boost and is well maintained by creat
 
 ``pip install pyexasol[rapidjson]``
 
-`ujson  <https://github.com/esnme/ultrajson>`_
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+`ujson  <https://github.com/ultrajson/ultrajson>`_
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Ujson provides great performance in our internal tests. It was abandoned by maintainers for a while, but now it is supported once again.
 
@@ -109,7 +111,7 @@ Use ``.meta`` Functions to Perform Lock-Free Meta Data Requests
 ---------------------------------------------------------------
 It is quite common for Exasol system views to become locked by DML statements, which prevents clients from retrieving metadata.
 
-In order to mitigate this problem, Exasol provided special SQL hint described in `IDEA-476 <https://www.exasol.com/support/browse/IDEA-476>` which is available in latest versions. It does not require user to enable "snapshot transaction" mode for the whole session. Currently this is the best way to access meta data using WebSocket protocol.
+In order to mitigate this problem, Exasol provided special SQL hint described in `Snapshot Mode <https://docs.exasol.com/db/latest/database_concepts/snapshot_mode.htm>__` which is available in latest versions. It does not require user to enable "snapshot transaction" mode for the whole session. Currently this is the best way to access metadata using WebSocket protocol.
 
 Also, it is possible to get SQL result set column structure without executing the actual query. This method relies on prepared statements and it is also free from locks.
 

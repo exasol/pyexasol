@@ -853,14 +853,14 @@ simplejson = ">=3.16.0"
 
 [[package]]
 name = "exasol-toolbox"
-version = "1.5.0"
+version = "1.6.0"
 description = "Your one-stop solution for managing all standard tasks and core workflows of your Python project."
 optional = false
 python-versions = "<4.0,>=3.9"
 groups = ["dev"]
 files = [
-    {file = "exasol_toolbox-1.5.0-py3-none-any.whl", hash = "sha256:60ea3ece68354d83e4e18ad7200bd2f6966ea415baac8eb87d80b908057d465c"},
-    {file = "exasol_toolbox-1.5.0.tar.gz", hash = "sha256:46af5efb56fc2088099980be610d8cfa15acda105657057230a5a5696647f524"},
+    {file = "exasol_toolbox-1.6.0-py3-none-any.whl", hash = "sha256:a8d35bd2ad90dffa4e3ba9afbace459e9e45d418521c50d2e9e62b082e610c0e"},
+    {file = "exasol_toolbox-1.6.0.tar.gz", hash = "sha256:9475424f59decf268b9692bb54b664d833da1948e35a16e5748d6fb920e93a5c"},
 ]
 
 [package.dependencies]
@@ -1367,22 +1367,21 @@ testing = ["PyYAML", "atheris (>=2.3.0,<2.4.0) ; python_version < \"3.12\"", "bs
 
 [[package]]
 name = "license-expression"
-version = "30.4.1"
+version = "30.4.3"
 description = "license-expression is a comprehensive utility library to parse, compare, simplify and normalize license expressions (such as SPDX license expressions) using boolean logic."
 optional = false
 python-versions = ">=3.9"
 groups = ["dev"]
 files = [
-    {file = "license_expression-30.4.1-py3-none-any.whl", hash = "sha256:679646bc3261a17690494a3e1cada446e5ee342dbd87dcfa4a0c24cc5dce13ee"},
-    {file = "license_expression-30.4.1.tar.gz", hash = "sha256:9f02105f9e0fcecba6a85dfbbed7d94ea1c3a70cf23ddbfb5adf3438a6f6fce0"},
+    {file = "license_expression-30.4.3-py3-none-any.whl", hash = "sha256:fd3db53418133e0eef917606623bc125fbad3d1225ba8d23950999ee87c99280"},
+    {file = "license_expression-30.4.3.tar.gz", hash = "sha256:49f439fea91c4d1a642f9f2902b58db1d42396c5e331045f41ce50df9b40b1f2"},
 ]
 
 [package.dependencies]
 "boolean.py" = ">=4.0"
 
 [package.extras]
-docs = ["Sphinx (>=5.0.2)", "doc8 (>=0.11.2)", "sphinx-autobuild", "sphinx-copybutton", "sphinx-reredirects (>=0.1.2)", "sphinx-rtd-dark-mode (>=1.3.0)", "sphinx-rtd-theme (>=1.0.0)", "sphinxcontrib-apidoc (>=0.4.0)"]
-testing = ["black", "isort", "pytest (>=6,!=7.0.0)", "pytest-xdist (>=2)", "twine"]
+dev = ["Sphinx (>=5.0.2)", "doc8 (>=0.11.2)", "pytest (>=7.0.1)", "pytest-xdist (>=2)", "ruff", "sphinx-autobuild", "sphinx-copybutton", "sphinx-reredirects (>=0.1.2)", "sphinx-rtd-dark-mode (>=1.3.0)", "sphinx-rtd-theme (>=1.0.0)", "sphinxcontrib-apidoc (>=0.4.0)", "twine"]
 
 [[package]]
 name = "lockfile"
@@ -4088,4 +4087,4 @@ ujson = ["ujson"]
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.9.2"
-content-hash = "3e3b719f640b76143393f7429e17374c78166062ef7bbdb2bc566685bb1423a0"
+content-hash = "6107c05a5c5c6cdaac96e3a8b92c7108f26414daf9c6dc391632b76724b4ae3d"

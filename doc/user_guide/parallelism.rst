@@ -6,7 +6,7 @@ Fundamentals:
 
 - 1 Exasol session can run only 1 SQL query in parallel.
 - 1 PyExasol connection equals 1 Exasol session.
-- `threadsafety <https://www.python.org/dev/peps/pep-0249/#threadsafety>`_ level of PyExasol is `1` (threads may share the module, but not connections).
+- `threadsafety <https://peps.python.org/pep-0249/#threadsafety>`__ level of PyExasol is `1` (threads may share the module, but not connections).
 
 Best practices
 --------------

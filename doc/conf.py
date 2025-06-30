@@ -76,3 +76,16 @@ html_theme_options = {
     "github_url": "https://github.com/exasol/pyexasol",
     "accent_color": "grass",
 }
+# -- Configure link checking behavior  ----------------------------------------
+linkcheck_rate_limit_timeout = 60
+linkcheck_timeout = 30
+linkcheck_delay = 30
+linkcheck_retries = 2
+linkcheck_anchors = False
+linkcheck_ignore: list[str] = []
+linkcheck_allowed_redirects = {
+    # All HTTP redirections from the source URI to
+    # the canonical URI will be treated as "working".
+    r"https://github\.com/.*": r"https://github\.com/login*",
+    r"https://exasol\.my\.site\.com/s/article/.*": r"https://exasol\.my\.site\.com/s/article/.*?language=en_US",
+}

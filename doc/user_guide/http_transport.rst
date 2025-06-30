@@ -162,8 +162,8 @@ import_params
      - `This is a query description`
      - Add a comment before the beginning of the query
 
-.. _numeric: https://docs.exasol.com/sql_references/formatmodels.htm#NumericFormat
-.. _date: https://docs.exasol.com/sql_references/formatmodels.htm#DateTimeFormat
+.. _numeric: https://docs.exasol.com/db/latest/sql_references/formatmodels.htm#Numericformatmodels
+.. _date: https://docs.exasol.com/db/latest/sql_references/formatmodels.htm#Datetimeformatmodels
 
 export_params
 -------------
