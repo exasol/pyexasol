@@ -91,7 +91,7 @@ I strongly encourage you to run your own performance tests. You may use test scr
 
 1. Install PyODBC, TurbODBC, PyExasol, pandas.
 2. Install Exasol ODBC driver.
-3. Download the `PyExasol source code <https://github.com/exasol/pyexasol/>`_.
+3. Download the `PyExasol source code <https://github.com/exasol/pyexasol/>`__.
 4. Open `/performance/` directory and edit the file `_config.py`. Input your Exasol credentials, set the table name, and other settings. Set the path to the ODBC driver.
 5. (Optional) Run the script to prepare the data set for testing:
 

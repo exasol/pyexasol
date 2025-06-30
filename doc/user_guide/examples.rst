@@ -7,11 +7,11 @@ Preparation
 Basic preparation steps are required to see examples in action.
 
 1. Install PyExasol with *optional dependencies*.
-2. Download the `PyExasol source code <https://github.com/exasol/pyexasol/>`_.
+2. Download the `PyExasol source code <https://github.com/exasol/pyexasol/>`__.
 3. Make sure Exasol you have installed and have created a dedicated schema for testing. For **testing** purposes, you may use
 
-  - the free `Exasol Community Edition <https://www.exasol.com/free-signup-community-edition/>`_
-  - `exasol/docker-db <https://hub.docker.com/r/exasol/docker-db/tags>`_, which can be easily accessed by using `poetry run -- nox -s db:start`
+  - the free `Exasol Community Edition <https://www.exasol.com/free-signup-community-edition/>`__
+  - `exasol/docker-db <https://hub.docker.com/r/exasol/docker-db/tags>`__, which can be easily accessed by using `poetry run -- nox -s db:start`
 
 4. Open the `/examples/` directory and edit the file `_config.py`. Input your Exasol credentials.
 5. Run this script to prepare data set for testing:

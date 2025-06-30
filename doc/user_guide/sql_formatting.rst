@@ -8,7 +8,7 @@ You're not forced to use this formatter. You can always overload it using `cls_f
 Types of placeholders
 ----------------------
 
-Formatter supports only `new-style named placeholders <https://peps.python.org/pep-3101/>`_ and optional "conversion" to specify placeholder type.
+Formatter supports only `new-style named placeholders <https://peps.python.org/pep-3101/>`__ and optional "conversion" to specify placeholder type.
 
 .. code-block:: python
 
