@@ -87,9 +87,7 @@ class SqlQuery:
 
     @staticmethod
     def _get_query_str(query_lines: list[Optional[str]]) -> str:
-        filtered_query_lines = [
-            query_line for query_line in query_lines if query_line is not None
-        ]
+        filtered_query_lines = [q for q in query_lines if q is not None]
         return "\n".join(filtered_query_lines)
 
     def _requires_tls_public_key(self) -> bool:
