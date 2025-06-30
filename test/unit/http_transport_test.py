@@ -53,8 +53,14 @@ class TestSqlQuery:
     @pytest.mark.parametrize(
         "csv_cols,expected",
         [
-            pytest.param(None, "", id="none_specified_returns_empty_string"),
-            pytest.param(["1..2"], "(1..2)", id="values_specified_returns_value"),
+            pytest.param(None, "", id="none_specified"),
+            pytest.param(["1..3"], "(1..3)", id="col_gap_specified"),
+            pytest.param(["123"], "(123)", id="col_without_spaces"),
+            pytest.param(
+                ["1..3", "4 FORMAT='DD-MM-YYYY'"],
+                "(1..3,4 FORMAT='DD-MM-YYYY')",
+                id="multi_specifier_with_format",
+            ),
         ],
     )
     def test_build_csv_cols(sql_query, csv_cols: Optional[list[str]], expected: str):
