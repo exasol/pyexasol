@@ -245,8 +245,11 @@ class ExaSQLImportThread(ExaSQLThread):
 
 class ExaHttpThread(threading.Thread):
     """
-    HTTP communication and compression / decompression is offloaded to separate thread
-    Thread can be used instead of subprocess when compatibility is an issue
+    HTTP communication and compression / decompression is offloaded to a separate thread.
+    PyExasol uses a thread instead of a subprocess or multiprocessing to avoid
+    compatibility issues on Windows operating systems. For further details, see
+    - https://github.com/exasol/pyexasol/issues/73
+    - https://pythonforthelab.com/blog/differences-between-multiprocessing-windows-and-linux/
     """
 
     def __init__(self, ipaddr, port, compression, encryption):
