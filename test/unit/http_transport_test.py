@@ -199,9 +199,9 @@ class TestSqlQuery:
     @pytest.mark.parametrize(
         "compression,file_ext,expected",
         [
-            pytest.param(True, None, "gz", id="no_format_maps_to_gz"),
-            pytest.param(False, None, "csv", id="no_format_maps_to_csv"),
-            pytest.param(True, "gz", "gz", id="gz_accepted"),
+            pytest.param(True, None, "gz", id="compressed_defaults_to_format_gz"),
+            pytest.param(False, None, "csv", id="uncompressed_defaults_to_format_csv"),
+            pytest.param(True, "gz", "gz", id="format_gz_accepted"),
         ],
     )
     def test_file_ext(
