@@ -75,36 +75,33 @@ class TestSqlQuery:
 
     @staticmethod
     @pytest.mark.parametrize(
-        "exa_address, expected",
+        "ip_address, public_key",
         [
-            pytest.param(
-                "localhost:12583",
-                "+vGxqpxBMYlTgzLlQqNS2X9kcpXIFJSZxU54GqJ0ZCo=",
-                id="localhost",
-            ),
             pytest.param(
                 "127.18.0.2:8156",
                 "tfdCUbrFQxEBTtrD9yet67fwCQMlxNVGqIdagPXvnlM=",
                 id="ip",
             ),
             pytest.param(
-                "127.18.0.2/64:8364",
-                "YHistZoLhU9+FKoSEHHbNGtC/Ee4KT75DDBO+s5OG8o=",
-                id="url_with_cidr",
+                "127.18.0.2:8364",
+                None,
+                id="url_without_public_key",
             ),
         ],
     )
-    def test_extract_public_key(exa_address: str, expected: str):
-        exa_address = f"{exa_address}/{expected}"
-        assert SqlQuery._extract_public_key(exa_address) == expected
+    def test_split_exa_address_into_known_components(ip_address: str, public_key: str):
+        exa_address = f"{ip_address}"
+        if public_key:
+            exa_address = f"{ip_address}/{public_key}"
+        result = SqlQuery._split_exa_address_into_components(exa_address)
+        assert result[0] == ip_address
+        assert result[1] == public_key
 
     @staticmethod
-    def test_extract_public_key_raises_exception():
+    def test_split_exa_address_into_known_components_raises_exception():
         exa_address = "127.18.0.2/64:8364/YHistZoLhU9+FKoSEH"
-        with pytest.raises(
-            ValueError, match="Could not extract public key from exa_address"
-        ):
-            SqlQuery._extract_public_key(exa_address)
+        with pytest.raises(ValueError, match="Could not split exa_address"):
+            SqlQuery._split_exa_address_into_components(exa_address)
 
     @staticmethod
     @pytest.mark.parametrize(
@@ -126,9 +123,7 @@ class TestSqlQuery:
 
         result = sql_query._get_file_list(exa_address_list)
 
-        assert result == [
-            f"AT 'https://127.18.0.2:8364/YHistZoLhU9+FKoSEHHbNGtC/Ee4KT75DDBO+s5OG8o=' {expected_end}"
-        ]
+        assert result == [f"AT 'https://127.18.0.2:8364' {expected_end}"]
 
     @staticmethod
     def test_get_query_str():
@@ -263,7 +258,7 @@ class TestImportQuery:
         )
         assert (
             result
-            == "IMPORT INTO TABLE FROM CSV\nAT 'https://127.18.0.2:8364/YHistZoLhU9+FKoSEHHbNGtC/Ee4KT75DDBO+s5OG8o=' PUBLIC KEY 'sha256//YHistZoLhU9+FKoSEHHbNGtC/Ee4KT75DDBO+s5OG8o=' FILE '000.gz'"
+            == "IMPORT INTO TABLE FROM CSV\nAT 'https://127.18.0.2:8364' PUBLIC KEY 'sha256//YHistZoLhU9+FKoSEHHbNGtC/Ee4KT75DDBO+s5OG8o=' FILE '000.gz'"
         )
 
     @staticmethod
@@ -323,7 +318,7 @@ class TestExportQuery:
         )
         assert (
             result
-            == "EXPORT TABLE INTO CSV\nAT 'https://127.18.0.2:8364/YHistZoLhU9+FKoSEHHbNGtC/Ee4KT75DDBO+s5OG8o=' PUBLIC KEY 'sha256//YHistZoLhU9+FKoSEHHbNGtC/Ee4KT75DDBO+s5OG8o=' FILE '000.gz'"
+            == "EXPORT TABLE INTO CSV\nAT 'https://127.18.0.2:8364' PUBLIC KEY 'sha256//YHistZoLhU9+FKoSEHHbNGtC/Ee4KT75DDBO+s5OG8o=' FILE '000.gz'"
         )
 
     #

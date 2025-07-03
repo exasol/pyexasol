@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import base64
 import hashlib
 import os
 import re
@@ -52,18 +53,25 @@ class SqlQuery:
         return f"({','.join(self.csv_cols)})"
 
     @staticmethod
-    def _extract_public_key(exa_address: str) -> str:
+    def _split_exa_address_into_components(exa_address: str) -> tuple[str, str | None]:
         """
-        Extract public key from exa address, where the expected pattern is:
+        Split ip_address:port and public key from exa address, where the expected
+        patterns are:
+            ip_address:port
             ip_address:port/public_key
         The value for public key is expected to be a SHA-256 hash of the public key,
         which is then base64-encoded.
         """
-        pattern = r"\/([a-zA-Z0-9_\-+\/]+=)"
-        match = re.search(pattern, exa_address)
-        if match:
-            return match.group(1)
-        raise ValueError(f"Could not extract public key from exa_address {exa_address}")
+        pattern = r"^([\d\.]+:\d+)(?:\/([a-zA-Z0-9_\-+\/]+=))?$"
+        match = re.match(pattern, exa_address)
+        if match is None:
+            raise ValueError(
+                f"Could not split exa_address {exa_address} into known components"
+            )
+        ip_address, public_key = match.groups()
+        if not public_key:
+            return ip_address, None
+        return ip_address, public_key
 
     def _get_file_list(self, exa_address_list: list[str]) -> list[str]:
         file_ext = self._file_ext
@@ -72,9 +80,15 @@ class SqlQuery:
         csv_cols = self._build_csv_cols()
         files = []
         for i, exa_address in enumerate(exa_address_list):
-            statement = f"AT '{prefix}{exa_address}'"
+            ip_address_port, public_key = self._split_exa_address_into_components(
+                exa_address
+            )
+            statement = f"AT '{prefix}{ip_address_port}'"
             if self._requires_tls_public_key():
-                public_key = self._extract_public_key(exa_address)
+                if not public_key:
+                    raise ValueError(
+                        f"Public key is required to be in the 'exa_address' for encrypted connections with Exasol DB >= 8.32.0"
+                    )
                 statement += f" PUBLIC KEY 'sha256//{public_key}'"
             statement += f" FILE '{str(i).rjust(3, '0')}.{file_ext}'{csv_cols}"
             files.append(statement)
