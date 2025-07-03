@@ -98,8 +98,17 @@ class TestSqlQuery:
         assert result[1] == public_key
 
     @staticmethod
-    def test_split_exa_address_into_known_components_raises_exception():
-        exa_address = "127.18.0.2/64:8364/YHistZoLhU9+FKoSEH"
+    @pytest.mark.parametrize(
+        "exa_address",
+        [
+            pytest.param(
+                "127.18.0.2:8364/YHistZoLhU9+FKoSEH", id="incomplete_public_key"
+            ),
+            pytest.param("127.18.0.2/64:8364", id="cidr_notation"),
+            pytest.param("localhost:1729", id="localhost"),
+        ],
+    )
+    def test_split_exa_address_into_known_components_raises_exception(exa_address: str):
         with pytest.raises(ValueError, match="Could not split exa_address"):
             SqlQuery._split_exa_address_into_components(exa_address)
 

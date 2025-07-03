@@ -87,7 +87,7 @@ class SqlQuery:
             if self._requires_tls_public_key():
                 if not public_key:
                     raise ValueError(
-                        f"Public key is required to be in the 'exa_address' for encrypted connections with Exasol DB >= 8.32.0"
+                        "Public key is required to be in the 'exa_address' for encrypted connections with Exasol DB >= 8.32.0"
                     )
                 statement += f" PUBLIC KEY 'sha256//{public_key}'"
             statement += f" FILE '{str(i).rjust(3, '0')}.{file_ext}'{csv_cols}"
