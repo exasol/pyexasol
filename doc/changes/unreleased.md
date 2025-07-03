@@ -48,6 +48,12 @@ these statements. Here's an example of an `EXPORT` query sent to an Exasol DB:
     WITH COLUMN HEADERS
 ```
 
+Additionally, the `http_transport` methods have been modified to more explicitly evaluate the
+`import_params` and `export_params` dictionaries, which were passed into the `IMPORT` and `EXPORT` queries.
+The previous behavior did not validate all the contents of a dictionary, but it would access needed ones with `dict.get(key)`.
+To make it more explicit what our `http_transport` methods support, we now pass the
+dictionary to the `http_transport.ImportQuery` and `http_transport.ExportQuery` classes, so keys that we do not yet support would raise an exception.
+
 ## ✨Features
 
 * Added support for multi-version documentation

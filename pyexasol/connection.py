@@ -628,7 +628,7 @@ class ExaConnection:
             - This function may run out of memory
 
         Examples:
-            >>> cb = lamda args: print(args)
+            >>> cb = lambda args: print(args)
             >>> con = ExaConnection(...)
             >>> con.export_to_callback(
             ...    callback=cb,

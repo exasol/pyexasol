@@ -203,6 +203,12 @@ class ImportQuery(SqlQuery):
     def load_from_dict(
         connection: ExaConnection, compression: bool, params: dict
     ) -> ImportQuery:
+        """
+        Load the params dictionary into the ImportQuery class
+
+        Keys in `params` that are not present in as attributes of the `ImportQuery`
+        class will raise an Exception.
+        """
         return ImportQuery(connection=connection, compression=compression, **params)
 
     def _get_import(self, table: str) -> str:
@@ -250,6 +256,12 @@ class ExportQuery(SqlQuery):
     def load_from_dict(
         connection: ExaConnection, compression: bool, params: dict
     ) -> ExportQuery:
+        """
+        Load the params dictionary into the ExportQuery class
+
+        Keys in `params` that are not present in as attributes of the `ExportQuery`
+        class will raise an Exception.
+        """
         return ExportQuery(connection=connection, compression=compression, **params)
 
     def _get_export(self, table: str) -> str:
