@@ -16,6 +16,16 @@ You may also specify `import_params` or `export_params` to alter the `IMPORT` or
 .. _threading: https://docs.python.org/3/library/threading.html
 .. _pipe: https://docs.python.org/3/library/os.html#os.pipe
 
+For further details, see:
+
+- `EXPORT <https://docs.exasol.com/db/latest/sql/export.htm>`_
+- `IMPORT <https://docs.exasol.com/db/latest/sql/import.htm>`_
+- `CHANGELOG: TLS Certificate Verification for Loader File Connections <https://exasol.my.site.com/s/article/Changelog-content-16273>`_
+
+Default
+=======
+
+
 Pre-defined Functions
 =====================
 

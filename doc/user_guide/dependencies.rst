@@ -7,7 +7,6 @@ Core dependencies
 - Exasol >= 6.2
 - Python >= 3.6
 - websocket-client >= 1.0.1
-- pyopenssl
 - rsa
 
 Optional dependencies
