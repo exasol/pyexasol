@@ -1,7 +1,7 @@
 ---
-name: 🔐 Security Issue
+name: Security Issue
 about: Fix Security Issue
-title: 🔐 <Insert Title>
+title: <Insert Title>
 labels: security
 assignees: ''
 
