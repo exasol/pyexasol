@@ -1,7 +1,7 @@
 ---
-name: 📚 Documentation
+name: Documentation
 about: Add/Improve Documentation
-title: 📚 <Insert Title>
+title: <Insert Title>
 labels: documentation
 assignees: ''
 

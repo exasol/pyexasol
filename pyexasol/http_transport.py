@@ -607,7 +607,7 @@ class ExaTCPServer(socketserver.TCPServer):
     def server_bind(self):
         self.set_sock_opts()
 
-        """ Special Exasol packet to establish tunneling and return internal exasol address, which can be used in query """
+        """ Special Exasol packet to establish tunneling and return an internal Exasol address, which can be used in a query """
         self.socket.connect(self.server_address)
         self.socket.sendall(struct.pack("iii", 0x02212102, 1, 1))
         _, port, ipaddr = struct.unpack("ii16s", self.socket.recv(24))

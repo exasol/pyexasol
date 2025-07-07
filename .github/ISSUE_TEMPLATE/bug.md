@@ -1,7 +1,7 @@
 ---
-name: 🐞 Bug Report
+name: Bug Report
 about: File a bug report
-title: 🐞 <Insert Title>
+title: <Insert Title>
 labels: bug
 assignees: ''
 

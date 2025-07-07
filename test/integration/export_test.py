@@ -4,8 +4,6 @@ from inspect import cleandoc
 
 import pytest
 
-import pyexasol
-
 
 @pytest.fixture
 def connection(connection_factory):
