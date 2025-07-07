@@ -50,18 +50,18 @@ classifiers = [
 websocket-client = ">=1.0.1"
 rsa = "*"
 packaging = "*"
-pandas = { version = "^2.3", optional = true}
-ujson = { version = "*", optional = true }
-python-rapidjson = { version = "*", optional = true }
 orjson = { version = ">=3.6", optional = true }
+pandas = { version = "^2.3", optional = true}
 pproxy = { version = "*", optional = true }
+python-rapidjson = { version = "*", optional = true }
+ujson = { version = "*", optional = true }
 
 [tool.poetry.extras]
-pandas = ["pandas"]
-ujson = ["ujson"]
-rapidjson = ["python-rapidjson"]
-orjson = ["orjson"]
 examples = ["pproxy"]
+orjson = ["orjson"]
+pandas = ["pandas"]
+rapidjson = ["python-rapidjson"]
+ujson = ["ujson"]
 
 [tool.poetry.group.dev.dependencies]
 nox = "^2023.4.22"
