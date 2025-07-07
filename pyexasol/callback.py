@@ -21,6 +21,7 @@ Import callback arguments:
 import csv
 import io
 import shutil
+from collections.abc import Iterable
 
 
 def export_to_list(pipe, dst, **kwargs):
@@ -53,7 +54,7 @@ def export_to_file(pipe, dst):
     shutil.copyfileobj(pipe, dst, 65535)
 
 
-def import_from_iterable(pipe, src, **kwargs):
+def import_from_iterable(pipe, src: Iterable, **kwargs):
     """
     Basic example how to import from iterable object (list, dict, tuple, iterator, generator, etc.)
     """
@@ -74,7 +75,6 @@ def import_from_pandas(pipe, src, **kwargs):
     Basic example how to import from Pandas DataFrame
     Custom params for "to_csv" may be passed in **kwargs
     """
-    import packaging.version
     import pandas
 
     if not isinstance(src, pandas.DataFrame):
@@ -82,25 +82,14 @@ def import_from_pandas(pipe, src, **kwargs):
 
     wrapped_pipe = io.TextIOWrapper(pipe, newline="\n", encoding="utf-8")
 
-    # https://github.com/pandas-dev/pandas/pull/45302
-    if packaging.version.parse(pandas.__version__) >= packaging.version.parse("1.5.0"):
-        return src.to_csv(
-            wrapped_pipe,
-            header=False,
-            index=False,
-            lineterminator="\n",
-            quoting=csv.QUOTE_NONNUMERIC,
-            **kwargs
-        )
-    else:
-        return src.to_csv(
-            wrapped_pipe,
-            header=False,
-            index=False,
-            line_terminator="\n",
-            quoting=csv.QUOTE_NONNUMERIC,
-            **kwargs
-        )
+    return src.to_csv(
+        wrapped_pipe,
+        header=False,
+        index=False,
+        lineterminator="\n",
+        quoting=csv.QUOTE_NONNUMERIC,
+        **kwargs,
+    )
 
 
 def import_from_file(pipe, src):
