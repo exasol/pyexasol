@@ -1966,7 +1966,7 @@ description = "Fundamental package for array computing in Python"
 optional = true
 python-versions = ">=3.9"
 groups = ["main"]
-markers = "extra == \"pandas\" or extra == \"numpy\""
+markers = "extra == \"pandas\""
 files = [
     {file = "numpy-1.26.4-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:9ff0f4f29c51e2803569d7a51c2304de5554655a60c5d776e35b4a41413830d0"},
     {file = "numpy-1.26.4-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:2e4ee3380d6de9c9ec04745830fd9e2eccb3e6cf790d39d7b98ffd19b0dd754a"},
@@ -4078,7 +4078,6 @@ type = ["pytest-mypy"]
 
 [extras]
 examples = ["pproxy"]
-numpy = ["numpy"]
 orjson = ["orjson"]
 pandas = ["pandas"]
 rapidjson = ["python-rapidjson"]
@@ -4087,4 +4086,4 @@ ujson = ["ujson"]
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.9.2"
-content-hash = "6107c05a5c5c6cdaac96e3a8b92c7108f26414daf9c6dc391632b76724b4ae3d"
+content-hash = "7ccdf5232db67e9590a3de22aee68c9ad8d8bc4fc1d01dbaef964d059d3a0de5"

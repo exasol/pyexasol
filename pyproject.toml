@@ -50,18 +50,13 @@ python = "^3.9.2"
 websocket-client = ">=1.0.1"
 rsa = "*"
 packaging = "*"
-# Currently, it is necessary to pin numpy explicitly.
-# For additional details, refer to: https://github.com/numpy/numpy/issues/26710
-# Once this issue has been resolved, we should be able to remove this explicit dependency.
-numpy = { version = ">1.26.0,<2", optional = true }
-pandas = { version = "^2", optional = true, extras = ["numpy"] }
+pandas = { version = "^2.3", optional = true}
 ujson = { version = "*", optional = true }
 python-rapidjson = { version = "*", optional = true }
 orjson = { version = ">=3.6", optional = true }
 pproxy = { version = "*", optional = true }
 
 [tool.poetry.extras]
-numpy = ["numpy"]
 pandas = ["pandas"]
 ujson = ["ujson"]
 rapidjson = ["python-rapidjson"]
