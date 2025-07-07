@@ -4085,5 +4085,5 @@ ujson = ["ujson"]
 
 [metadata]
 lock-version = "2.1"
-python-versions = "^3.9.2"
-content-hash = "7ccdf5232db67e9590a3de22aee68c9ad8d8bc4fc1d01dbaef964d059d3a0de5"
+python-versions = ">=3.9.2,<4"
+content-hash = "3cfd1d167685fdeabc7933629aaa04b885d88eabc20122fc02419751978c40a5"

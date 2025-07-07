@@ -1,6 +1,7 @@
 [project]
 name = "pyexasol"
 version = "0.27.0"
+requires-python = ">=3.9.2,<4"
 description = "Exasol python driver with extra features"
 authors = [
     {name="Vitaly Markov", email="wild.desu@gmail.com"},
@@ -17,7 +18,7 @@ keywords = [
     "import",
     "export"
 ]
-dynamic = ["classifiers"]
+dynamic = ["classifiers", "dependencies"]
 
 [project.urls]
 Homepage = "https://www.exasol.com/"
@@ -46,7 +47,6 @@ classifiers = [
 ]
 
 [tool.poetry.dependencies]
-python = "^3.9.2"
 websocket-client = ">=1.0.1"
 rsa = "*"
 packaging = "*"
