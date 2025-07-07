@@ -45,7 +45,7 @@ class ExaExtension:
             **DEPRECATED**, please use ``.meta.sql_columns`` instead.
 
         Note:
-            It relies on prepared statement which is closed immediately without execution
+            It relies on a prepared statement that will be closed immediately without execution
         """
         stmt = self.connection.cls_statement(
             self.connection, query, query_params, prepare=True
@@ -57,7 +57,7 @@ class ExaExtension:
 
     def insert_multi(self, table_name, data, columns=None):
         """
-        Insert a samll number of rows into a table using a prepared statement.
+        Insert a small number of rows into a table using a prepared statement.
 
         Args:
             table_name:
@@ -217,9 +217,9 @@ class ExaExtension:
 
         return res
 
-    def get_sys_views(self, schema=None, view_name_prefix=""):
+    def get_sys_views(self, schema: str | None = None, view_name_prefix: str = ""):
         """
-        Get information about views in selected schema(SYS format)
+        Get information about views in selected schema (SYS format)
 
         Args:
             schema:
@@ -278,7 +278,7 @@ class ExaExtension:
 
         return res
 
-    def get_sys_schemas(self, schema_name_prefix=""):
+    def get_sys_schemas(self, schema_name_prefix: str = ""):
         """
         Get information about schemas (SYS format)
 
@@ -348,7 +348,7 @@ class ExaExtension:
 
     def get_disk_space_usage(self):
         """
-        Get the disk space usage of the exasol DB.
+        Get the disk space usage of the Exasol DB.
 
         Returns:
 
@@ -407,8 +407,8 @@ class ExaExtension:
                 Additional query parameters.
 
         Note:
-            Since pandas has significantly smaller range of allowed values, this function makes many assumptions
-            Please use it as baseline for your own function for complex cases
+            Since pandas has significantly smaller range of allowed values, this function makes many assumptions.
+            Please use it as baseline for your own function for complex cases.
 
             .. list-table::
                :widths: 25 25
@@ -488,7 +488,7 @@ class ExaExtension:
             callback, None, query_or_table, None, params
         )
 
-    def explain_last(self, details=False):
+    def explain_last(self, details: bool = False):
         """
         Args:
             details (bool):
