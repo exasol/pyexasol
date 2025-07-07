@@ -53,6 +53,7 @@ packaging = "*"
 orjson = { version = ">=3.6", optional = true }
 pandas = { version = "^2.3", optional = true}
 pproxy = { version = "*", optional = true }
+pyarrow = { version = "^20.0.0", optional = true}
 python-rapidjson = { version = "*", optional = true }
 ujson = { version = "*", optional = true }
 
@@ -60,6 +61,7 @@ ujson = { version = "*", optional = true }
 examples = ["pproxy"]
 orjson = ["orjson"]
 pandas = ["pandas"]
+pyarrow = ["pyarrow"]
 rapidjson = ["python-rapidjson"]
 ujson = ["ujson"]
 
