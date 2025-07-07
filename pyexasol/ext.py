@@ -2,6 +2,8 @@
 Extension with Exasol-specific helper functions
 """
 
+from typing import Optional
+
 from .exceptions import ExaRuntimeError
 
 
@@ -217,7 +219,7 @@ class ExaExtension:
 
         return res
 
-    def get_sys_views(self, schema: str | None = None, view_name_prefix: str = ""):
+    def get_sys_views(self, schema: Optional[str] = None, view_name_prefix: str = ""):
         """
         Get information about views in selected schema (SYS format)
 
