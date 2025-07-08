@@ -101,10 +101,13 @@ def import_from_parquet(pipe, source: Path, **kwargs):
             Local filepath to a parquet file or set of files matching a glob pattern
         **kwargs:
             Custom params for "pyarrow.csv.WriteOptions"
+
+    Please note that nested or hierarchical types are not supported.
     """
     from pyarrow import (
         csv,
         parquet,
+        types,
     )
 
     if not isinstance(source, Path):
@@ -116,6 +119,11 @@ def import_from_parquet(pipe, source: Path, **kwargs):
 
     for file in sorted(matching_files):
         table = parquet.read_table(file)
+        for field in table.schema:
+            if types.is_nested(field.type):
+                raise ValueError(
+                    f"Field {field} of schema from file {file} is hierarchical which is not supported."
+                )
         write_options = csv.WriteOptions(include_header=False, **kwargs)
         csv.write_csv(table, pipe, write_options=write_options)
 
