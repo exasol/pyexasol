@@ -22,15 +22,14 @@ For further details, see:
 - `IMPORT <https://docs.exasol.com/db/latest/sql/import.htm>`_
 - `CHANGELOG: TLS Certificate Verification for Loader File Connections <https://exasol.my.site.com/s/article/Changelog-content-16273>`_
 
-Default
-=======
-
-
 Pre-defined Functions
-=====================
+---------------------
 
-Export from Exasol to pandas
-----------------------------
+Using pandas
+^^^^^^^^^^^^
+
+Export
+""""""""""""""""
 
 Export data from Exasol into `pandas.DataFrame`. You may use the `callback_params` argument to pass custom options for the pandas `read_csv`_ function.
 
@@ -44,8 +43,8 @@ Export data from Exasol into `pandas.DataFrame`. You may use the `callback_param
     # Read from table
     pd = C.export_to_pandas("users")
 
-Import from pandas to Exasol
-----------------------------
+Import
+""""""
 
 Import data from `pandas.DataFrame` into Exasol table. You may use the `callback_params` argument to pass custom options for the pandas `to_csv`_ function.
 
@@ -55,8 +54,11 @@ Import data from `pandas.DataFrame` into Exasol table. You may use the `callback
 
     C.import_from_pandas(pd, "users")
 
-Import from list (a-la INSERT)
-------------------------------
+Using Iterables
+^^^^^^^^^^^^^^^^
+
+Import from a List
+""""""""""""""""""
 
 .. code-block:: python
 
@@ -67,8 +69,8 @@ Import from list (a-la INSERT)
 
     C.import_from_iterable(my_list, "users")
 
-Import from generator
----------------------
+Import from a Generator
+"""""""""""""""""""""""
 
 This function is suitable for very big INSERTS as long as the generator returns rows one-by-one and does not run out of memory.
 
@@ -80,8 +82,24 @@ This function is suitable for very big INSERTS as long as the generator returns 
 
     C.import_from_iterable(my_generator(), "users")
 
-Import from file
-----------------
+Using a File
+^^^^^^^^^^^^
+
+Export
+""""""
+
+Export data from Exasol into a file, path object, or file-like object opened in binary mode. You may export to process `STDOUT` using `sys.stdout.buffer`.
+
+.. code-block:: python
+
+    # Export from file defined with string path
+    C.export_to_file('my_file.csv', "users")
+
+    # Export into STDOUT
+    C.export_to_file(sys.stdout.buffer, "users")
+
+Import
+""""""
 
 Import data from a file, path object, or file-like object opened in binary mode. You may import from process `STDIN` using `sys.stdin.buffer`.
 
@@ -101,26 +119,14 @@ Import data from a file, path object, or file-like object opened in binary mode.
     # Import from STDIN
     C.import_from_file(sys.stdin.buffer, "users")
 
-Export to file
---------------
-
-Export data from Exasol into a file, path object, or file-like object opened in binary mode. You may export to process `STDOUT` using `sys.stdout.buffer`.
-
-.. code-block:: python
-
-    # Export from file defined with string path
-    C.export_to_file('my_file.csv', "users")
-
-    # Export into STDOUT
-    C.export_to_file(sys.stdout.buffer, "users")
 
 Parameters
-==========
+----------
 
 Please refer to the Exasol User Manual to learn more about `IMPORT` and `EXPORT` parameters.
 
 import_params
--------------
+^^^^^^^^^^^^^
 
 .. list-table::
    :header-rows: 1
@@ -166,7 +172,7 @@ import_params
 .. _date: https://docs.exasol.com/db/latest/sql_references/formatmodels.htm#Datetimeformatmodels
 
 export_params
--------------
+^^^^^^^^^^^^^
 
 .. list-table::
    :header-rows: 1
@@ -208,8 +214,8 @@ export_params
      - `This is a query description`
      - Add a comment before the beginning of the query
 
-The `comment` parameter, for adding comments to queries
--------------------------------------------------------
+The `comment` parameter
+^^^^^^^^^^^^^^^^^^^^^^^
 
 For any `export_*` or `import_*` call, you can add a comment that will be inserted before the beginning of the query.
 
@@ -222,10 +228,10 @@ This can be used for profiling and auditing. Example:
     This query is importing user from CSV.
     '''})
 
-The comment is inserted as a block comment (`/* <comment> */`). The block comment closing sequence (`*/`) is forbidden in the comment.
+The comment is inserted as a block comment (`/* <comment> */`). Thus, the block comment closing sequence (`*/`) is forbidden in the provided comment.
 
-How to write custom EXPORT / IMPORT functions
-=============================================
+Write Custom EXPORT / IMPORT Functions
+--------------------------------------
 
 A full collection of pre-defined callback functions is available in ``callback.py`` module.
 
