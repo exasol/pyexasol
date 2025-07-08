@@ -97,8 +97,6 @@ def import_from_parquet(pipe, source: Path, **kwargs):
     Basic example how to import from pyarrow parquet file(s)
 
     Args:
-        pipe:
-
         source:
             Local filepath to a parquet file or set of files matching a glob pattern
         **kwargs:

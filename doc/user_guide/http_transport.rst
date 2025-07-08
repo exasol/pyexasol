@@ -31,7 +31,7 @@ Using pandas
 Export
 """"""""""""""""
 
-Export data from Exasol into `pandas.DataFrame`. You may use the `callback_params` argument to pass custom options for the pandas `read_csv`_ function.
+Export data from Exasol into a `pandas.DataFrame`. You may use the `callback_params` argument to pass custom options for the pandas `read_csv`_ function.
 
 .. _read_csv: https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.read_csv.html
 
@@ -46,7 +46,7 @@ Export data from Exasol into `pandas.DataFrame`. You may use the `callback_param
 Import
 """"""
 
-Import data from `pandas.DataFrame` into Exasol table. You may use the `callback_params` argument to pass custom options for the pandas `to_csv`_ function.
+Import data from `pandas.DataFrame` into an Exasol table. You may use the `callback_params` argument to pass custom options for the pandas `to_csv`_ function.
 
 .. _to_csv: https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.to_csv.html
 
@@ -54,8 +54,22 @@ Import data from `pandas.DataFrame` into Exasol table. You may use the `callback
 
     C.import_from_pandas(pd, "users")
 
-Using Iterables
-^^^^^^^^^^^^^^^^
+Using parquet
+^^^^^^^^^^^^^
+
+Import
+""""""
+
+Import data from parquet files (`pyarrow.parquet.Table`) into an Exasol table. You may use the `callback_params` argument to pass custom options for the pyarrow.csv `WriteOptions`_ class.
+
+.. _WriteOptions: https://arrow.apache.org/docs/python/generated/pyarrow.csv.WriteOptions.html
+
+.. code-block:: python
+
+    C.import_from_parquet("<local_path>/*.parquet", "users")
+
+Using an Iterable
+^^^^^^^^^^^^^^^^^
 
 Import from a List
 """"""""""""""""""
@@ -249,7 +263,7 @@ Example of a callback exporting into a basic Python list.
     # Run EXPORT using the defined callback function
     C.export_to_callback(export_to_list, None, 'my_table')
 
-Example of a callback importing from Pandas into Exasol.
+Example of a callback importing from pandas into an Exasol table.
 
 .. code-block:: python
 
