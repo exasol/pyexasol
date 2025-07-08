@@ -22,6 +22,7 @@ import csv
 import io
 import shutil
 from collections.abc import Iterable
+from pathlib import Path
 
 
 def export_to_list(pipe, dst, **kwargs):
@@ -81,8 +82,7 @@ def import_from_pandas(pipe, src, **kwargs):
         raise ValueError("Data source is not pandas.DataFrame")
 
     wrapped_pipe = io.TextIOWrapper(pipe, newline="\n", encoding="utf-8")
-
-    return src.to_csv(
+    src.to_csv(
         wrapped_pipe,
         header=False,
         index=False,
@@ -90,6 +90,36 @@ def import_from_pandas(pipe, src, **kwargs):
         quoting=csv.QUOTE_NONNUMERIC,
         **kwargs,
     )
+
+
+def import_from_parquet(pipe, source: Path, **kwargs):
+    """
+    Basic example how to import from pyarrow parquet file(s)
+
+    Args:
+        pipe:
+
+        source:
+            Local filepath to a parquet file or set of files matching a glob pattern
+        **kwargs:
+            Custom params for "pyarrow.csv.WriteOptions"
+    """
+    from pyarrow import (
+        csv,
+        parquet,
+    )
+
+    if not isinstance(source, Path):
+        raise ValueError(f"source {source} is not a `pathlib.Path`")
+
+    matching_files = list(source.parent.glob(source.name))
+    if not matching_files:
+        raise ValueError(f"source {source} does not match any files")
+
+    for file in sorted(matching_files):
+        table = parquet.read_table(file)
+        write_options = csv.WriteOptions(include_header=False, **kwargs)
+        csv.write_csv(table, pipe, write_options=write_options)
 
 
 def import_from_file(pipe, src):

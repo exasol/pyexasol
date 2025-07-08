@@ -138,6 +138,7 @@ markers = [
     "metadata: tests related to metadata retrieval with pyexasol.",
     "misc: miscellaneous tests which did not fit in the other categories.",
     "pandas: tests related to support of pandas library.",
+    "parquet: tests related to support of pyarrow.parquet library.",
     "smoke: smoke tests which always should pass.",
     "tls: tests related to tls.",
     "transaction: tests related to transaction management.",

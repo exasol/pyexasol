@@ -61,6 +61,7 @@ dictionary to the `http_transport.ImportQuery` and `http_transport.ExportQuery` 
 * #179: Modified `ExaConnection` so that default is encryption with strict certification verification
 * #190: Added nox task to run examples
 * #194: Modified `ExaSQLThread` to include PUBLIC KEY in IMPORT and EXPORT queries for Exasol DB version 8.32.0 and onwards
+* #208: Added `ExaConnection.import_from_parquet` which can read parquet file(s) from a path
 
 ## ⚒️ Refactorings
 

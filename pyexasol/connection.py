@@ -12,6 +12,7 @@ import time
 import urllib.parse
 import zlib
 from inspect import cleandoc
+from pathlib import Path
 from typing import (
     TYPE_CHECKING,
     Callable,
@@ -618,6 +619,30 @@ class ExaConnection:
         """
         return self.import_from_callback(
             cb.import_from_pandas, src, table, callback_params, import_params
+        )
+
+    def import_from_parquet(
+        self,
+        source: Path,
+        table: str,
+        callback_params: Optional[dict] = None,
+        import_params: Optional[dict] = None,
+    ):
+        """
+        Import a large amount of data from ``pyarrow.parquet.table``.
+
+        Args:
+            source:
+                Local filepath to a parquet file or set of files matching a glob pattern.
+            table:
+                Destination table for IMPORT.
+            callback_params:
+                Dict with additional parameters for callback function
+            import_params:
+                Custom parameters for IMPORT query.
+        """
+        return self.import_from_callback(
+            cb.import_from_parquet, source, table, callback_params, import_params
         )
 
     def export_to_callback(

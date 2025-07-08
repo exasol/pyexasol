@@ -1,28 +1,23 @@
+from collections import defaultdict
 from inspect import cleandoc
-from operator import itemgetter
+from pathlib import Path
+from typing import Any
 
-import pandas as pd
+import pyarrow as pa
 import pytest
-from pandas import testing as pd_testing
-
-import pyexasol
-
-
-@pytest.fixture
-def connection_with_compression(connection_factory):
-    with connection_factory(compression=True) as con:
-        yield con
+from pyarrow import parquet as pq
 
 
 @pytest.fixture
 def empty_table(connection):
-    name = "USER_NAMES"
+    name = "USER_SCORES"
     ddl = cleandoc(
         f"""
         CREATE OR REPLACE TABLE {name}
         (
-            FIRST_NAME VARCHAR(200),
-            LAST_NAME VARCHAR(200)
+            NAME VARCHAR(200),
+            AGE INTEGER,
+            SCORE INTEGER
         );
         """
     )
@@ -36,78 +31,51 @@ def empty_table(connection):
     connection.commit()
 
 
-@pytest.fixture
-def names(faker):
-    yield tuple(
-        {"FIRST_NAME": faker.first_name(), "LAST_NAME": faker.last_name()}
-        for _ in range(0, 10)
-    )
+@pytest.mark.parquet
+class TestImportFromParquet:
+    @staticmethod
+    def _assemble_data(faker, rows: int = 5) -> dict[str, list[Any]]:
+        data = defaultdict(list)
+        for _ in range(rows):
+            data["name"].append(f"{faker.first_name()} {faker.last_name()}")
+            data["age"].append(faker.random_int(min=18, max=65))
+            data["score"].append(faker.random_int(min=69, max=100))
+        return data
 
+    @staticmethod
+    def _create_parquet_file(path: Path, data: dict[str, list[Any]]):
+        table = pa.Table.from_pydict(data)
+        pq.write_table(table, path)
 
-@pytest.fixture
-def table(connection, empty_table, names):
-    insert = "INSERT INTO {table} VALUES({{FIRST_NAME}}, {{LAST_NAME}});"
-    for name in names:
-        stmt = insert.format(table=empty_table)
-        connection.execute(stmt, name)
+    @staticmethod
+    def _get_table_rows(connection, table_name):
+        result = connection.execute(f"SELECT NAME, AGE, SCORE FROM {table_name};")
+        return result.fetchall()
 
-    yield empty_table, names
+    def test_load_single_file_into_empty_table(
+        self, connection, empty_table, tmp_path, faker
+    ):
+        filepath = tmp_path / "single_file.parquet"
+        data = self._assemble_data(faker)
+        self._create_parquet_file(filepath, data)
 
+        connection.import_from_parquet(filepath, empty_table)
+        results = self._get_table_rows(connection, empty_table)
 
-@pytest.mark.parametrize(
-    "connection", ["connection", "connection_with_compression"], indirect=True
-)
-@pytest.mark.pandas
-def test_export_table_to_pandas(connection, table):
-    table_name, values = table
+        assert results == list(zip(*data.values()))
 
-    expected = pd.DataFrame.from_records(values)
-    actual = connection.export_to_pandas(table_name)
+    def test_load_files_from_glob_into_empty_table(
+        self, connection, empty_table, tmp_path, faker
+    ):
+        first_data = self._assemble_data(faker)
+        self._create_parquet_file(tmp_path / "first_file.parquet", first_data)
 
-    assert actual.equals(expected)
+        second_data = self._assemble_data(faker)
+        self._create_parquet_file(tmp_path / "second_file.parquet", second_data)
 
+        connection.import_from_parquet(tmp_path / "*.parquet", empty_table)
+        results = self._get_table_rows(connection, empty_table)
 
-@pytest.mark.parametrize(
-    "connection", ["connection", "connection_with_compression"], indirect=True
-)
-@pytest.mark.pandas
-def test_export_sql_result_to_pandas(connection):
-
-    query = "SELECT USER_NAME, USER_ID FROM USERS ORDER BY USER_ID ASC LIMIT 5;"
-
-    expected = pd.DataFrame.from_records(
-        data=[
-            ("Jessica Mccoy", 0),
-            ("Beth James", 1),
-            ("Mrs. Teresa Ryan", 2),
-            ("Tommy Henderson", 3),
-            ("Jessica Christian", 4),
-        ],
-        columns=["USER_NAME", "USER_ID"],
-    )
-    actual = connection.export_to_pandas(query)
-
-    assert actual.equals(expected)
-
-
-@pytest.mark.parametrize(
-    "connection", ["connection", "connection_with_compression"], indirect=True
-)
-@pytest.mark.pandas
-def test_import_from_pandas(connection, empty_table, names):
-    table_name = empty_table
-
-    df = pd.DataFrame.from_records(names)
-    connection.import_from_pandas(df, table_name)
-    connection.commit()
-
-    result = connection.execute(
-        f"SELECT FIRST_NAME, LAST_NAME FROM {table_name} ORDER BY FIRST_NAME ASC;"
-    )
-    actual = result.fetchall()
-    expected = sorted(
-        [(first_name, last_name) for first_name, last_name in df.values],
-        key=itemgetter(0),
-    )
-
-    assert actual == expected
+        assert results == list(zip(*first_data.values())) + list(
+            zip(*second_data.values())
+        )
