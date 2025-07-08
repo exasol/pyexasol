@@ -4,8 +4,8 @@ Dependencies
 Core dependencies
 +++++++++++++++++
 
-- Exasol >= 6.2
-- Python >= 3.6
+- Exasol >= 7.1
+- Python >= 3.9
 - websocket-client >= 1.0.1
 - rsa
 
