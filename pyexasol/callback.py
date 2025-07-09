@@ -24,6 +24,7 @@ import io
 import shutil
 from collections.abc import Iterable
 from pathlib import Path
+from typing import Union
 
 
 def export_to_list(pipe, dst, **kwargs):
@@ -93,7 +94,7 @@ def import_from_pandas(pipe, src, **kwargs):
     )
 
 
-def import_from_parquet(pipe, source: Path | str, **kwargs):
+def import_from_parquet(pipe, source: Union[Path, str], **kwargs):
     """
     Basic example how to import from pyarrow parquet file(s)
 
