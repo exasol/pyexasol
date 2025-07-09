@@ -92,7 +92,7 @@ def import_from_pandas(pipe, src, **kwargs):
     )
 
 
-def import_from_parquet(pipe, source: Path, **kwargs):
+def import_from_parquet(pipe, source: Path | str, **kwargs):
     """
     Basic example how to import from pyarrow parquet file(s)
 
@@ -110,8 +110,11 @@ def import_from_parquet(pipe, source: Path, **kwargs):
         types,
     )
 
+    if isinstance(source, str):
+        source = Path(source)
+
     if not isinstance(source, Path):
-        raise ValueError(f"source {source} is not a `pathlib.Path`")
+        raise ValueError(f"source {source} is not a `pathlib.Path` or `str`")
 
     matching_files = list(source.parent.glob(source.name))
     if not matching_files:
