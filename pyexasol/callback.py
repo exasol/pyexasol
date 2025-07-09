@@ -19,6 +19,7 @@ Import callback arguments:
 """
 
 import csv
+import glob
 import io
 import shutil
 from collections.abc import Iterable
@@ -110,13 +111,10 @@ def import_from_parquet(pipe, source: Path | str, **kwargs):
         types,
     )
 
-    if isinstance(source, str):
-        source = Path(source)
-
-    if not isinstance(source, Path):
+    if not isinstance(source, Path) or isinstance(source, str):
         raise ValueError(f"source {source} is not a `pathlib.Path` or `str`")
 
-    matching_files = list(source.parent.glob(source.name))
+    matching_files = glob.glob(str(source))
     if not matching_files:
         raise ValueError(f"source {source} does not match any files")
 
