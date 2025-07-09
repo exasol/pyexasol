@@ -94,13 +94,45 @@ def import_from_pandas(pipe, src, **kwargs):
     )
 
 
-def import_from_parquet(pipe, source: Union[Path, str], **kwargs):
+def get_parquet_files(source: Union[list[Path], Path, str]) -> list[Path]:
+    if isinstance(source, str):
+        matches = glob.glob(source)
+        return sorted(
+            [filepath for i in matches if (filepath := Path(i)) and filepath.is_file()]
+        )
+    if isinstance(source, Path):
+        if source.is_file():
+            return [source]
+        elif source.is_dir():
+            return sorted(source.glob("*.parquet"))
+    if isinstance(source, list):
+        not_a_valid_path_file = [
+            filepath
+            for filepath in source
+            if not isinstance(filepath, Path) or not filepath.is_file()
+        ]
+        if len(not_a_valid_path_file) > 0:
+            raise ValueError(
+                f"source {source} contained entries which were not `Path` or valid `Path` files {not_a_valid_path_file}"
+            )
+        return source
+    raise ValueError(
+        f"source {source} is not a supported type (Union[list[Path], Path, str])."
+    )
+
+
+def import_from_parquet(pipe, source: Union[list[Path], Path, str], **kwargs):
     """
     Basic example how to import from pyarrow parquet file(s)
 
     Args:
-        source:
-            Local filepath to a parquet file or set of files matching a glob pattern
+        source: Local filepath specification(s) to process. Can be one of:
+            - A `list[pathlib.Path]` object representing specific files
+            - A `pathlib.Path` object representing either a file or directory.
+            If it's a directory, all files matching this pattern `*.parquet` will be
+            processed.
+            - A `str` representing a filepath which already contains a glob pattern
+            (e.g., "/local_dir/*.parquet")
         **kwargs:
             Custom params for "pyarrow.csv.WriteOptions"
 
@@ -112,20 +144,17 @@ def import_from_parquet(pipe, source: Union[Path, str], **kwargs):
         types,
     )
 
-    if not isinstance(source, Path) or isinstance(source, str):
-        raise ValueError(f"source {source} is not a `pathlib.Path` or `str`")
-
-    matching_files = glob.glob(str(source))
-    if not matching_files:
+    if not (parquet_files := get_parquet_files(source)):
         raise ValueError(f"source {source} does not match any files")
 
-    for file in sorted(matching_files):
+    for file in parquet_files:
         table = parquet.read_table(file)
         for field in table.schema:
             if types.is_nested(field.type):
                 raise ValueError(
                     f"Field {field} of schema from file {file} is hierarchical which is not supported."
                 )
+
         write_options = csv.WriteOptions(include_header=False, **kwargs)
         csv.write_csv(table, pipe, write_options=write_options)
 

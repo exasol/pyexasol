@@ -18,6 +18,7 @@ from typing import (
     Callable,
     NamedTuple,
     Optional,
+    Union,
 )
 from warnings import warn
 
@@ -623,7 +624,7 @@ class ExaConnection:
 
     def import_from_parquet(
         self,
-        source: Path,
+        source: Union[list[Path], Path, str],
         table: str,
         callback_params: Optional[dict] = None,
         import_params: Optional[dict] = None,
@@ -632,8 +633,13 @@ class ExaConnection:
         Import a large amount of data from ``pyarrow.parquet.table``.
 
         Args:
-            source:
-                Local filepath to a parquet file or set of files matching a glob pattern.
+            source: Local filepath specification(s) to process. Can be one of:
+             - A `list[pathlib.Path]` object representing specific files
+             - A `pathlib.Path` object representing either a file or directory.
+             If it's a directory, all files matching this pattern `*.parquet` will be
+             processed.
+             - A `str` representing a filepath which already contains a glob pattern
+             (e.g., "/local_dir/*.parquet")
             table:
                 Destination table for IMPORT.
             callback_params:
