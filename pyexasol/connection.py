@@ -12,9 +12,13 @@ import time
 import urllib.parse
 import zlib
 from inspect import cleandoc
+from pathlib import Path
 from typing import (
+    TYPE_CHECKING,
+    Callable,
     NamedTuple,
     Optional,
+    Union,
 )
 from warnings import warn
 
@@ -259,8 +263,6 @@ class ExaConnection:
         self.attr: dict = {}
         self.is_closed: bool = False
 
-        self.ws_ipaddr = None
-        self.ws_port = None
         self.ws_req_count = 0
         self.ws_req_time = 0
 
@@ -445,7 +447,11 @@ class ExaConnection:
         return self.attr.get("currentSchema", "")
 
     def export_to_file(
-        self, dst, query_or_table, query_params=None, export_params=None
+        self,
+        dst,
+        query_or_table: str,
+        query_params: Optional[dict] = None,
+        export_params: Optional[dict] = None,
     ):
         """
         Export large amount of data from Exasol to file or file-like object using fast HTTP transport.
@@ -461,7 +467,7 @@ class ExaConnection:
             query_params:
                 Values for SQL query placeholders.
             export_params:
-                Custom parameters for Export query.
+                Custom parameters for EXPORT query.
 
         Examples:
             >>> con = ExaConnection(...)
@@ -475,7 +481,12 @@ class ExaConnection:
             cb.export_to_file, dst, query_or_table, query_params, None, export_params
         )
 
-    def export_to_list(self, query_or_table, query_params=None, export_params=None):
+    def export_to_list(
+        self,
+        query_or_table: str,
+        query_params: Optional[dict] = None,
+        export_params: Optional[dict] = None,
+    ):
         """
         Export large amount of data from Exasol to basic Python `list` using fast HTTP transport.
 
@@ -485,7 +496,7 @@ class ExaConnection:
             query_params:
                 Values for SQL query placeholders.
             export_params:
-                Custom parameters for Export query.
+                Custom parameters for EXPORT query.
 
         Returns:
             `list` of `tuples`
@@ -505,10 +516,10 @@ class ExaConnection:
 
     def export_to_pandas(
         self,
-        query_or_table,
-        query_params=None,
-        callback_params=None,
-        export_params=None,
+        query_or_table: str,
+        query_params: Optional[dict] = None,
+        callback_params: Optional[dict] = None,
+        export_params: Optional[dict] = None,
     ):
         """
         Export large amount of data from Exasol to :class:`pandas.DataFrame`.
@@ -518,6 +529,8 @@ class ExaConnection:
                 SQL query or table for export.
             query_params:
                 Values for SQL query placeholders.
+            callback_params:
+                Dict with additional parameters for callback function
             export_params:
                 Custom parameters for Export query.
 
@@ -547,7 +560,7 @@ class ExaConnection:
             export_params,
         )
 
-    def import_from_file(self, src, table, import_params=None):
+    def import_from_file(self, src, table: str, import_params: Optional[dict] = None):
         """
         Import a large amount of data from a file or file-like object.
 
@@ -557,7 +570,7 @@ class ExaConnection:
             table:
                 Destination table for IMPORT.
             import_params:
-                Custom parameters for import query.
+                Custom parameters for IMPORT query.
 
         Note:
             File must be opened in binary mode.
@@ -566,7 +579,9 @@ class ExaConnection:
             cb.import_from_file, src, table, None, import_params
         )
 
-    def import_from_iterable(self, src, table, import_params=None):
+    def import_from_iterable(
+        self, src, table: str, import_params: Optional[dict] = None
+    ):
         """
         Import a large amount of data from an ``iterable`` Python object.
 
@@ -577,13 +592,19 @@ class ExaConnection:
             table:
                 Destination table for IMPORT.
             import_params:
-                Custom parameters for import query.
+                Custom parameters for IMPORT query.
         """
         return self.import_from_callback(
             cb.import_from_iterable, src, table, None, import_params
         )
 
-    def import_from_pandas(self, src, table, callback_params=None, import_params=None):
+    def import_from_pandas(
+        self,
+        src,
+        table: str,
+        callback_params: Optional[dict] = None,
+        import_params: Optional[dict] = None,
+    ):
         """
         Import a large amount of data from ``pandas.DataFrame``.
 
@@ -592,34 +613,68 @@ class ExaConnection:
                 Source ``pandas.DataFrame`` instance.
             table:
                 Destination table for IMPORT.
+            callback_params:
+                Dict with additional parameters for callback function
             import_params:
-                Custom parameters for import query.
+                Custom parameters for IMPORT query.
         """
         return self.import_from_callback(
             cb.import_from_pandas, src, table, callback_params, import_params
         )
 
-    def export_to_callback(
+    def import_from_parquet(
         self,
-        callback,
-        dst,
-        query_or_table,
-        query_params=None,
-        callback_params=None,
-        export_params=None,
+        source: Union[list[Path], Path, str],
+        table: str,
+        callback_params: Optional[dict] = None,
+        import_params: Optional[dict] = None,
     ):
         """
-        Export large amount of data to user-defined callback function
+        Import a large amount of data from ``pyarrow.parquet.table``.
+
+        Args:
+            source: Local filepath specification(s) to process. Can be one of:
+                - list[pathlib.Path]: list of specific files
+                - pathlib.Path: can be either a file or directory. If it's a directory,
+                all files matching this pattern *.parquet will be processed.
+                - str: representing a filepath which already contains a glob pattern
+                (e.g., "/local_dir/*.parquet")
+            table:
+                Destination table for IMPORT.
+            callback_params:
+                Dict with additional parameters for callback function
+            import_params:
+                Custom parameters for IMPORT query.
+        """
+        return self.import_from_callback(
+            cb.import_from_parquet, source, table, callback_params, import_params
+        )
+
+    def export_to_callback(
+        self,
+        callback: Callable,
+        dst,
+        query_or_table: str,
+        query_params: Optional[dict] = None,
+        callback_params: Optional[dict] = None,
+        export_params: Optional[dict] = None,
+    ):
+        """
+        Export a large amount of data to a user-defined callback function
 
         Args:
             callback:
-                Callback function
+                Callback function.
+            dst:
+                Path to file or file-like object.
             query_or_table:
                 SQL query or table for export.
             query_params:
                 Values for SQL query placeholders.
+            callback_params:
+                Dict with additional parameters for callback function
             export_params:
-                Custom parameters for Export query.
+                Custom parameters for EXPORT query.
 
         Returns:
             result of callback function
@@ -690,7 +745,12 @@ class ExaConnection:
             raise e
 
     def import_from_callback(
-        self, callback, src, table, callback_params=None, import_params=None
+        self,
+        callback: Callable,
+        src,
+        table: str,
+        callback_params: Optional[dict] = None,
+        import_params: Optional[dict] = None,
     ):
         """
         Import a large amount of data from a user-defined callback function.
