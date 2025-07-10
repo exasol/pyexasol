@@ -73,7 +73,7 @@ class TestImportFromParquet:
         second_data = self._assemble_data(faker)
         self._create_parquet_file(tmp_path / "second_file.parquet", second_data)
 
-        connection.import_from_parquet(tmp_path / "*.parquet", empty_table)
+        connection.import_from_parquet(tmp_path, empty_table)
         results = self._get_table_rows(connection, empty_table)
 
         assert results == list(zip(*first_data.values())) + list(
