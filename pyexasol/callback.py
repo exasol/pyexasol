@@ -147,15 +147,19 @@ def import_from_parquet(pipe, source: Union[list[Path], Path, str], **kwargs):
         raise ValueError(f"source {source} does not match any files")
 
     for file in parquet_files:
-        table = parquet.read_table(file)
-        for field in table.schema:
-            if types.is_nested(field.type):
-                raise ValueError(
-                    f"Field {field} of schema from file {file} is hierarchical which is not supported."
-                )
+        parquet_file = parquet.ParquetFile(file)
+        num_row_groups = parquet_file.num_row_groups
 
-        write_options = csv.WriteOptions(include_header=False, **kwargs)
-        csv.write_csv(table, pipe, write_options=write_options)
+        for i in range(num_row_groups):
+            row_group_table = parquet_file.read_row_group(i)
+            for field in row_group_table.schema:
+                if types.is_nested(field.type):
+                    raise ValueError(
+                        f"Field {field} of schema from file {file} is hierarchical which is not supported."
+                    )
+
+            write_options = csv.WriteOptions(include_header=False, **kwargs)
+            csv.write_csv(row_group_table, pipe, write_options=write_options)
 
 
 def import_from_file(pipe, src):
