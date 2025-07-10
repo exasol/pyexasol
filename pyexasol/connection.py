@@ -634,12 +634,11 @@ class ExaConnection:
 
         Args:
             source: Local filepath specification(s) to process. Can be one of:
-             - A `list[pathlib.Path]` object representing specific files
-             - A `pathlib.Path` object representing either a file or directory.
-             If it's a directory, all files matching this pattern `*.parquet` will be
-             processed.
-             - A `str` representing a filepath which already contains a glob pattern
-             (e.g., "/local_dir/*.parquet")
+                - list[pathlib.Path]: list of specific files
+                - pathlib.Path: can be either a file or directory. If it's a directory,
+                all files matching this pattern *.parquet will be processed.
+                - str: representing a filepath which already contains a glob pattern
+                (e.g., "/local_dir/*.parquet")
             table:
                 Destination table for IMPORT.
             callback_params:
