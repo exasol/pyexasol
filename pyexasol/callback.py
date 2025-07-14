@@ -128,14 +128,14 @@ def import_from_parquet(pipe, source: Union[list[Path], Path, str], **kwargs):
     Args:
         source: Local filepath specification(s) to process. Can be one of:
             - list[pathlib.Path]: list of specific files
-            - pathlib.Path: can be either a file or directory. If it's a directory,
-            all files matching this pattern *.parquet will be processed.
+            - pathlib.Path: can be either a file or directory. If it is a directory,
+            all files matching the following pattern *.parquet will be processed.
             - str: representing a filepath which already contains a glob pattern
             (e.g., "/local_dir/*.parquet")
         **kwargs:
             Custom params for "pyarrow.csv.WriteOptions"
 
-    Please note that nested or hierarchical types are not supported.
+    Please note that nested or hierarchical column types are not supported.
     """
     from pyarrow import (
         csv,
