@@ -64,6 +64,22 @@ class TestImportFromParquet:
 
         assert results == list(zip(*data.values()))
 
+    def test_load_specific_columns_into_empty_table(
+        self, connection, empty_table, tmp_path, faker
+    ):
+        filepath = tmp_path / "single_file.parquet"
+        data = self._assemble_data(faker)
+        data["unneeded_column"] = [0] * len(data["name"])
+        self._create_parquet_file(filepath, data)
+
+        connection.import_from_parquet(
+            filepath, empty_table, callback_params={"columns": ["name", "age", "score"]}
+        )
+        results = self._get_table_rows(connection, empty_table)
+
+        del data["unneeded_column"]
+        assert results == list(zip(*data.values()))
+
     def test_load_files_from_glob_into_empty_table(
         self, connection, empty_table, tmp_path, faker
     ):
