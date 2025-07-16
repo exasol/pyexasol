@@ -22,20 +22,22 @@ reflect your organization's needs.
 
 ### IMPORT & EXPORT
 
-In Exasol DB versions prior to version 8.32.0, the behavior of the database
+In Exasol DB versions prior to version 2025.1, the behavior of the database
 was to have TLS certificate validation deactivated for `IMPORT` and `EXPORT`
 queries, leaving connections potentially vulnerable to security risks like
 man-in-the-middle attacks. Users needed to explicitly enable TLS certificate
 validation using custom parameters or SQL syntax.
-Starting with Exasol version 8.32.0, TLS Certificate Validation is activated
-by default for `IMPORT` and `EXPORT` queries, ensuring secure data transfers
+
+Starting with Exasol version 8.32.0, TLS Certificate Validation is available for `IMPORT` and `EXPORT` queries, ensuring secure data transfers
 by validating certificates for external file connections like HTTPS and
 FTPS. For more details, see
-[CHANGELOG: TLS Certificate Verification for Loader File Connections](https://exasol.my.site.com/s/article/Changelog-content-16273).
+[CHANGELOG: TLS Certificate Verification for Loader File Connections](https://exasol.my.site.com/s/article/Changelog-content-16273). This
+certificate validation behavior is the default behavior starting with Exasol version
+2025.1. For more details, see [CHANGELOG: Default TLS Certificate Validation Enabled for Import/Export Queries](https://exasol.my.site.com/s/article/Changelog-content-25090).
 
 Pyexasol uses a self-signed certificate for the encrypted `http_transport`
-methods, which means that such queries would fail the TLS certificate
-validation enabled by default (from Exasol DB version 8.32.0), as the provided
+methods, which means that such queries would fail the enabled TLS certificate
+validation (available from Exasol DB version 8.32.0), as the provided
 certificate is not a *globally trusted certificate*.  Thus, from version
 `1.0.0`, PyExasol adapts the default behavior of its `ExaSQLThread` to include
 clauses like `PUBLIC KEY 'sha256//<sha256_base64_encoded_public_key>'` in
