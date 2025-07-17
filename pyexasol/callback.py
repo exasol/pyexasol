@@ -144,20 +144,30 @@ def import_from_parquet(pipe, source: Union[list[Path], Path, str], **kwargs):
         types,
     )
 
-    if not (parquet_files := get_parquet_files(source)):
-        raise ValueError(f"source {source} does not match any files")
+    def ensure_no_nested_columns(
+        schema, requested_columns: Union[list[str], None]
+    ) -> None:
+        nested_fields = []
+        for field in schema:
+            if not types.is_nested(field.type):
+                continue
+            if requested_columns and field.name in requested_columns:
+                nested_fields.append(field)
+            if not requested_columns:
+                nested_fields.append(field)
 
-    for file in parquet_files:
-        parquet_file = parquet.ParquetFile(file, memory_map=True)
-
-        nested_fields = [
-            field for field in parquet_file.schema_arrow if types.is_nested(field.type)
-        ]
         if nested_fields:
             raise ValueError(
                 f"Fields {nested_fields} of schema from file {file} is hierarchical which is not supported."
             )
 
+    if not (parquet_files := get_parquet_files(source)):
+        raise ValueError(f"source {source} does not match any files")
+
+    columns = kwargs.get("columns", None)
+    for file in parquet_files:
+        parquet_file = parquet.ParquetFile(file, memory_map=True)
+        ensure_no_nested_columns(parquet_file.schema_arrow, columns)
         for batch in parquet_file.iter_batches(batch_size=10000, **kwargs):
             write_options = csv.WriteOptions(include_header=False)
             csv.write_csv(batch, pipe, write_options=write_options)
