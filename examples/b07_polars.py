@@ -23,7 +23,7 @@ C.execute("TRUNCATE TABLE users_copy")
 
 # Export from Exasol table into polars.DataFrame
 df = C.export_to_polars("users")
-df.info()
+df.describe()
 
 stmt = C.last_statement()
 print(f"EXPORTED {stmt.rowcount()} rows in {stmt.execution_time}s")
@@ -40,7 +40,7 @@ print(f"IMPORTED {stmt.rowcount()} rows in {stmt.execution_time}s")
 
 # Export from SQL query
 df = C.export_to_polars("SELECT user_id, user_name FROM users WHERE user_id >= 5000")
-df.info()
+df.describe()
 
 stmt = C.last_statement()
 print(f"EXPORTED {stmt.rowcount()} rows in {stmt.execution_time}s")
