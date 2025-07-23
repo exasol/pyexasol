@@ -7,15 +7,9 @@ import pyexasol
 
 
 @pytest.fixture
-def connection_with_compression(dsn, user, password, schema):
-    with pyexasol.connect(
-        dsn=dsn,
-        user=user,
-        password=password,
-        schema=schema,
-        compression=True,
-    ) as connection:
-        yield connection
+def connection_with_compression(connection_factory):
+    with connection_factory(compression=True) as con:
+        yield con
 
 
 @pytest.fixture
@@ -111,5 +105,24 @@ def test_import_from_polars(connection, empty_table, names):
     )
     actual = result.fetchall()
     expected = df.sort(pl.nth(0)).rows()
+
+    assert actual == expected
+
+@pytest.mark.parametrize(
+    "connection", ["connection", "connection_with_compression"], indirect=True
+)
+@pytest.mark.polars
+def test_import_from_polars_lazy(connection, empty_table, names):
+    table_name = empty_table
+
+    lf = pl.from_records(names).lazy()
+    connection.import_from_polars(lf, table_name)
+    connection.commit()
+
+    result = connection.execute(
+        f"SELECT FIRST_NAME, LAST_NAME FROM {table_name} ORDER BY FIRST_NAME ASC;"
+    )
+    actual = result.fetchall()
+    expected = lf.sort(pl.nth(0)).collect().rows()
 
     assert actual == expected

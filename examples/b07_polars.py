@@ -16,6 +16,7 @@ C = pyexasol.connect(
     password=config.password,
     schema=config.schema,
     compression=True,
+    websocket_sslopt=config.websocket_sslopt,
 )
 
 C.execute("TRUNCATE TABLE users_copy")

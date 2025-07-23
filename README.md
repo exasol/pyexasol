@@ -71,6 +71,16 @@ df = C.export_to_pandas("SELECT * FROM EXA_ALL_USERS")
 print(df.head())
 ```
 
+Load data into `polars.DataFrame`:
+```python
+import pyexasol
+
+C = pyexasol.connect(dsn='<host:port>', user='sys', password='exasol', compression=True)
+
+df = C.export_to_polars("SELECT * FROM EXA_ALL_USERS")
+print(df.head())
+```
+
 You may set up `local config` to store your personal Exasol credentials and connection options:
 ```python
 import pyexasol

@@ -55,7 +55,7 @@ packaging = "*"
 # Once this issue has been resolved, we should be able to remove this explicit dependency.
 numpy = { version = ">1.26.0,<2", optional = true }
 pandas = { version = "^2", optional = true, extras = ["numpy"] }
-polars = { version = "^1.29", optional = true }
+polars = { version = "^1.10", optional = true }
 ujson = { version = "*", optional = true }
 python-rapidjson = { version = "*", optional = true }
 orjson = { version = ">=3.6", optional = true }
