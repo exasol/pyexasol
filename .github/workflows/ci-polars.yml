@@ -5,6 +5,7 @@ on:
     branches:
       - "polars2"
 
+jobs:
   merge_gate:
     name: Checks
     uses: ./.github/workflows/merge-gate.yml
