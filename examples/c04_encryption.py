@@ -6,8 +6,7 @@ It works both for WebSocket communication (wss://) and HTTP(S) Transport
 import hashlib
 import pprint
 
-import _config as config
-
+import examples._config as config
 import pyexasol
 
 printer = pprint.PrettyPrinter(indent=4, width=140)

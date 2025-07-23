@@ -6,9 +6,10 @@ on:
 
 jobs:
 
-  documentation-job:
+  build-documentation:
     runs-on: ubuntu-24.04
-
+    permissions:
+      contents: read
     steps:
       - name: SCM Checkout
         uses: actions/checkout@v4
@@ -16,16 +17,29 @@ jobs:
           fetch-depth: 0
 
       - name: Setup Python & Poetry Environment
-        uses: exasol/python-toolbox/.github/actions/python-environment@1.0.1
+        uses: exasol/python-toolbox/.github/actions/python-environment@1.6.0
 
       - name: Build Documentation
         run: |
           poetry run -- nox -s docs:multiversion
+          rm -r .html-documentation/*/.doctrees
 
-      - name: Deploy
-        uses: JamesIves/github-pages-deploy-action@v4.7.2
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
         with:
-          branch: gh-pages
-          folder: .html-documentation
-          git-config-name: Github Action
-          git-config-email: opensource@exasol.com
+          path: .html-documentation
+
+  deploy-documentation:
+    needs: [ build-documentation ]
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

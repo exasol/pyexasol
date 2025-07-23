@@ -10,8 +10,7 @@ Compression and encryption are enabled in this example
 import multiprocessing
 import pprint
 
-import _config as config
-
+import examples._config as config
 import pyexasol
 import pyexasol.callback as cb
 

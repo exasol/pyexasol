@@ -11,13 +11,14 @@ jobs:
   cd-job:
     name: Continuous Delivery
     runs-on: ubuntu-24.04
+    permissions:
+      contents: write
     steps:
-
       - name: SCM Checkout
         uses: actions/checkout@v4
 
       - name: Setup Python & Poetry Environment
-        uses: exasol/python-toolbox/.github/actions/python-environment@1.0.1
+        uses: exasol/python-toolbox/.github/actions/python-environment@1.6.0
 
       - name: Build Artifacts
         run: poetry build

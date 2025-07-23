@@ -8,21 +8,31 @@ jobs:
   fast-checks:
     name: Fast
     uses: ./.github/workflows/checks.yml
+    permissions:
+      contents: read
 
   slow-checks:
     name: Slow
     uses: ./.github/workflows/slow-checks.yml
+    permissions:
+      contents: read
 
   examples:
     uses: ./.github/workflows/examples.yml
+    permissions:
+      contents: read
 
   ssl_cert:
     uses: ./.github/workflows/ssl_cert.yml
+    permissions:
+      contents: read
 
   # This job ensures inputs have been executed successfully.
   approve-merge:
     name: Allow Merge
     runs-on: ubuntu-24.04
+    permissions:
+      contents: read
     # If you need additional jobs to be part of the merge gate, add them below
     needs: [ fast-checks, slow-checks, examples, ssl_cert ]
 

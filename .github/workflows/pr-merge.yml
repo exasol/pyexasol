@@ -14,18 +14,30 @@ jobs:
   ci-job:
     name: Checks
     uses: ./.github/workflows/checks.yml
-    secrets: inherit
+    permissions:
+      contents: read
 
   examples:
     uses: ./.github/workflows/examples.yml
+    permissions:
+      contents: read
 
   ssl_cert:
     uses: ./.github/workflows/ssl_cert.yml
+    permissions:
+      contents: read
 
   publish-docs:
     name: Publish Documentation
     uses: ./.github/workflows/gh-pages.yml
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
 
   metrics:
     needs: [ ci-job ]
     uses: ./.github/workflows/report.yml
+    secrets: inherit
+    permissions:
+      contents: read

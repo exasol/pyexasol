@@ -4,10 +4,11 @@ from .exceptions import ExaRuntimeError
 
 class ExaMetaData:
     """
-    This class implements lock-free meta data requests using ``/*snapshot execution*/`` SQL hint described in `IDEA-476 <https://www.exasol.com/support/browse/IDEA-476>`_.
+    This class implements lock-free metadata requests using ``/*snapshot execution*/``
+    SQL hint, as described further in https://docs.exasol.com/db/latest/database_concepts/snapshot_mode.htm.
 
     Note:
-        If you still get locks, please make sure to update Exasol server to the latest minor version
+        If you still get locks, please make sure to update Exasol server to the latest minor version.
 
     Examples:
 
@@ -29,9 +30,9 @@ class ExaMetaData:
 
         Args:
             query:
-                SQL query text, possibly with placholders.
+                SQL query text, possibly with placeholders.
             query_params:
-                Values for placholders.
+                Values for placeholders.
 
         Returns:
             Columns of SQL query result without executing it.
@@ -523,7 +524,7 @@ class ExaMetaData:
 
     def execute_meta_nosql(self, meta_command, meta_params=None):
         """
-        Execute no SQL meta data command introduced in Exasol 7.0+
+        Execute no SQL metadata command introduced in Exasol 7.0+
 
         Args:
             meta_command:
@@ -542,7 +543,7 @@ class ExaMetaData:
         if self.connection.protocol_version() < constant.PROTOCOL_V2:
             raise ExaRuntimeError(
                 self.connection,
-                "Protocol version 2 is required to execute nosql meta data commands",
+                "Protocol version 2 is required to execute nosql metadata commands",
             )
 
         # Security check, prevents execution of dangerous commands if meta_command argument is dynamic

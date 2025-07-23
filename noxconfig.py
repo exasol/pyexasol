@@ -1,14 +1,14 @@
 from __future__ import annotations
 
+from collections.abc import Iterable
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Iterable
 
 from exasol.toolbox.nox.plugin import hookimpl
 from nox import Session
 
 DEFAULT_PORT = 8563
-DEFAULT_DB_VERSION = "8.31.0"
+DEFAULT_DB_VERSION = "8.32.0"
 CONTAINER_SUFFIX = "test"
 CONTAINER_NAME = f"db_container_{CONTAINER_SUFFIX}"
 
@@ -60,14 +60,19 @@ class Config:
     root: Path = Path(__file__).parent
     doc: Path = Path(__file__).parent / "doc"
     version_file: Path = Path(__file__).parent / "pyexasol" / "version.py"
+    source: Path = Path("pyexasol")
     path_filters: Iterable[str] = (
         "dist",
         ".eggs",
         "venv",
     )
-
+    python_versions = ["3.9", "3.10", "3.11", "3.12", "3.13"]
     plugins = [StartDB, StopDB]
-    exasol_versions = [DEFAULT_DB_VERSION]
+    exasol_versions = ["8.31.0", DEFAULT_DB_VERSION]
+    # need --keep-runtime-typing, as pydantic with python3.9 does not accept str | None
+    # format, and it is not resolved with from __future__ import annotations. pyupgrade
+    # will keep switching Optional[str] to str | None leading to issues.
+    pyupgrade_args = ("--py39-plus", "--keep-runtime-typing")
 
 
 PROJECT_CONFIG = Config()

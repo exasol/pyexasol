@@ -35,6 +35,7 @@ import shutil
 import socket
 import socketserver
 import sys
+from typing import Optional
 
 
 class ExaScriptOutputServer(socketserver.ThreadingMixIn, socketserver.TCPServer):
@@ -42,10 +43,10 @@ class ExaScriptOutputServer(socketserver.ThreadingMixIn, socketserver.TCPServer)
     total_clients = 0
 
     # Stop all sub-threads immediately
-    daemon_threads = True
-    allow_reuse_address = True
+    daemon_threads: bool = True
+    allow_reuse_address: bool = True
 
-    output_dir_path = None
+    output_dir_path: Optional[pathlib.Path] = None
     initial_ppid = None
 
     def get_output_address(self):

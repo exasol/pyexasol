@@ -1,6 +1,6 @@
 [project]
 name = "pyexasol"
-version = "0.27.0"
+version = "1.0.0"
 description = "Exasol python driver with extra features"
 authors = [
     {name="Vitaly Markov", email="wild.desu@gmail.com"},
@@ -48,12 +48,11 @@ classifiers = [
 [tool.poetry.dependencies]
 python = "^3.9.2"
 websocket-client = ">=1.0.1"
-pyopenssl = "*"
 rsa = "*"
 packaging = "*"
 # Currently, it is necessary to pin numpy explicitly.
 # For additional details, refer to: https://github.com/numpy/numpy/issues/26710
-# Once this issue has been resolved, we should be able remove this explicit dependency.
+# Once this issue has been resolved, we should be able to remove this explicit dependency.
 numpy = { version = ">1.26.0,<2", optional = true }
 pandas = { version = "^2", optional = true, extras = ["numpy"] }
 polars = { version = "^1.29", optional = true }
@@ -74,10 +73,11 @@ examples = ["pproxy"]
 [tool.poetry.group.dev.dependencies]
 nox = "^2023.4.22"
 pytest = ">=7.0.0,<9"
-docutils = "0.20.1"
-exasol-integration-test-docker-environment = "^3.0.0"
+docutils = "^0.21.2"
+exasol-integration-test-docker-environment = "^4.0.0"
 faker = "^24.14.1"
-exasol-toolbox = "^1.0.0"
+exasol-toolbox = "^1.6.0"
+types-ujson = "^5.10.0.20250326"
 
 [tool.black]
 line-length = 88
@@ -100,21 +100,29 @@ max-module-lines = 800
 
 [[tool.mypy.overrides]]
 module = [
-    "exasol.*",
-    "pyexasol.*",
+    # pandas-stubs only for python >=3.10,<4.0.0, but we support 3.9 too
+    "pandas.*",
+    # no stubs available as of 2025
+    "orjson.*",
+    "rapidjson.*",
+    "pyodbc.*",
+    "turbodbc.*",
+    # code we are not yet type checking
     "examples.*",
-    "performance.*",
-    "pyexasol_utils.*",
-    "noxfile",
-    "noxconfig",
     "test.unit.*",
     "test.integration.*",
 ]
 ignore_errors = true
+ignore_missing_imports = true
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.sonar]
+projectKey = "com.exasol:pyexasol"
+hostUrl = "https://sonarcloud.io"
+organization = "exasol"
 
 [tool.pytest.ini_options]
 xfail_strict = true

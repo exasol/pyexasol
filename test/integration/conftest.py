@@ -1,5 +1,4 @@
 import decimal
-import logging
 import os
 import ssl
 import subprocess
@@ -12,6 +11,7 @@ import pytest
 
 import pyexasol
 from pyexasol import ExaConnection
+from pyexasol_utils.docker_util import DockerDataLoader
 
 _ROOT: Path = Path(__file__).parent
 DATA_DIRECTORY = _ROOT / ".." / "data"
@@ -39,18 +39,14 @@ def certificate(tmp_path_factory, container_name) -> Path:
 
 @pytest.fixture(scope="session")
 def db_version(connection_factory):
-    db_version_query = (
-        "SELECT PARAM_VALUE FROM EXA_METADATA "
-        "WHERE PARAM_NAME = 'databaseProductVersion';"
-    )
     with connection_factory() as conn:
-        version = conn.execute(db_version_query).fetchone()[0]
+        version = conn.exasol_db_version
     return version
 
 
 @pytest.fixture(scope="session")
-def db_major_version(db_version):
-    return db_version.split(".")[0]
+def db_major_version(db_version) -> int:
+    return db_version.major
 
 
 @pytest.fixture(scope="session")
@@ -58,8 +54,25 @@ def dsn_resolved():
     return os.environ.get("EXAHOST", "localhost:8563")
 
 
+@pytest.fixture(
+    scope="session",
+    params=[
+        pytest.param(ssl.CERT_NONE, id="NO_CERT", marks=pytest.mark.no_cert),
+        pytest.param(ssl.CERT_REQUIRED, id="WITH_CERT", marks=pytest.mark.with_cert),
+    ],
+)
+def certification_type(request):
+    if request.param == ssl.CERT_NONE:
+        return ssl.CERT_NONE
+    return ssl.CERT_REQUIRED
+
+
 @pytest.fixture(scope="session")
-def dsn():
+def dsn(certification_type):
+    if certification_type == ssl.CERT_NONE:
+        return os.environ.get("EXAHOST", "localhost:8563")
+    # The host name is different for this case. As it is required to be the same
+    # host name that the certificate is signed. This comes from the ITDE.
     return os.environ.get("EXAHOST", "exasol-test-database:8563")
 
 
@@ -78,18 +91,12 @@ def schema():
     return os.environ.get("EXASCHEMA", "PYEXASOL_TEST")
 
 
-@pytest.fixture(
-    scope="session",
-    params=[
-        ssl.CERT_NONE,
-        ssl.CERT_REQUIRED,
-    ],
-    ids=["NO_CERT", "WITH_CERT"],
-)
-def websocket_sslopt(request, certificate):
-    if request.param == ssl.CERT_NONE:
-        return {"cert_reqs": request.param}
-    return {"cert_reqs": request.param, "ca_certs": certificate}
+@pytest.fixture(scope="session")
+def websocket_sslopt(certification_type, certificate):
+    websocket_dict = {"cert_reqs": certification_type}
+    if certification_type == ssl.CERT_REQUIRED:
+        websocket_dict["ca_certs"] = certificate
+    return websocket_dict
 
 
 @pytest.fixture(scope="session")
@@ -293,9 +300,9 @@ def expected_reserved_words(db_major_version):
     }
     # fmt: on
 
-    if db_major_version == "7":
+    if db_major_version == 7:
         return set_shared
-    elif db_major_version == "8":
+    elif db_major_version == 8:
         set_shared.update(["CURRENT_CLUSTER", "CURRENT_CLUSTER_UID"])
         return set_shared
 
@@ -304,9 +311,9 @@ def expected_reserved_words(db_major_version):
 def expected_user_table_column_last_visit_ts(db_major_version):
     timestamp_type = namedtuple("timestamp_type", ["size", "sql_type"])
 
-    if db_major_version == "7":
+    if db_major_version == 7:
         return timestamp_type(size=8, sql_type="TIMESTAMP")
-    elif db_major_version == "8":
+    elif db_major_version == 8:
         return timestamp_type(size=16, sql_type="TIMESTAMP(3)")
 
 
@@ -326,107 +333,3 @@ def expected_user_table_column_info(expected_user_table_column_last_visit_ts):
         "user_score": {"type": "DOUBLE"},
         "status": {"type": "VARCHAR", "size": 50, "characterSet": "UTF8"},
     }
-
-
-class DockerDataLoader:
-    """Data loader for docker based Exasol DB"""
-
-    def __init__(self, dsn, username, password, container_name, data_directory):
-        self._logger = logging.getLogger("DockerDataLoader")
-        self._dsn = dsn
-        self._user = username
-        self._password = password
-        self._container = container_name
-        self._data_directory = data_directory
-        self._tmp_dir = f"data-{uuid.uuid4()}"
-
-    @property
-    def data_directory(self):
-        return self._data_directory
-
-    @property
-    def ddl_file(self):
-        return self.data_directory / "import.sql"
-
-    @property
-    def csv_files(self):
-        return self.data_directory.rglob("*.csv")
-
-    def load(self):
-        self._create_dir()
-        self._upload_files()
-        self._import_data()
-
-    def _execute_command(self, command):
-        self._logger.info("Executing docker command: %s", command)
-        result = subprocess.run(
-            command,
-            check=True,
-            text=True,
-            capture_output=True,
-        )
-        self._logger.debug("Stderr: %s", result.stderr)
-        return result.stdout
-
-    def _exaplus(self) -> str:
-        # Note that the directory for the binary might change between DB versions
-        find_exaplus = [
-            "docker",
-            "exec",
-            self._container,
-            "find",
-            "/opt",
-            "/usr",
-            "-name",
-            "exaplus",
-            "-type",
-            "f",  # only files
-            "-executable",  # only executable files
-            "-print",  # -print -quit will stop after the result is found
-            "-quit",
-        ]
-        exaplus = self._execute_command(find_exaplus).strip()
-        self._logger.info("Found exaplus at %s", exaplus)
-        return exaplus
-
-    def _create_dir(self):
-        """Create data directory within the docker container."""
-        mkdir = ["docker", "exec", self._container, "mkdir", self._tmp_dir]
-        stdout = self._execute_command(mkdir)
-        self._logger.info("Stdout: %s", stdout)
-
-    def _upload_files(self):
-        files = [self.ddl_file]
-        files.extend(self.csv_files)
-        for file in files:
-            copy_file = [
-                "docker",
-                "cp",
-                f"{file.resolve()}",
-                f"{self._container}:{self._tmp_dir}/{file.name}",
-            ]
-            stdout = self._execute_command(copy_file)
-            self._logger.debug("Stdout: %s", stdout)
-
-    def _import_data(self):
-        """Load test data into a backend."""
-        execute_ddl_file = [
-            "docker",
-            "exec",
-            "-w",
-            f"/{self._tmp_dir}",
-            self._container,
-            self._exaplus(),
-            "-c",
-            f"{self._dsn}",
-            "-u",
-            self._user,
-            "-p",
-            self._password,
-            "-f",
-            self.ddl_file.name,
-            "--jdbcparam",
-            "validateservercertificate=0",
-        ]
-        stdout = self._execute_command(execute_ddl_file)
-        self._logger.info("Stdout: %s", stdout)

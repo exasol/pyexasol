@@ -6,8 +6,7 @@ In this example we add print_session_id() custom method to all objects
 import collections
 import pprint
 
-import _config as config
-
+import examples._config as config
 import pyexasol
 
 printer = pprint.PrettyPrinter(indent=4, width=140)
@@ -39,7 +38,7 @@ class CustomExaMetaData(pyexasol.ExaMetaData):
 
 
 class CustomExaConnection(pyexasol.ExaConnection):
-    # Set custom sub-classes here
+    # Set custom subclasses here
     cls_statement = CustomExaStatement
     cls_formatter = CustomExaFormatter
     cls_logger = CustomExaLogger

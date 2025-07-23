@@ -129,8 +129,8 @@ if __name__ == "__main__":
         )
 
     # Start worker processes
-    process_pool = list()
-    message_queue = multiprocessing.Queue()
+    process_pool: list = list()
+    message_queue: multiprocessing.Queue = multiprocessing.Queue()
 
     for i in range(args.parallel):
         proc = ExaBenchWorker(i, args, sql_text, message_queue)

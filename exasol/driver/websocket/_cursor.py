@@ -25,7 +25,7 @@ from exasol.driver.websocket._types import TypeCode
 
 @dataclass
 class MetaData:
-    """Meta data describing a result column"""
+    """Metadata describing a result column"""
 
     name: str
     type_code: TypeCode

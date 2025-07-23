@@ -20,6 +20,7 @@ from warnings import warn
 
 import rsa
 import websocket
+from packaging.version import Version
 
 from . import callback as cb
 from .exceptions import *
@@ -86,35 +87,35 @@ class ExaConnection:
         dsn=None,
         user=None,
         password=None,
-        schema="",
+        schema: str = "",
         autocommit=constant.DEFAULT_AUTOCOMMIT,
         snapshot_transactions=None,
         connection_timeout=constant.DEFAULT_CONNECTION_TIMEOUT,
         socket_timeout=constant.DEFAULT_SOCKET_TIMEOUT,
         query_timeout=constant.DEFAULT_QUERY_TIMEOUT,
-        compression=False,
-        encryption=True,
-        fetch_dict=False,
+        compression: bool = False,
+        encryption: bool = True,
+        fetch_dict: bool = False,
         fetch_mapper=None,
         fetch_size_bytes=constant.DEFAULT_FETCH_SIZE_BYTES,
-        lower_ident=False,
-        quote_ident=False,
+        lower_ident: bool = False,
+        quote_ident: bool = False,
         json_lib="json",
-        verbose_error=True,
-        debug=False,
+        verbose_error: bool = True,
+        debug: bool = False,
         debug_logdir=None,
         udf_output_bind_address=None,
         udf_output_connect_address=None,
         udf_output_dir=None,
         http_proxy=None,
-        resolve_hostnames=True,
+        resolve_hostnames: bool = True,
         client_name=None,
         client_version=None,
         client_os_username=None,
         protocol_version=constant.PROTOCOL_V3,
         websocket_sslopt: Optional[dict] = None,
-        access_token=None,
-        refresh_token=None,
+        access_token: Optional[str] = None,
+        refresh_token: Optional[str] = None,
     ):
         """
         Exasol connection object
@@ -253,10 +254,10 @@ class ExaConnection:
             "refresh_token": refresh_token,
         }
 
-        self.login_info = {}
+        self.login_info: dict = {}
         self.login_time = 0
-        self.attr = {}
-        self.is_closed = False
+        self.attr: dict = {}
+        self.is_closed: bool = False
 
         self.ws_ipaddr = None
         self.ws_port = None
@@ -687,7 +688,7 @@ class ExaConnection:
             - This function may run out of memory
 
         Examples:
-            >>> cb = lamda args: print(args)
+            >>> cb = lambda args: print(args)
             >>> con = ExaConnection(...)
             >>> con.export_to_callback(
             ...    callback=cb,
@@ -887,7 +888,7 @@ class ExaConnection:
         sql_thread.set_exa_address_list(exa_address_list)
         sql_thread.run_sql()
 
-    def session_id(self):
+    def session_id(self) -> str:
         """
         Session id of current session.
 
@@ -896,9 +897,9 @@ class ExaConnection:
         """
         return str(self.login_info.get("sessionId", ""))
 
-    def protocol_version(self):
+    def protocol_version(self) -> int:
         """
-        Actual protocol version used by the the established connection.
+        Actual protocol version used by the established connection.
 
         Returns:
             ``0`` if connection was not established yet (e.g. due to exception handling), otherwise protocol version as int.
@@ -913,6 +914,18 @@ class ExaConnection:
 
         """
         return int(self.login_info.get("protocolVersion", 0))
+
+    @property
+    def exasol_db_version(self) -> Optional[Version]:
+        """
+        Version of the Exasol database of the current session.
+
+        The login information is returned by the second response of LOGIN command
+        and calls this "releaseVersion".
+        """
+        if release_version := self.login_info.get("releaseVersion"):
+            return Version(release_version)
+        return None
 
     def last_statement(self) -> ExaStatement:
         """
@@ -1265,7 +1278,8 @@ class ExaConnection:
         options = {
             "timeout": self.options["connection_timeout"],
             "skip_utf8_validation": True,
-            "enable_multithread": True,  # Extra lock is necessary to protect abort_query() calls
+            "enable_multithread": True,
+            # Extra lock is necessary to protect abort_query() calls
         }
 
         if self.options["encryption"]:
@@ -1274,13 +1288,13 @@ class ExaConnection:
                 warn(
                     cleandoc(
                         """
-                        From PyExasol version ``1.0.0``, the default behavior of 
-                        ExaConnection for encrypted connections is to require strict 
-                        certificate validation with ``websocket_sslopt=None`` being 
-                        mapped to ``{"cert_reqs": ssl.CERT_REQUIRED}``. The prior 
-                        default behavior was to map such cases to 
+                        From PyExasol version ``1.0.0``, the default behavior of
+                        ExaConnection for encrypted connections is to require strict
+                        certificate validation with ``websocket_sslopt=None`` being
+                        mapped to ``{"cert_reqs": ssl.CERT_REQUIRED}``. The prior
+                        default behavior was to map such cases to
                         ``{"cert_reqs": ssl.CERT_NONE}``. For more information about
-                        encryption & best practices, please refer to 
+                        encryption & best practices, please refer to
                         ``doc/user_guide/encryption.rst``.
                         """
                     ),
