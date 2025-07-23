@@ -514,7 +514,7 @@ class ExaConnection:
         query_params=None,
         callback_params=None,
         export_params=None,
-    ) -> pandas.DataFrame:
+    ) -> "pandas.DataFrame":
         """
         Export large amount of data from Exasol to :class:`pandas.DataFrame`.
 
@@ -558,7 +558,7 @@ class ExaConnection:
         query_params=None,
         callback_params=None,
         export_params=None,
-    ) -> polars.DataFrame:
+    ) -> "polars.DataFrame":
         """
         Export large amount of data from Exasol to :class:`polars.DataFrame`.
 

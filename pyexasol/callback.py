@@ -38,7 +38,7 @@ def export_to_list(pipe, dst, **kwargs):
     return [row for row in reader]
 
 
-def export_to_pandas(pipe, dst, **kwargs) -> pandas.DataFrame:
+def export_to_pandas(pipe, dst, **kwargs) -> "pandas.DataFrame":
     """
     Basic example how to export into Pandas DataFrame
     Custom params for "read_csv" may be passed in **kwargs
@@ -48,7 +48,7 @@ def export_to_pandas(pipe, dst, **kwargs) -> pandas.DataFrame:
     return pandas.read_csv(pipe, skip_blank_lines=False, **kwargs)
 
 
-def export_to_polars(pipe, dst, **kwargs) -> polars.DataFrame:
+def export_to_polars(pipe, dst, **kwargs) -> "polars.DataFrame":
     """
     Basic example how to export into Polars DataFrame
     Custom params for "read_csv" may be passed in **kwargs
