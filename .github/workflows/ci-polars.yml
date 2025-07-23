@@ -5,13 +5,7 @@ on:
     branches:
       - "polars2"
 
-  ci-job:
+  merge_gate:
     name: Checks
-    uses: ./.github/workflows/checks.yml
+    uses: ./.github/workflows/merge-gate.yml
     secrets: inherit
-
-  examples:
-    uses: ./.github/workflows/examples.yml
-
-  ssl_cert:
-    uses: ./.github/workflows/ssl_cert.yml
