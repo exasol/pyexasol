@@ -21,6 +21,11 @@ Import callback arguments:
 import csv
 import io
 import shutil
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    import pandas
+    import polars
 
 
 def export_to_list(pipe, dst, **kwargs):
@@ -33,7 +38,7 @@ def export_to_list(pipe, dst, **kwargs):
     return [row for row in reader]
 
 
-def export_to_pandas(pipe, dst, **kwargs) -> "pandas.DataFrame":
+def export_to_pandas(pipe, dst, **kwargs) -> pandas.DataFrame:
     """
     Basic example how to export into Pandas DataFrame
     Custom params for "read_csv" may be passed in **kwargs
@@ -43,7 +48,7 @@ def export_to_pandas(pipe, dst, **kwargs) -> "pandas.DataFrame":
     return pandas.read_csv(pipe, skip_blank_lines=False, **kwargs)
 
 
-def export_to_polars(pipe, dst, **kwargs) -> "polars.DataFrame":
+def export_to_polars(pipe, dst, **kwargs) -> polars.DataFrame:
     """
     Basic example how to export into Polars DataFrame
     Custom params for "read_csv" may be passed in **kwargs
@@ -125,11 +130,7 @@ def import_from_polars(pipe, src, **kwargs):
     elif not isinstance(src, polars.DataFrame):
         raise ValueError("Data source is not polars.DataFrame or polars.LazyFrame")
 
-    return src.write_csv(
-        pipe,
-        include_header=False,
-        **kwargs
-    )
+    return src.write_csv(pipe, include_header=False, **kwargs)
 
 
 def import_from_file(pipe, src):

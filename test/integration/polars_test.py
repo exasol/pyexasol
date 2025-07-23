@@ -108,6 +108,7 @@ def test_import_from_polars(connection, empty_table, names):
 
     assert actual == expected
 
+
 @pytest.mark.parametrize(
     "connection", ["connection", "connection_with_compression"], indirect=True
 )

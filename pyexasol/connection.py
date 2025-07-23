@@ -13,6 +13,7 @@ import urllib.parse
 import zlib
 from inspect import cleandoc
 from typing import (
+    TYPE_CHECKING,
     NamedTuple,
     Optional,
 )
@@ -37,6 +38,10 @@ from .script_output import ExaScriptOutputProcess
 from .statement import ExaStatement
 from .version import __version__
 from .warnings import PyexasolWarning
+
+if TYPE_CHECKING:
+    import pandas
+    import polars
 
 
 class Host(NamedTuple):
@@ -509,7 +514,7 @@ class ExaConnection:
         query_params=None,
         callback_params=None,
         export_params=None,
-    ) -> "pandas.DataFrame":
+    ) -> pandas.DataFrame:
         """
         Export large amount of data from Exasol to :class:`pandas.DataFrame`.
 
@@ -553,7 +558,7 @@ class ExaConnection:
         query_params=None,
         callback_params=None,
         export_params=None,
-    ) -> "polars.DataFrame":
+    ) -> polars.DataFrame:
         """
         Export large amount of data from Exasol to :class:`polars.DataFrame`.
 
