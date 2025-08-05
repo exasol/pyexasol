@@ -133,7 +133,7 @@ def import_from_parquet(pipe, source: Union[list[Path], Path, str], **kwargs):
             - str: representing a filepath which already contains a glob pattern
             (e.g., "/local_dir/*.parquet")
         **kwargs:
-            Custom params for "parquet.Table.iter_batches". This can be used
+            Custom params for :func:`parquet.Table.iter_batches`. This can be used
             to specify what columns should be read and their preferred order.
 
     Please note that nested or hierarchical column types are not supported.
@@ -168,7 +168,7 @@ def import_from_parquet(pipe, source: Union[list[Path], Path, str], **kwargs):
     for file in parquet_files:
         parquet_file = parquet.ParquetFile(file, memory_map=True)
         ensure_no_nested_columns(parquet_file.schema_arrow, columns)
-        for batch in parquet_file.iter_batches(batch_size=10000, **kwargs):
+        for batch in parquet_file.iter_batches(**kwargs):
             write_options = csv.WriteOptions(include_header=False)
             csv.write_csv(batch, pipe, write_options=write_options)
 
