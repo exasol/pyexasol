@@ -121,7 +121,9 @@ def get_parquet_files(source: Union[list[Path], Path, str]) -> list[Path]:
     )
 
 
-def import_from_parquet(pipe, source: Union[list[Path], Path, str], **kwargs):
+def import_from_parquet(
+    pipe, source: Union[list[Path], Path, str], **kwargs
+):  # NOSONAR(S3776)
     """
     Basic example how to import from pyarrow parquet file(s)
 
