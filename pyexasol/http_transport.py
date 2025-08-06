@@ -524,7 +524,7 @@ class ExaHTTPTransportWrapper:
             return result
 
         except (Exception, KeyboardInterrupt) as e:
-            self.http_thread.terminate_export()
+            self.http_thread.terminate()
             self.http_thread.join()
 
             raise e
@@ -563,7 +563,7 @@ class ExaHTTPTransportWrapper:
             return result
 
         except (Exception, KeyboardInterrupt) as e:
-            self.http_thread.terminate_import()
+            self.http_thread.terminate()
             self.http_thread.join()
 
             raise e
