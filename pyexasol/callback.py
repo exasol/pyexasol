@@ -135,7 +135,7 @@ def import_from_parquet(
             - str: representing a filepath which already contains a glob pattern
             (e.g., "/local_dir/*.parquet")
         **kwargs:
-            Custom params for :func:`parquet.Table.iter_batches`. This can be used
+            Custom params for :func:`pyarrow.parquet.Table.iter_batches`. This can be used
             to specify what columns should be read and their preferred order.
 
     Please note that nested or hierarchical column types are not supported.
