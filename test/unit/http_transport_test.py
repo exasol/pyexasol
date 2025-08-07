@@ -1,5 +1,8 @@
 from typing import Optional
-from unittest.mock import Mock
+from unittest.mock import (
+    Mock,
+    patch,
+)
 
 import pytest
 from packaging.version import Version
@@ -9,6 +12,8 @@ from pyexasol import (
     ExaFormatter,
 )
 from pyexasol.http_transport import (
+    ExaHttpThread,
+    ExaHTTPTransportWrapper,
     ExportQuery,
     ImportQuery,
     SqlQuery,
@@ -377,3 +382,73 @@ class TestExportQuery:
     def test_with_column_names(export_sql_query, with_column_names, expected):
         export_sql_query.with_column_names = with_column_names
         assert export_sql_query._with_column_names == expected
+
+
+ERROR_MESSAGE = "Error from callback"
+
+
+def export_callback(pipe, dst, **kwargs):
+    raise Exception(ERROR_MESSAGE)
+
+
+def import_callback(pipe, src, **kwargs):
+    raise Exception(ERROR_MESSAGE)
+
+
+@pytest.fixture
+def mock_http_thread():
+    return Mock(ExaHttpThread)
+
+
+@pytest.fixture
+def http_transport_wrapper_with_mocks(mock_http_thread):
+    with patch.object(ExaHTTPTransportWrapper, "__init__", return_value=None):
+        http_wrapper = ExaHTTPTransportWrapper(ipaddr="dummy", port=8000)
+        http_wrapper.http_thread = mock_http_thread
+        return http_wrapper
+
+
+class TestExaHTTPTransportWrapper:
+    @staticmethod
+    def test_export_to_callback_fails_as_not_a_callback(
+        http_transport_wrapper_with_mocks,
+    ):
+        with pytest.raises(ValueError, match="is not callable"):
+            http_transport_wrapper_with_mocks.export_to_callback(
+                callback="string", dst=None
+            )
+
+    @staticmethod
+    def test_export_to_callback_fails_at_callback(
+        http_transport_wrapper_with_mocks, mock_http_thread
+    ):
+        mock_http_thread.read_pipe = None
+        with pytest.raises(Exception, match=ERROR_MESSAGE):
+            http_transport_wrapper_with_mocks.export_to_callback(
+                callback=export_callback, dst=None
+            )
+
+        mock_http_thread.terminate.assert_called()
+        mock_http_thread.join.assert_called_once()
+
+    @staticmethod
+    def test_import_to_callback_fails_as_not_a_callback(
+        http_transport_wrapper_with_mocks,
+    ):
+        with pytest.raises(ValueError, match="is not callable"):
+            http_transport_wrapper_with_mocks.import_from_callback(
+                callback="string", src=None
+            )
+
+    @staticmethod
+    def test_import_from_callback_fails_at_callback(
+        http_transport_wrapper_with_mocks, mock_http_thread
+    ):
+        mock_http_thread.write_pipe = None
+        with pytest.raises(Exception, match=ERROR_MESSAGE):
+            http_transport_wrapper_with_mocks.import_from_callback(
+                callback=import_callback, src=None
+            )
+
+        mock_http_thread.terminate.assert_called_once()
+        mock_http_thread.join.assert_called_once()

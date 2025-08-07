@@ -50,8 +50,18 @@ def db_major_version(db_version) -> int:
 
 
 @pytest.fixture(scope="session")
-def dsn_resolved():
-    return os.environ.get("EXAHOST", "localhost:8563")
+def ipaddr():
+    return "localhost"
+
+
+@pytest.fixture(scope="session")
+def port():
+    return 8563
+
+
+@pytest.fixture(scope="session")
+def dsn_resolved(ipaddr, port):
+    return os.environ.get("EXAHOST", f"{ipaddr}:{port}")
 
 
 @pytest.fixture(
@@ -68,12 +78,12 @@ def certification_type(request):
 
 
 @pytest.fixture(scope="session")
-def dsn(certification_type):
+def dsn(certification_type, ipaddr, port):
     if certification_type == ssl.CERT_NONE:
-        return os.environ.get("EXAHOST", "localhost:8563")
+        return os.environ.get("EXAHOST", f"{ipaddr}:{port}")
     # The host name is different for this case. As it is required to be the same
     # host name that the certificate is signed. This comes from the ITDE.
-    return os.environ.get("EXAHOST", "exasol-test-database:8563")
+    return os.environ.get("EXAHOST", f"exasol-test-database:{port}")
 
 
 @pytest.fixture(scope="session")
