@@ -2,7 +2,7 @@
 HTTP Transport
 
 EXPORT and IMPORT from Exasol to Polars DataFrames
-Make sure to enable compression for Wifi connections to improve performance
+Make sure to enable compression for Wi-Fi connections to improve performance
 """
 
 import _config as config
@@ -32,8 +32,8 @@ print(f"EXPORTED {stmt.rowcount()} rows in {stmt.execution_time}s")
 C.import_from_polars(df, "users_copy")
 
 # Alternatively use polars LazyFrame the same way
-# lf = df.lazy()
-# C.import_from_polars(lf, 'users_copy')
+lf = df.lazy()
+C.import_from_polars(lf, "users_copy")
 
 stmt = C.last_statement()
 print(f"IMPORTED {stmt.rowcount()} rows in {stmt.execution_time}s")

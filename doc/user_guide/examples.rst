@@ -136,6 +136,13 @@ Pandas DataFrame
     :language: python
     :caption: IMPORT / EXPORT to and from pandas.DataFrame
 
+Polars DataFrame
+++++++++++++++++
+
+.. literalinclude:: ../../examples/b07_pandas.py
+    :language: python
+    :caption: IMPORT / EXPORT to and from polars.DataFrame
+
 Other Methods
 +++++++++++++
 

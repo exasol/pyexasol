@@ -523,6 +523,8 @@ class ExaConnection:
                 SQL query or table for export.
             query_params:
                 Values for SQL query placeholders.
+            callback_params:
+                Dict with additional parameters for callback function
             export_params:
                 Custom parameters for Export query.
 
@@ -567,6 +569,8 @@ class ExaConnection:
                 SQL query or table for export.
             query_params:
                 Values for SQL query placeholders.
+            callback_params:
+                Dict with additional parameters for callback function
             export_params:
                 Custom parameters for Export query.
 
@@ -641,6 +645,8 @@ class ExaConnection:
                 Source ``pandas.DataFrame`` instance.
             table:
                 Destination table for IMPORT.
+            callback_params:
+                Dict with additional parameters for callback function
             import_params:
                 Custom parameters for import query.
         """
@@ -657,6 +663,8 @@ class ExaConnection:
                 Source ``polars.DataFrame`` instance.
             table:
                 Destination table for IMPORT.
+            callback_params:
+                Dict with additional parameters for callback function
             import_params:
                 Custom parameters for import query.
         """
@@ -683,6 +691,8 @@ class ExaConnection:
                 SQL query or table for export.
             query_params:
                 Values for SQL query placeholders.
+            callback_params:
+                Dict with additional parameters for callback function
             export_params:
                 Custom parameters for Export query.
 

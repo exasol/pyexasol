@@ -123,6 +123,12 @@ def connection(connection_factory):
 
 
 @pytest.fixture
+def connection_with_compression(connection_factory):
+    with connection_factory(compression=True) as con:
+        yield con
+
+
+@pytest.fixture
 def view(connection, faker):
     name = f"TEST_VIEW_{uuid.uuid4()}"
     name = name.replace("-", "_").upper()
@@ -135,6 +141,46 @@ def view(connection, faker):
     delete_stmt = f"DROP VIEW IF EXISTS {name};"
     connection.execute(delete_stmt)
     connection.commit()
+
+
+@pytest.fixture
+def empty_table(connection):
+    name = "USER_NAMES"
+    ddl = cleandoc(
+        f"""
+        CREATE OR REPLACE TABLE {name}
+        (
+            FIRST_NAME VARCHAR(200),
+            LAST_NAME VARCHAR(200)
+        );
+        """
+    )
+    connection.execute(ddl)
+    connection.commit()
+
+    yield name
+
+    ddl = f"DROP TABLE IF EXISTS {name};"
+    connection.execute(ddl)
+    connection.commit()
+
+
+@pytest.fixture
+def names(faker):
+    yield tuple(
+        {"FIRST_NAME": faker.first_name(), "LAST_NAME": faker.last_name()}
+        for _ in range(0, 10)
+    )
+
+
+@pytest.fixture
+def table(connection, empty_table, names):
+    insert = "INSERT INTO {table} VALUES({{FIRST_NAME}}, {{LAST_NAME}});"
+    for name in names:
+        stmt = insert.format(table=empty_table)
+        connection.execute(stmt, name)
+
+    yield empty_table, names
 
 
 @pytest.fixture

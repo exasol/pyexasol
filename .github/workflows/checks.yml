@@ -113,6 +113,7 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
+      # Install extras so that usage of optional dependencies are also type checked
       - name: Install all extras
         run: poetry install --all-extras
 
