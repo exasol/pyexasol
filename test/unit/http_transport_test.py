@@ -16,7 +16,7 @@ from pyexasol.http_transport import (
 
 
 @pytest.fixture
-def connection():
+def mock_connection():
     mock = Mock(ExaConnection)
     mock.options = {"encryption": True, "quote_ident": "'"}
     mock.exasol_db_version = Version("8.32.0")
@@ -25,18 +25,18 @@ def connection():
 
 
 @pytest.fixture
-def sql_query(connection):
-    return SqlQuery(connection=connection, compression=True)
+def sql_query(mock_connection):
+    return SqlQuery(connection=mock_connection, compression=True)
 
 
 @pytest.fixture
-def import_sql_query(connection):
-    return ImportQuery(connection=connection, compression=True)
+def import_sql_query(mock_connection):
+    return ImportQuery(connection=mock_connection, compression=True)
 
 
 @pytest.fixture
-def export_sql_query(connection):
-    return ExportQuery(connection=connection, compression=True)
+def export_sql_query(mock_connection):
+    return ExportQuery(connection=mock_connection, compression=True)
 
 
 class TestSqlQuery:
@@ -124,8 +124,8 @@ class TestSqlQuery:
             ),
         ],
     )
-    def test_get_file_list(connection, sql_query, db_version, expected_end):
-        connection.exasol_db_version = db_version
+    def test_get_file_list(mock_connection, sql_query, db_version, expected_end):
+        mock_connection.exasol_db_version = db_version
         exa_address_list = [
             "127.18.0.2:8364/YHistZoLhU9+FKoSEHHbNGtC/Ee4KT75DDBO+s5OG8o="
         ]
@@ -158,10 +158,10 @@ class TestSqlQuery:
         ],
     )
     def test_requires_tls_public_key(
-        sql_query, connection, db_version, encryption, expected
+        sql_query, mock_connection, db_version, encryption, expected
     ):
-        connection.options["encryption"] = encryption
-        connection.exasol_db_version = db_version
+        mock_connection.options["encryption"] = encryption
+        mock_connection.exasol_db_version = db_version
 
         result = sql_query._requires_tls_public_key()
         assert result == expected
@@ -243,8 +243,8 @@ class TestSqlQuery:
             (True, "https://"),
         ],
     )
-    def test_url_prefix(sql_query, connection, encryption, expected):
-        connection.options["encryption"] = encryption
+    def test_url_prefix(sql_query, mock_connection, encryption, expected):
+        mock_connection.options["encryption"] = encryption
         assert sql_query._url_prefix == expected
 
     @staticmethod
@@ -258,7 +258,7 @@ class TestSqlQuery:
 
 class TestImportQuery:
     @staticmethod
-    def test_build_query(import_sql_query, connection):
+    def test_build_query(import_sql_query, mock_connection):
         result = import_sql_query.build_query(
             table="TABLE",
             exa_address_list=[
@@ -271,9 +271,9 @@ class TestImportQuery:
         )
 
     @staticmethod
-    def test_load_from_dict(connection):
+    def test_load_from_dict(mock_connection):
         ImportQuery.load_from_dict(
-            connection=connection, compression=False, params={"skip": 2}
+            connection=mock_connection, compression=False, params={"skip": 2}
         )
 
     @staticmethod
@@ -318,7 +318,7 @@ class TestImportQuery:
 
 class TestExportQuery:
     @staticmethod
-    def test_build_query(export_sql_query, connection):
+    def test_build_query(export_sql_query, mock_connection):
         result = export_sql_query.build_query(
             table="TABLE",
             exa_address_list=[
@@ -332,9 +332,9 @@ class TestExportQuery:
 
     #
     @staticmethod
-    def test_load_from_dict(connection):
+    def test_load_from_dict(mock_connection):
         ExportQuery.load_from_dict(
-            connection=connection, compression=False, params={"delimit": "auto"}
+            connection=mock_connection, compression=False, params={"delimit": "auto"}
         )
 
     @staticmethod
