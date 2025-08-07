@@ -2245,7 +2245,7 @@ description = "Proxy server that can tunnel among remote servers by regex rules.
 optional = true
 python-versions = ">=3.6"
 groups = ["main"]
-markers = "extra == \"examples\""
+markers = "extra == \"examples\" or extra == \"all\""
 files = [
     {file = "pproxy-2.7.9-py3-none-any.whl", hash = "sha256:a073d02616a47c43e1d20a547918c307dbda598c6d53869b165025f3cfe58e80"},
 ]
@@ -2726,7 +2726,7 @@ description = "Python wrapper around rapidjson"
 optional = true
 python-versions = ">=3.6"
 groups = ["main"]
-markers = "extra == \"rapidjson\""
+markers = "extra == \"rapidjson\" or extra == \"all\""
 files = [
     {file = "python_rapidjson-1.20-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:eeaa8487fdd8db409bd2e0c41c59cee3b9f1d08401fc75520f7d35c7a22d8789"},
     {file = "python_rapidjson-1.20-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:425c2bb8e778a04497953482c251944b2736f61012d897f17b73da3eca060c27"},
@@ -3927,7 +3927,7 @@ test = ["big-O", "jaraco.functools", "jaraco.itertools", "jaraco.test", "more_it
 type = ["pytest-mypy"]
 
 [extras]
-all = ["numpy", "orjson", "pandas", "ujson"]
+all = ["numpy", "orjson", "pandas", "pproxy", "python-rapidjson", "ujson"]
 examples = ["pproxy"]
 numpy = ["numpy"]
 orjson = ["orjson"]
@@ -3938,4 +3938,4 @@ ujson = ["ujson"]
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.9.2"
-content-hash = "1d92d9fd67118af483130b4aa2c3936ae89dfadbe9983395a79488eaf9a3f31e"
+content-hash = "bd365b844ee4b7dd4d96d4e34709d32591b4985f0652a663c2a1f2531f9728ab"
