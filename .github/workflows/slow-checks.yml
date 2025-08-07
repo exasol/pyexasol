@@ -35,9 +35,7 @@ jobs:
         uses: exasol/python-toolbox/.github/actions/python-environment@1.7.4
         with:
           python-version: ${{ matrix.python-version }}
-
-      - name: "Install all extras"
-        run: poetry install --all-extras
+          extras: "all"
 
       - name: "Setup custom host"
         run: echo "127.0.0.1 exasol-test-database" | sudo tee -a /etc/hosts
