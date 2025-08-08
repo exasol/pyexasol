@@ -139,7 +139,7 @@ Pandas DataFrame
 Polars DataFrame
 ++++++++++++++++
 
-.. literalinclude:: ../../examples/b07_pandas.py
+.. literalinclude:: ../../examples/b07_polars.py
     :language: python
     :caption: IMPORT / EXPORT to and from polars.DataFrame
 

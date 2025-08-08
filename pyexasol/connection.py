@@ -656,11 +656,11 @@ class ExaConnection:
 
     def import_from_polars(self, src, table, callback_params=None, import_params=None):
         """
-        Import a large amount of data from ``polars.DataFrame``.
+        Import a large amount of data from :class:`polars.DataFrame`.
 
         Args:
             src:
-                Source ``polars.DataFrame`` instance.
+                Source :class:`polars.DataFrame` instance.
             table:
                 Destination table for IMPORT.
             callback_params:
