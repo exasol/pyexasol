@@ -606,11 +606,11 @@ class ExaConnection:
         import_params: Optional[dict] = None,
     ):
         """
-        Import a large amount of data from ``pandas.DataFrame``.
+        Import a large amount of data from :class:`pandas.DataFrame`.
 
         Args:
             src:
-                Source ``pandas.DataFrame`` instance.
+                Source :class:`pandas.DataFrame` instance.
             table:
                 Destination table for IMPORT.
             callback_params:
@@ -630,7 +630,7 @@ class ExaConnection:
         import_params: Optional[dict] = None,
     ):
         """
-        Import a large amount of data from ``pyarrow.parquet.table``.
+        Import a large amount of data from :class:`pyarrow.parquet.Table`.
 
         Args:
             source: Local filepath specification(s) to process. Can be one of:
