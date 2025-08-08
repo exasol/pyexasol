@@ -12,15 +12,18 @@ Core dependencies
 Optional dependencies
 +++++++++++++++++++++
 
-- ``pandas`` is required for :ref:`http_transport` functions working with data frames
-- ``ujson`` is required for ``json_lib=ujson`` to improve JSON parsing performance
-- ``rapidjson`` is required for ``json_lib=rapidjson`` to improve JSON parsing performance
 - ``orjson`` is required for ``json_lib=orjson`` to improve JSON parsing performance
-- ``pproxy`` is used in examples to test HTTP proxy;
+- ``pandas`` is required for :ref:`http_transport` functions working with :class:`pandas.DataFrame`
+- ``parquet`` is required for :ref:`http_transport` functions working with :class:`pyarrow.parquet.Table`
+- ``pproxy`` is used in examples to test HTTP proxy
+- ``rapidjson`` is required for ``json_lib=rapidjson`` to improve JSON parsing performance
+- ``ujson`` is required for ``json_lib=ujson`` to improve JSON parsing performance
 
-Installation with optional dependencies
-+++++++++++++++++++++++++++++++++++++++
+Installation of optional dependencies
++++++++++++++++++++++++++++++++++++++
 
 .. code-block:: bash
-
-   pip install pyexasol[pandas,ujson,rapidjson,orjson,examples]
+   # to install all optional dependencies
+   pip install pyexasol[all]
+   # to install a particular optional dependency
+   pip install pyexasol[<reference_to_package>]
