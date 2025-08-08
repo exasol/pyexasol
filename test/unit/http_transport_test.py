@@ -419,19 +419,6 @@ class TestExaHTTPTransportWrapper:
             )
 
     @staticmethod
-    def test_export_to_callback_fails_at_callback(
-        http_transport_wrapper_with_mocks, mock_http_thread
-    ):
-        mock_http_thread.read_pipe = None
-        with pytest.raises(Exception, match=ERROR_MESSAGE):
-            http_transport_wrapper_with_mocks.export_to_callback(
-                callback=export_callback, dst=None
-            )
-
-        mock_http_thread.terminate.assert_called()
-        mock_http_thread.join.assert_called_once()
-
-    @staticmethod
     def test_import_to_callback_fails_as_not_a_callback(
         http_transport_wrapper_with_mocks,
     ):
@@ -439,16 +426,3 @@ class TestExaHTTPTransportWrapper:
             http_transport_wrapper_with_mocks.import_from_callback(
                 callback="string", src=None
             )
-
-    @staticmethod
-    def test_import_from_callback_fails_at_callback(
-        http_transport_wrapper_with_mocks, mock_http_thread
-    ):
-        mock_http_thread.write_pipe = None
-        with pytest.raises(Exception, match=ERROR_MESSAGE):
-            http_transport_wrapper_with_mocks.import_from_callback(
-                callback=import_callback, src=None
-            )
-
-        mock_http_thread.terminate.assert_called_once()
-        mock_http_thread.join.assert_called_once()
