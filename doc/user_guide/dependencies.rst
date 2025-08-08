@@ -23,6 +23,7 @@ Installation of optional dependencies
 +++++++++++++++++++++++++++++++++++++
 
 .. code-block:: bash
+
    # to install all optional dependencies
    pip install pyexasol[all]
    # to install a particular optional dependency
