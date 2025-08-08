@@ -69,7 +69,7 @@ ujson = ["ujson"]
 rapidjson = ["python-rapidjson"]
 orjson = ["orjson"]
 examples = ["pproxy"]
-all = ["numpy", "pandas", "ujson", "python-rapidjson", "orjson", "pproxy"]
+all = ["numpy", "pandas", "ujson", "python-rapidjson", "orjson", "pproxy", "polars"]
 
 [tool.poetry.group.dev.dependencies]
 nox = "^2023.4.22"
