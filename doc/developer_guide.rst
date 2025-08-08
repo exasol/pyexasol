@@ -96,5 +96,5 @@ The `exasol-toolbox` provides nox tasks to semi-automate the release process:
     # trigger a release
     nox -s release:trigger
 
-For further information, please refer to the `exasol-toolbox`'s page `How to Release
+For further information, please refer to the `exasol-toolbox`'s page `Creating a Release
 <https://exasol.github.io/python-toolbox/main/user_guide/features/creating_a_release.html>`_.

@@ -99,3 +99,7 @@ Relocked dependencies
 * Added example to highlight how sensitive information from exceptions should be handled
 * Harmonized spelling of PyExasol across documentation
 * #204: Fixed broken links and some typos
+
+## Bugfix
+
+* #183: Replaced terminate_export & terminate_import for ExaHttpThread with terminate
