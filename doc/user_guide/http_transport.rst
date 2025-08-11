@@ -9,7 +9,7 @@ This is a powerful tool which helps to bypass the creation of intermediate Pytho
 
 PyExasol offloads HTTP communication and decompression to a separate thread using the `threading`_ module. The main thread deals with a simple `pipe`_ opened in binary mode.
 
-You may specify a custom `callback` function to read or write from the raw pipe and to apply complex logic. Use `callback_params` to pass additional parameters to the `callback` function (e.g. options for pandas).
+You may specify a custom `callback` function to read or write from the raw pipe and to apply complex logic. Use ``callback_params`` to pass additional parameters to the `callback` function (e.g. options for pandas).
 
 You may also specify `import_params` or `export_params` to alter the `IMPORT` or `EXPORT` query and modify the CSV data stream.
 
@@ -22,19 +22,18 @@ For further details, see:
 - `IMPORT <https://docs.exasol.com/db/latest/sql/import.htm>`_
 - `CHANGELOG: TLS Certificate Verification for Loader File Connections <https://exasol.my.site.com/s/article/Changelog-content-16273>`_
 
-Default
-=======
-
-
 Pre-defined Functions
-=====================
+---------------------
 
-Export from Exasol to pandas
-----------------------------
+Using pandas
+^^^^^^^^^^^^
 
-Export data from Exasol into `pandas.DataFrame`. You may use the `callback_params` argument to pass custom options for the pandas `read_csv`_ function.
+Export
+""""""""""""""""
 
-.. _read_csv: https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.read_csv.html
+Export data from Exasol into a :class:`pandas.DataFrame`. You may use the
+``callback_params`` argument to pass custom options for the :func:`pandas.read_csv`
+(`link <https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.read_csv.html>`__).
 
 .. code-block:: python
 
@@ -44,23 +43,51 @@ Export data from Exasol into `pandas.DataFrame`. You may use the `callback_param
     # Read from table
     pd = C.export_to_pandas("users")
 
-Import from pandas to Exasol
-----------------------------
+Import
+""""""
 
-Import data from `pandas.DataFrame` into Exasol table. You may use the `callback_params` argument to pass custom options for the pandas `to_csv`_ function.
-
-.. _to_csv: https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.to_csv.html
+Import data from :class:`pandas.DataFrame` into an Exasol table. You may use the
+``callback_params`` argument to pass custom options to the :func:`pandas.DataFrame.to_csv`
+(`link <https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.to_csv.html>`__).
 
 .. code-block:: python
 
     C.import_from_pandas(pd, "users")
 
-Export from Exasol to polars
-----------------------------
+Using parquet
+^^^^^^^^^^^^^
 
-Export data from Exasol into `polars.DataFrame`. You may use the `callback_params` argument to pass custom options for the polars `polars.read_csv`_ function.
+Import
+""""""
 
-.. _polars.read_csv: https://docs.pola.rs/api/python/dev/reference/api/polars.read_csv.html
+Import data from parquet files (:class:`pyarrow.parquet.Table`) into an Exasol table.
+You may use the ``callback_params`` argument to pass custom options to
+:func:`parquet.ParquetFile.iter_batches` (`link <https://arrow.apache.org/docs/python/generated/pyarrow.parquet.ParquetFile.html#pyarrow.parquet.ParquetFile.iter_batches>`__).
+
+.. code-block:: python
+
+    C.import_from_parquet("<local_path>/*.parquet", "users")
+
+Using polars
+^^^^^^^^^^^^
+
+Import
+""""""
+
+Import data from :class:`polars.DataFrame` into an Exasol table. You may use the
+``callback_params`` argument to pass custom options to :func:`polars.DataFrame.write_csv`
+(`link <https://docs.pola.rs/api/python/dev/reference/api/polars.DataFrame.write_csv.html>`__).
+
+.. code-block:: python
+
+    C.import_from_polars(df, "users")
+
+Export
+""""""
+
+Export data from Exasol into :class:`polars.DataFrame`. You may use the
+``callback_params`` argument to pass custom options to :func:`polars.read_csv`
+(`link <https://docs.pola.rs/api/python/dev/reference/api/polars.read_csv.html>`__).
 
 .. code-block:: python
 
@@ -70,19 +97,12 @@ Export data from Exasol into `polars.DataFrame`. You may use the `callback_param
     # Read from table
     df = C.export_to_polars("users")
 
-Import from polars to Exasol
-----------------------------
 
-Import data from `polars.DataFrame` into Exasol table. You may use the `callback_params` argument to pass custom options for the polars `polars.DataFrame.write_csv`_ function.
+Using an Iterable
+^^^^^^^^^^^^^^^^^
 
-.. _polars.DataFrame.write_csv: https://docs.pola.rs/api/python/dev/reference/api/polars.DataFrame.write_csv.html
-
-.. code-block:: python
-
-    C.import_from_polars(df, "users")
-
-Import from list (a-la INSERT)
-------------------------------
+Import from a List
+""""""""""""""""""
 
 .. code-block:: python
 
@@ -93,8 +113,8 @@ Import from list (a-la INSERT)
 
     C.import_from_iterable(my_list, "users")
 
-Import from generator
----------------------
+Import from a Generator
+"""""""""""""""""""""""
 
 This function is suitable for very big INSERTS as long as the generator returns rows one-by-one and does not run out of memory.
 
@@ -106,8 +126,24 @@ This function is suitable for very big INSERTS as long as the generator returns 
 
     C.import_from_iterable(my_generator(), "users")
 
-Import from file
-----------------
+Using a File
+^^^^^^^^^^^^
+
+Export
+""""""
+
+Export data from Exasol into a file, path object, or file-like object opened in binary mode. You may export to process `STDOUT` using `sys.stdout.buffer`.
+
+.. code-block:: python
+
+    # Export from file defined with string path
+    C.export_to_file('my_file.csv', "users")
+
+    # Export into STDOUT
+    C.export_to_file(sys.stdout.buffer, "users")
+
+Import
+""""""
 
 Import data from a file, path object, or file-like object opened in binary mode. You may import from process `STDIN` using `sys.stdin.buffer`.
 
@@ -127,26 +163,14 @@ Import data from a file, path object, or file-like object opened in binary mode.
     # Import from STDIN
     C.import_from_file(sys.stdin.buffer, "users")
 
-Export to file
---------------
-
-Export data from Exasol into a file, path object, or file-like object opened in binary mode. You may export to process `STDOUT` using `sys.stdout.buffer`.
-
-.. code-block:: python
-
-    # Export from file defined with string path
-    C.export_to_file('my_file.csv', "users")
-
-    # Export into STDOUT
-    C.export_to_file(sys.stdout.buffer, "users")
 
 Parameters
-==========
+----------
 
 Please refer to the Exasol User Manual to learn more about `IMPORT` and `EXPORT` parameters.
 
 import_params
--------------
+^^^^^^^^^^^^^
 
 .. list-table::
    :header-rows: 1
@@ -192,7 +216,7 @@ import_params
 .. _date: https://docs.exasol.com/db/latest/sql_references/formatmodels.htm#Datetimeformatmodels
 
 export_params
--------------
+^^^^^^^^^^^^^
 
 .. list-table::
    :header-rows: 1
@@ -234,8 +258,8 @@ export_params
      - `This is a query description`
      - Add a comment before the beginning of the query
 
-The `comment` parameter, for adding comments to queries
--------------------------------------------------------
+The `comment` parameter
+^^^^^^^^^^^^^^^^^^^^^^^
 
 For any `export_*` or `import_*` call, you can add a comment that will be inserted before the beginning of the query.
 
@@ -248,10 +272,10 @@ This can be used for profiling and auditing. Example:
     This query is importing user from CSV.
     '''})
 
-The comment is inserted as a block comment (`/* <comment> */`). The block comment closing sequence (`*/`) is forbidden in the comment.
+The comment is inserted as a block comment (`/* <comment> */`). Thus, the block comment closing sequence (`*/`) is forbidden in the provided comment.
 
-How to write custom EXPORT / IMPORT functions
-=============================================
+Write Custom EXPORT / IMPORT Functions
+--------------------------------------
 
 A full collection of pre-defined callback functions is available in ``callback.py`` module.
 
@@ -269,7 +293,7 @@ Example of a callback exporting into a basic Python list.
     # Run EXPORT using the defined callback function
     C.export_to_callback(export_to_list, None, 'my_table')
 
-Example of a callback importing from Pandas into Exasol.
+Example of a callback importing from pandas into an Exasol table.
 
 .. code-block:: python
 

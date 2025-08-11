@@ -37,7 +37,7 @@ jobs:
           python-version: ${{ matrix.python-version }}
           extras: "all"
 
-      - name: "Setup custom host"
+      - name: Setup Custom Host
         run: echo "127.0.0.1 exasol-test-database" | sudo tee -a /etc/hosts
 
       - name: Run Tests and Collect Coverage

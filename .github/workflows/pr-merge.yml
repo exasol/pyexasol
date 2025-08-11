@@ -17,16 +17,6 @@ jobs:
     permissions:
       contents: read
 
-  examples:
-    uses: ./.github/workflows/examples.yml
-    permissions:
-      contents: read
-
-  ssl_cert:
-    uses: ./.github/workflows/ssl_cert.yml
-    permissions:
-      contents: read
-
   publish-docs:
     name: Publish Documentation
     uses: ./.github/workflows/gh-pages.yml

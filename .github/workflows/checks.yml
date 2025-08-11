@@ -181,6 +181,9 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
+      - name: Install All Extras
+        run: poetry install --all-extras
+
       - name: Run Tests and Collect Coverage
         run: poetry run -- nox -s test:unit -- --coverage
 
