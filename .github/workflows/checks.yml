@@ -112,6 +112,8 @@ jobs:
         uses: exasol/python-toolbox/.github/actions/python-environment@1.7.4
         with:
           python-version: ${{ matrix.python-version }}
+          # Install extras so that usage of optional dependencies are also type checked
+          extras: "all"
 
       - name: Run type-check
         run: poetry run -- nox -s lint:typing

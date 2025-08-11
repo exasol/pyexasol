@@ -55,6 +55,32 @@ Import data from `pandas.DataFrame` into Exasol table. You may use the `callback
 
     C.import_from_pandas(pd, "users")
 
+Export from Exasol to polars
+----------------------------
+
+Export data from Exasol into `polars.DataFrame`. You may use the `callback_params` argument to pass custom options for the polars `polars.read_csv`_ function.
+
+.. _polars.read_csv: https://docs.pola.rs/api/python/dev/reference/api/polars.read_csv.html
+
+.. code-block:: python
+
+    # Read from SQL
+    df = C.export_to_polars("SELECT * FROM users")
+
+    # Read from table
+    df = C.export_to_polars("users")
+
+Import from polars to Exasol
+----------------------------
+
+Import data from `polars.DataFrame` into Exasol table. You may use the `callback_params` argument to pass custom options for the polars `polars.DataFrame.write_csv`_ function.
+
+.. _polars.DataFrame.write_csv: https://docs.pola.rs/api/python/dev/reference/api/polars.DataFrame.write_csv.html
+
+.. code-block:: python
+
+    C.import_from_polars(df, "users")
+
 Import from list (a-la INSERT)
 ------------------------------
 
@@ -148,7 +174,7 @@ import_params
      - File encoding
    * - `with_column_names`
      - `True`
-     - Add column names as the first line, useful for Pandas
+     - Add column names as the first line, useful for Pandas and Polars
    * - `null`
      - `\N`
      - Custom `NULL` value
