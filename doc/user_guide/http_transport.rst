@@ -9,7 +9,7 @@ This is a powerful tool which helps to bypass the creation of intermediate Pytho
 
 PyExasol offloads HTTP communication and decompression to a separate thread using the `threading`_ module. The main thread deals with a simple `pipe`_ opened in binary mode.
 
-You may specify a custom `callback` function to read or write from the raw pipe and to apply complex logic. Use `callback_params` to pass additional parameters to the `callback` function (e.g. options for pandas).
+You may specify a custom `callback` function to read or write from the raw pipe and to apply complex logic. Use ``callback_params`` to pass additional parameters to the `callback` function (e.g. options for pandas).
 
 You may also specify `import_params` or `export_params` to alter the `IMPORT` or `EXPORT` query and modify the CSV data stream.
 
@@ -31,9 +31,9 @@ Using pandas
 Export
 """"""""""""""""
 
-Export data from Exasol into a :class:`pandas.DataFrame`. You may use the `callback_params` argument to pass custom options for the pandas `read_csv`_ function.
-
-.. _read_csv: https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.read_csv.html
+Export data from Exasol into a :class:`pandas.DataFrame`. You may use the
+``callback_params`` argument to pass custom options for the :func:`pandas.read_csv`
+(`link <https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.read_csv.html>`__).
 
 .. code-block:: python
 
@@ -46,9 +46,9 @@ Export data from Exasol into a :class:`pandas.DataFrame`. You may use the `callb
 Import
 """"""
 
-Import data from :class:`pandas.DataFrame` into an Exasol table. You may use the `callback_params` argument to pass custom options for the pandas `to_csv`_ function.
-
-.. _to_csv: https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.to_csv.html
+Import data from :class:`pandas.DataFrame` into an Exasol table. You may use the
+``callback_params`` argument to pass custom options to the :func:`pandas.DataFrame.to_csv`
+(`link <https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.to_csv.html>`__).
 
 .. code-block:: python
 
@@ -60,13 +60,43 @@ Using parquet
 Import
 """"""
 
-Import data from parquet files (:class:`pyarrow.parquet.Table`) into an Exasol table. You may use the `callback_params` argument to pass custom options for the pyarrow.csv `WriteOptions`_ class.
-
-.. _WriteOptions: https://arrow.apache.org/docs/python/generated/pyarrow.csv.WriteOptions.html
+Import data from parquet files (:class:`pyarrow.parquet.Table`) into an Exasol table.
+You may use the ``callback_params`` argument to pass custom options to
+:func:`parquet.ParquetFile.iter_batches` (`link <https://arrow.apache.org/docs/python/generated/pyarrow.parquet.ParquetFile.html#pyarrow.parquet.ParquetFile.iter_batches>`__).
 
 .. code-block:: python
 
     C.import_from_parquet("<local_path>/*.parquet", "users")
+
+Using polars
+^^^^^^^^^^^^
+
+Import
+""""""
+
+Import data from :class:`polars.DataFrame` into an Exasol table. You may use the
+``callback_params`` argument to pass custom options to :func:`polars.DataFrame.write_csv`
+(`link <https://docs.pola.rs/api/python/dev/reference/api/polars.DataFrame.write_csv.html>`__).
+
+.. code-block:: python
+
+    C.import_from_polars(df, "users")
+
+Export
+""""""
+
+Export data from Exasol into :class:`polars.DataFrame`. You may use the
+``callback_params`` argument to pass custom options to :func:`polars.read_csv`
+(`link <https://docs.pola.rs/api/python/dev/reference/api/polars.read_csv.html>`__).
+
+.. code-block:: python
+
+    # Read from SQL
+    df = C.export_to_polars("SELECT * FROM users")
+
+    # Read from table
+    df = C.export_to_polars("users")
+
 
 Using an Iterable
 ^^^^^^^^^^^^^^^^^
@@ -168,7 +198,7 @@ import_params
      - File encoding
    * - `with_column_names`
      - `True`
-     - Add column names as the first line, useful for Pandas
+     - Add column names as the first line, useful for Pandas and Polars
    * - `null`
      - `\N`
      - Custom `NULL` value

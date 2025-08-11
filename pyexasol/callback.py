@@ -24,7 +24,14 @@ import io
 import shutil
 from collections.abc import Iterable
 from pathlib import Path
-from typing import Union
+from typing import (
+    TYPE_CHECKING,
+    Union,
+)
+
+if TYPE_CHECKING:
+    import pandas
+    import polars
 
 
 def export_to_list(pipe, dst, **kwargs):
@@ -37,7 +44,7 @@ def export_to_list(pipe, dst, **kwargs):
     return [row for row in reader]
 
 
-def export_to_pandas(pipe, dst, **kwargs):
+def export_to_pandas(pipe, dst, **kwargs) -> "pandas.DataFrame":
     """
     Basic example how to export into Pandas DataFrame
     Custom params for "read_csv" may be passed in **kwargs
@@ -45,6 +52,16 @@ def export_to_pandas(pipe, dst, **kwargs):
     import pandas
 
     return pandas.read_csv(pipe, skip_blank_lines=False, **kwargs)
+
+
+def export_to_polars(pipe, dst, **kwargs) -> "polars.DataFrame":
+    """
+    Basic example how to export into Polars DataFrame
+    Custom params for "read_csv" may be passed in **kwargs
+    """
+    import polars
+
+    return polars.read_csv(pipe, **kwargs)
 
 
 def export_to_file(pipe, dst):
@@ -173,6 +190,21 @@ def import_from_parquet(
         for batch in parquet_file.iter_batches(**kwargs):
             write_options = csv.WriteOptions(include_header=False)
             csv.write_csv(batch, pipe, write_options=write_options)
+
+
+def import_from_polars(pipe, src, **kwargs):
+    """
+    Basic example how to import from Polars DataFrame or LazyFrame
+    Custom params for "write_csv" may be passed in **kwargs
+    """
+    import polars
+
+    if isinstance(src, polars.LazyFrame):
+        src = src.collect()
+    elif not isinstance(src, polars.DataFrame):
+        raise ValueError("Data source is not polars.DataFrame or polars.LazyFrame")
+
+    return src.write_csv(pipe, include_header=False, **kwargs)
 
 
 def import_from_file(pipe, src):

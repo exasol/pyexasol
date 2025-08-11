@@ -75,6 +75,7 @@ class ExaExtension:
             * Use ``.import_from_iterable`` for larger data sets and better memory efficiency
             * Use ``.import_from_pandas`` to import from :class:`pandas.DataFrame` regardless of its size
             * Use ``.import_from_parquet`` to import from parquet files
+            * Use ``.import_from_polars`` to import from :class:`polars.DataFrame` regardless of its size
 
             You may use "columns" argument to specify custom order of columns for insertion
             If some columns are not included in this list, ``NULL`` or ``DEFAULT`` value will be used instead
