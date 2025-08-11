@@ -50,8 +50,18 @@ def db_major_version(db_version) -> int:
 
 
 @pytest.fixture(scope="session")
-def dsn_resolved():
-    return os.environ.get("EXAHOST", "localhost:8563")
+def ipaddr():
+    return "localhost"
+
+
+@pytest.fixture(scope="session")
+def port():
+    return 8563
+
+
+@pytest.fixture(scope="session")
+def dsn_resolved(ipaddr, port):
+    return os.environ.get("EXAHOST", f"{ipaddr}:{port}")
 
 
 @pytest.fixture(
@@ -68,12 +78,12 @@ def certification_type(request):
 
 
 @pytest.fixture(scope="session")
-def dsn(certification_type):
+def dsn(certification_type, ipaddr, port):
     if certification_type == ssl.CERT_NONE:
-        return os.environ.get("EXAHOST", "localhost:8563")
+        return os.environ.get("EXAHOST", f"{ipaddr}:{port}")
     # The host name is different for this case. As it is required to be the same
     # host name that the certificate is signed. This comes from the ITDE.
-    return os.environ.get("EXAHOST", "exasol-test-database:8563")
+    return os.environ.get("EXAHOST", f"exasol-test-database:{port}")
 
 
 @pytest.fixture(scope="session")
@@ -123,6 +133,12 @@ def connection(connection_factory):
 
 
 @pytest.fixture
+def connection_with_compression(connection_factory):
+    with connection_factory(compression=True) as con:
+        yield con
+
+
+@pytest.fixture
 def view(connection, faker):
     name = f"TEST_VIEW_{uuid.uuid4()}"
     name = name.replace("-", "_").upper()
@@ -135,6 +151,46 @@ def view(connection, faker):
     delete_stmt = f"DROP VIEW IF EXISTS {name};"
     connection.execute(delete_stmt)
     connection.commit()
+
+
+@pytest.fixture
+def empty_table(connection):
+    name = "USER_NAMES"
+    ddl = cleandoc(
+        f"""
+        CREATE OR REPLACE TABLE {name}
+        (
+            FIRST_NAME VARCHAR(200),
+            LAST_NAME VARCHAR(200)
+        );
+        """
+    )
+    connection.execute(ddl)
+    connection.commit()
+
+    yield name
+
+    ddl = f"DROP TABLE IF EXISTS {name};"
+    connection.execute(ddl)
+    connection.commit()
+
+
+@pytest.fixture
+def names(faker):
+    yield tuple(
+        {"FIRST_NAME": faker.first_name(), "LAST_NAME": faker.last_name()}
+        for _ in range(0, 10)
+    )
+
+
+@pytest.fixture
+def table(connection, empty_table, names):
+    insert = "INSERT INTO {table} VALUES({{FIRST_NAME}}, {{LAST_NAME}});"
+    for name in names:
+        stmt = insert.format(table=empty_table)
+        connection.execute(stmt, name)
+
+    yield empty_table, names
 
 
 @pytest.fixture

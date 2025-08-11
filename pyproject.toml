@@ -55,6 +55,7 @@ packaging = "*"
 # Once this issue has been resolved, we should be able to remove this explicit dependency.
 numpy = { version = ">1.26.0,<2", optional = true }
 pandas = { version = "^2", optional = true, extras = ["numpy"] }
+polars = { version = "^1.10", optional = true }
 ujson = { version = "*", optional = true }
 python-rapidjson = { version = "*", optional = true }
 orjson = { version = ">=3.6", optional = true }
@@ -63,10 +64,12 @@ pproxy = { version = "*", optional = true }
 [tool.poetry.extras]
 numpy = ["numpy"]
 pandas = ["pandas"]
+polars = ["polars"]
 ujson = ["ujson"]
 rapidjson = ["python-rapidjson"]
 orjson = ["orjson"]
 examples = ["pproxy"]
+all = ["numpy", "pandas", "ujson", "python-rapidjson", "orjson", "pproxy", "polars"]
 
 [tool.poetry.group.dev.dependencies]
 nox = "^2023.4.22"
@@ -74,7 +77,7 @@ pytest = ">=7.0.0,<9"
 docutils = "^0.21.2"
 exasol-integration-test-docker-environment = "^4.0.0"
 faker = "^24.14.1"
-exasol-toolbox = "^1.6.0"
+exasol-toolbox = "^1.7.4"
 types-ujson = "^5.10.0.20250326"
 
 [tool.black]
@@ -143,6 +146,7 @@ markers = [
     "tls: tests related to tls.",
     "udf: tests related to user defined functions.",
     "pandas: tests related to support of pandas library.",
+    "polars: tests related to support of polars library.",
     "etl: etl related tests, export, load (import) and transform data.",
     "misc: miscellaneous tests which did not fit in the other categories."
 ]
