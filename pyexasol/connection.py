@@ -565,6 +565,7 @@ class ExaConnection:
         )
 
     def export_to_polars(
+        self,
         query_or_table: str,
         query_params: Optional[dict] = None,
         callback_params: Optional[dict] = None,
