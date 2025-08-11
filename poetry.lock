@@ -2241,7 +2241,7 @@ description = "Blazingly fast DataFrame library"
 optional = true
 python-versions = ">=3.9"
 groups = ["main"]
-markers = "extra == \"polars\""
+markers = "extra == \"polars\" or extra == \"all\""
 files = [
     {file = "polars-1.32.2-cp39-abi3-macosx_10_12_x86_64.whl", hash = "sha256:f21da6a5210898ec800b7e9e667fb53eb9161b7ceb812ee6555ff5661a00e517"},
     {file = "polars-1.32.2-cp39-abi3-macosx_11_0_arm64.whl", hash = "sha256:d3f4e061312ef6c2a907378ce407a6132734fe1a13f261a1984a1a9ca2f6febc"},
@@ -3988,7 +3988,7 @@ test = ["big-O", "jaraco.functools", "jaraco.itertools", "jaraco.test", "more_it
 type = ["pytest-mypy"]
 
 [extras]
-all = ["numpy", "orjson", "pandas", "pproxy", "python-rapidjson", "ujson"]
+all = ["numpy", "orjson", "pandas", "polars", "pproxy", "python-rapidjson", "ujson"]
 examples = ["pproxy"]
 numpy = ["numpy"]
 orjson = ["orjson"]
@@ -4000,4 +4000,4 @@ ujson = ["ujson"]
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.9.2"
-content-hash = "c8489cd1da6c937155539d4b14e98bf45543d0aad1192154fa02eff2faf014a3"
+content-hash = "4f620a5a870db3752e005d3856ed13499531aeb5d843c215fc808bfb59cae8f9"
