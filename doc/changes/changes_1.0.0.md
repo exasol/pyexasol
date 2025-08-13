@@ -104,3 +104,21 @@ Relocked dependencies
 ## Bugfix
 
 * #183: Replaced terminate_export & terminate_import for ExaHttpThread with terminate
+
+## Dependency Updates
+
+### `main`
+* Updated dependency `orjson:3.10.6` to `3.10.18`
+* Updated dependency `packaging:24.1` to `25.0`
+* Updated dependency `pandas:2.2.2` to `2.3.0`
+* Added dependency `polars:1.32.2`
+* Removed dependency `pyopenssl:24.2.1`
+* Updated dependency `python-rapidjson:1.19` to `1.20`
+* Updated dependency `rsa:4.9` to `4.9.1`
+
+### `dev`
+* Updated dependency `docutils:0.20.1` to `0.21.2`
+* Updated dependency `exasol-integration-test-docker-environment:3.1.0` to `4.1.0`
+* Added dependency `exasol-toolbox:1.7.4`
+* Updated dependency `pytest:8.3.2` to `7.4.4`
+* Added dependency `types-ujson:5.10.0.20250326`
