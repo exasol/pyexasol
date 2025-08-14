@@ -93,6 +93,7 @@ Relocked dependencies
 * #194: Adapted integration tests so that tests with `ssl.CERT_REQUIRED` can be deselected
 * #200: Activated Sonar for CI & Relocked dependencies to resolve CVEs for transitive dependence `urllib3`
 * Removed non-ASCII symbols from templates for GitHub issues
+* #218: Upgrade to exasol-toolbox `1.8.0` which allows `pytest` to go up to `8.4.1`
 
 ## 📚 Documentation
 
@@ -104,3 +105,21 @@ Relocked dependencies
 ## Bugfix
 
 * #183: Replaced terminate_export & terminate_import for ExaHttpThread with terminate
+
+## Dependency Updates
+
+### `main`
+* Updated dependency `orjson:3.10.6` to `3.11.2`
+* Updated dependency `packaging:24.1` to `25.0`
+* Updated dependency `pandas:2.2.2` to `2.3.1`
+* Added dependency `polars:1.32.2`
+* Removed dependency `pyopenssl:24.2.1`
+* Updated dependency `python-rapidjson:1.19` to `1.21`
+* Updated dependency `rsa:4.9` to `4.9.1`
+
+### `dev`
+* Updated dependency `docutils:0.20.1` to `0.21.2`
+* Updated dependency `exasol-integration-test-docker-environment:3.1.0` to `4.2.0`
+* Added dependency `exasol-toolbox:1.8.0`
+* Updated dependency `pytest:8.3.2` to `8.4.1`
+* Added dependency `types-ujson:5.10.0.20250326`
