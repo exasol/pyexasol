@@ -93,6 +93,7 @@ Relocked dependencies
 * #194: Adapted integration tests so that tests with `ssl.CERT_REQUIRED` can be deselected
 * #200: Activated Sonar for CI & Relocked dependencies to resolve CVEs for transitive dependence `urllib3`
 * Removed non-ASCII symbols from templates for GitHub issues
+* #218: Upgrade to exasol-toolbox `1.8.0` which allows `pytest` to go up to `8.4.1`
 
 ## 📚 Documentation
 
