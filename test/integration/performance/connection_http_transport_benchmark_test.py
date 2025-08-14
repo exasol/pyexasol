@@ -1,0 +1,150 @@
+from inspect import cleandoc
+from pathlib import Path
+
+import pyarrow.csv as csv
+import pyarrow.parquet as pq
+import pytest
+
+from pyexasol import ExaConnection
+
+INITIAL_SIZE = 1_000
+FINAL_SIZE = 4_000_000
+
+
+def create_empty_table(connection: ExaConnection, table_name: str):
+    ddl = cleandoc(
+        f"""
+        CREATE OR REPLACE TABLE {table_name} (
+            SALES_ID                DECIMAL(18,0) IDENTITY NOT NULL PRIMARY KEY,
+            SALES_TIMESTAMP         TIMESTAMP,
+            PRICE                   DECIMAL(9,2),
+            CUSTOMER_NAME           VARCHAR(200)
+          );
+        """
+    )
+    connection.execute(ddl)
+    connection.commit()
+
+
+@pytest.fixture(scope="session")
+def session_connection(connection_factory):
+    con = connection_factory()
+    yield con
+    con.close()
+
+
+@pytest.fixture(scope="session")
+def tmp_source_directory(tmp_path_factory) -> Path:
+    return tmp_path_factory.mktemp("benchmark")
+
+
+@pytest.fixture(scope="session")
+def create_empty_sales_table(session_connection: ExaConnection) -> str:
+    table_name = "SALES"
+    create_empty_table(connection=session_connection, table_name=table_name)
+
+    yield table_name
+
+    ddl = f"DROP TABLE IF EXISTS {table_name};"
+    session_connection.execute(ddl)
+    session_connection.commit()
+
+
+@pytest.fixture
+def empty_import_into_table(connection: ExaConnection):
+    table_name = "TMP_SALES_COPY"
+    create_empty_table(connection=connection, table_name=table_name)
+
+    yield table_name
+
+    ddl = f"DROP TABLE IF EXISTS {table_name};"
+    connection.execute(ddl)
+    connection.commit()
+
+
+@pytest.fixture(scope="session")
+def fill_sales_table(create_empty_sales_table, session_connection: ExaConnection):
+    query = f"""
+        INSERT INTO {create_empty_sales_table} (SALES_TIMESTAMP, PRICE, CUSTOMER_NAME)
+        SELECT ADD_SECONDS(TIMESTAMP'2024-01-01 00:00:00', FLOOR(RANDOM() * 365 * 24 * 60 * 60)),
+        RANDOM(1, 125),
+        SUBSTRING(
+        LPAD(TO_CHAR(FLOOR(RANDOM() * 1000000)), 6, '0'),
+        1,
+        FLOOR(RANDOM() * 3) + 5)
+        FROM dual
+        CONNECT BY level <= {INITIAL_SIZE}
+    """
+    session_connection.execute(query)
+    session_connection.commit()
+    return create_empty_sales_table
+
+
+@pytest.fixture(scope="session")
+def create_csv(
+    session_connection: ExaConnection, tmp_source_directory: Path, fill_sales_table
+):
+    csv_path = tmp_source_directory / "test_data.csv"
+    session_connection.export_to_file(
+        csv_path,
+        f"SELECT SALES_TIMESTAMP, PRICE, CUSTOMER_NAME FROM {fill_sales_table}",
+    )
+    return csv_path
+
+
+@pytest.fixture(scope="session")
+def create_parquet(
+    session_connection: ExaConnection, tmp_source_directory: Path, create_csv
+):
+    parquet_path = tmp_source_directory / "test_data.parquet"
+
+    table = csv.read_csv(create_csv)
+    pq.write_table(table, parquet_path)
+
+    return parquet_path
+
+
+def test_import_from_file(
+    benchmark,
+    connection: ExaConnection,
+    create_csv,
+    empty_import_into_table,
+):
+    rounds = 5
+
+    def func_to_be_measured():
+        return connection.import_from_file(
+            create_csv,
+            table=empty_import_into_table,
+            import_params={"columns": ["SALES_TIMESTAMP", "PRICE", "CUSTOMER_NAME"]},
+        )
+
+    benchmark.pedantic(func_to_be_measured, iterations=1, rounds=rounds)
+
+    count_query = f"SELECT count(*) FROM {empty_import_into_table};"
+    count = connection.execute(count_query).fetchval()
+    assert count == INITIAL_SIZE * rounds
+
+
+def test_import_from_parquet(
+    benchmark,
+    connection: ExaConnection,
+    create_parquet,
+    empty_import_into_table,
+):
+    rounds = 5
+
+    def func_to_be_measured():
+        return connection.import_from_parquet(
+            create_parquet,
+            table=empty_import_into_table,
+            import_params={"columns": ["SALES_TIMESTAMP", "PRICE", "CUSTOMER_NAME"]},
+        )
+
+    benchmark.pedantic(func_to_be_measured, iterations=1, rounds=rounds)
+
+    # sometimes this fails with only 4995 records. is this a known issue with batch?
+    # like some streaming services have failurs or the CSV conversion?
+    count_query = f"SELECT count(*) FROM {empty_import_into_table};"
+    count = connection.execute(count_query).fetchval()
+    assert count == INITIAL_SIZE * rounds
