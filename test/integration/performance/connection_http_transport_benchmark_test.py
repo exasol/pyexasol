@@ -1,6 +1,7 @@
 from inspect import cleandoc
 from pathlib import Path
 
+import pandas as pd
 import polars as pl
 import pyarrow.csv as csv
 import pyarrow.parquet as pq
@@ -28,9 +29,7 @@ def calculate_iterations(start_value: int, target_value: int) -> tuple[int, int]
 INITIAL_SIZE = 1_000
 ROUNDS = 5
 ITERATIONS, FINAL_SIZE = calculate_iterations(
-    start_value=INITIAL_SIZE,
-    target_value=4_000,
-    # target_value=4_000_000
+    start_value=INITIAL_SIZE, target_value=4_000_000
 )
 
 
@@ -148,7 +147,14 @@ def create_parquet(
 
 
 @pytest.fixture(scope="session")
-def create_polars(
+def create_pandas_dataframe(
+    session_connection: ExaConnection, tmp_source_directory: Path, create_csv
+):
+    return pd.read_csv(create_csv, header=None)
+
+
+@pytest.fixture(scope="session")
+def create_polars_dataframe(
     session_connection: ExaConnection, tmp_source_directory: Path, create_csv
 ):
     return pl.read_csv(
@@ -176,15 +182,35 @@ def test_import_from_file(
     assert count == FINAL_SIZE * ROUNDS
 
 
+def test_import_from_pandas(
+    benchmark,
+    connection: ExaConnection,
+    create_pandas_dataframe,
+    empty_import_into_table,
+):
+    def func_to_be_measured():
+        return connection.import_from_pandas(
+            create_pandas_dataframe,
+            table=empty_import_into_table,
+            import_params={"columns": ["SALES_TIMESTAMP", "PRICE", "CUSTOMER_NAME"]},
+        )
+
+    benchmark.pedantic(func_to_be_measured, iterations=1, rounds=ROUNDS)
+
+    count_query = f"SELECT count(*) FROM {empty_import_into_table};"
+    count = connection.execute(count_query).fetchval()
+    assert count == FINAL_SIZE * ROUNDS
+
+
 def test_import_from_polars(
     benchmark,
     connection: ExaConnection,
-    create_polars,
+    create_polars_dataframe,
     empty_import_into_table,
 ):
     def func_to_be_measured():
         return connection.import_from_polars(
-            create_polars,
+            create_polars_dataframe,
             table=empty_import_into_table,
             import_params={"columns": ["SALES_TIMESTAMP", "PRICE", "CUSTOMER_NAME"]},
         )
