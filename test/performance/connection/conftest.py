@@ -10,7 +10,7 @@ from pyexasol import ExaConnection
 class BenchmarkSpecifications:
     def __init__(self):
         self.initial_data_size: int = 1_000
-        self.target_data_size: int = 4_000
+        self.target_data_size: int = 4_000_000
         self.rounds: int = 5
         # calculated fields - could move to a setter
         iterations, data_each_round = self.calculate_iterations()
@@ -61,7 +61,7 @@ def session_connection(connection_factory):
 
 
 @pytest.fixture(scope="session")
-def create_empty_sales_table(session_connection: ExaConnection) -> str:
+def create_empty_sales_table(session_connection: ExaConnection):
     table_name = "SALES"
     create_empty_table(connection=session_connection, table_name=table_name)
 

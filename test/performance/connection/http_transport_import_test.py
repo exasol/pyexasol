@@ -1,18 +1,14 @@
+import csv
 from pathlib import Path
 
 import pandas as pd
 import polars as pl
-import pyarrow.csv as csv
+import pyarrow.csv as py_csv
 import pyarrow.parquet as pq
 import pytest
 
 from performance.connection.helper import create_empty_table
 from pyexasol import ExaConnection
-
-# ROUNDS = 5
-# ITERATIONS, FINAL_SIZE = calculate_iterations(
-#     start_value=INITIAL_SIZE, target_value=4_000_000
-# )
 
 
 @pytest.fixture
@@ -40,14 +36,21 @@ def create_csv(
 
 
 @pytest.fixture(scope="session")
+def create_iterable(session_connection: ExaConnection, create_csv):
+    with Path(create_csv).open(mode="r", encoding="utf-8") as file:
+        reader = csv.reader(file)
+        return list(reader)
+
+
+@pytest.fixture(scope="session")
 def create_parquet(
     session_connection: ExaConnection, tmp_source_directory: Path, create_csv
 ):
     parquet_path = tmp_source_directory / "test_data.parquet"
 
-    table = csv.read_csv(
+    table = py_csv.read_csv(
         create_csv,
-        read_options=csv.ReadOptions(
+        read_options=py_csv.ReadOptions(
             column_names=["SALES_TIMESTAMP", "PRICE", "CUSTOMER_NAME"],
         ),
     )
@@ -57,16 +60,12 @@ def create_parquet(
 
 
 @pytest.fixture(scope="session")
-def create_pandas_dataframe(
-    session_connection: ExaConnection, tmp_source_directory: Path, create_csv
-):
+def create_pandas_dataframe(session_connection: ExaConnection, create_csv):
     return pd.read_csv(create_csv, header=None)
 
 
 @pytest.fixture(scope="session")
-def create_polars_dataframe(
-    session_connection: ExaConnection, tmp_source_directory: Path, create_csv
-):
+def create_polars_dataframe(session_connection: ExaConnection, create_csv):
     return pl.read_csv(
         create_csv, has_header=False, rechunk=False, infer_schema_length=10000
     )
@@ -76,6 +75,7 @@ def create_polars_dataframe(
     "import_method, data_creator",
     [
         pytest.param("import_from_file", "create_csv", id="file"),
+        pytest.param("import_from_iterable", "create_iterable", id="iterable"),
         pytest.param("import_from_pandas", "create_pandas_dataframe", id="pandas"),
         pytest.param("import_from_parquet", "create_parquet", id="parquet"),
         pytest.param("import_from_polars", "create_polars_dataframe", id="polars"),
