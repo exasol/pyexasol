@@ -13,8 +13,10 @@ class BenchmarkSpecifications:
         self.target_data_size: int = 4_000_000
         self.rounds: int = 5
         # calculated fields - could move to a setter
-        iterations, data_each_round = self.calculate_iterations()
-        self.final_import_data_size: int = data_each_round * self.rounds
+        iterations, final_export_size = self.calculate_iterations()
+        self.final_export_data_size = final_export_size
+        # benchmark does not reset fixtures with scope of test during its rounds
+        self.final_import_data_size: int = final_export_size * self.rounds
         self.iterations: int = iterations
 
     def calculate_iterations(self) -> tuple[int, int]:
