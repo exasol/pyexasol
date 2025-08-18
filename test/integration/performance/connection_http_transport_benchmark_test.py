@@ -7,8 +7,28 @@ import pytest
 
 from pyexasol import ExaConnection
 
+
+def calculate_iterations(start_value: int, target_value: int) -> tuple[int, int]:
+    """
+    Calculate how many times we need to multiply start_value by 4
+    to reach or exceed target_value
+
+    Returns:
+        tuple: (number_of_iterations, final_value)
+    """
+    current_value = start_value
+    iterations = 0
+    while current_value < target_value:
+        current_value *= 4
+        iterations += 1
+    return iterations, current_value
+
+
 INITIAL_SIZE = 1_000
-FINAL_SIZE = 4_000_000
+ROUNDS = 5
+ITERATIONS, FINAL_SIZE = calculate_iterations(
+    start_value=INITIAL_SIZE, target_value=4_000_000
+)
 
 
 def create_empty_table(connection: ExaConnection, table_name: str):
@@ -64,7 +84,7 @@ def empty_import_into_table(connection: ExaConnection):
 
 @pytest.fixture(scope="session")
 def fill_sales_table(create_empty_sales_table, session_connection: ExaConnection):
-    query = f"""
+    initial_query = f"""
         INSERT INTO {create_empty_sales_table} (SALES_TIMESTAMP, PRICE, CUSTOMER_NAME)
         SELECT ADD_SECONDS(TIMESTAMP'2024-01-01 00:00:00', FLOOR(RANDOM() * 365 * 24 * 60 * 60)),
         RANDOM(1, 125),
@@ -75,8 +95,23 @@ def fill_sales_table(create_empty_sales_table, session_connection: ExaConnection
         FROM dual
         CONNECT BY level <= {INITIAL_SIZE}
     """
-    session_connection.execute(query)
+    session_connection.execute(initial_query)
     session_connection.commit()
+
+    quadrupling_query = f"""
+    INSERT INTO {create_empty_sales_table} (SALES_TIMESTAMP, PRICE, CUSTOMER_NAME)
+        SELECT * FROM (
+            SELECT SALES_TIMESTAMP, PRICE, CUSTOMER_NAME FROM {create_empty_sales_table}
+            UNION ALL
+            SELECT SALES_TIMESTAMP, PRICE, CUSTOMER_NAME FROM {create_empty_sales_table}
+            UNION ALL
+            SELECT SALES_TIMESTAMP, PRICE, CUSTOMER_NAME FROM {create_empty_sales_table}
+        ) AS doubled_data;
+    """
+    for _ in range(ITERATIONS):
+        session_connection.execute(quadrupling_query)
+        session_connection.commit()
+
     return create_empty_sales_table
 
 
@@ -110,8 +145,6 @@ def test_import_from_file(
     create_csv,
     empty_import_into_table,
 ):
-    rounds = 5
-
     def func_to_be_measured():
         return connection.import_from_file(
             create_csv,
@@ -119,11 +152,11 @@ def test_import_from_file(
             import_params={"columns": ["SALES_TIMESTAMP", "PRICE", "CUSTOMER_NAME"]},
         )
 
-    benchmark.pedantic(func_to_be_measured, iterations=1, rounds=rounds)
+    benchmark.pedantic(func_to_be_measured, iterations=1, rounds=ROUNDS)
 
     count_query = f"SELECT count(*) FROM {empty_import_into_table};"
     count = connection.execute(count_query).fetchval()
-    assert count == INITIAL_SIZE * rounds
+    assert count == FINAL_SIZE * ROUNDS
 
 
 def test_import_from_parquet(
@@ -132,8 +165,6 @@ def test_import_from_parquet(
     create_parquet,
     empty_import_into_table,
 ):
-    rounds = 5
-
     def func_to_be_measured():
         return connection.import_from_parquet(
             create_parquet,
@@ -141,10 +172,11 @@ def test_import_from_parquet(
             import_params={"columns": ["SALES_TIMESTAMP", "PRICE", "CUSTOMER_NAME"]},
         )
 
-    benchmark.pedantic(func_to_be_measured, iterations=1, rounds=rounds)
+    benchmark.pedantic(func_to_be_measured, iterations=1, rounds=ROUNDS)
 
     # sometimes this fails with only 4995 records. is this a known issue with batch?
-    # like some streaming services have failurs or the CSV conversion?
+    # like some streaming services have failures or the CSV conversion? or just need
+    # a delay to process?
     count_query = f"SELECT count(*) FROM {empty_import_into_table};"
     count = connection.execute(count_query).fetchval()
-    assert count == INITIAL_SIZE * rounds
+    assert count == FINAL_SIZE * ROUNDS
