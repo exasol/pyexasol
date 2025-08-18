@@ -5,8 +5,8 @@ import polars as pl
 import pyarrow.csv as csv
 import pyarrow.parquet as pq
 import pytest
-from integration.performance.helper import create_empty_table
 
+from performance.connection.helper import create_empty_table
 from pyexasol import ExaConnection
 
 # ROUNDS = 5
@@ -87,8 +87,8 @@ def test_import_methods(
     connection: ExaConnection,
     request,
     empty_import_into_table,
-    import_method,
-    data_creator,
+    import_method: str,
+    data_creator: str,
 ):
     data = request.getfixturevalue(data_creator)
 

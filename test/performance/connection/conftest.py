@@ -1,15 +1,16 @@
+import ssl
 from pathlib import Path
 
 import pytest
-from integration.performance.helper import create_empty_table
 
+from performance.connection.helper import create_empty_table
 from pyexasol import ExaConnection
 
 
 class BenchmarkSpecifications:
     def __init__(self):
         self.initial_data_size: int = 1_000
-        self.target_data_size: int = 4_000_000
+        self.target_data_size: int = 4_000
         self.rounds: int = 5
         # calculated fields - could move to a setter
         iterations, data_each_round = self.calculate_iterations()
@@ -30,6 +31,16 @@ class BenchmarkSpecifications:
             current_value *= 4
             iterations += 1
         return iterations, current_value
+
+
+@pytest.fixture(scope="session")
+def certification_type(request):
+    return ssl.CERT_NONE
+
+
+@pytest.fixture(scope="session")
+def websocket_sslopt(certification_type):
+    return {"cert_reqs": certification_type}
 
 
 @pytest.fixture(scope="session")
