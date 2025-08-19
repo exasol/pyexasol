@@ -115,6 +115,11 @@ def performance_tests(session: Session) -> None:
         poetry run -- pytest ./test/performance/ --benchmark-sort=name
         --benchmark-save=benchmark_performance
         --benchmark-storage=file://test/performance/.benchmarks
+    Please save the newly created benchmark file over the existing one
+    at test/performance/.benchmarks/Linux-CPython-3.10-64bit/0001_benchmark_performance.json
+    and replace your local `"machine_info": { "key": "blah" }` with
+    `"machine_info": { }`.
+
     Additionally, the value used in this nox session for `--benchmark-compare-fail`
     should be re-evaluated and potentially updated.
     """
