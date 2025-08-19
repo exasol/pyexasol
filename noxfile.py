@@ -108,7 +108,16 @@ def run_examples(session: Session) -> None:
 
 @nox.session(name="test:performance", python=False)
 def performance_tests(session: Session) -> None:
-    """Execute performance tests, assuming a DB already is ready"""
+    """Execute performance tests, assuming a DB already is ready
+
+    In the event of reasonable changes, the benchmark file should be updated
+    by running:
+        poetry run -- pytest ./test/performance/ --benchmark-sort=name
+        --benchmark-save=benchmark_performance
+        --benchmark-storage=file://test/performance/.benchmarks
+    Additionally, the value used in this nox session for `--benchmark-compare-fail`
+    should be re-evaluated and potentially updated.
+    """
     test_path = _ROOT / "test/performance"
     benchmark_path = test_path / ".benchmarks"
 
