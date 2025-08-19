@@ -11,7 +11,7 @@ class BenchmarkSpecifications:
     def __init__(self):
         self.initial_data_size: int = 1_000
         self.target_data_size: int = 4_000_000
-        self.rounds: int = 5
+        self.rounds: int = 10
         # calculated fields - could move to a setter
         iterations, final_export_size = self.calculate_iterations()
         self.final_export_data_size = final_export_size
