@@ -5,7 +5,7 @@ on:
 
 jobs:
   performance-checks:
-    name: Run Performance-Checks (Python-${{ matrix.python-version }}, Exasol-${{ matrix.exasol-version}})
+    name: Performance-Tests (Python-${{ matrix.python-version }}, Exasol-${{ matrix.exasol-version}})
     runs-on:  ubuntu-24.04
     timeout-minutes: 30
     strategy:
