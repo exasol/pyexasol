@@ -34,7 +34,7 @@ jobs:
 
       - name: Start test db
         run: >
-          poetry run -- nox -s db:start --db-version ${{ matrix.exasol-version }}
+          poetry run -- nox -s db:start -- --db-version ${{ matrix.exasol-version }}
           --with-certificate
 
       - name: Pull certificate from container

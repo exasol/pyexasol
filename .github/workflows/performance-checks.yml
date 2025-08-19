@@ -27,7 +27,7 @@ jobs:
 
       - name: Start test db
         run: >
-          poetry run -- nox -s db:start --db-version ${{ matrix.exasol-version }}
+          poetry run -- nox -s db:start -- --db-version ${{ matrix.exasol-version }}
 
       - name: Run performance tests and compare to saved benchmark
         run: poetry run -- nox -s test:performance

@@ -38,7 +38,7 @@ jobs:
 
       - name: Start test db
         run: >
-          poetry run -- nox -s db:start --db-version ${{ matrix.exasol-version }}
+          poetry run -- nox -s db:start -- --db-version ${{ matrix.exasol-version }}
 
       - name: Wait for Exasol container (UDF extraction)
         run: poetry run -- python examples/_wait_container.py
