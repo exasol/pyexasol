@@ -104,3 +104,24 @@ def run_examples(session: Session) -> None:
         for error in errors:
             print(f"- {error}")
         session.error(1)
+
+
+@nox.session(name="test:performance", python=False)
+def performance_tests(session: Session) -> None:
+    """Execute performance tests, assuming a DB already is ready"""
+    test_path = _ROOT / "test/performance"
+    benchmark_path = test_path / ".benchmarks"
+
+    command = [
+        "pytest",
+        str(test_path),
+        "--benchmark-sort=name",
+        "--benchmark-compare=0001",
+        # the greatest stddev ~1s, so we set this at 1.25 of that for a robust estimate
+        # alternately if we wanted by percent, we could compare median to stddev
+        # or split into export vs import tests to have tighter bounds
+        "--benchmark-compare-fail=median:1.25",
+        f"--benchmark-storage=file://{benchmark_path}",
+    ]
+
+    session.run(*command)
