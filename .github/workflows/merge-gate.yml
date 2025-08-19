@@ -45,6 +45,12 @@ jobs:
     permissions:
       contents: read
 
+  performance-checks:
+    needs: [ run-slow-tests ]
+    uses: ./.github/workflows/performance-checks.yml
+    permissions:
+      contents: read
+
   # This job ensures inputs have been executed successfully.
   approve-merge:
     name: Allow Merge
@@ -52,7 +58,7 @@ jobs:
     permissions:
       contents: read
     # If you need additional jobs to be part of the merge gate, add them below
-    needs: [ fast-checks, slow-checks, examples, ssl_cert ]
+    needs: [ fast-checks, slow-checks, examples, ssl_cert, performance-checks ]
 
     # Each job requires a step, so we added this dummy step.
     steps:

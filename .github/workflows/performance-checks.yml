@@ -1,0 +1,36 @@
+name: Performance-Checks
+
+on:
+  workflow_call:
+
+jobs:
+  performance-checks:
+    name: Run Performance-Checks (Python-${{ matrix.python-version }}, Exasol-${{ matrix.exasol-version}})
+    runs-on:  ubuntu-24.04
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11"]
+        exasol-version: ["8.32.0"]
+    permissions:
+      contents: read
+    steps:
+      - name: Check out repo
+        uses: actions/checkout@v2
+
+      - name: Setup Python & Poetry Environment
+        uses: exasol/python-toolbox/.github/actions/python-environment@1.8.0
+        with:
+          python-version: ${{ matrix.python-version }}
+          extras: "all"
+
+      - name: Start test db
+        run: >
+          poetry run -- nox -s db:start --db-version ${{ matrix.exasol-version }}
+
+      - name: Run performance tests and compare to saved benchmark
+        run: poetry run -- nox -s test:performance
+
+      - name: Stop test db
+        run: poetry run -- nox -s db:stop
