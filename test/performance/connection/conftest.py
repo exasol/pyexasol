@@ -62,6 +62,14 @@ def session_connection(connection_factory):
     con.close()
 
 
+@pytest.fixture(scope="session", autouse=True)
+def set_up_initial_schema(connection_factory, schema):
+    con = connection_factory(schema="")
+    con.execute(f"DROP SCHEMA IF EXISTS {schema} CASCADE;")
+    con.execute(f"CREATE SCHEMA {schema};")
+    con.close()
+
+
 @pytest.fixture(scope="session")
 def create_empty_sales_table(session_connection: ExaConnection):
     table_name = "SALES"
