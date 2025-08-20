@@ -1,7 +1,16 @@
 from __future__ import annotations
 
 import argparse
+from dataclasses import (
+    dataclass,
+    field,
+)
+from json import loads
 from pathlib import Path
+from typing import (
+    Any,
+    Optional,
+)
 
 import nox
 
@@ -106,36 +115,93 @@ def run_examples(session: Session) -> None:
         session.error(1)
 
 
-@nox.session(name="test:performance", python=False)
+@nox.session(name="performance:test", python=False)
 def performance_tests(session: Session) -> None:
-    """Execute performance tests, assuming a DB already is ready
-
-    In the event of reasonable changes, the benchmark file should be updated
-    by running:
-        poetry run -- pytest ./test/performance/ --benchmark-sort=name
-        --benchmark-save=benchmark_performance
-        --benchmark-storage=file://test/performance/.benchmarks
-    Please save the newly created benchmark file over the existing one
-    at test/performance/.benchmarks/Linux-CPython-3.10-64bit/0001_benchmark_performance.json
-    and replace your local `"machine_info": { "key": "blah" }` with
-    `"machine_info": { }`.
-
-    Additionally, the value used in this nox session for `--benchmark-compare-fail`
-    should be re-evaluated and potentially updated.
-    """
-    test_path = _ROOT / "test/performance"
-    benchmark_path = test_path / ".benchmarks"
+    """Execute performance tests, assuming a DB already is ready"""
+    performance_tests_folder = "test/performance"
+    test_path = _ROOT / performance_tests_folder
+    benchmark_path = f"{performance_tests_folder}/.benchmarks"
 
     command = [
         "pytest",
         str(test_path),
         "--benchmark-sort=name",
-        "--benchmark-compare=0001",
-        # the greatest stddev ~1s, so we set this at 1.25 of that for a robust estimate
-        # alternately if we wanted by percent, we could compare median to stddev
-        # or split into export vs import tests to have tighter bounds
-        "--benchmark-compare-fail=median:1.25",
         f"--benchmark-storage=file://{benchmark_path}",
+        "--benchmark-save=benchmark_performance",
     ]
 
     session.run(*command)
+
+
+@dataclass
+class Benchmark:
+    filepath: Path
+    benchmark_data: list[dict[str, Any]] = field(init=False)
+
+    def get_benchmark_test(self, fullname: str) -> Optional[dict[str, float]]:
+        match_test = list(
+            filter(lambda x: x["fullname"] == fullname, self.benchmark_data)
+        )
+        if len(match_test) == 1:
+            return match_test[0]["stats"]
+        return None
+
+    def set_benchmark_data(self) -> None:
+        file_json = self.filepath.read_text()
+        file_dict = loads(file_json)
+        self.benchmark_data = file_dict["benchmarks"]
+
+    @property
+    def fullname_tests(self) -> set[str]:
+        return {entry["fullname"] for entry in self.benchmark_data}
+
+
+@nox.session(name="performance:check", python=False)
+def performance_check(session: Session) -> None:
+    """Compare previous & current results of performance tests
+
+    In the event of reasonable changes, the benchmark file should be updated
+    by copying the one saved by the CI locally & updating the existing one
+    at test/performance/.benchmarks/Linux-CPython-3.10-64bit/0001_benchmark_performance.json.
+
+    Additionally, the value used in this nox session for comparison should be
+    re-evaluated and potentially updated.
+    """
+    benchmark_path = _ROOT / "test/performance/.benchmarks/Linux-CPython-3.10-64bit"
+
+    expected_benchmark = Benchmark(benchmark_path / "0001_benchmark_performance.json")
+    expected_benchmark.set_benchmark_data()
+
+    current_benchmark = Benchmark(benchmark_path / "0002_benchmark_performance.json")
+    current_benchmark.set_benchmark_data()
+
+    errors = []
+    all_tests = expected_benchmark.fullname_tests | current_benchmark.fullname_tests
+    for test in all_tests:
+        expected_results = expected_benchmark.get_benchmark_test(test)
+        current_results = current_benchmark.get_benchmark_test(test)
+
+        if current_results is None:
+            errors.append(
+                f"- {test} is not present in {current_benchmark.filepath.name}"
+            )
+            continue
+        elif expected_results is None:
+            errors.append(
+                f"- {test} is not present in {expected_benchmark.filepath.name}"
+            )
+            continue
+
+        if (
+            current_results["mean"]
+            > expected_results["mean"] + expected_results["stddev"]
+            or current_results["mean"]
+            < expected_results["mean"] - expected_results["stddev"]
+        ):
+            errors.append(
+                f"- mean of {test} is not in {expected_results['mean']} +/- {expected_results['stddev']}"
+            )
+
+    if errors:
+        errors = ["the comparison failed due to:"] + errors
+        session.error("\n".join(errors))

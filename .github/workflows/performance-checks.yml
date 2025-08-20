@@ -29,8 +29,18 @@ jobs:
         run: >
           poetry run -- nox -s db:start -- --db-version ${{ matrix.exasol-version }}
 
-      - name: Run performance tests and compare to saved benchmark
-        run: poetry run -- nox -s test:performance
+      - name: Run performance tests
+        run: poetry run -- nox -s performance:test
+
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v4.6.2
+        with:
+          name: coverage-python${{ matrix.python-version }}-exasol${{ matrix.exasol-version}}-performance
+          path: .benchmark/0002_benchmark_performance.json
+          include-hidden-files: true
 
       - name: Stop test db
         run: poetry run -- nox -s db:stop
+
+      - name: Run performance check against saved reference
+        run: poetry run -- nox -s performance:check
