@@ -101,6 +101,7 @@ Relocked dependencies
 * Added example to highlight how sensitive information from exceptions should be handled
 * Harmonized spelling of PyExasol across documentation
 * #204: Fixed broken links and some typos
+* #221: Updated documentation on TLS & renamed encryption.rst to security.rst
 
 ## Bugfix
 
