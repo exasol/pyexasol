@@ -9,7 +9,7 @@
     dependencies
     best_practices
     examples
-    encryption
+    security
     http_transport
     http_transport_parallel
     udf_script_output
@@ -22,5 +22,3 @@
     performance
     protocol_version
     known_issues
-
-
