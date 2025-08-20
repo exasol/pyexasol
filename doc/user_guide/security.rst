@@ -1,4 +1,4 @@
-Encryption
+Security
 ==========
 
 Similar to other Exasol connectors, PyExasol is capable of using TLS cryptographic protocol.
