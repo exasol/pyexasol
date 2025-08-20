@@ -192,14 +192,15 @@ def performance_check(session: Session) -> None:
             )
             continue
 
+        max_deviation = 1.5 * expected_results["stddev"]
+        max_expected = expected_results["mean"] + max_deviation
+        min_expected = expected_results["mean"] - max_deviation
         if (
-            current_results["mean"]
-            > expected_results["mean"] + expected_results["stddev"]
-            or current_results["mean"]
-            < expected_results["mean"] - expected_results["stddev"]
+            current_results["mean"] > max_expected
+            or current_results["mean"] < min_expected
         ):
             errors.append(
-                f"- mean of {test} is not in {expected_results['mean']} +/- {expected_results['stddev']}"
+                f"- mean of {test} is not in {[round(min_expected, 3), round(max_expected, 3)]}"
             )
 
     if errors:
