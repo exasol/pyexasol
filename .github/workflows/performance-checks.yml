@@ -36,7 +36,7 @@ jobs:
         uses: actions/upload-artifact@v4.6.2
         with:
           name: coverage-python${{ matrix.python-version }}-exasol${{ matrix.exasol-version}}-performance
-          path: .benchmark/0002_benchmark_performance.json
+          path: test/performance/.benchmarks/Linux-CPython-3.11-64bit/0002_benchmark_performance.json
           include-hidden-files: true
 
       - name: Stop test db

@@ -162,12 +162,12 @@ def performance_check(session: Session) -> None:
 
     In the event of reasonable changes, the benchmark file should be updated
     by copying the one saved by the CI locally & updating the existing one
-    at test/performance/.benchmarks/Linux-CPython-3.10-64bit/0001_benchmark_performance.json.
+    at test/performance/.benchmarks/Linux-CPython-3.11-64bit/0001_benchmark_performance.json.
 
     Additionally, the value used in this nox session for comparison should be
     re-evaluated and potentially updated.
     """
-    benchmark_path = _ROOT / "test/performance/.benchmarks/Linux-CPython-3.10-64bit"
+    benchmark_path = _ROOT / "test/performance/.benchmarks/Linux-CPython-3.11-64bit"
 
     expected_benchmark = Benchmark(benchmark_path / "0001_benchmark_performance.json")
     expected_benchmark.set_benchmark_data()
