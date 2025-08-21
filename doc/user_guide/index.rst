@@ -12,5 +12,4 @@
     encryption
     http_transport
     http_transport_parallel
-    local_config
     protocol_version
