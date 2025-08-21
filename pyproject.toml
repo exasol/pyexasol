@@ -1,6 +1,7 @@
 [project]
 name = "pyexasol"
 version = "1.0.0"
+requires-python = ">=3.9.2,<4"
 description = "Exasol python driver with extra features"
 authors = [
     {name="Vitaly Markov", email="wild.desu@gmail.com"},
@@ -17,7 +18,7 @@ keywords = [
     "import",
     "export"
 ]
-dynamic = ["classifiers"]
+dynamic = ["classifiers", "dependencies"]
 
 [project.urls]
 Homepage = "https://www.exasol.com/"
@@ -46,30 +47,25 @@ classifiers = [
 ]
 
 [tool.poetry.dependencies]
-python = "^3.9.2"
 websocket-client = ">=1.0.1"
 rsa = "*"
 packaging = "*"
-# Currently, it is necessary to pin numpy explicitly.
-# For additional details, refer to: https://github.com/numpy/numpy/issues/26710
-# Once this issue has been resolved, we should be able to remove this explicit dependency.
-numpy = { version = ">1.26.0,<2", optional = true }
-pandas = { version = "^2", optional = true, extras = ["numpy"] }
-polars = { version = "^1.10", optional = true }
-ujson = { version = "*", optional = true }
-python-rapidjson = { version = "*", optional = true }
 orjson = { version = ">=3.6", optional = true }
+pandas = { version = "^2.3", optional = true}
+polars = { version = "^1.10", optional = true }
 pproxy = { version = "*", optional = true }
+pyarrow = { version = "^20.0.0", optional = true}
+python-rapidjson = { version = "*", optional = true }
+ujson = { version = "*", optional = true }
 
 [tool.poetry.extras]
-numpy = ["numpy"]
-pandas = ["pandas"]
-polars = ["polars"]
-ujson = ["ujson"]
-rapidjson = ["python-rapidjson"]
-orjson = ["orjson"]
 examples = ["pproxy"]
-all = ["numpy", "pandas", "ujson", "python-rapidjson", "orjson", "pproxy", "polars"]
+orjson = ["orjson"]
+pandas = ["pandas"]
+pyarrow = ["pyarrow"]
+rapidjson = ["python-rapidjson"]
+ujson = ["ujson"]
+all = ["pproxy", "orjson", "pandas", "polars", "pyarrow", "python-rapidjson", "ujson"]
 
 [tool.poetry.group.dev.dependencies]
 nox = "^2023.4.22"
@@ -106,6 +102,7 @@ module = [
     # no stubs available as of 2025
     "orjson.*",
     "rapidjson.*",
+    "pyarrow.*",
     "pyodbc.*",
     "turbodbc.*",
     # code we are not yet type checking
@@ -128,25 +125,26 @@ organization = "exasol"
 [tool.pytest.ini_options]
 xfail_strict = true
 markers = [
-    "smoke: smoke tests which always should pass.",
     "basic: basic driver tests.",
-    "fetch_tuple: tests related to fetching tuple based results.",
-    "fetch_dict: tests related to fetching dictionary based results.",
-    "fetch_mapper: tests related to mapping data types.",
-    "format: tests related to f-string based statement formatting.",
-    "transaction: tests related to transaction management.",
+    "configuration: tests related to pyexasol settings and configuration.",
+    "context_managers: tests related to pyexasol context_managers.",
+    "dbapi2: tests related to dbapi2 compatibility.",
+    "edge_cases: tests related to pyexasol and exasol edge cases scenarios.",
+    "etl: etl related tests, export, load (import) and transform data.",
     "exceptions: tests related to exceptions in pyexasol.",
     "extensions: tests related to pyexasol extensions.",
-    "context_managers: tests related to pyexasol context_managers.",
-    "metadata: tests related to metadata retrieval with pyexasol.",
+    "fetch_dict: tests related to fetching dictionary based results.",
+    "fetch_mapper: tests related to mapping data types.",
+    "fetch_tuple: tests related to fetching tuple based results.",
+    "format: tests related to f-string based statement formatting.",
     "json: tests related to json serialization in pyexasol.",
-    "dbapi2: tests related to dbapi2 compatibility.",
-    "configuration: tests related to pyexasol settings and configuration.",
-    "edge_cases: tests related to pyexasol and exasol edge cases scenarios.",
-    "tls: tests related to tls.",
-    "udf: tests related to user defined functions.",
+    "metadata: tests related to metadata retrieval with pyexasol.",
+    "misc: miscellaneous tests which did not fit in the other categories.",
     "pandas: tests related to support of pandas library.",
+    "parquet: tests related to support of pyarrow.parquet library.",
     "polars: tests related to support of polars library.",
-    "etl: etl related tests, export, load (import) and transform data.",
-    "misc: miscellaneous tests which did not fit in the other categories."
+    "smoke: smoke tests which always should pass.",
+    "tls: tests related to tls.",
+    "transaction: tests related to transaction management.",
+    "udf: tests related to user defined functions.",
 ]
