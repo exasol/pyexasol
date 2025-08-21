@@ -4,7 +4,7 @@ Debugging UDF Script Output
 Exasol allows capturing combined output (STDOUT + STDERR) of UDF scripts. It is very helpful for debugging and to extract additional statistics from scripts running in production.
 For further details, see `Debug UDF Script Output <https://docs.exasol.com/db/latest/database_concepts/udf_scripts/debug_udf_script_output.htm>`__.
 
-In order to use this feature, a user has to run a TCP server and provide the address via session parameters. For example:
+In order to use this feature, a user has to run a TCP server and provide the address as a session parameter. For example:
 
 .. code-block:: sql
 
