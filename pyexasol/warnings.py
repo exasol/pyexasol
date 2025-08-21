@@ -3,4 +3,4 @@ class PyexasolWarning(UserWarning):
 
 
 class PyexasolDeprecationWarning(PyexasolWarning, DeprecationWarning):
-    """Warning class for features that will be removed in future versions."""
+    """Warning class for exploring_features that will be removed in future versions."""
