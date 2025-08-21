@@ -102,6 +102,7 @@ Relocked dependencies
 * Harmonized spelling of PyExasol across documentation
 * #204: Fixed broken links and some typos
 * #224: Added "Exploring PyExasol's Features" directory in documentation and moved related pages there
+* #226: Added "Getting Started" page & "Configuration" directory in documentation and moved related pages there
 
 ## Bugfix
 
