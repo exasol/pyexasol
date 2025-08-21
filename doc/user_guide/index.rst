@@ -7,20 +7,9 @@
     :maxdepth: 2
 
     dependencies
-    best_practices
-    examples
+    exploring_features/index
     encryption
     http_transport
     http_transport_parallel
-    udf_script_output
     local_config
-    parallelism
-    snapshot_transactions
-    sql_formatting
-    dbapi
-    design
-    performance
     protocol_version
-    known_issues
-
-

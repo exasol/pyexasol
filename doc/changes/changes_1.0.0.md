@@ -101,6 +101,7 @@ Relocked dependencies
 * Added example to highlight how sensitive information from exceptions should be handled
 * Harmonized spelling of PyExasol across documentation
 * #204: Fixed broken links and some typos
+* #224: Added "Exploring PyExasol's Features" directory in documentation and moved related pages there
 
 ## Bugfix
 

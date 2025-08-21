@@ -1,5 +1,5 @@
-SQL Formatting
-==============
+Formatting SQL Statements
+=========================
 
 PyExasol provides custom Exasol-specific formatter based on standard `Python 3 Formatter <https://docs.python.org/3/library/string.html#string.Formatter>`_.
 

@@ -1,15 +1,15 @@
-Performance Tests
-=================
+Runtime Comparisons
+===================
 
-Performance of database drivers depends on many factors. Results may vary depending on hardware, network, settings and data set properties. I strongly suggest making your own performance tests before making any important decisions.
+The performance of a database driver depends on many factors: the hardware used, the network used, the properties of the test dataset, etc. It is strongly suggested to do your own performance tests before making any important decisions.
 
-In this sample test I want to compare:
+In this sample test, the following are compared:
 
 - `PyODBC <https://github.com/mkleehammer/pyodbc>`_
 - `TurbODBC <https://github.com/blue-yonder/turbodbc>`_
 - PyExasol
 
-I use Badoo production Exasol cluster for testing:
+For testing, an Exasol cluster with the following specifications was used:
 
 - 20 nodes
 - 800+ CPU cores with hyper-threading
@@ -17,18 +17,20 @@ I use Badoo production Exasol cluster for testing:
 - 10 Gb private network connections
 - 1 Gb public network connections
 
-I run three different types of tests:
+Three different scenarios were evaluated for each of the database drivers:
 
-- Fetching "low random" data set using server in the same data center
-- Fetching "high random" data set using server in the same data center
-- Fetching data set using local laptop behind VPN and Wifi network (slow network)
+- Fetching **low random** data set using server in the same data center
+- Fetching **high random** data set using server in the same data center
+- Fetching data set using local laptop behind VPN and Wifi network (**slow network**)
 
-I use the default number of rows in the test table: 10 million rows, mixed data types.
-
-I measure total rounded execution time in seconds using the `time` command in bash.
+For each of the scenarios, there were 10 million rows in the test table with mixed data types. The bash command ``time`` was used to measure the total execution duration in seconds.
 
 Results
 -------
+
+.. note::
+
+    All results are recorded in seconds.
 
 .. list-table::
    :header-rows: 1
@@ -77,7 +79,7 @@ Results
 Conclusions
 -----------
 
-1. PyODBC performance is trash (no surprise).
+1. PyODBC's performance is poor (no surprise).
 2. PyExasol standard fetching is faster than TurbODBC, but it happens mostly due to fewer ops with Python objects and due to zip() magic.
 3. TurbODBC optimized fetching as numpy or arrow is very efficient and consistent, well done!
 4. PyExasol export to pandas performance may vary depending on the randomness of the data set. It highly depends on pandas CSV reader.
@@ -87,7 +89,7 @@ Conclusions
 How to Run Your Own Test
 ------------------------
 
-I strongly encourage you to run your own performance tests. You may use test scripts provided with PyExasol as the starting point. Make sure to use your production Exasol cluster for tests. Please do not use Exasol running in Docker locally, it eliminates the whole point of testing.
+It is strongly encouraged that you run your own performance measurements. You may use the scripts provided with PyExasol as the starting point. Make sure to use your production Exasol cluster for measurements. Please do not use Exasol running in Docker locally; it eliminates the whole point of evaluating the performance.
 
 1. Install PyODBC, TurbODBC, PyExasol, pandas.
 2. Install Exasol ODBC driver.
