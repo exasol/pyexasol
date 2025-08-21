@@ -11,4 +11,3 @@
     exploring_features/index
     http_transport
     http_transport_parallel
-    protocol_version

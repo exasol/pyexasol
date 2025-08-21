@@ -8,3 +8,4 @@ Configuration
 
     local_configuration
     security
+    protocol_version
