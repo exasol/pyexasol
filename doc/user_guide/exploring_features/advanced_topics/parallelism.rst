@@ -28,6 +28,6 @@ Known Problems When Trying Other Options
 Parallelism Limitations
 -----------------------
 
-Normally, Exasol server can only run 100 queries in parallel, but the practical limit is much lower.
+Normally, an Exasol server can only run 100 queries in parallel, but the practical limit is much lower.
 
 It is recommended to avoid running more than 20-30 queries in parallel to improve performance. If your system experiences sudden bursts of activity, it is recommended to add a basic "queue" or a "proxy" as a system in the middle between clients and Exasol server. It will help to spread the workload and reduce the complexity of resource management for Exasol server. Which will lead to better performance overall.
