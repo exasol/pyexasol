@@ -6,7 +6,7 @@
 .. toctree::
     :maxdepth: 2
 
-    dependencies
+    getting_started
     exploring_features/index
     encryption
     http_transport
