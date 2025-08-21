@@ -7,6 +7,7 @@
     :maxdepth: 2
 
     getting_started
+    configuration/index
     exploring_features/index
     encryption
     http_transport
