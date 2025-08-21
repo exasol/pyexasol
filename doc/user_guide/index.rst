@@ -9,7 +9,6 @@
     getting_started
     configuration/index
     exploring_features/index
-    encryption
     http_transport
     http_transport_parallel
     protocol_version

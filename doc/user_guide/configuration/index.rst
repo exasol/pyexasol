@@ -7,3 +7,4 @@ Configuration
     :maxdepth: 2
 
     local_configuration
+    security
