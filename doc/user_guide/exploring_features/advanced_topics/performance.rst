@@ -1,7 +1,7 @@
 Runtime Comparisons
 ===================
 
-The performance of a database driver depends on many factors: the hardware used, the network used, the properties of the test dataset, etc. It is strongly suggested to do your own performance tests before making any important decisions.
+The performance of a database driver depends on many factors: the hardware used, the network used, the properties of the test dataset, etc. It is strongly suggest to do your own performance tests before making any important decisions.
 
 In this sample test, the following are compared:
 
