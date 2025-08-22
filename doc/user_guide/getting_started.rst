@@ -6,16 +6,14 @@ Welcome to PyExasol
 
 PyExasol is the officially supported Python connector that revolutionizes how users
 interact with Exasol databases. This powerful tool is specifically designed to handle
-massive volumes of data with unprecedented efficiency, providing a significant
-performance boost over traditional ODBC/JDBC solutions
+massive volumes of data with efficiency, providing a performance boost over traditional ODBC/JDBC solutions.
 
 Why Choose PyExasol?
 --------------------
 * **Superior Performance** — Achieve linear scalability by utilizing multiple CPU cores simultaneously, breaking free from single-core limitations
 * **Optimized Architecture** — Built on WebSocket protocol with minimal overhead, ensuring fast and reliable data transfer
-* **Seamless Integration** — Effortless connection with popular data science tools like pandas and polars through HTTP transport
+* **Seamless Integration** — Easily connect with popular data science tools like pandas and polars through HTTP transport
 * **Smart Data Handling** — Automatic compression reduces network bottlenecks, making it ideal for large-scale data operations
-
 
 Prerequisites
 -------------
