@@ -1,12 +1,35 @@
+.. _http_transport:
+
+HTTP Transport
+==============
+
+The main purpose of HTTP transport is to reduce massive fetching overhead associated
+with large data sets (1M+ rows). It uses native Exasol commands ``EXPORT`` and ``IMPORT``
+specifically designed to move large amounts of data. Data is transferred using streamed
+CSV file(s) with optional zlib compression. This is a powerful tool which helps to
+bypass the creation of intermediate Python objects altogether and dramatically increases
+performance.
+
+PyExasol offloads HTTP communication and decompression to a separate thread using the
+`threading`_ module. The main thread deals with a simple `pipe`_ opened in binary mode.
+For more details, check out the implementation of :func:`pyexasol.http_transport`.
+
+
+.. _threading: https://docs.python.org/3/library/threading.html
+.. _pipe: https://docs.python.org/3/library/os.html#os.pipe
+
 .. _http_transport_parallel:
 
-HTTP Transport (parallel)
-=========================
+Parallel
+--------
+
+.. note::
+    Please check out the documentation :ref:`pyexasol_parallelism` for PyExasol.
 
 It is possible to run :ref:`http_transport` in parallel. Workload may be distributed across multiple CPU cores and even across multiple servers.
 
-How it works on high level
---------------------------
+Overview of How it Works
+^^^^^^^^^^^^^^^^^^^^^^^^
 
 1. Parent process opens main connection to Exasol and spawns multiple child processes.
 2. Each child process connects to individual Exasol node using ``http_transport()`` method, gets internal Exasol address (``ipaddr:port/public_key`` string) using the ``.exa_address`` property, and sends it to the parent process.
@@ -19,14 +42,14 @@ How it works on high level
 Please note that PyExasol does not provide any specific way to send internal Exasol address strings from child processes to parent process. You are free to choose your own way of inter-process communication. For example, you may use `multiprocessing.Pipe <https://docs.python.org/3/library/multiprocessing.html?highlight=Pipes#exchanging-objects-between-processes>`_.
 
 Examples
---------
+^^^^^^^^
 
-- ``b03_parallel_export.py>`` for EXPORT;
-- ``b04_parallel_import.py>`` for IMPORT;
+- ``b03_parallel_export.py`` for EXPORT;
+- ``b04_parallel_import.py`` for IMPORT;
 - ``b05_parallel_export_import.py`` for EXPORT followed by IMPORT using the same child processes;
 
 Example of EXPORT query executed in Exasol
-------------------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 This is how the complete query looks from Exasol's perspective.
 

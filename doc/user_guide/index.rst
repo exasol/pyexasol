@@ -9,5 +9,3 @@
     getting_started
     configuration/index
     exploring_features/index
-    http_transport
-    http_transport_parallel
