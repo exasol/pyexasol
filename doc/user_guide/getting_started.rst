@@ -55,7 +55,14 @@ First Steps
 
 For a user's first steps, it is recommended to try out running basic queries and exporting data from an Exasol table well-known Python packages, like pandas or polars.
 
-Run basic query:
+.. note::
+    These examples are written assuming a newly installed or otherwise safe-to-test
+    Exasol database. If that is not the case, it is recommended, in particular with the
+    export examples, to check the :ref:`API` and your to-be-queried table to ensure that
+    the output you will receive is as desired (and not, i.e. millions of rows).
+
+Run basic query
+^^^^^^^^^^^^^^^
 
 .. code-block:: python
 
@@ -67,7 +74,8 @@ Run basic query:
     for row in stmt:
         print(row)
 
-Load data into :class:`pandas.DataFrame`:
+Export data into :class:`pandas.DataFrame`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. code-block:: python
 
@@ -78,7 +86,8 @@ Load data into :class:`pandas.DataFrame`:
     df = C.export_to_pandas("SELECT * FROM EXA_ALL_USERS")
     print(df.head())
 
-Load data into :class:`polars.DataFrame`:
+Export data into :class:`polars.DataFrame`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. code-block:: python
 
@@ -96,4 +105,5 @@ The PyExasol documentation covers many topics at different levels of experience:
 
 * For configuring usage of PyExasol, see :ref:`configuration`.
 * For more useful starting tips and examples, see :ref:`exploring_features` and, in particular, the :ref:`examples` page.
+* For an overview of the API, check out the :ref:`API` page.
 * As a user's needs with PyExasol become more advanced, check out the :ref:`advanced_topics`.
