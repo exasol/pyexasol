@@ -14,8 +14,10 @@ import zlib
 from inspect import cleandoc
 from typing import (
     TYPE_CHECKING,
+    Callable,
     NamedTuple,
     Optional,
+    Union,
 )
 from warnings import warn
 
@@ -450,7 +452,11 @@ class ExaConnection:
         return self.attr.get("currentSchema", "")
 
     def export_to_file(
-        self, dst, query_or_table, query_params=None, export_params=None
+        self,
+        dst,
+        query_or_table: str,
+        query_params: Optional[dict] = None,
+        export_params: Optional[dict] = None,
     ):
         """
         Export large amount of data from Exasol to file or file-like object using fast HTTP transport.
@@ -460,13 +466,13 @@ class ExaConnection:
 
         Args:
             dst:
-                Path to file or file-like object.
+                Path to file or file-like object where data will be exported to.
             query_or_table:
-                SQL query or table for export.
+                SQL query or table from which to export data.
             query_params:
                 Values for SQL query placeholders.
             export_params:
-                Custom parameters for Export query.
+                Custom parameters for EXPORT query.
 
         Examples:
             >>> con = ExaConnection(...)
@@ -480,17 +486,22 @@ class ExaConnection:
             cb.export_to_file, dst, query_or_table, query_params, None, export_params
         )
 
-    def export_to_list(self, query_or_table, query_params=None, export_params=None):
+    def export_to_list(
+        self,
+        query_or_table: str,
+        query_params: Optional[dict] = None,
+        export_params: Optional[dict] = None,
+    ):
         """
         Export large amount of data from Exasol to basic Python `list` using fast HTTP transport.
 
         Args:
             query_or_table:
-                SQL query or table for export.
+                SQL query or table from which to export data.
             query_params:
                 Values for SQL query placeholders.
             export_params:
-                Custom parameters for Export query.
+                Custom parameters for EXPORT query.
 
         Returns:
             `list` of `tuples`
@@ -510,23 +521,24 @@ class ExaConnection:
 
     def export_to_pandas(
         self,
-        query_or_table,
-        query_params=None,
-        callback_params=None,
-        export_params=None,
+        query_or_table: str,
+        query_params: Optional[dict] = None,
+        callback_params: Optional[dict] = None,
+        export_params: Optional[dict] = None,
     ) -> "pandas.DataFrame":
         """
         Export large amount of data from Exasol to :class:`pandas.DataFrame`.
 
         Args:
             query_or_table:
-                SQL query or table for export.
+                SQL query or table from which to export data.
             query_params:
                 Values for SQL query placeholders.
             callback_params:
-                Dict with additional parameters for callback function
+                Dictionary with additional parameters for callback function
+                `pandas.read_csv <https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.read_csv.html>`__.
             export_params:
-                Custom parameters for Export query.
+                 Custom parameters for EXPORT query.
 
         Returns:
             instance of :class:`pandas.DataFrame`
@@ -566,13 +578,14 @@ class ExaConnection:
 
         Args:
             query_or_table:
-                SQL query or table for export.
+                SQL query or table from which to export data.
             query_params:
                 Values for SQL query placeholders.
             callback_params:
-                Dict with additional parameters for callback function
+                Dictionary with additional parameters for callback function
+                `polars.read_csv <https://docs.pola.rs/api/python/stable/reference/api/polars.read_csv.html>`__.
             export_params:
-                Custom parameters for Export query.
+                Custom parameters for EXPORT query.
 
         Returns:
             instance of :class:`polars.DataFrame`
@@ -600,7 +613,7 @@ class ExaConnection:
             export_params,
         )
 
-    def import_from_file(self, src, table, import_params=None):
+    def import_from_file(self, src, table: str, import_params: Optional[dict] = None):
         """
         Import a large amount of data from a file or file-like object.
 
@@ -610,7 +623,7 @@ class ExaConnection:
             table:
                 Destination table for IMPORT.
             import_params:
-                Custom parameters for import query.
+                Custom parameters for IMPORT query.
 
         Note:
             File must be opened in binary mode.
@@ -619,7 +632,9 @@ class ExaConnection:
             cb.import_from_file, src, table, None, import_params
         )
 
-    def import_from_iterable(self, src, table, import_params=None):
+    def import_from_iterable(
+        self, src, table: str, import_params: Optional[dict] = None
+    ):
         """
         Import a large amount of data from an ``iterable`` Python object.
 
@@ -630,15 +645,21 @@ class ExaConnection:
             table:
                 Destination table for IMPORT.
             import_params:
-                Custom parameters for import query.
+                Custom parameters for IMPORT query.
         """
         return self.import_from_callback(
             cb.import_from_iterable, src, table, None, import_params
         )
 
-    def import_from_pandas(self, src, table, callback_params=None, import_params=None):
+    def import_from_pandas(
+        self,
+        src: "pandas.DataFrame",
+        table: str,
+        callback_params: Optional[dict] = None,
+        import_params: Optional[dict] = None,
+    ):
         """
-        Import a large amount of data from ``pandas.DataFrame``.
+        Import a large amount of data from :class:`pandas.DataFrame`.
 
         Args:
             src:
@@ -646,15 +667,22 @@ class ExaConnection:
             table:
                 Destination table for IMPORT.
             callback_params:
-                Dict with additional parameters for callback function
+                Dictionary with additional parameters for callback function
+                `pandas.DataFrame.to_csv <https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.to_csv.html>`__.
             import_params:
-                Custom parameters for import query.
+                Custom parameters for IMPORT query.
         """
         return self.import_from_callback(
             cb.import_from_pandas, src, table, callback_params, import_params
         )
 
-    def import_from_polars(self, src, table, callback_params=None, import_params=None):
+    def import_from_polars(
+        self,
+        src: Union["polars.LazyFrame", "polars.DataFrame"],
+        table: str,
+        callback_params: Optional[dict] = None,
+        import_params: Optional[dict] = None,
+    ):
         """
         Import a large amount of data from :class:`polars.DataFrame`.
 
@@ -664,9 +692,10 @@ class ExaConnection:
             table:
                 Destination table for IMPORT.
             callback_params:
-                Dict with additional parameters for callback function
+                Dictionary with additional parameters for callback function
+                `polars.DataFrame.write_csv <https://docs.pola.rs/api/python/stable/reference/api/polars.DataFrame.write_csv.html>`__.
             import_params:
-                Custom parameters for import query.
+                Custom parameters for IMPORT query.
         """
         return self.import_from_callback(
             cb.import_from_polars, src, table, callback_params, import_params
@@ -674,27 +703,27 @@ class ExaConnection:
 
     def export_to_callback(
         self,
-        callback,
+        callback: Callable,
         dst,
-        query_or_table,
-        query_params=None,
-        callback_params=None,
-        export_params=None,
+        query_or_table: str,
+        query_params: Optional[dict] = None,
+        callback_params: Optional[dict] = None,
+        export_params: Optional[dict] = None,
     ):
         """
         Export large amount of data to user-defined callback function
 
         Args:
             callback:
-                Callback function
+                Callback function.
             query_or_table:
-                SQL query or table for export.
+                SQL query or table from which to export data.
             query_params:
                 Values for SQL query placeholders.
             callback_params:
-                Dict with additional parameters for callback function
+                Dictionary with additional parameters for callback function.
             export_params:
-                Custom parameters for Export query.
+                Custom parameters for EXPORT query.
 
         Returns:
             result of callback function
@@ -727,7 +756,7 @@ class ExaConnection:
         )
 
         http_thread = ExaHttpThread(
-            self.ws_ipaddr, self.ws_port, compression, self.options["encryption"]
+            self.ws_ipaddr, self.ws_port, compression, self.options["encryption"]  # type: ignore
         )
         sql_thread = ExaSQLExportThread(
             self, compression, query_or_table, export_params
@@ -778,7 +807,7 @@ class ExaConnection:
             table:
                 Destination table for IMPORT.
             callback_params:
-                Dict with additional parameters for callback function
+                Dictionary with additional parameters for callback function.
             import_params:
                 Custom parameters for IMPORT query.
 
