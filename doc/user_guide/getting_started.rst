@@ -63,6 +63,10 @@ For a user's first steps, it is recommended to try out running basic queries and
 
 Run basic query
 ^^^^^^^^^^^^^^^
+.. note::
+    For more options when running a basic query, check out :class:`pyexasol.ExaStatement`,
+    which is the returned object from :func:`C.execute()`.
+
 
 .. code-block:: python
 
@@ -71,11 +75,27 @@ Run basic query
     C = pyexasol.connect(dsn='<host:port>', user='sys', password='exasol')
     stmt = C.execute("SELECT * FROM EXA_ALL_USERS")
 
+    # to fetch 1 row
+    print(stmt.fetchone())
+
+    # to fetch n=3 rows
+    print(stmt.fetchmany(3))
+
+    # to fetch all remaining rows
+    print(stmt.fetchall())
+
+    C = pyexasol.connect(dsn='<host:port>', user='sys', password='exasol')
+    stmt = C.execute("SELECT * FROM EXA_ALL_USERS")
+
+    # to iterate through all rows
     for row in stmt:
         print(row)
 
-Export data into :class:`pandas.DataFrame`
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Export data into a DataFrame
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Using pandas
+""""""""""""
 
 .. code-block:: python
 
@@ -86,8 +106,8 @@ Export data into :class:`pandas.DataFrame`
     df = C.export_to_pandas("SELECT * FROM EXA_ALL_USERS")
     print(df.head())
 
-Export data into :class:`polars.DataFrame`
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Using polars
+""""""""""""
 
 .. code-block:: python
 
