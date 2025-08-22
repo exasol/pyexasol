@@ -1,10 +1,10 @@
-Configuration File ``pyexasol.ini``
+Configuration File ``.pyexasol.ini``
 ===================================
 
-Local configuration is a popular feature among data scientists and analysts working on laptops.
-It allows users to store personal Exasol credentials and connection options in a local file, which is separated from the code.
+Using a local configuration file is a popular feature among data scientists and analysts working on laptops.
+It allows users to store personal Exasol credentials and connection options separate from the code.
 
-To use local configuration, please create a file ``~/.pyexasol.ini``, where the contents should look similar to:
+Simply create a file ``~/.pyexasol.ini``, where the contents should look similar to:
 
 .. code-block:: ini
 
@@ -19,15 +19,16 @@ To use local configuration, please create a file ``~/.pyexasol.ini``, where the 
 If a user has multiple Exasol instances, each of the Exasol instances can have their
 access credential defined in a separate section of the ``ini`` file.
 
-
-To create a connection using a local configuration file, please call :func:`pyexasol.connect_local_config`, like so:
+To create a connection using a local configuration file, please call :func:`pyexasol.connect_local_config`:
 
 .. code-block:: python
 
     import pyexasol
 
-    C = pyexasol.connect_local_config(config_section='my_exasol',
-    config_path="~/.pyexasol.ini")
+    C = pyexasol.connect_local_config(
+      config_section='my_exasol',
+      config_path="~/.pyexasol.ini"
+    )
 
     st = C.execute("SELECT CURRENT_TIMESTAMP")
     print(st.fetchone())
