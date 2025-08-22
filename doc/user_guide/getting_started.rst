@@ -10,9 +10,9 @@ massive volumes of data with efficiency, providing a performance boost over trad
 
 Why Choose PyExasol?
 --------------------
-* Built on WebSocket protocol with minimal overhead, ensuring fast and reliable data transfer
-* Easily connect with popular data science tools like pandas and polars through HTTP transport
-* Automatic compression reduces network bottlenecks, making it ideal for large-scale data operations
+* Easy and fast access to Exasol from Python
+* Bulk import and export from/to pandas and polars to Exasol
+* Exasol UDF debugging support
 
 Prerequisites
 -------------
