@@ -10,10 +10,9 @@ massive volumes of data with efficiency, providing a performance boost over trad
 
 Why Choose PyExasol?
 --------------------
-* **Superior Performance** — Achieve linear scalability by utilizing multiple CPU cores simultaneously, breaking free from single-core limitations
-* **Optimized Architecture** — Built on WebSocket protocol with minimal overhead, ensuring fast and reliable data transfer
-* **Seamless Integration** — Easily connect with popular data science tools like pandas and polars through HTTP transport
-* **Smart Data Handling** — Automatic compression reduces network bottlenecks, making it ideal for large-scale data operations
+* Built on WebSocket protocol with minimal overhead, ensuring fast and reliable data transfer
+* Easily connect with popular data science tools like pandas and polars through HTTP transport
+* Automatic compression reduces network bottlenecks, making it ideal for large-scale data operations
 
 Prerequisites
 -------------

@@ -1,5 +1,5 @@
 Configuration File ``.pyexasol.ini``
-===================================
+====================================
 
 Using a local configuration file is a popular feature among data scientists and analysts working on laptops.
 It allows users to store personal Exasol credentials and connection options separate from the code.

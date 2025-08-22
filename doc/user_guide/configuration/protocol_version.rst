@@ -1,7 +1,7 @@
 .. _protocol_version:
 
-WebSocket Protocol Versions
-===========================
+WebSocket Protocol Version
+==========================
 
 PyExasol is based on the `WebSocket protocol <https://github.com/exasol/websocket-api>`__.
 
