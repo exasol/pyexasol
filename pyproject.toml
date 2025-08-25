@@ -99,6 +99,8 @@ max-module-lines = 800
 
 [[tool.mypy.overrides]]
 module = [
+    # scipy-stubs only for python>=3.10.1 and scipy>=1.14.1.0
+    "scipy.*",
     # pandas-stubs only for python >=3.10,<4.0.0, but we support 3.9 too
     "pandas.*",
     # no stubs available as of 2025
