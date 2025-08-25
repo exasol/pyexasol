@@ -86,9 +86,9 @@ Run basic query
             # to fetch all remaining rows
             print(stmt.fetchall())
 
-        # This is not needed for the code to run, but it a value of a context manager.
+        # This is not needed for the code to run, but it shows the value of a context manager.
         print(stmt.is_closed)
-    # This is not needed for the code to run, but it a value of a context manager.
+    # This is not needed for the code to run, but it shows the value of a context manager.
     print(C.is_closed)
 
     with pyexasol.connect(dsn='<host:port>', user='sys', password='exasol') as C:
