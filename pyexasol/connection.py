@@ -1327,7 +1327,7 @@ class ExaConnection:
         }
 
         if self.options["encryption"]:
-            # refer to the ``doc/user_guide/security.rst``
+            # refer to the `Security <https://exasol.github.io/pyexasol/master/user_guide/configuration/security.html>`__ page.
             if self.options["websocket_sslopt"] is None:
                 warn(
                     cleandoc(
@@ -1339,7 +1339,7 @@ class ExaConnection:
                         default behavior was to map such cases to
                         ``{"cert_reqs": ssl.CERT_NONE}``. For more information about
                         encryption & best practices, please refer to
-                        ``doc/user_guide/security.rst``.
+                        `Security <https://exasol.github.io/pyexasol/master/user_guide/configuration/security.html>`__ page.
                         """
                     ),
                     PyexasolWarning,
