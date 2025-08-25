@@ -72,24 +72,30 @@ Run basic query
 
     import pyexasol
 
-    C = pyexasol.connect(dsn='<host:port>', user='sys', password='exasol')
-    stmt = C.execute("SELECT * FROM EXA_ALL_USERS")
+    # Usage of the context manager for a DB connection is helpful as it ensures proper
+    # resource management -- like closing the connection after proper usage or an
+    # exception is raised.
+    with pyexasol.connect(dsn='<host:port>', user='sys', password='exasol') as C:
+        with C.execute("SELECT * FROM EXA_ALL_USERS") as stmt:
+            # to fetch 1 row
+            print(stmt.fetchone())
 
-    # to fetch 1 row
-    print(stmt.fetchone())
+            # to fetch n=3 rows
+            print(stmt.fetchmany(3))
 
-    # to fetch n=3 rows
-    print(stmt.fetchmany(3))
+            # to fetch all remaining rows
+            print(stmt.fetchall())
 
-    # to fetch all remaining rows
-    print(stmt.fetchall())
+        # This is not needed for the code to run, but it a value of a context manager.
+        print(stmt.is_closed)
+    # This is not needed for the code to run, but it a value of a context manager.
+    print(C.is_closed)
 
-    C = pyexasol.connect(dsn='<host:port>', user='sys', password='exasol')
-    stmt = C.execute("SELECT * FROM EXA_ALL_USERS")
-
-    # to iterate through all rows
-    for row in stmt:
-        print(row)
+    with pyexasol.connect(dsn='<host:port>', user='sys', password='exasol') as C:
+        with C.execute("SELECT * FROM EXA_ALL_USERS") as stmt:
+            # to iterate through all rows
+            for row in stmt:
+                print(row)
 
 Export data into a DataFrame
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
