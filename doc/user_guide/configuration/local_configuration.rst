@@ -33,4 +33,4 @@ To create a connection using a local configuration file, please call :func:`pyex
     st = C.execute("SELECT CURRENT_TIMESTAMP")
     print(st.fetchone())
 
-For more sophisticated configuration management, overload the :class:`ExaLocalConfig` or create a custom implementation of a local configuration loader.
+For more sophisticated configuration management, overload the :class:`pyexasol.ExaLocalConfig` or create a custom implementation of a local configuration loader.
