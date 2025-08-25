@@ -221,5 +221,5 @@ def performance_check(session: Session) -> None:
             )
 
     if errors:
-        errors = ["the comparison failed due to:"] + errors
+        errors = ["\nthe comparison failed due to:"] + errors
         session.error("\n".join(errors))
