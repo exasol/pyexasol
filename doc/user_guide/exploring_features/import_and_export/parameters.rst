@@ -25,39 +25,39 @@ Please refer to the Exasol User Manual to learn more about:
    * - Name
      - Example
      - Description
-   * - `column_separator`
-     - `,`
+   * - column_separator
+     - ,
      - Column separator for CSV
-   * - `column_delimiter`
-     - `"`
+   * - column_delimiter
+     - "
      - Column delimiter for CSV (quoting)
-   * - `columns`
-     - `['id', 'name']`
+   * - columns
+     - ['id', 'name']
      - List of table columns in the data source, useful if the column order of data source does not match the column order of Exasol table
-   * - `csv_cols`
-     - `["1..5", "6 FORMAT='999.99'", "8"]`
+   * - csv_cols
+     - ["1..5", "6 FORMAT='999.99'", "8"]
      - List of CSV columns with optional `numeric`_ or `date`_ formats
-   * - `row_separator`
-     - `LF`
+   * - row_separator
+     - LF
      - Row separator for CSV (line-endings)
-   * - `encoding`
-     - `UTF8`
+   * - encoding
+     - UTF8
      - File encoding
-   * - `with_column_names`
-     - `True`
+   * - with_column_names
+     - True
      - Add column names as the first line, which may be useful for external APIs (e.g. pandas)
-   * - `null`
-     - `\N`
-     - Custom `NULL` value
-   * - `delimit`
-     - `AUTO`
-     - Delimiter mode: `AUTO`, `ALWAYS`, `NEVER`
-   * - `format`
-     - `gz`
-     - Import file or stream compressed with `gz`, `bzip2`, `zip`
-   * - `comment`
-     - `This is a query description`
-     - Add a comment before the beginning of the query
+   * - null
+     - \N
+     - Custom NULL value
+   * - delimit
+     - AUTO
+     - Delimiter mode: ``AUTO``, ``ALWAYS``, ``NEVER``
+   * - format
+     - gz
+     - Import file or stream compressed with ``gz``, ``bzip2``, ``zip``
+   * - comment
+     - This is a query description
+     - Add a comment before the beginning of the query.  See :ref:`comment`.
 
 .. _numeric: https://docs.exasol.com/db/latest/sql_references/formatmodels.htm#Numericformatmodels
 .. _date: https://docs.exasol.com/db/latest/sql_references/formatmodels.htm#Datetimeformatmodels
@@ -74,44 +74,46 @@ Please refer to the Exasol User Manual to learn more about:
    * - Name
      - Example
      - Description
-   * - `column_separator`
-     - `,`
+   * - column_separator
+     - ,
      - Column separator for CSV
-   * - `column_delimiter`
-     - `"`
+   * - column_delimiter
+     - "
      - Column delimiter for CSV (quoting)
-   * - `columns`
-     - `['id', 'name']`
+   * - columns
+     - ['id', 'name']
      - List of table columns, useful to reorder table columns during export from table
-   * - `csv_cols`
-     - `["1..5", "6 FORMAT='999.99'", "8"]`
+   * - csv_cols
+     - ["1..5", "6 FORMAT='999.99'", "8"]
      - List of CSV columns with optional `numeric`_ or `date`_ formats
-   * - `row_separator`
-     - `LF`
+   * - row_separator
+     - LF
      - Row separator for CSV (line-endings)
-   * - `encoding`
-     - `UTF8`
+   * - encoding
+     - UTF8
      - File encoding
-   * - `skip`
-     - `1`
+   * - skip
+     - 1
      - How many first rows to skip, useful for skipping header
-   * - `null`
-     - `\N`
+   * - null
+     - \N
      - Custom `NULL` value
-   * - `trim`
-     - `TRIM`
-     - Trim mode: `TRIM`, `RTRIM`, `LTRIM`
-   * - `format`
-     - `gz`
-     - Export file or stream compressed with `gz`, `bzip2`, `zip`
-   * - `comment`
-     - `This is a query description`
-     - Add a comment before the beginning of the query
+   * - trim
+     - TRIM
+     - Trim mode: ``TRIM``, ``RTRIM``, ``LTRIM``
+   * - format
+     - gz
+     - Export file or stream compressed with ``gz``, ``bzip2``, ``zip``
+   * - comment
+     - This is a query description
+     - Add a comment before the beginning of the query. See :ref:`comment`.
+
+.. _comment:
 
 The `comment` parameter, for adding comments to queries
 -------------------------------------------------------
 
-For any `export_*` or `import_*` call, you can add a comment that will be inserted before the beginning of the query.
+For any ``export_*`` or ``import_*`` call, you can add a comment that will be inserted before the beginning of the query.
 
 This can be used for profiling and auditing. Example:
 
@@ -122,4 +124,4 @@ This can be used for profiling and auditing. Example:
     This query is importing user from CSV.
     '''})
 
-The comment is inserted as a block comment (`/* <comment> */`). The block comment closing sequence (`*/`) is forbidden in the comment.
+The comment is inserted as a block comment (``/* <comment> */``). The block comment closing sequence (``*/``) is forbidden in the comment.
