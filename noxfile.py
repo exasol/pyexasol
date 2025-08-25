@@ -13,10 +13,13 @@ from typing import (
 )
 
 import nox
+import numpy as np
 
 # imports all nox task provided by the toolbox
 from exasol.toolbox.nox.tasks import *  # pylint: disable=wildcard-import disable=unused-wildcard-import
 from nox import Session
+from numpy import ndarray
+from scipy import stats
 
 from noxconfig import (
     start_test_db,
@@ -138,12 +141,12 @@ class Benchmark:
     filepath: Path
     benchmark_data: list[dict[str, Any]] = field(init=False)
 
-    def get_benchmark_test(self, fullname: str) -> Optional[dict[str, float]]:
+    def get_benchmark_test(self, fullname: str) -> Optional[ndarray]:
         match_test = list(
             filter(lambda x: x["fullname"] == fullname, self.benchmark_data)
         )
         if len(match_test) == 1:
-            return match_test[0]["stats"]
+            return np.array(match_test[0]["stats"]["data"])
         return None
 
     def set_benchmark_data(self) -> None:
@@ -166,17 +169,30 @@ def performance_check(session: Session) -> None:
 
     Additionally, the value used in this nox session for comparison should be
     re-evaluated and potentially updated.
+
+    This performance evaluation is used instead of the ones provided by
+    pytest-benchmark as it should more robustly detect when an individual test's
+    performance changes. The pytest-benchmark options as of 0.5.1 focus on overall
+    performance deviations, like +/- 0.1 s or +/- 10% of the mean, which has the
+    underlying assumption that all tests have similar runtime distributions.
     """
-    expected_benchmark = Benchmark(PREVIOUS_BENCHMARK)
-    expected_benchmark.set_benchmark_data()
+    # This threshold is used to determine current_benchmark differs from
+    # previous_benchmark. 0.05 is taken for the evaluative criterion of the
+    # pvalue based on common statistical standards when rejecting the null hypothesi
+    # that the runtime data is drawn from the same distribution
+    alpha_threshold = 0.05
+
+    previous_benchmark = Benchmark(PREVIOUS_BENCHMARK)
+    previous_benchmark.set_benchmark_data()
 
     current_benchmark = Benchmark(CURRENT_BENCHMARK)
     current_benchmark.set_benchmark_data()
 
     errors = []
-    all_tests = expected_benchmark.fullname_tests | current_benchmark.fullname_tests
-    for test in all_tests:
-        expected_results = expected_benchmark.get_benchmark_test(test)
+    all_tests = previous_benchmark.fullname_tests | current_benchmark.fullname_tests
+    for test in sorted(all_tests):
+        print(test)
+        previous_results = previous_benchmark.get_benchmark_test(test)
         current_results = current_benchmark.get_benchmark_test(test)
 
         if current_results is None:
@@ -184,21 +200,24 @@ def performance_check(session: Session) -> None:
                 f"- {test} is not present in {current_benchmark.filepath.name}"
             )
             continue
-        elif expected_results is None:
+        elif previous_results is None:
             errors.append(
-                f"- {test} is not present in {expected_benchmark.filepath.name}"
+                f"- {test} is not present in {previous_benchmark.filepath.name}"
             )
             continue
 
-        max_deviation = 1.5 * expected_results["stddev"]
-        max_expected = expected_results["mean"] + max_deviation
-        min_expected = expected_results["mean"] - max_deviation
-        if (
-            current_results["mean"] > max_expected
-            or current_results["mean"] < min_expected
-        ):
+        differences = np.around(previous_results - current_results, decimals=3)
+        # We use the `Wilcoxon signed-rank test <https://en.wikipedia.org/wiki/Wilcoxon_signed-rank_test>`__
+        # to check if the distributions of the two runtimes are statistically
+        # different. This has been implemented in scipy, where the function behaves
+        # differently based on the len(differences). If len(d) <= 50, method="auto"
+        # should select "exact", which is good for non-normal distributions
+        result = stats.wilcoxon(differences)
+        print(result)
+
+        if result.pvalue < alpha_threshold:
             errors.append(
-                f"- mean of {test} is not in {[round(min_expected, 3), round(max_expected, 3)]}"
+                f"- current runtimes of {test} (pvalue={result.pvalue}) rejected as not within previous benchmark runtimes"
             )
 
     if errors:

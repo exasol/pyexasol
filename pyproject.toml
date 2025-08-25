@@ -76,6 +76,7 @@ faker = "^24.14.1"
 exasol-toolbox = "^1.8.0"
 types-ujson = "^5.10.0.20250326"
 pytest-benchmark = {extras = ["histogram"], version = "^5.1.0"}
+scipy = "^1.13.1"
 
 [tool.black]
 line-length = 88
