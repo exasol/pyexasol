@@ -10,4 +10,5 @@ Exploring PyExasol's Features
     debugging_udf_script_output
     examples
     formatting_sql
+    import_and_export/index
     advanced_topics/index

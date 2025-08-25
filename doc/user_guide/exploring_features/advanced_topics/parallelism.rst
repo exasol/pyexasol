@@ -1,3 +1,5 @@
+.. _pyexasol_parallelism:
+
 Parallelism
 ===========
 

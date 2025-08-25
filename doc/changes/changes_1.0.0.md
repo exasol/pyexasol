@@ -21,7 +21,7 @@ messages like: `[SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed`.
 
 Prior to the upgrade:
 1. Please determine which encryption and security measures are appropriate for your
-organization by reading through [user_guide/encryption](https://exasol.github.io/pyexasol/master/user_guide/encryption.html).
+organization by reading through the [User Guide's security](https://exasol.github.io/pyexasol/master/user_guide/configuration/security.html) page.
 2. If needed, update your usage of `pyexasol.connect(...)` & `ExaConnection` to
 reflect your organization's needs.
 
@@ -108,6 +108,7 @@ Relocked dependencies
 * #204: Fixed broken links and some typos
 * #224: Added "Exploring PyExasol's Features" directory in documentation and moved related pages there
 * #226: Added "Getting Started" page & "Configuration" directory in documentation and moved related pages there
+* #228: Reorganized "HTTP Transport" page to be under "Importing and Exporting Data"
 
 ## Bugfix
 
