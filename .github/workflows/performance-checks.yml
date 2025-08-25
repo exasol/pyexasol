@@ -5,7 +5,7 @@ on:
 
 jobs:
   performance-checks:
-    name: Performance-Tests (Python-${{ matrix.python-version }}, Exasol-${{ matrix.exasol-version}})
+    name: Performance-Tests (Python-${{ matrix.python-version }}, Exasol-${{ matrix.exasol-version}}), Run-${{ matrix.run-number }}
     runs-on:  ubuntu-24.04
     timeout-minutes: 30
     strategy:
@@ -13,6 +13,7 @@ jobs:
       matrix:
         python-version: ["3.12"]
         exasol-version: ["8.32.0"]
+        run-number: ["1", "2"]
     permissions:
       contents: read
     steps:
@@ -35,7 +36,7 @@ jobs:
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4.6.2
         with:
-          name: performance-python${{ matrix.python-version }}-exasol${{ matrix.exasol-version}}
+          name: performance-python${{ matrix.python-version }}-exasol${{ matrix.exasol-version}}-run${{ matrix.run-number }}
           path: test/performance/.benchmarks/0002_performance.json
           include-hidden-files: true
 
