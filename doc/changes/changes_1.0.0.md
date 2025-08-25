@@ -2,6 +2,11 @@
 
 ## Summary
 
+## Documentation update
+
+This release comes with updated documentation. In particular, the user guide now guides
+the user through installation, configuration, and PyExasol's most important features.
+
 ### Websocket in connection
 
 From PyExasol version `1.0.0`, the default behavior has been changed to use strict
@@ -102,6 +107,7 @@ Relocked dependencies
 * Harmonized spelling of PyExasol across documentation
 * #204: Fixed broken links and some typos
 * #224: Added "Exploring PyExasol's Features" directory in documentation and moved related pages there
+* #226: Added "Getting Started" page & "Configuration" directory in documentation and moved related pages there
 
 ## Bugfix
 

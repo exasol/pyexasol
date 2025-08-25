@@ -21,14 +21,14 @@ PyExasol is the officially supported Python connector for [Exasol](https://www.e
 
 You may expect significant performance improvement over ODBC in a single process scenario involving pandas or polars.
 
-PyExasol provides API to read & write multiple data streams in parallel using separate processes, which is necessary to fully utilize hardware and achieve linear scalability. With PyExasol you are no longer limited to a single CPU core.
+PyExasol provides an [API](https://exasol.github.io/pyexasol/master/api.html) to read & write multiple data streams in parallel using separate processes, which is necessary to fully utilize hardware and achieve linear scalability. With PyExasol you are no longer limited to a single CPU core.
 
 ---
 * Documentation: [https://exasol.github.io/pyexasol/](https://exasol.github.io/pyexasol/index.html)
 * Source Code: [https://github.com/exasol/pyexasol](https://github.com/exasol/pyexasol)
 ---
 
-## PyExasol main concepts
+## PyExasol Main Concepts
 
 - Based on [WebSocket protocol](https://github.com/exasol/websocket-api);
 - Optimized for minimum overhead;
@@ -36,78 +36,15 @@ PyExasol provides API to read & write multiple data streams in parallel using se
 - Compression to reduce network bottleneck;
 
 
-## System requirements
+## System Requirements
 
 - Exasol >= 7.1
 - Python >= 3.9
 
+## Getting Started
 
-## Getting started
+Check out PyExasol's Getting Started page for your first steps.
 
-Install PyExasol:
-```
-pip install pyexasol[pandas]
-```
-
-Run basic query:
-```python
-import pyexasol
-
-C = pyexasol.connect(dsn='<host:port>', user='sys', password='exasol')
-
-stmt = C.execute("SELECT * FROM EXA_ALL_USERS")
-
-for row in stmt:
-    print(row)
-```
-
-Load data into `pandas.DataFrame`:
-```python
-import pyexasol
-
-C = pyexasol.connect(dsn='<host:port>', user='sys', password='exasol', compression=True)
-
-df = C.export_to_pandas("SELECT * FROM EXA_ALL_USERS")
-print(df.head())
-```
-
-Load data into `polars.DataFrame`:
-```python
-import pyexasol
-
-C = pyexasol.connect(dsn='<host:port>', user='sys', password='exasol', compression=True)
-
-df = C.export_to_polars("SELECT * FROM EXA_ALL_USERS")
-print(df.head())
-```
-
-You may set up `local config` to store your personal Exasol credentials and connection options:
-```python
-import pyexasol
-
-C = pyexasol.connect_local_config('my_config')
-
-stmt = C.execute("SELECT CURRENT_TIMESTAMP")
-print(stmt.fetchone())
-```
-
-Connect to Exasol SAAS using OpenID token for authentication:
-
-```python
-import pyexasol
-
-C = pyexasol.connect(dsn='<host:port>', user='sys', refresh_token='<token>')
-
-stmt = C.execute("SELECT * FROM EXA_ALL_USERS")
-
-for row in stmt:
-    print(row)
-```
-
-## Created by
-[Vitaly Markov](https://www.linkedin.com/in/markov-vitaly/), 2018 — 2022
-
-Enjoy!
-
-## Maintained by
-[Exasol](https://www.exasol.com) 2023 — Today 
+## Developers
+* Created by [Vitaly Markov](https://www.linkedin.com/in/markov-vitaly/), 2018 — 2022
+* Maintained by [Exasol](https://www.exasol.com) 2023 — Today

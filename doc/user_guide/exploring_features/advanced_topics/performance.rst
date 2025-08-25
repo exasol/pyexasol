@@ -1,15 +1,15 @@
 Runtime Comparisons
 ===================
 
-The performance of a database driver depends on many factors: the hardware used, the network used, the properties of the test dataset, etc. It is strongly suggested to do your own performance tests before making any important decisions.
+The performance of a database driver depends on many factors: the hardware used, the network used, the properties of the sample dataset, etc. It is strongly suggested to collect your own performance measurements before making any important decisions.
 
-In this sample test, the following are compared:
+In this performance scenario, the following database drivers are compared:
 
 - `PyODBC <https://github.com/mkleehammer/pyodbc>`_
 - `TurbODBC <https://github.com/blue-yonder/turbodbc>`_
 - PyExasol
 
-For testing, an Exasol cluster with the following specifications was used:
+An Exasol cluster with the following specifications was used:
 
 - 20 nodes
 - 800+ CPU cores with hyper-threading
@@ -23,7 +23,7 @@ Three different scenarios were evaluated for each of the database drivers:
 - Fetching **high random** data set using server in the same data center
 - Fetching data set using local laptop behind VPN and Wifi network (**slow network**)
 
-For each of the scenarios, there were 10 million rows in the test table with mixed data types. The bash command ``time`` was used to measure the total execution duration in seconds.
+For each of the scenarios, there were 10 million rows in the table with mixed data types. The bash command ``time`` was used to measure the total execution duration in seconds.
 
 Results
 -------
@@ -35,7 +35,7 @@ Results
 .. list-table::
    :header-rows: 1
 
-   * - Test
+   * - Scenario
      - Low random
      - High random
      - Slow network
@@ -86,16 +86,16 @@ Conclusions
 5. PyExasol fetch and export with ZLIB compression is very good for slow network scenarios, but it is bad for fast networks.
 6. PyExasol parallel export beats everything else because it fully utilizes multiple CPU cores.
 
-How to Run Your Own Test
-------------------------
+How to Run Your Own Performance Measurements
+--------------------------------------------
 
-It is strongly encouraged that you run your own performance measurements. You may use the scripts provided with PyExasol as the starting point. Make sure to use your production Exasol cluster for measurements. Please do not use Exasol running in Docker locally; it eliminates the whole point of evaluating the performance.
+It is strongly encouraged that you collect your own performance measurements. You may use the scripts provided with PyExasol as the starting point. Make sure to use your production Exasol cluster for measurements. Please do not use Exasol running in Docker locally; it eliminates the whole point of evaluating the performance.
 
 1. Install PyODBC, TurbODBC, PyExasol, pandas.
 2. Install Exasol ODBC driver.
 3. Download the `PyExasol source code <https://github.com/exasol/pyexasol/>`__.
 4. Open `/performance/` directory and edit the file `_config.py`. Input your Exasol credentials, set the table name, and other settings. Set the path to the ODBC driver.
-5. (Optional) Run the script to prepare the data set for testing:
+5. (Optional) Run the script to prepare the dataset for later use in collecting performance metrics:
 
    .. code-block:: bash
 

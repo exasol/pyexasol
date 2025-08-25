@@ -6,10 +6,8 @@
 .. toctree::
     :maxdepth: 2
 
-    dependencies
+    getting_started
+    configuration/index
     exploring_features/index
-    encryption
     http_transport
     http_transport_parallel
-    local_config
-    protocol_version

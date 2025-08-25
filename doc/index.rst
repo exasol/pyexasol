@@ -18,11 +18,17 @@ Documentation of PyExasol
 
         Instructions and best practices to help developers contribute to the project and set up their development environment.
 
-    .. grid-item-card:: :octicon:`question` FAQ
-        :link: faq
+    .. grid-item-card:: :octicon:`cpu` API Reference
+        :link: api
         :link-type: ref
 
-        Frequently asked questions.
+        Comprehensive technical documentation for API endpoints and methods
+
+    .. grid-item-card:: :octicon:`history` Changes
+        :link: changes/changelog
+        :link-type: doc
+
+        View API version history and release notes
 
 .. toctree::
    :maxdepth: 1
@@ -31,6 +37,4 @@ Documentation of PyExasol
    user_guide/index
    developer_guide
    api
-   faq
    changes/changelog
-

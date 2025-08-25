@@ -8,5 +8,5 @@ schema = os.environ.get("EXASCHEMA", "TEST")
 # For usage with a Docker test setup, we deactivate the requirement to use a strict
 # certificate verification. However, users are strongly recommended to use the default
 # with `{"cert_reqs": ssl.CERT_REQUIRED}` or other secure variants found
-# in the `doc/user_guide/encryption.rst`
+# in the `doc/user_guide/security.rst`
 websocket_sslopt = {"cert_reqs": ssl.CERT_NONE}
