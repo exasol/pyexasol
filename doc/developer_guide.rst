@@ -84,7 +84,7 @@ DB
 If you manually run some tests or want to try something out, you can start and stop the database manually using ``nox -s db:start`` and ``nox -s db:stop``.
 
 Preparing & Triggering a Release
---------------------------------
+++++++++++++++++++++++++++++++++
 
 The `exasol-toolbox` provides nox tasks to semi-automate the release process:
 
