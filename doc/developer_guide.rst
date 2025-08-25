@@ -79,6 +79,41 @@ Integration Tests
 
 Passing additional arguments to pytest works the same as for the unit tests.
 
+Performance Tests
+-----------------
+
+The CI executes and compares the results of the performance tests in `performance-checks.yml`,
+using two nox sessions:
+
+* ``performance:test`` - this uses the ``pytest-benchmark`` to capture the results
+  of the **current CI run** in ``test/performance/.benchmarks/0002_performance.json``
+* ``performance:check`` - this utilizes scipy's implementation of the Wilcoxon
+  signed-rank test to determine if the results in the **current CI run** are statistically
+  similar to the **saved reference results** in ``test/performance/.benchmarks/0001_performance.json``.
+  If a test is not present in both the **current CI run** and **saved reference results**,
+  this is noted as an error.
+
+If the results of executing ``nox -s performance:check`` breaks a build, this requires
+manual checks from a developer:
+
+#. When the CI run was executed, the file generated from executing the performance tests
+is uploaded to the GitHub Action as an artifact, ``performance-python${{ python-version }}-exasol${{ exasol-version}}.
+The developer should retrieve this file and compare the results to the **saved reference results**.
+#. If the changed results can be explained by significant differences in the CI runner
+or expected changes in the implementation, then the developer would overwrite the **saved reference results**
+with the GitHub Action artifact.
+
+.. note::
+
+    As the results of performance tests can vary by machine & the active environment on said machine,
+    the performance tests are benchmarked against the CI runner, and the reference results are saved
+    in ``test/performance/.benchmarks/0001_performance.json`` of the repository.
+    Naturally, this makes the results dependent upon the consistency & stability of GitHub's runners.
+    While it may not cover all use cases, the results saved by the ``nox -s performance:test`` include
+    the machine information, which may help developers determine if the observed shift in performance results
+    could have resulted from differences in the past and current execution of the performance tests
+    due to apparent macroscopic runner differences.
+
 DB
 --
 If you manually run some tests or want to try something out, you can start and stop the database manually using ``nox -s db:start`` and ``nox -s db:stop``.
