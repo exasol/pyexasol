@@ -33,6 +33,11 @@ __all__ = [
 
 _ROOT: Path = Path(__file__).parent
 
+PERFORMANCE_TEST_DIRECTORY = _ROOT / "test/performance"
+BENCHMARK_FILEPATH = PERFORMANCE_TEST_DIRECTORY / ".benchmarks"
+PREVIOUS_BENCHMARK = BENCHMARK_FILEPATH / "0001_performance.json"
+CURRENT_BENCHMARK = BENCHMARK_FILEPATH / "0002_performance.json"
+
 
 def _create_start_db_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
@@ -118,16 +123,11 @@ def run_examples(session: Session) -> None:
 @nox.session(name="performance:test", python=False)
 def performance_tests(session: Session) -> None:
     """Execute performance tests, assuming a DB already is ready"""
-    performance_tests_folder = "test/performance"
-    test_path = _ROOT / performance_tests_folder
-    benchmark_path = f"{performance_tests_folder}/.benchmarks"
-
     command = [
         "pytest",
-        str(test_path),
+        str(PERFORMANCE_TEST_DIRECTORY),
         "--benchmark-sort=name",
-        f"--benchmark-storage=file://{benchmark_path}",
-        "--benchmark-save=benchmark_performance",
+        f"--benchmark-json={CURRENT_BENCHMARK}",
     ]
 
     session.run(*command)
@@ -162,17 +162,15 @@ def performance_check(session: Session) -> None:
 
     In the event of reasonable changes, the benchmark file should be updated
     by copying the one saved by the CI locally & updating the existing one
-    at test/performance/.benchmarks/Linux-CPython-3.11-64bit/0001_benchmark_performance.json.
+    at test/performance/.benchmarks/0001_benchmark_performance.json.
 
     Additionally, the value used in this nox session for comparison should be
     re-evaluated and potentially updated.
     """
-    benchmark_path = _ROOT / "test/performance/.benchmarks/Linux-CPython-3.11-64bit"
-
-    expected_benchmark = Benchmark(benchmark_path / "0001_benchmark_performance.json")
+    expected_benchmark = Benchmark(PREVIOUS_BENCHMARK)
     expected_benchmark.set_benchmark_data()
 
-    current_benchmark = Benchmark(benchmark_path / "0002_benchmark_performance.json")
+    current_benchmark = Benchmark(CURRENT_BENCHMARK)
     current_benchmark.set_benchmark_data()
 
     errors = []

@@ -1,0 +1,458 @@
+{
+    "machine_info": {},
+    "benchmarks": [
+        {
+            "group": null,
+            "name": "test_export_methods_to_memory[list]",
+            "fullname": "test/performance/connection/http_transport_export_test.py::test_export_methods_to_memory[list]",
+            "params": {
+                "export_method": "export_to_list",
+                "file_length_function": "UNSERIALIZABLE[<function get_list_length at 0x7fb3ec29a290>]"
+            },
+            "param": "list",
+            "extra_info": {},
+            "options": {
+                "disable_gc": false,
+                "timer": "perf_counter",
+                "min_rounds": 5,
+                "max_time": 1.0,
+                "min_time": 5e-06,
+                "warmup": false
+            },
+            "stats": {
+                "min": 1.0707790039959946,
+                "max": 1.1245979619998252,
+                "mean": 1.0932672556991747,
+                "stddev": 0.016772234270136882,
+                "rounds": 10,
+                "median": 1.0941622940008529,
+                "iqr": 0.021238649998849723,
+                "q1": 1.0805137860006653,
+                "q3": 1.101752435999515,
+                "iqr_outliers": 0,
+                "stddev_outliers": 4,
+                "outliers": "4;0",
+                "ld15iqr": 1.0707790039959946,
+                "hd15iqr": 1.1245979619998252,
+                "ops": 0.9146894272987919,
+                "total": 10.932672556991747,
+                "data": [
+                    1.1245979619998252,
+                    1.0731074529976468,
+                    1.1106239059954532,
+                    1.101752435999515,
+                    1.0945235590043012,
+                    1.0707790039959946,
+                    1.0938010289974045,
+                    1.0983391499976278,
+                    1.0846342720033135,
+                    1.0805137860006653
+                ],
+                "iterations": 1
+            }
+        },
+        {
+            "group": null,
+            "name": "test_export_methods_to_memory[pandas]",
+            "fullname": "test/performance/connection/http_transport_export_test.py::test_export_methods_to_memory[pandas]",
+            "params": {
+                "export_method": "export_to_pandas",
+                "file_length_function": "UNSERIALIZABLE[<function get_pandas_dataframe_length at 0x7fb3ec29a320>]"
+            },
+            "param": "pandas",
+            "extra_info": {},
+            "options": {
+                "disable_gc": false,
+                "timer": "perf_counter",
+                "min_rounds": 5,
+                "max_time": 1.0,
+                "min_time": 5e-06,
+                "warmup": false
+            },
+            "stats": {
+                "min": 1.0463587579943123,
+                "max": 1.2449846929957857,
+                "mean": 1.0860486058001697,
+                "stddev": 0.05756685504561601,
+                "rounds": 10,
+                "median": 1.0689157510023506,
+                "iqr": 0.031121306004934013,
+                "q1": 1.0578709139954299,
+                "q3": 1.0889922200003639,
+                "iqr_outliers": 1,
+                "stddev_outliers": 1,
+                "outliers": "1;1",
+                "ld15iqr": 1.0463587579943123,
+                "hd15iqr": 1.2449846929957857,
+                "ops": 0.9207691024686951,
+                "total": 10.860486058001698,
+                "data": [
+                    1.2449846929957857,
+                    1.089821669003868,
+                    1.0463587579943123,
+                    1.0767658240001765,
+                    1.0707335340048303,
+                    1.0578709139954299,
+                    1.062245236003946,
+                    1.0889922200003639,
+                    1.0670979679998709,
+                    1.055615242003114
+                ],
+                "iterations": 1
+            }
+        },
+        {
+            "group": null,
+            "name": "test_export_methods_to_memory[polars]",
+            "fullname": "test/performance/connection/http_transport_export_test.py::test_export_methods_to_memory[polars]",
+            "params": {
+                "export_method": "export_to_polars",
+                "file_length_function": "UNSERIALIZABLE[<function get_polars_dataframe_length at 0x7fb3ec29a3b0>]"
+            },
+            "param": "polars",
+            "extra_info": {},
+            "options": {
+                "disable_gc": false,
+                "timer": "perf_counter",
+                "min_rounds": 5,
+                "max_time": 1.0,
+                "min_time": 5e-06,
+                "warmup": false
+            },
+            "stats": {
+                "min": 1.0565430950009613,
+                "max": 1.1300212060014019,
+                "mean": 1.0814661762007745,
+                "stddev": 0.020673304138085647,
+                "rounds": 10,
+                "median": 1.0794619585030887,
+                "iqr": 0.01990818699414376,
+                "q1": 1.0692857220055885,
+                "q3": 1.0891939089997322,
+                "iqr_outliers": 1,
+                "stddev_outliers": 3,
+                "outliers": "3;1",
+                "ld15iqr": 1.0565430950009613,
+                "hd15iqr": 1.1300212060014019,
+                "ops": 0.9246706203175324,
+                "total": 10.814661762007745,
+                "data": [
+                    1.1300212060014019,
+                    1.0891939089997322,
+                    1.0809791960055009,
+                    1.0692857220055885,
+                    1.0918341830038116,
+                    1.0779447210006765,
+                    1.0837972219960648,
+                    1.0760666529968148,
+                    1.0565430950009613,
+                    1.0589958549971925
+                ],
+                "iterations": 1
+            }
+        },
+        {
+            "group": null,
+            "name": "test_export_methods_to_file[file]",
+            "fullname": "test/performance/connection/http_transport_export_test.py::test_export_methods_to_file[file]",
+            "params": {
+                "export_method": "export_to_file",
+                "file_extension": "csv",
+                "file_length_function": "UNSERIALIZABLE[<function get_csv_length at 0x7fb437e4bbe0>]"
+            },
+            "param": "file",
+            "extra_info": {},
+            "options": {
+                "disable_gc": false,
+                "timer": "perf_counter",
+                "min_rounds": 5,
+                "max_time": 1.0,
+                "min_time": 5e-06,
+                "warmup": false
+            },
+            "stats": {
+                "min": 1.0345146449981257,
+                "max": 1.153928249994351,
+                "mean": 1.0696987432005698,
+                "stddev": 0.03739350897884444,
+                "rounds": 10,
+                "median": 1.0583619050048583,
+                "iqr": 0.03759595398878446,
+                "q1": 1.0420790410062182,
+                "q3": 1.0796749949950026,
+                "iqr_outliers": 1,
+                "stddev_outliers": 2,
+                "outliers": "2;1",
+                "ld15iqr": 1.0345146449981257,
+                "hd15iqr": 1.153928249994351,
+                "ops": 0.9348426427126303,
+                "total": 10.696987432005699,
+                "data": [
+                    1.0420790410062182,
+                    1.153928249994351,
+                    1.0528062540033716,
+                    1.056933794003271,
+                    1.0345146449981257,
+                    1.1112411569993128,
+                    1.0697467099962523,
+                    1.0796749949950026,
+                    1.0597900160064455,
+                    1.036272570003348
+                ],
+                "iterations": 1
+            }
+        },
+        {
+            "group": null,
+            "name": "test_import_methods[file]",
+            "fullname": "test/performance/connection/http_transport_import_test.py::test_import_methods[file]",
+            "params": {
+                "import_method": "import_from_file",
+                "data_creator": "create_csv"
+            },
+            "param": "file",
+            "extra_info": {},
+            "options": {
+                "disable_gc": false,
+                "timer": "perf_counter",
+                "min_rounds": 5,
+                "max_time": 1.0,
+                "min_time": 5e-06,
+                "warmup": false
+            },
+            "stats": {
+                "min": 0.06704119699861621,
+                "max": 0.13804403199901571,
+                "mean": 0.10256285309951636,
+                "stddev": 0.02256366332033428,
+                "rounds": 10,
+                "median": 0.09654675699857762,
+                "iqr": 0.03441925100196386,
+                "q1": 0.08584547899954487,
+                "q3": 0.12026473000150872,
+                "iqr_outliers": 0,
+                "stddev_outliers": 3,
+                "outliers": "3;0",
+                "ld15iqr": 0.06704119699861621,
+                "hd15iqr": 0.13804403199901571,
+                "ops": 9.75011877867422,
+                "total": 1.0256285309951636,
+                "data": [
+                    0.09343266500218306,
+                    0.08503225500317058,
+                    0.06704119699861621,
+                    0.09966084899497218,
+                    0.09057356500125024,
+                    0.13804403199901571,
+                    0.08584547899954487,
+                    0.12026473000150872,
+                    0.12997979499778012,
+                    0.1157539639971219
+                ],
+                "iterations": 1
+            }
+        },
+        {
+            "group": null,
+            "name": "test_import_methods[iterable]",
+            "fullname": "test/performance/connection/http_transport_import_test.py::test_import_methods[iterable]",
+            "params": {
+                "import_method": "import_from_iterable",
+                "data_creator": "create_iterable"
+            },
+            "param": "iterable",
+            "extra_info": {},
+            "options": {
+                "disable_gc": false,
+                "timer": "perf_counter",
+                "min_rounds": 5,
+                "max_time": 1.0,
+                "min_time": 5e-06,
+                "warmup": false
+            },
+            "stats": {
+                "min": 0.08737890700285789,
+                "max": 0.1961370189965237,
+                "mean": 0.13146733089961343,
+                "stddev": 0.03697777517352978,
+                "rounds": 10,
+                "median": 0.1244988124963129,
+                "iqr": 0.059677245997590944,
+                "q1": 0.097217153001111,
+                "q3": 0.15689439899870194,
+                "iqr_outliers": 0,
+                "stddev_outliers": 4,
+                "outliers": "4;0",
+                "ld15iqr": 0.08737890700285789,
+                "hd15iqr": 0.1961370189965237,
+                "ops": 7.606452440748079,
+                "total": 1.3146733089961344,
+                "data": [
+                    0.11821953499747906,
+                    0.08737890700285789,
+                    0.097217153001111,
+                    0.09302719900006196,
+                    0.1961370189965237,
+                    0.17695528300100705,
+                    0.15689439899870194,
+                    0.14672473300015554,
+                    0.11134099100308958,
+                    0.13077808999514673
+                ],
+                "iterations": 1
+            }
+        },
+        {
+            "group": null,
+            "name": "test_import_methods[pandas]",
+            "fullname": "test/performance/connection/http_transport_import_test.py::test_import_methods[pandas]",
+            "params": {
+                "import_method": "import_from_pandas",
+                "data_creator": "create_pandas_dataframe"
+            },
+            "param": "pandas",
+            "extra_info": {},
+            "options": {
+                "disable_gc": false,
+                "timer": "perf_counter",
+                "min_rounds": 5,
+                "max_time": 1.0,
+                "min_time": 5e-06,
+                "warmup": false
+            },
+            "stats": {
+                "min": 0.0715488869973342,
+                "max": 0.14885378299368313,
+                "mean": 0.10607372139857034,
+                "stddev": 0.02439473008163092,
+                "rounds": 10,
+                "median": 0.10069185800239211,
+                "iqr": 0.015421679003338795,
+                "q1": 0.09259288299654145,
+                "q3": 0.10801456199988024,
+                "iqr_outliers": 2,
+                "stddev_outliers": 3,
+                "outliers": "3;2",
+                "ld15iqr": 0.0715488869973342,
+                "hd15iqr": 0.1467205329972785,
+                "ops": 9.427405645951797,
+                "total": 1.0607372139857034,
+                "data": [
+                    0.09688106099929428,
+                    0.10450265500548994,
+                    0.10801456199988024,
+                    0.1467205329972785,
+                    0.0715488869973342,
+                    0.09298052399390144,
+                    0.0907606280015898,
+                    0.14885378299368313,
+                    0.10788169800071046,
+                    0.09259288299654145
+                ],
+                "iterations": 1
+            }
+        },
+        {
+            "group": null,
+            "name": "test_import_methods[parquet]",
+            "fullname": "test/performance/connection/http_transport_import_test.py::test_import_methods[parquet]",
+            "params": {
+                "import_method": "import_from_parquet",
+                "data_creator": "create_parquet"
+            },
+            "param": "parquet",
+            "extra_info": {},
+            "options": {
+                "disable_gc": false,
+                "timer": "perf_counter",
+                "min_rounds": 5,
+                "max_time": 1.0,
+                "min_time": 5e-06,
+                "warmup": false
+            },
+            "stats": {
+                "min": 0.06385048299853224,
+                "max": 0.14582905800489243,
+                "mean": 0.09471473560042795,
+                "stddev": 0.024274747140264275,
+                "rounds": 10,
+                "median": 0.09467072600091342,
+                "iqr": 0.021978613003739156,
+                "q1": 0.07557158999406965,
+                "q3": 0.09755020299780881,
+                "iqr_outliers": 1,
+                "stddev_outliers": 3,
+                "outliers": "3;1",
+                "ld15iqr": 0.06385048299853224,
+                "hd15iqr": 0.14582905800489243,
+                "ops": 10.558019231755967,
+                "total": 0.9471473560042796,
+                "data": [
+                    0.12251228999957675,
+                    0.09393306099809706,
+                    0.14582905800489243,
+                    0.06385048299853224,
+                    0.09540839100372978,
+                    0.09755020299780881,
+                    0.0969116020060028,
+                    0.07533052500366466,
+                    0.07557158999406965,
+                    0.08025015299790539
+                ],
+                "iterations": 1
+            }
+        },
+        {
+            "group": null,
+            "name": "test_import_methods[polars]",
+            "fullname": "test/performance/connection/http_transport_import_test.py::test_import_methods[polars]",
+            "params": {
+                "import_method": "import_from_polars",
+                "data_creator": "create_polars_dataframe"
+            },
+            "param": "polars",
+            "extra_info": {},
+            "options": {
+                "disable_gc": false,
+                "timer": "perf_counter",
+                "min_rounds": 5,
+                "max_time": 1.0,
+                "min_time": 5e-06,
+                "warmup": false
+            },
+            "stats": {
+                "min": 0.0710146010023891,
+                "max": 0.13873695800430141,
+                "mean": 0.10373143240067292,
+                "stddev": 0.01837036644148594,
+                "rounds": 10,
+                "median": 0.10272117950080428,
+                "iqr": 0.013295828997797798,
+                "q1": 0.0988423180024256,
+                "q3": 0.1121381470002234,
+                "iqr_outliers": 2,
+                "stddev_outliers": 3,
+                "outliers": "3;2",
+                "ld15iqr": 0.08330674700118834,
+                "hd15iqr": 0.13873695800430141,
+                "ops": 9.640279487681235,
+                "total": 1.0373143240067293,
+                "data": [
+                    0.10363531800248893,
+                    0.08330674700118834,
+                    0.13873695800430141,
+                    0.11009733799437527,
+                    0.0710146010023891,
+                    0.0988423180024256,
+                    0.11701369000365958,
+                    0.10180704099911964,
+                    0.10072216599655803,
+                    0.1121381470002234
+                ],
+                "iterations": 1
+            }
+        }
+    ],
+    "datetime": "2025-08-25T07:11:56.441222+00:00",
+    "version": "5.1.0"
+}

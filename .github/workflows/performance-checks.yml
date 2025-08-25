@@ -11,7 +11,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.11"]
+        python-version: ["3.12"]
         exasol-version: ["8.32.0"]
     permissions:
       contents: read
@@ -36,7 +36,7 @@ jobs:
         uses: actions/upload-artifact@v4.6.2
         with:
           name: performance-python${{ matrix.python-version }}-exasol${{ matrix.exasol-version}}
-          path: test/performance/.benchmarks/Linux-CPython-3.11-64bit/0002_benchmark_performance.json
+          path: test/performance/.benchmarks/0002_performance.json
           include-hidden-files: true
 
       - name: Stop test db
