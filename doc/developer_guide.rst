@@ -97,7 +97,7 @@ If the results of executing ``nox -s performance:check`` breaks a build, this re
 manual checks from a developer:
 
 #. When the CI run was executed, the file generated from executing the performance tests
-is uploaded to the GitHub Action as an artifact, ``performance-python${{ python-version }}-exasol${{ exasol-version}}.
+is uploaded to the GitHub Action as an artifact, ``performance-python${{ python-version }}-exasol${{ exasol-version}}``.
 The developer should retrieve this file and compare the results to the **saved reference results**.
 #. If the changed results can be explained by significant differences in the CI runner
 or expected changes in the implementation, then the developer would overwrite the **saved reference results**
