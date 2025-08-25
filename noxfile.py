@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import json
 from dataclasses import (
     dataclass,
     field,
@@ -13,12 +14,10 @@ from typing import (
 )
 
 import nox
-import numpy as np
 
 # imports all nox task provided by the toolbox
 from exasol.toolbox.nox.tasks import *  # pylint: disable=wildcard-import disable=unused-wildcard-import
 from nox import Session
-from numpy import ndarray
 from scipy import stats
 
 from noxconfig import (
@@ -141,12 +140,12 @@ class Benchmark:
     filepath: Path
     benchmark_data: list[dict[str, Any]] = field(init=False)
 
-    def get_benchmark_test(self, fullname: str) -> Optional[ndarray]:
+    def get_benchmark_test(self, fullname: str) -> Optional[dict[str, float]]:
         match_test = list(
             filter(lambda x: x["fullname"] == fullname, self.benchmark_data)
         )
         if len(match_test) == 1:
-            return np.array(match_test[0]["stats"]["data"])
+            return match_test[0]["stats"]
         return None
 
     def set_benchmark_data(self) -> None:
@@ -157,6 +156,12 @@ class Benchmark:
     @property
     def fullname_tests(self) -> set[str]:
         return {entry["fullname"] for entry in self.benchmark_data}
+
+
+def print_statistics(statistics_dict: dict[str, Any]) -> None:
+    for key, item in statistics_dict.items():
+        if key not in ("data", "iterations", "outliers", "rounds", "total"):
+            print(f"|---> {key}: {round(item, 3)}")
 
 
 @nox.session(name="performance:check", python=False)
@@ -191,7 +196,7 @@ def performance_check(session: Session) -> None:
     errors = []
     all_tests = previous_benchmark.fullname_tests | current_benchmark.fullname_tests
     for test in sorted(all_tests):
-        print(test)
+        print(f"\033[92m[TEST] {test}\033[0m")
         previous_results = previous_benchmark.get_benchmark_test(test)
         current_results = current_benchmark.get_benchmark_test(test)
 
@@ -206,18 +211,24 @@ def performance_check(session: Session) -> None:
             )
             continue
 
-        differences = np.around(previous_results - current_results, decimals=3)
         # We use the `Wilcoxon signed-rank test <https://en.wikipedia.org/wiki/Wilcoxon_signed-rank_test>`__
         # to check if the distributions of the two runtimes are statistically
-        # different. This has been implemented in scipy, where the function behaves
-        # differently based on the len(differences). If len(d) <= 50, method="auto"
-        # should select "exact", which is good for non-normal distributions
-        result = stats.wilcoxon(differences)
-        print(result)
+        # different.
+        result = stats.wilcoxon(x=current_results["data"], y=previous_results["data"])
+
+        print("\033[33m- previous results:\033[0m")
+        print_statistics(previous_results)
+
+        print("\033[33m- current results:\033[0m")
+        print_statistics(current_results)
+
+        print("\033[33m- Wilcox results:\033[0m")
+        print(f"|---> statistic: {result.statistic}")
+        print(f"|---> pvalue: {round(result.pvalue,3)}")
 
         if result.pvalue < alpha_threshold:
             errors.append(
-                f"- current runtimes of {test} (pvalue={result.pvalue}) rejected as not within previous benchmark runtimes"
+                f"- current runtimes of {test} (pvalue={round(result.pvalue,3)}) rejected as not within previous benchmark runtimes"
             )
 
     if errors:
