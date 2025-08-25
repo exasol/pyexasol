@@ -21,7 +21,7 @@ messages like: `[SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed`.
 
 Prior to the upgrade:
 1. Please determine which encryption and security measures are appropriate for your
-organization by reading through [user_guide/encryption](https://exasol.github.io/pyexasol/master/user_guide/encryption.html).
+organization by reading through the [User Guide's security](https://exasol.github.io/pyexasol/master/user_guide/configuration/security.html) page.
 2. If needed, update your usage of `pyexasol.connect(...)` & `ExaConnection` to
 reflect your organization's needs.
 
