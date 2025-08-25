@@ -3,16 +3,16 @@
 Exasol Parameters
 =================
 
-* The :ref:`import_params` are defined for all ``import_from_*`` :ref:`Variants` and
+* The :ref:`import_params` are defined for all ``import_from_*`` :ref:`Variants`
   to generate the ``IMPORT`` statement.
-* The :ref:`export_params`, are defined for all ``export_to_*`` :ref:`Variants`, and
+* The :ref:`export_params`, are defined for all ``export_to_*`` :ref:`Variants`
   to generate the ``EXPORT`` statement.
 
 Please refer to the Exasol User Manual to learn more about:
 
-* `IMPORT query parameters <https://docs.exasol.com/db/latest/sql/import.htm>`
-* `EXPORT query parameters <https://docs.exasol.com/db/latest/sql/export.htm>`
-* `CHANGELOG: TLS Certificate Verification for Loader File Connections <https://exasol.my.site.com/s/article/Changelog-content-16273>`_
+* `IMPORT query parameters <https://docs.exasol.com/db/latest/sql/import.htm>`__
+* `EXPORT query parameters <https://docs.exasol.com/db/latest/sql/export.htm>`__
+* `CHANGELOG: TLS Certificate Verification for Loader File Connections <https://exasol.my.site.com/s/article/Changelog-content-16273>`__
 
 .. _import_params:
 
