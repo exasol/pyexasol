@@ -75,7 +75,15 @@ Iterable
 
 Export
 """"""
+See :meth:`pyexasol.ExaConnection.export_to_list`.
 
+.. code-block:: python
+
+    # Read from SQL
+    export_list = C.export_to_list("SELECT * FROM users")
+
+    # Read from table
+    export_list = C.export_to_list("users")
 
 
 Import
@@ -192,4 +200,4 @@ Example of a callback importing from Pandas into Exasol.
         return src.to_csv(wrapped_pipe, header=False, index=False, quoting=csv.QUOTE_NONNUMERIC, **kwargs)
 
     # Run IMPORT using the defined callback function
-    C.export_from_callback(import_from_pandas, df, 'my_table')
+    C.import_from_callback(import_from_pandas, df, 'my_table')
