@@ -3,115 +3,125 @@
 Exasol Parameters
 =================
 
-* The :ref:`import_params` are defined for all ``import_from_*`` :ref:`Variants`
-  to generate the ``IMPORT`` statement.
 * The :ref:`export_params`, are defined for all ``export_to_*`` :ref:`Variants`
   to generate the ``EXPORT`` statement.
+* The :ref:`import_params` are defined for all ``import_from_*`` :ref:`Variants`
+  to generate the ``IMPORT`` statement.
 
 Please refer to the Exasol User Manual to learn more about:
 
-* `IMPORT query parameters <https://docs.exasol.com/db/latest/sql/import.htm>`__
 * `EXPORT query parameters <https://docs.exasol.com/db/latest/sql/export.htm>`__
+* `IMPORT query parameters <https://docs.exasol.com/db/latest/sql/import.htm>`__
 * `CHANGELOG: TLS Certificate Verification for Loader File Connections <https://exasol.my.site.com/s/article/Changelog-content-16273>`__
-
-.. _import_params:
-
-``import_params``
------------------
-
-.. list-table::
-   :header-rows: 1
-
-   * - Name
-     - Example
-     - Description
-   * - column_separator
-     - ,
-     - Column separator for CSV
-   * - column_delimiter
-     - "
-     - Column delimiter for CSV (quoting)
-   * - columns
-     - ['id', 'name']
-     - List of table columns in the data source, useful if the column order of data source does not match the column order of Exasol table
-   * - csv_cols
-     - ["1..5", "6 FORMAT='999.99'", "8"]
-     - List of CSV columns with optional `numeric`_ or `date`_ formats
-   * - row_separator
-     - LF
-     - Row separator for CSV (line-endings)
-   * - encoding
-     - UTF8
-     - File encoding
-   * - with_column_names
-     - True
-     - Add column names as the first line, which may be useful for external APIs (e.g. pandas)
-   * - null
-     - \N
-     - Custom NULL value
-   * - delimit
-     - AUTO
-     - Delimiter mode: ``AUTO``, ``ALWAYS``, ``NEVER``
-   * - format
-     - gz
-     - Import file or stream compressed with ``gz``, ``bzip2``, ``zip``
-   * - comment
-     - This is a query description
-     - Add a comment before the beginning of the query.  See :ref:`comment`.
-
-.. _numeric: https://docs.exasol.com/db/latest/sql_references/formatmodels.htm#Numericformatmodels
-.. _date: https://docs.exasol.com/db/latest/sql_references/formatmodels.htm#Datetimeformatmodels
-
 
 .. _export_params:
 
 ``export_params``
 -----------------
 
+These parameters are given as a dictionary, like ``export_params = { "name1": "value1", "name2": ["value2", "value3"]}``.
+This dictionary is passed into the :ref:`Variants` for a selected ``export_to_*``
+method. When the code is executed, these are validated using the :class:`pyexasol.http_transport.ExportQuery`.
+
+
 .. list-table::
    :header-rows: 1
 
    * - Name
      - Example
      - Description
-   * - column_separator
-     - ,
-     - Column separator for CSV
    * - column_delimiter
      - "
      - Column delimiter for CSV (quoting)
+   * - column_separator
+     - ,
+     - Column separator for CSV
    * - columns
-     - ['id', 'name']
+     - ["id", "name"]
      - List of table columns, useful to reorder table columns during export from table
-   * - csv_cols
-     - ["1..5", "6 FORMAT='999.99'", "8"]
-     - List of CSV columns with optional `numeric`_ or `date`_ formats
-   * - row_separator
-     - LF
-     - Row separator for CSV (line-endings)
-   * - encoding
-     - UTF8
-     - File encoding
-   * - skip
-     - 1
-     - How many first rows to skip, useful for skipping header
-   * - null
-     - \N
-     - Custom `NULL` value
-   * - trim
-     - TRIM
-     - Trim mode: ``TRIM``, ``RTRIM``, ``LTRIM``
-   * - format
-     - gz
-     - Export file or stream compressed with ``gz``, ``bzip2``, ``zip``
    * - comment
      - This is a query description
      - Add a comment before the beginning of the query. See :ref:`comment`.
+   * - csv_cols
+     - ["1..5", "6 FORMAT='999.99'", "8"]
+     - List of CSV columns with optional `numeric`_ or `date`_ formats
+   * - delimit
+     - AUTO
+     - Delimiter mode: ``AUTO``, ``ALWAYS``, ``NEVER``
+   * - encoding
+     - UTF8
+     - File encoding
+   * - format
+     - gz
+     - Export file or stream compressed with ``gz``, ``bzip2``, ``zip``
+   * - null
+     - \N
+     - Custom `NULL` value
+   * - row_separator
+     - LF
+     - Row separator for CSV (line-endings)
+   * - with_column_names
+     - True
+     - Add column names as the first line, which may be useful for external APIs (e.g. pandas)
+
+.. _import_params:
+
+``import_params``
+-----------------
+
+These parameters are given as a dictionary, like ``import_params = { "name1": "value1", "name2": ["value2", "value3"]}``.
+This dictionary is passed into the :ref:`Variants` for a selected ``import_from_*``
+method. When the code is executed, these are validated using the :class:`pyexasol.http_transport.ImportQuery`.
+
+.. list-table::
+   :header-rows: 1
+
+   * - Name
+     - Example
+     - Description
+   * - column_delimiter
+     - "
+     - Column delimiter for CSV (quoting)
+   * - column_separator
+     - ,
+     - Column separator for CSV
+   * - columns
+     - ["id", "name"]
+     - List of table columns in the data source, useful if the column order of data source does not match the column order of Exasol table
+   * - comment
+     - This is a query description
+     - Add a comment before the beginning of the query.  See :ref:`comment`.
+   * - csv_cols
+     - ["1..5", "6 FORMAT='999.99'", "8"]
+     - List of CSV columns with optional `numeric`_ or `date`_ formats
+   * - encoding
+     - UTF8
+     - File encoding
+   * - format
+     - gz
+     - Import file or stream compressed with ``gz``, ``bzip2``, ``zip``
+   * - null
+     - \N
+     - Custom NULL value
+   * - row_separator
+     - LF
+     - Row separator for CSV (line-endings)
+   * - skip
+     - 1
+     - How many first rows to skip, useful for skipping header
+   * - trim
+     - TRIM
+     - Trim mode: ``TRIM``, ``RTRIM``, ``LTRIM``
+
+
+.. _numeric: https://docs.exasol.com/db/latest/sql_references/formatmodels.htm#Numericformatmodels
+.. _date: https://docs.exasol.com/db/latest/sql_references/formatmodels.htm#Datetimeformatmodels
+
 
 .. _comment:
 
-The `comment` parameter, for adding comments to queries
--------------------------------------------------------
+Comment
+-------
 
 For any ``export_*`` or ``import_*`` call, you can add a comment that will be inserted before the beginning of the query.
 
