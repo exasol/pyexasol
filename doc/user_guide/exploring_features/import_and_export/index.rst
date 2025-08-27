@@ -34,7 +34,7 @@ File
 
 Export
 """"""
-See :func:`pyexasol.ExaConnection.export_to_file`. This function supports exporting data
+See :meth:`pyexasol.ExaConnection.export_to_file`. This method supports exporting data
 from an Exasol database into a file, path object, file-like object opened in binary
 mode, or to a process ``STDOUT`` using ``sys.stdout.buffer``.
 
@@ -49,7 +49,7 @@ mode, or to a process ``STDOUT`` using ``sys.stdout.buffer``.
 
 Import
 """"""
-See :func:`pyexasol.ExaConnection.import_from_file`. This function supports importing
+See :meth:`pyexasol.ExaConnection.import_from_file`. This method supports importing
 data from a file, path object, file-like object opened in binary mode, or from a process
 ``STDIN`` using ``sys.stdin.buffer``.
 
@@ -80,7 +80,7 @@ Export
 
 Import
 """"""
-See :func:`pyexasol.ExaConnection.import_from_iterable`.
+See :meth:`pyexasol.ExaConnection.import_from_iterable`.
 
 .. code-block:: python
 
@@ -107,7 +107,7 @@ Pandas
 
 Export
 """"""
-See :func:`pyexasol.ExaConnection.export_to_pandas`.
+See :meth:`pyexasol.ExaConnection.export_to_pandas`.
 
 .. code-block:: python
 
@@ -120,7 +120,7 @@ See :func:`pyexasol.ExaConnection.export_to_pandas`.
 
 Import
 """"""
-See :func:`pyexasol.ExaConnection.import_from_pandas`.
+See :meth:`pyexasol.ExaConnection.import_from_pandas`.
 
 .. code-block:: python
 
@@ -131,7 +131,7 @@ Polars
 
 Export
 """"""
-See :func:`pyexasol.ExaConnection.export_to_polars`.
+See :meth:`pyexasol.ExaConnection.export_to_polars`.
 
 .. code-block:: python
 
@@ -144,7 +144,7 @@ See :func:`pyexasol.ExaConnection.export_to_polars`.
 
 Import
 """"""
-See :func:`pyexasol.ExaConnection.import_from_polars`.
+See :meth:`pyexasol.ExaConnection.import_from_polars`.
 
 .. code-block:: python
 
@@ -156,8 +156,8 @@ Write a Custom Variant
 
 .. note::
     A full collection of pre-defined callback functions is available in the
-    :py:mod:`callback` module. Their usage by the :class:`pyexasol.ExaConnection` is
-    documented in the :ref:`Variants` section.
+    :py:mod:`pyexasol.callback` module. Their usage by the
+    :class:`pyexasol.ExaConnection` class is documented in the :ref:`Variants` section.
 
 Export
 """"""

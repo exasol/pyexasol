@@ -26,20 +26,30 @@ Parallel
 .. note::
     Please check out the documentation :ref:`pyexasol_parallelism` for PyExasol.
 
-It is possible to run :ref:`http_transport` in parallel. Workload may be distributed across multiple CPU cores and even across multiple servers.
+It is possible to run :ref:`http_transport` in parallel. The workload may be
+distributed across multiple CPU cores and even across multiple servers.
 
 Overview of How it Works
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
-1. Parent process opens main connection to Exasol and spawns multiple child processes.
-2. Each child process connects to individual Exasol node using ``http_transport()`` method, gets internal Exasol address (``ipaddr:port/public_key`` string) using the ``.exa_address`` property, and sends it to the parent process.
-3. Parent process collects list of internal Exasol addresses from child processes and runs ``export_parallel()`` or ``import_parallel()`` function to execute SQL query.
+1. A parent process opens main connection to Exasol and spawns multiple child processes.
+2. Each child process:
+
+  * connects to an individual Exasol node using the :func:`pyexasol.http_transport` function
+  * gets an internal Exasol address (``ipaddr:port/public_key`` string) using the ``.exa_address`` property
+  * sends its internal Exasol address to the parent process
+
+3. The parent process collects a list of internal Exasol addresses from its child
+   processes and runs either `export_parallel()`` or ``import_parallel()`` function to execute SQL query.
 4. Each child process runs a callback function and reads or sends a chunk of data from or to Exasol.
 5. Parent process waits for the SQL query and child processes to finish.
 
 .. image:: /_static/parallel_export.png
 
-Please note that PyExasol does not provide any specific way to send internal Exasol address strings from child processes to parent process. You are free to choose your own way of inter-process communication. For example, you may use `multiprocessing.Pipe <https://docs.python.org/3/library/multiprocessing.html?highlight=Pipes#exchanging-objects-between-processes>`_.
+Please note that PyExasol does not provide any specific way to send internal Exasol
+address strings from child processes to parent process. You are free to choose your own
+way of inter-process communication. For example, you may use
+`multiprocessing.Pipe <https://docs.python.org/3/library/multiprocessing.html?highlight=Pipes#exchanging-objects-between-processes>`__.
 
 Examples
 ^^^^^^^^
