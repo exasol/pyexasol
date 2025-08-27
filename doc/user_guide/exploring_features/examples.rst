@@ -152,6 +152,8 @@ Other Methods
     :language: python
     :caption: other methods of IMPORT / EXPORT
 
+.. _parallel_export:
+
 Parallel Export
 +++++++++++++++
 
@@ -159,12 +161,16 @@ Parallel Export
     :language: python
     :caption: multi-process HTTP transport for EXPORT
 
+.. _parallel_import:
+
 Parallel Import
 +++++++++++++++
 
 .. literalinclude:: ../../../examples/b04_parallel_import.py
     :language: python
     :caption: multi-process HTTP transport for IMPORT
+
+.. _parallel_export_and_import:
 
 Parallel Export/Import
 ++++++++++++++++++++++

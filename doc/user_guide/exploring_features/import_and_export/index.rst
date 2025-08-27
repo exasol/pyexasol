@@ -100,7 +100,7 @@ See :meth:`pyexasol.ExaConnection.import_from_iterable`.
 
     C.import_from_iterable(my_generator(), "users")
 
-
+.. _pandas_export_import:
 
 Pandas
 ^^^^^^
@@ -125,6 +125,8 @@ See :meth:`pyexasol.ExaConnection.import_from_pandas`.
 .. code-block:: python
 
     C.import_from_pandas(pd, "users")
+
+.. _polars_export_import:
 
 Polars
 ^^^^^^

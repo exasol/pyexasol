@@ -11,7 +11,7 @@ massive volumes of data with efficiency, providing a performance boost over trad
 Why Choose PyExasol?
 --------------------
 * Easy and fast access to Exasol from Python
-* Bulk import and export from/to pandas and polars to Exasol
+* Bulk import and export from/to :ref:`pandas <pandas_export_import>` and :ref:`polars <polars_export_import>` to Exasol
 * Exasol UDF debugging support
 
 Prerequisites

@@ -54,9 +54,9 @@ way of inter-process communication. For example, you may use
 Examples
 ^^^^^^^^
 
-- ``b03_parallel_export.py`` for EXPORT;
-- ``b04_parallel_import.py`` for IMPORT;
-- ``b05_parallel_export_import.py`` for EXPORT followed by IMPORT using the same child processes;
+- :ref:`b03_parallel_export.py <parallel_export>` for EXPORT;
+- :ref:`b04_parallel_import.py <parallel_import>` for IMPORT;
+- :ref:`b05_parallel_export_import.py <parallel_export_and_import>` for EXPORT followed by IMPORT using the same child processes;
 
 Example of EXPORT query executed in Exasol
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
