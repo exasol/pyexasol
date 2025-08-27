@@ -12,7 +12,9 @@ performance.
 
 PyExasol offloads HTTP communication and decompression to a separate thread using the
 `threading`_ module. The main thread deals with a simple `pipe`_ opened in binary mode.
-For more details, check out the implementation of :func:`pyexasol.http_transport`.
+For more details on how the :ref:`Variants` work, check out the implementation of
+:meth:`pyexasol.ExaConnection.export_to_callback` and :meth:`pyexasol.ExaConnection.import_from_callback`.
+For how this can be used in parallel, see :ref:`http_transport_parallel`.
 
 
 .. _threading: https://docs.python.org/3/library/threading.html
