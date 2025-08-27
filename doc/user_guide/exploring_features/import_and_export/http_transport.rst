@@ -42,14 +42,14 @@ Overview of How it Works
   * sends its internal Exasol address to the parent process
 
 3. The parent process collects a list of internal Exasol addresses from its child
-   processes and runs either `export_parallel()`` or ``import_parallel()`` function to execute SQL query.
+   processes and runs either `export_parallel()`` or ``import_parallel()`` function to execute the SQL query.
 4. Each child process runs a callback function and reads or sends a chunk of data from or to Exasol.
 5. Parent process waits for the SQL query and child processes to finish.
 
 .. image:: /_static/parallel_export.png
 
 Please note that PyExasol does not provide any specific way to send internal Exasol
-address strings from child processes to parent process. You are free to choose your own
+address strings from a child process to the parent process. You are free to choose your own
 way of inter-process communication. For example, you may use
 `multiprocessing.Pipe <https://docs.python.org/3/library/multiprocessing.html?highlight=Pipes#exchanging-objects-between-processes>`__.
 
