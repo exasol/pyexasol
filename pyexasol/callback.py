@@ -21,6 +21,7 @@ Import callback arguments:
 import csv
 import io
 import shutil
+from collections.abc import Iterable
 from typing import (
     TYPE_CHECKING,
     Union,
@@ -71,7 +72,7 @@ def export_to_file(pipe, dst):
     shutil.copyfileobj(pipe, dst, 65535)
 
 
-def import_from_iterable(pipe, src, **kwargs):
+def import_from_iterable(pipe, src: Iterable, **kwargs):
     """
     Basic example how to import from iterable object (list, dict, tuple, iterator, generator, etc.)
     """

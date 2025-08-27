@@ -11,6 +11,7 @@ import threading
 import time
 import urllib.parse
 import zlib
+from collections.abc import Iterable
 from inspect import cleandoc
 from typing import (
     TYPE_CHECKING,
@@ -491,7 +492,7 @@ class ExaConnection:
         query_or_table: str,
         query_params: Optional[dict] = None,
         export_params: Optional[dict] = None,
-    ):
+    ) -> list:
         """
         Export large amount of data from Exasol to basic Python `list` using fast HTTP transport.
 
@@ -633,7 +634,7 @@ class ExaConnection:
         )
 
     def import_from_iterable(
-        self, src, table: str, import_params: Optional[dict] = None
+        self, src: Iterable, table: str, import_params: Optional[dict] = None
     ):
         """
         Import a large amount of data from an ``iterable`` Python object.
@@ -663,7 +664,7 @@ class ExaConnection:
 
         Args:
             src:
-                Source ``pandas.DataFrame`` instance.
+                Source :class:`pandas.DataFrame` instance.
             table:
                 Destination table for IMPORT.
             callback_params:
@@ -716,6 +717,8 @@ class ExaConnection:
         Args:
             callback:
                 Callback function.
+            dst:
+                (optional) Path to file or file-like object where data will be exported to.
             query_or_table:
                 SQL query or table from which to export data.
             query_params:
@@ -756,7 +759,10 @@ class ExaConnection:
         )
 
         http_thread = ExaHttpThread(
-            self.ws_ipaddr, self.ws_port, compression, self.options["encryption"]  # type: ignore
+            self.ws_ipaddr,  # type: ignore
+            self.ws_port,  # type: ignore
+            compression,
+            self.options["encryption"],
         )
         sql_thread = ExaSQLExportThread(
             self, compression, query_or_table, export_params
@@ -794,7 +800,12 @@ class ExaConnection:
             raise e
 
     def import_from_callback(
-        self, callback, src, table, callback_params=None, import_params=None
+        self,
+        callback: Callable,
+        src,
+        table: str,
+        callback_params: Optional[dict] = None,
+        import_params: Optional[dict] = None,
     ):
         """
         Import a large amount of data from a user-defined callback function.
@@ -828,7 +839,10 @@ class ExaConnection:
             raise ValueError("Callback argument is not callable")
 
         http_thread = ExaHttpThread(
-            self.ws_ipaddr, self.ws_port, compression, self.options["encryption"]
+            self.ws_ipaddr,  # type: ignore
+            self.ws_port,  # type: ignore
+            compression,
+            self.options["encryption"],
         )
         sql_thread = ExaSQLImportThread(self, compression, table, import_params)
 
