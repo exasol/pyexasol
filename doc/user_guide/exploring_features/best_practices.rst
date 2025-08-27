@@ -17,7 +17,8 @@ Use HTTP Transport for Big Volumes of Data
 ------------------------------------------
 It is okay to use common fetching for small data sets up to 1M of records.
 
-For large data sets, you should always consider :ref:`variants` (``export_*`` and ``import_*`` functions). It scales well and prevents creation and destruction of intermediate Python objects.
+For large data sets, you should always consider :ref:`variants` (``export_*`` and ``import_*`` functions).
+They scale relatively well and prevent creation and destruction of intermediate Python objects.
 
 .. code-block:: python
 
