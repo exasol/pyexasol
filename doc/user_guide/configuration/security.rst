@@ -214,27 +214,32 @@ Passing into the Connection
 
 This is how an unprivileged user can specify the certificate when making the connection.
 
-   .. code-block:: python
+.. code-block:: python
 
-      pyexasol.connect(dsn='myexasol:8563'
-                       , user='user'
-                       , password='password'
-                       , websocket_sslopt={
-                          "cert_reqs": ssl.CERT_REQUIRED,
-                          "ca_certs": '/path/to/rootCA.crt',
-                       })
+  pyexasol.connect(dsn='myexasol:8563'
+                   , user='user'
+                   , password='password'
+                   , websocket_sslopt={
+                      "cert_reqs": ssl.CERT_REQUIRED,
+                      "ca_certs": '/path/to/rootCA.crt',
+                   })
 
 Disabling Certificate Verification
 """"""""""""""""""""""""""""""""""
 
-This should only be used when testing with a local DB and **never** be used for production.
+As discussed in the :ref:`changed_defaults`, PyExasol by default has certificate
+verification turned on. This is to improve security and prevent man-in-the-middle
+attacks. In the case of testing with a local DB, a user might want to temporarily
+disable certificate verification. Due to the increased security risks, this
+change should :octicon:`alert` **never be used for production**.
 
-   .. code-block:: python
+.. warning::
+  For more context regarding the security risks of disabling certificate validation,
+  see `An introduction to TLS <https://github.com/exasol/tutorials/blob/1.0.0/tls/doc/tls_introduction.md>`__.
 
-      pyexasol.connect(dsn='myexasol:8563'
-                       , user='user'
-                       , password='password'
-                       , websocket_sslopt={"cert_reqs": ssl.CERT_NONE})
+.. code-block:: python
 
-
-.. _security_examples:
+  pyexasol.connect(dsn='myexasol:8563'
+                   , user='user'
+                   , password='password'
+                   , websocket_sslopt={"cert_reqs": ssl.CERT_NONE})
