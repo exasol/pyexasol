@@ -11,7 +11,7 @@ massive volumes of data with efficiency, providing a performance boost over trad
 Why Choose PyExasol?
 --------------------
 * Easy and fast access to Exasol from Python
-* Bulk import and export from/to pandas and polars to Exasol
+* Bulk import and export from/to :ref:`pandas <pandas_export_import>` and :ref:`polars <polars_export_import>` to Exasol
 * Exasol UDF debugging support
 
 Prerequisites
@@ -86,9 +86,9 @@ Run basic query
             # to fetch all remaining rows
             print(stmt.fetchall())
 
-        # This is not needed for the code to run, but it a value of a context manager.
+        # This is not needed for the code to run, but it shows the value of a context manager.
         print(stmt.is_closed)
-    # This is not needed for the code to run, but it a value of a context manager.
+    # This is not needed for the code to run, but it shows the value of a context manager.
     print(C.is_closed)
 
     with pyexasol.connect(dsn='<host:port>', user='sys', password='exasol') as C:

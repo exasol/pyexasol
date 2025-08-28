@@ -6,7 +6,7 @@ Examples
 Preparation
 -----------
 
-Basic preparation steps are required to see examples in action.
+Some basic preparation steps are required to see examples in action.
 
 1. Install PyExasol with :ref:`optional_dependencies`.
 2. Download the `PyExasol source code <https://github.com/exasol/pyexasol/>`__.
@@ -22,13 +22,13 @@ Basic preparation steps are required to see examples in action.
 
         python examples/a00_prepare.py
 
-That's all. Now, you may run examples in any order like common python scripts. E.g.:
+That's all. Now, you may run examples in any order like common Python scripts, e.g.:
 
     .. code-block:: bash
 
         python examples/a01_basic.py
 
-To run all of the examples, you can use this nox task
+To run all of the examples, you can use this nox session:
 
     .. code-block:: bash
 
@@ -152,6 +152,8 @@ Other Methods
     :language: python
     :caption: other methods of IMPORT / EXPORT
 
+.. _parallel_export:
+
 Parallel Export
 +++++++++++++++
 
@@ -159,12 +161,16 @@ Parallel Export
     :language: python
     :caption: multi-process HTTP transport for EXPORT
 
+.. _parallel_import:
+
 Parallel Import
 +++++++++++++++
 
 .. literalinclude:: ../../../examples/b04_parallel_import.py
     :language: python
     :caption: multi-process HTTP transport for IMPORT
+
+.. _parallel_export_and_import:
 
 Parallel Export/Import
 ++++++++++++++++++++++
