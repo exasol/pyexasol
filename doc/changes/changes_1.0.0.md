@@ -110,6 +110,7 @@ Relocked dependencies
 * #226: Added "Getting Started" page & "Configuration" directory in documentation and moved related pages there
 * #228: Reorganized "HTTP Transport" page to be under "Importing and Exporting Data"
 * #230: Reorganized "Security" page (formerly "Encryption")
+* #221: Added additional information about TLS
 
 ## Bugfix
 

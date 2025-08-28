@@ -4,7 +4,7 @@ Security
 PyExasol works with different Exasol database variants: on-premise, SAAS, and, for
 testing purposes, Docker-based. Each of these have shared and unique
 :ref:`authentication` methods and require a
-:ref:`TLS/SSL certificate setup <certificate_validation>`.
+:ref:`TLS/SSL certificate setup <certificate_verification>`.
 Throughout this guide on security, an overview of the security features of PyExasol is
 provided, as well as examples.
 
@@ -19,7 +19,7 @@ all functionality which rely upon the :func:`pyexasol.connect` function (and the
 which it wraps, :class:`pyexasol.ExaConnection`).
 
 +------------------+----------------------------+---------------------------+
-| PyExasol Version | Encryption                 | Certificate Validation    |
+| PyExasol Version | Encryption                 | Certificate Verification  |
 +==================+============================+===========================+
 | < 0.24.0         | unencrypted                | not validated             |
 +------------------+----------------------------+---------------------------+
@@ -32,10 +32,10 @@ Thus, the current defaults, in relation to the :func:`pyexasol.connect` are:
 
 * **Encryption** - To use SSL to encrypt client-server communications for WebSocket &
   HTTP Transport, the ``encryption`` parameter is set to ``True``.
-* **Certificate Validation** - When :func:`pyexasol.connect`
+* **Certificate Verification** - When :func:`pyexasol.connect`
   is executed with ``websocket_sslopt=None``, then this is effectively mapped to
   ``websocket_sslopt={"cert_reqs": ssl.CERT_REQUIRED}``. For more details, see
-  :ref:`certificate_validation`.
+  :ref:`certificate_verification`.
 
 
 .. _authentication:
@@ -117,7 +117,7 @@ For technical articles made by Exasol relating to TLS, please see:
 
 Fingerprint Verification
 ------------------------
-Similar to JDBC / ODBC drivers, PyExasol supports fingerprint certificate validation.
+Similar to JDBC / ODBC drivers, PyExasol supports fingerprint certificate verification.
 
 .. code-block:: python
 
@@ -128,10 +128,10 @@ Similar to JDBC / ODBC drivers, PyExasol supports fingerprint certificate valida
                    )
 
 
-.. _certificate_validation:
+.. _certificate_verification:
 
-Certification Validation
-------------------------
+Certification Verification
+--------------------------
 
 As further discussed in
 `Certificate and Certificate Agencies <https://github.com/exasol/tutorials/blob/1.0.0/tls/doc/tls_introduction.md#certificates-and-certification-agencies>`__,
@@ -141,7 +141,7 @@ there are three kinds of certificates:
 * ones from a private CA
 * ones that are self-signed
 
-Before using a certificate for certificate validation, your IT Admin should ensure that
+Before using a certificate for certificate verification, your IT Admin should ensure that
 whatever certificate your Exasol instance uses is the most secure. Exasol on-premise
 uses a default certificate which should be replaced with one provided by your
 organization. For further context, see
@@ -172,30 +172,32 @@ Client machine
 #. Public CA
     * The certificate should already be in the operating system truststore of the client machine.
 #. Private CA (Corporate CA)
-    * Your IT should add it to operating system truststore of the client machine.
+    * Your IT should add it to the operating system truststore of the client machine.
 #. Self-signed Certificate
-    * Your IT should add it to operating system truststore of the client machine.
+    * Your IT should add it to the operating system truststore of the client machine.
         1. DBA needs to fetch the certificate from the Exasol Cluster.
         2. Client Machine Admin needs to add it to the  operating system truststore.
     * Or, in case of a unprivileged user and the user can access the certificate of the Exasol database you can specify the certificate during connect.
-    * For testing with a local DB you can disable the certificate validation (however, this should **NEVER** be used for production).
+    * For testing with a local DB you can disable the certificate verification (however, this should **NEVER** be used for production).
 
 .. _inside_a_udf:
 
-Inside a UDF
-""""""""""""
+Inside a User Defined Function (UDF)
+""""""""""""""""""""""""""""""""""""
 
 #. Public CA
-    * The certificate should already be in the operating system truststore of the client machine.
+    * The certificate should already be in the operating system truststore of the
+      `Script Language Container (SLC) <https://docs.exasol.com/db/latest/database_concepts/udf_scripts/adding_new_packages_script_languages.htm>`__
+      of the UDF.
 #. Private CA (Corporate CA)
     * Your DBA should upload the certificate to BucketFS and you should pass it to the connect inside of the UDF.
         * Note: The operating system truststore is part of the SLC and can only be changed during SLC creation.
-          While you run a UDF, the operating system truststore is read-only.
+          While you run a UDF, the operating system truststore inside of the UDF is read-only.
 #. Self-signed Certificate
     * Your DBA or you should upload the certificate to BucketFS and you should pass it to the connect inside of the UDF.
         * Note: The operating system truststore is part of the SLC and can only be changed during SLC creation.
-          While you run a UDF, the operating system truststore is read-only.
-    * For testing with a local DB you can disable the certificate validation (however, this should **NEVER** be used for production).
+          While you run a UDF, the operating system truststore of the UDF is read-only.
+    * For testing with a local DB you can disable the certificate verification (however, this should **NEVER** be used for production).
 
 .. _certificate_in_pyexasol:
 
@@ -217,8 +219,8 @@ This is how an unprivileged user can specify the certificate when making the con
                           "ca_certs": '/path/to/rootCA.crt',
                        })
 
-Disabling Certificate Validation
-""""""""""""""""""""""""""""""""
+Disabling Certificate Verification
+""""""""""""""""""""""""""""""""""
 
 This should only be used when testing with a local DB and **never** be used for production.
 
