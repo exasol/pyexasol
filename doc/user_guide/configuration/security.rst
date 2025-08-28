@@ -234,7 +234,7 @@ disable certificate verification. Due to the increased security risks, this
 change should :octicon:`alert` **never be used for production**.
 
 .. warning::
-  For more context regarding the security risks of disabling certificate validation,
+  For more context regarding the security risks of disabling certificate verification,
   see `An introduction to TLS <https://github.com/exasol/tutorials/blob/1.0.0/tls/doc/tls_introduction.md>`__.
 
 .. code-block:: python
