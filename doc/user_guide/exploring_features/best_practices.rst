@@ -7,7 +7,7 @@ This page explains how to use PyExasol with maximum efficiency.
 
 Enable Compression for WiFi Connections
 ---------------------------------------
-Wireless network bandwidth is usually the main bottleneck for laptops. ``Compression`` flag enables zlib compression both for common fetching and for :ref:`http_transport` It may improve overall performance by factor 4-8x.
+Wireless network bandwidth is usually the main bottleneck for laptops. ``Compression`` flag enables zlib compression both for common fetching and for :ref:`importing_and_exporting_data`. It may improve overall performance by a factor of 4-8x.
 
 .. code-block:: python
 
@@ -17,7 +17,8 @@ Use HTTP Transport for Big Volumes of Data
 ------------------------------------------
 It is okay to use common fetching for small data sets up to 1M of records.
 
-For large data sets you should always consider :ref:`http_transport` (``export_*`` and ``import_*`` functions). It scales well and prevents creation and destruction of intermediate Python objects.
+For large data sets, you should always consider :ref:`variants` (``export_*`` and ``import_*`` functions).
+They scale relatively well and prevent creation and destruction of intermediate Python objects.
 
 .. code-block:: python
 

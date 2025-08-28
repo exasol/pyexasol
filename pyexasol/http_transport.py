@@ -28,9 +28,9 @@ class SqlQuery:
     connection: ExaConnection
     compression: bool
     # set these values in param dictionary to ExaConnection
-    columns: Optional[list[str]] = None
     column_delimiter: Optional[str] = None
     column_separator: Optional[str] = None
+    columns: Optional[list[str]] = None
     comment: Optional[str] = None
     csv_cols: Optional[list[str]] = None
     encoding: Optional[str] = None

@@ -21,7 +21,11 @@ Import callback arguments:
 import csv
 import io
 import shutil
-from typing import TYPE_CHECKING
+from collections.abc import Iterable
+from typing import (
+    TYPE_CHECKING,
+    Union,
+)
 
 if TYPE_CHECKING:
     import pandas
@@ -68,7 +72,7 @@ def export_to_file(pipe, dst):
     shutil.copyfileobj(pipe, dst, 65535)
 
 
-def import_from_iterable(pipe, src, **kwargs):
+def import_from_iterable(pipe, src: Iterable, **kwargs):
     """
     Basic example how to import from iterable object (list, dict, tuple, iterator, generator, etc.)
     """
@@ -84,7 +88,7 @@ def import_from_iterable(pipe, src, **kwargs):
         writer.writerow(row)
 
 
-def import_from_pandas(pipe, src, **kwargs):
+def import_from_pandas(pipe, src: "pandas.DataFrame", **kwargs):
     """
     Basic example how to import from Pandas DataFrame
     Custom params for "to_csv" may be passed in **kwargs
@@ -118,7 +122,9 @@ def import_from_pandas(pipe, src, **kwargs):
         )
 
 
-def import_from_polars(pipe, src, **kwargs):
+def import_from_polars(
+    pipe, src: Union["polars.LazyFrame", "polars.DataFrame"], **kwargs
+):
     """
     Basic example how to import from Polars DataFrame or LazyFrame
     Custom params for "write_csv" may be passed in **kwargs
