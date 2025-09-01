@@ -5,10 +5,10 @@ import pathlib
 class ExaLocalConfig:
     """
     Parse local config file
-    Prepare arguments for pyexasol.connect() method
+    Prepare arguments for :func:`pyexasol.connect` method
 
     Arguments accepting functions class names and tuples are not supported
-    You may pass such arguments directly in code using **kwargs
+    You may pass such arguments directly in code using `**kwargs`
     """
 
     default_filename = ".pyexasol.ini"
