@@ -1,4 +1,4 @@
-# 1.0.0 - 2025-07-14
+# 1.0.0 - 2025-09-01
 
 ## Summary
 
@@ -130,6 +130,6 @@ Relocked dependencies
 ### `dev`
 * Updated dependency `docutils:0.20.1` to `0.21.2`
 * Updated dependency `exasol-integration-test-docker-environment:3.1.0` to `4.2.0`
-* Added dependency `exasol-toolbox:1.8.0`
+* Added dependency `exasol-toolbox:1.9.0`
 * Updated dependency `pytest:8.3.2` to `8.4.1`
 * Added dependency `types-ujson:5.10.0.20250326`
