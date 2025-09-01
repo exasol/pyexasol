@@ -99,7 +99,12 @@ def test_import_methods(
             import_params={"columns": ["SALES_TIMESTAMP", "PRICE", "CUSTOMER_NAME"]},
         )
 
-    benchmark.pedantic(func_to_be_measured, iterations=1, rounds=benchmark_specs.rounds)
+    benchmark.pedantic(
+        func_to_be_measured,
+        iterations=1,
+        rounds=benchmark_specs.rounds,
+        warmup_rounds=benchmark_specs.warm_up_rounds,
+    )
 
     count_query = f"SELECT count(*) FROM {empty_import_into_table};"
     count = connection.execute(count_query).fetchval()

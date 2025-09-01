@@ -11,6 +11,8 @@ class BenchmarkSpecifications:
     def __init__(self):
         self.initial_data_size: int = 1_000
         self.target_data_size: int = 4_000_000
+        # noticed that first round always is faster
+        self.warm_up_rounds: int = 1
         self.rounds: int = 15
         # calculated fields - could move to a setter
         iterations, final_export_size = self.calculate_iterations()

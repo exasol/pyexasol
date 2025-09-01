@@ -84,7 +84,12 @@ def test_export_methods_to_file(
             query_params={"columns": ["SALES_TIMESTAMP", "PRICE", "CUSTOMER_NAME"]},
         )
 
-    benchmark.pedantic(func_to_be_measured, iterations=1, rounds=benchmark_specs.rounds)
+    benchmark.pedantic(
+        func_to_be_measured,
+        iterations=1,
+        rounds=benchmark_specs.rounds,
+        warmup_rounds=benchmark_specs.warm_up_rounds,
+    )
 
     number_rows = file_length_function(export_dst)
     assert number_rows == benchmark_specs.final_export_data_size
