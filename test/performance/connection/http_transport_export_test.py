@@ -56,7 +56,7 @@ def test_export_methods_to_memory(
 
     number_rows = file_length_function(result)
 
-    assert number_rows == benchmark_specs.final_export_data_size
+    assert number_rows == benchmark_specs.final_data_size
 
 
 @pytest.mark.parametrize(
@@ -92,4 +92,4 @@ def test_export_methods_to_file(
     )
 
     number_rows = file_length_function(export_dst)
-    assert number_rows == benchmark_specs.final_export_data_size
+    assert number_rows == benchmark_specs.final_data_size

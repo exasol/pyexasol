@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import argparse
-import json
 from dataclasses import (
     dataclass,
     field,
@@ -224,11 +223,11 @@ def performance_check(session: Session) -> None:
 
         print("\033[33m- Wilcox results:\033[0m")
         print(f"|---> statistic: {result.statistic}")
-        print(f"|---> pvalue: {round(result.pvalue,3)}")
+        print(f"|---> pvalue: {round(result.pvalue, 3)}")
 
         if result.pvalue < alpha_threshold:
             errors.append(
-                f"- current runtimes of {test} (pvalue={round(result.pvalue,3)}) rejected as not within previous benchmark runtimes"
+                f"- current runtimes of {test} (pvalue={round(result.pvalue, 3)}) rejected as not within previous benchmark runtimes"
             )
 
     if errors:

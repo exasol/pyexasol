@@ -10,15 +10,16 @@ import pytest
 from performance.connection.helper import create_empty_table
 from pyexasol import ExaConnection
 
+IMPORT_TABLE_NAME = "TMP_SALES_COPY"
+
 
 @pytest.fixture
 def empty_import_into_table(connection: ExaConnection):
-    table_name = "TMP_SALES_COPY"
-    create_empty_table(connection=connection, table_name=table_name)
+    create_empty_table(connection=connection, table_name=IMPORT_TABLE_NAME)
 
-    yield table_name
+    yield IMPORT_TABLE_NAME
 
-    ddl = f"DROP TABLE IF EXISTS {table_name};"
+    ddl = f"DROP TABLE IF EXISTS {IMPORT_TABLE_NAME};"
     connection.execute(ddl)
     connection.commit()
 
@@ -92,6 +93,9 @@ def test_import_methods(
 ):
     data = request.getfixturevalue(data_creator)
 
+    def setup():
+        connection.execute(f"TRUNCATE TABLE {IMPORT_TABLE_NAME}")
+
     def func_to_be_measured():
         return getattr(connection, import_method)(
             data,
@@ -101,6 +105,7 @@ def test_import_methods(
 
     benchmark.pedantic(
         func_to_be_measured,
+        setup=setup,
         iterations=1,
         rounds=benchmark_specs.rounds,
         warmup_rounds=benchmark_specs.warm_up_rounds,
@@ -108,4 +113,4 @@ def test_import_methods(
 
     count_query = f"SELECT count(*) FROM {empty_import_into_table};"
     count = connection.execute(count_query).fetchval()
-    assert count == benchmark_specs.final_import_data_size
+    assert count == benchmark_specs.final_data_size
