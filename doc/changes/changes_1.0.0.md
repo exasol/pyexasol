@@ -1,6 +1,11 @@
-# 1.0.0 - 2025-07-14
+# 1.0.0 - 2025-09-01
 
 ## Summary
+
+## Documentation update
+
+This release comes with updated documentation. In particular, the user guide now guides
+the user through installation, configuration, and PyExasol's most important features.
 
 ### Websocket in connection
 
@@ -16,7 +21,7 @@ messages like: `[SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed`.
 
 Prior to the upgrade:
 1. Please determine which encryption and security measures are appropriate for your
-organization by reading through [user_guide/encryption](https://exasol.github.io/pyexasol/master/user_guide/encryption.html).
+organization by reading through the [User Guide's security](https://exasol.github.io/pyexasol/master/user_guide/configuration/security.html) page.
 2. If needed, update your usage of `pyexasol.connect(...)` & `ExaConnection` to
 reflect your organization's needs.
 
@@ -101,6 +106,11 @@ Relocked dependencies
 * Added example to highlight how sensitive information from exceptions should be handled
 * Harmonized spelling of PyExasol across documentation
 * #204: Fixed broken links and some typos
+* #224: Added "Exploring PyExasol's Features" directory in documentation and moved related pages there
+* #226: Added "Getting Started" page & "Configuration" directory in documentation and moved related pages there
+* #228: Reorganized "HTTP Transport" page to be under "Importing and Exporting Data"
+* #230: Reorganized "Security" page (formerly "Encryption")
+* #221: Added additional information about TLS
 
 ## Bugfix
 
@@ -120,6 +130,6 @@ Relocked dependencies
 ### `dev`
 * Updated dependency `docutils:0.20.1` to `0.21.2`
 * Updated dependency `exasol-integration-test-docker-environment:3.1.0` to `4.2.0`
-* Added dependency `exasol-toolbox:1.8.0`
+* Added dependency `exasol-toolbox:1.9.0`
 * Updated dependency `pytest:8.3.2` to `8.4.1`
 * Added dependency `types-ujson:5.10.0.20250326`

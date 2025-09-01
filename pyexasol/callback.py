@@ -90,7 +90,7 @@ def import_from_iterable(pipe, src: Iterable, **kwargs):
         writer.writerow(row)
 
 
-def import_from_pandas(pipe, src, **kwargs):
+def import_from_pandas(pipe, src: "pandas.DataFrame", **kwargs):
     """
     Basic example how to import from Pandas DataFrame
     Custom params for "to_csv" may be passed in **kwargs
@@ -192,7 +192,9 @@ def import_from_parquet(
             csv.write_csv(batch, pipe, write_options=write_options)
 
 
-def import_from_polars(pipe, src, **kwargs):
+def import_from_polars(
+    pipe, src: Union["polars.LazyFrame", "polars.DataFrame"], **kwargs
+):
     """
     Basic example how to import from Polars DataFrame or LazyFrame
     Custom params for "write_csv" may be passed in **kwargs

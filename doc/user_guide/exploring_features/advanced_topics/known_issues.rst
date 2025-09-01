@@ -1,5 +1,3 @@
-Certainly! Here is your data converted into reStructuredText (reST) format:
-
 Known Issues
 ============
 

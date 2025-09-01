@@ -44,3 +44,9 @@
    :members:
    :undoc-members:
    :show-inheritance:
+
+.. autoclass:: pyexasol.ExaLocalConfig
+   :members:
+   :special-members: __init__
+   :undoc-members:
+   :show-inheritance:

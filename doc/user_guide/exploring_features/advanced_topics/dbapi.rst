@@ -1,5 +1,5 @@
-DB-API 2.0 Compatibility
-========================
+Compatibility with DB-API 2.0
+=============================
 
 `PyExasol <https://github.com/exasol/pyexasol/blob/master/exasol/driver/websocket/dbapi2.py>`__ is similar to `PEP-249 DB-API 2.0 <https://peps.python.org/pep-0249/>`__ specification, but it does not strictly follow it. This page explains the reasons behind this decision and your alternative(s) if you need or want to use a DBAPI2 compatible driver.
 
