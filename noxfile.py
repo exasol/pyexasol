@@ -210,10 +210,25 @@ def performance_check(session: Session) -> None:
             )
             continue
 
-        # We use the `Wilcoxon signed-rank test <https://en.wikipedia.org/wiki/Wilcoxon_signed-rank_test>`__
-        # to check if the distributions of the two runtimes are statistically
-        # different.
-        result = stats.wilcoxon(x=current_results["data"], y=previous_results["data"])
+        # We use the `Mann-Whitney U test <https://en.wikipedia.org/wiki/Mann%E2%80%93Whitney_U_test>`,
+        # which is a non-parameterized test, to evaluate if the current_results
+        # and previous_results follow the null-hypothesis that their results
+        # come from the same true distribution.
+        #
+        # First, we assume no changes to the code or DB, so we expect the results of the
+        # to be equally distributed around the true distribution
+        result = stats.mannwhitneyu(
+            x=current_results["data"],
+            y=previous_results["data"],
+            alternative="two-sided",
+        )
+
+        # if p-value < 0.05:
+        # critical value is 64 (as 15 x 15
+
+        # if two-sided fails:
+        #     check lower -> is significantly lower (0.025)
+        #     check higher -> is significant higher (0.025)
 
         print("\033[33m- previous results:\033[0m")
         print_statistics(previous_results)
@@ -221,11 +236,12 @@ def performance_check(session: Session) -> None:
         print("\033[33m- current results:\033[0m")
         print_statistics(current_results)
 
-        print("\033[33m- Wilcox results:\033[0m")
+        print("\033[33m- Mann-Whitney U results:\033[0m")
         print(f"|---> statistic: {result.statistic}")
         print(f"|---> pvalue: {round(result.pvalue, 3)}")
 
-        if result.pvalue < alpha_threshold:
+        # https://de.wikipedia.org/wiki/Wilcoxon-Mann-Whitney-Test#Tabelle_der_kritischen_Werte_der_Mann-Whitney-U-Statistik
+        if result.pvalue < 0.05:
             errors.append(
                 f"- current runtimes of {test} (pvalue={round(result.pvalue, 3)}) rejected as not within previous benchmark runtimes"
             )
