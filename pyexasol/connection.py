@@ -1345,28 +1345,28 @@ class ExaConnection:
         if self.options["encryption"]:
             # refer to the `Security <https://exasol.github.io/pyexasol/master/user_guide/configuration/security.html>`__ page.
             if self.options["websocket_sslopt"] is None:
-                warn(
-                    cleandoc(
-                        """
-                        From PyExasol version ``1.0.0``, the default behavior of
-                        ExaConnection for encrypted connections without a fingerprint
-                        is to require strict certificate validation with
-                        ``websocket_sslopt=None`` being mapped to
-                        ``{"cert_reqs": ssl.CERT_REQUIRED}``. The prior default behavior
-                        was to map such cases to ``{"cert_reqs": ssl.CERT_NONE}``. For
-                        more information about encryption & best practices, please refer to
-                        `Security <https://exasol.github.io/pyexasol/master/user_guide/configuration/security.html>`__ page.
-                        """
-                    ),
-                    PyexasolWarning,
-                )
                 # If a fingerprint is provided, then we do not use the default
                 # to require a certificate verification.
                 if fingerprint is not None:
                     options["sslopt"] = {"cert_reqs": ssl.CERT_NONE}
-                # When not provided by the user, the default behavior is to require
-                # strict certificate verification.
                 else:
+                    # When not provided by the user, the default behavior is to require
+                    # strict certificate verification.
+                    warn(
+                        cleandoc(
+                            """
+                            From PyExasol version ``1.0.0``, the default behavior of
+                            ExaConnection for encrypted connections without a fingerprint
+                            is to require strict certificate validation with
+                            ``websocket_sslopt=None`` being mapped to
+                            ``{"cert_reqs": ssl.CERT_REQUIRED}``. The prior default behavior
+                            was to map such cases to ``{"cert_reqs": ssl.CERT_NONE}``. For
+                            more information about encryption & best practices, please refer to
+                            `Security <https://exasol.github.io/pyexasol/master/user_guide/configuration/security.html>`__ page.
+                            """
+                        ),
+                        PyexasolWarning,
+                    )
                     options["sslopt"] = {"cert_reqs": ssl.CERT_REQUIRED}
             else:
                 options["sslopt"] = self.options["websocket_sslopt"].copy()
