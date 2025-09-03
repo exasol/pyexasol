@@ -180,6 +180,7 @@ jobs:
         uses: exasol/python-toolbox/.github/actions/python-environment@v1
         with:
           python-version: ${{ matrix.python-version }}
+          extras: "all"
 
       - name: Run Tests and Collect Coverage
         run: poetry run -- nox -s test:unit -- --coverage

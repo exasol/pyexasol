@@ -3,9 +3,6 @@ from operator import itemgetter
 
 import pandas as pd
 import pytest
-from pandas import testing as pd_testing
-
-import pyexasol
 
 
 @pytest.mark.parametrize(
@@ -26,7 +23,6 @@ def test_export_table_to_pandas(connection, table):
 )
 @pytest.mark.pandas
 def test_export_sql_result_to_pandas(connection):
-
     query = "SELECT USER_NAME, USER_ID FROM USERS ORDER BY USER_ID ASC LIMIT 5;"
 
     expected = pd.DataFrame.from_records(
