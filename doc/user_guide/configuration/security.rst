@@ -131,8 +131,8 @@ For more information, see the ODBC entry on `fingerprint <https://docs.exasol.co
 
 .. _certificate_verification:
 
-Certification Verification
---------------------------
+Certificate Verification
+------------------------
 
 As further discussed in
 `Certificate and Certificate Agencies <https://github.com/exasol/tutorials/blob/1.0.0/tls/doc/tls_introduction.md#certificates-and-certification-agencies>`__,
