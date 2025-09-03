@@ -26,8 +26,6 @@ def mock_exaconnection_factory():
             "_login": default_mock,
             "get_attr": default_mock,
         }
-
-        # with patch.object(ExaConnection, "_init_ws"):
         with patch.multiple(ExaConnection, **mocks):
             return ExaConnection(**config)
 
