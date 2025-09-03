@@ -117,7 +117,8 @@ For technical articles made by Exasol relating to TLS, please see:
 
 Fingerprint Verification
 ------------------------
-Similar to JDBC / ODBC drivers, PyExasol supports fingerprint certificate verification.
+Similar to JDBC / ODBC drivers, PyExasol supports fingerprint verification.
+For more information, see the ODBC entry on `fingerprint <https://docs.exasol.com/db/latest/connect_exasol/drivers/odbc/using_odbc.htm?Highlight=prepared%20statement#fingerprint>`__.
 
 .. code-block:: python
 
