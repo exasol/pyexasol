@@ -65,7 +65,7 @@ dictionary to the `http_transport.ImportQuery` and `http_transport.ExportQuery` 
 
 * Added support for multi-version documentation
 * Added support for all standard nox tasks provided by `exasol-toolbox`
-* #179: Modified `ExaConnection` so that default is encryption with strict certification verification
+* #179: Modified `ExaConnection` so that default is encryption with strict certificate verification
 * #190: Added nox task to run examples
 * #194: Modified `ExaSQLThread` to include PUBLIC KEY in IMPORT and EXPORT queries for Exasol DB version 8.32.0 and onwards
 * #214: Added support to EXPORT and IMPORT from Exasol to Polars DataFrames

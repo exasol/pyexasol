@@ -15,10 +15,8 @@ def server_fingerprint(connection):
 
 def _dsn_with_fingerprint(dsn: str, fingerprint: str):
     if ":" in dsn:
-        dsn = dsn.replace(":", f"/{fingerprint}:")
-    else:
-        dsn = f"{dsn}/{fingerprint}"
-    return dsn
+        return dsn.replace(":", f"/{fingerprint}:")
+    return f"{dsn}/{fingerprint}"
 
 
 @pytest.fixture
@@ -29,14 +27,6 @@ def dsn_with_valid_fingerprint(dsn, server_fingerprint):
 @pytest.fixture
 def dsn_with_invalid_fingerprint(dsn):
     yield _dsn_with_fingerprint(dsn, "123abc")
-
-
-@pytest.mark.xfail(
-    reason="For futher details see: https://github.com/exasol/integration-tasks/issues/512"
-)
-@pytest.mark.tls
-def test_connect_fails_due_to_strict_certificate_validation_by_default():
-    assert False
 
 
 @pytest.mark.tls
@@ -58,20 +48,18 @@ def test_connect_with_tls_without_resolving_hostname(connection_factory):
 
 
 @pytest.mark.tls
-def test_connect_with_valid_fingerprint(dsn_with_valid_fingerprint, connection_factory):
-
-    expected = 1
-    with connection_factory(dsn=dsn_with_valid_fingerprint, encryption=True) as con:
+def test_connect_with_valid_fingerprint(
+    dsn_with_valid_fingerprint, user, password, schema
+):
+    with pyexasol.connect(
+        dsn=dsn_with_valid_fingerprint, user=user, password=password, schema=schema
+    ) as con:
         actual = con.execute("SELECT 1;").fetchval()
-    assert actual == expected
+    assert actual == 1
 
 
 @pytest.mark.tls
-def test_connect_with_invalid_fingerprint_fails(
-    dsn_with_invalid_fingerprint, connection_factory
-):
+def test_connect_with_invalid_fingerprint_fails(dsn_with_invalid_fingerprint):
     with pytest.raises(ExaConnectionFailedError) as exec_info:
-        connection_factory(dsn=dsn_with_invalid_fingerprint, encryption=True)
-
-    expected = "did not match server fingerprint"
-    assert expected in str(exec_info.value)
+        pyexasol.connect(dsn=dsn_with_invalid_fingerprint)
+    assert "did not match server fingerprint" in str(exec_info.value)

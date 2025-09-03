@@ -71,15 +71,15 @@ def dsn_resolved(ipaddr, port):
         pytest.param(ssl.CERT_REQUIRED, id="WITH_CERT", marks=pytest.mark.with_cert),
     ],
 )
-def certification_type(request):
+def certificate_type(request):
     if request.param == ssl.CERT_NONE:
         return ssl.CERT_NONE
     return ssl.CERT_REQUIRED
 
 
 @pytest.fixture(scope="session")
-def dsn(certification_type, ipaddr, port):
-    if certification_type == ssl.CERT_NONE:
+def dsn(certificate_type, ipaddr, port):
+    if certificate_type == ssl.CERT_NONE:
         return os.environ.get("EXAHOST", f"{ipaddr}:{port}")
     # The host name is different for this case. As it is required to be the same
     # host name that the certificate is signed. This comes from the ITDE.
@@ -102,9 +102,9 @@ def schema():
 
 
 @pytest.fixture(scope="session")
-def websocket_sslopt(certification_type, certificate):
-    websocket_dict = {"cert_reqs": certification_type}
-    if certification_type == ssl.CERT_REQUIRED:
+def websocket_sslopt(certificate_type, certificate):
+    websocket_dict = {"cert_reqs": certificate_type}
+    if certificate_type == ssl.CERT_REQUIRED:
         websocket_dict["ca_certs"] = certificate
     return websocket_dict
 

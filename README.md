@@ -43,7 +43,7 @@ PyExasol provides an [API](https://exasol.github.io/pyexasol/master/api.html) to
 
 ## Getting Started
 
-Check out PyExasol's `Getting Started <https://exasol.github.io/pyexasol/master/user_guide/getting_started.html>`__ page for your first steps.
+Check out PyExasol's [Getting Started](https://exasol.github.io/pyexasol/master/user_guide/getting_started.html) page for your first steps.
 
 ## Developers
 * Created by [Vitaly Markov](https://www.linkedin.com/in/markov-vitaly/), 2018 — 2022
