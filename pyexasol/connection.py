@@ -12,7 +12,10 @@ import time
 import urllib.parse
 import zlib
 from collections.abc import Iterable
-from inspect import cleandoc
+from inspect import (
+    cleandoc,
+    signature,
+)
 from pathlib import Path
 from typing import (
     TYPE_CHECKING,
@@ -228,39 +231,13 @@ class ExaConnection:
                 OpenID refresh token to use for the login process
         """
 
+        # convert all arguments to a dict[argument_name, argument_value]
+        sig = signature(self.__class__.__init__)
+        all_locals = locals()
         self.options = {
-            "dsn": dsn,
-            "user": user,
-            "password": password,
-            "schema": schema,
-            "autocommit": autocommit,
-            "snapshot_transactions": snapshot_transactions,
-            "connection_timeout": connection_timeout,
-            "socket_timeout": socket_timeout,
-            "query_timeout": query_timeout,
-            "compression": compression,
-            "encryption": encryption,
-            "fetch_dict": fetch_dict,
-            "fetch_mapper": fetch_mapper,
-            "fetch_size_bytes": fetch_size_bytes,
-            "lower_ident": lower_ident,
-            "quote_ident": quote_ident,
-            "json_lib": json_lib,
-            "verbose_error": verbose_error,
-            "debug": debug,
-            "debug_logdir": debug_logdir,
-            "udf_output_bind_address": udf_output_bind_address,
-            "udf_output_connect_address": udf_output_connect_address,
-            "udf_output_dir": udf_output_dir,
-            "http_proxy": http_proxy,
-            "resolve_hostnames": resolve_hostnames,
-            "client_name": client_name,
-            "client_version": client_version,
-            "client_os_username": client_os_username,
-            "protocol_version": protocol_version,
-            "websocket_sslopt": websocket_sslopt,
-            "access_token": access_token,
-            "refresh_token": refresh_token,
+            param.name: all_locals[param.name]
+            for param in sig.parameters.values()
+            if param.name != "self"
         }
 
         self.login_info: dict = {}
