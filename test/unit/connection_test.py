@@ -34,7 +34,7 @@ def mock_exaconnection_factory():
 
 class TestGetWsOptions:
     @staticmethod
-    def test_no_verification(mock_exaconnection_factory):
+    def test_no_verification(mock_exaconnection_factory, recwarn):
         connection = mock_exaconnection_factory()
         result = connection._get_ws_options(fingerprint=None)
 
@@ -44,9 +44,11 @@ class TestGetWsOptions:
             "enable_multithread": True,
             "sslopt": {"cert_reqs": ssl.CERT_REQUIRED},
         }
+        assert len(recwarn.list) == 1
+        assert "From PyExasol version ``1.0.0``," in str(recwarn.list[0].message)
 
     @staticmethod
-    def test_verification_with_fingerprint(mock_exaconnection_factory):
+    def test_verification_with_fingerprint(mock_exaconnection_factory, recwarn):
         fingerprint = "7BBBF74F1F2B993BB81FF5F795BCA2340CC697B8DEFEB768DD6BABDF13FB2F05"
         dsn = f"localhost:8563/{fingerprint}"
 
@@ -59,9 +61,10 @@ class TestGetWsOptions:
             "enable_multithread": True,
             "sslopt": {"cert_reqs": ssl.CERT_NONE},
         }
+        assert len(recwarn.list) == 0
 
     @staticmethod
-    def test_verification_with_certificate(mock_exaconnection_factory):
+    def test_verification_with_certificate(mock_exaconnection_factory, recwarn):
         # if websocket_sslopt is defined, like here, this is propagated as is without
         # any checks for this function
 
@@ -76,3 +79,4 @@ class TestGetWsOptions:
             "enable_multithread": True,
             "sslopt": websocket_sslopt,
         }
+        assert len(recwarn.list) == 0
