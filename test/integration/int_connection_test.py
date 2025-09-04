@@ -16,6 +16,7 @@ from pyexasol.exceptions import ExaConnectionDsnError
 
 # pylint: disable=protected-access/W0212
 
+
 @pytest.fixture(
     scope="session",
     params=[
@@ -27,6 +28,7 @@ from pyexasol.exceptions import ExaConnectionDsnError
 def fingerprint(request):
     return request.param
 
+
 @pytest.fixture(scope="session")
 def dsn(certificate_type, ipaddr, port, fingerprint):
     if certificate_type == ssl.CERT_NONE:
@@ -35,11 +37,15 @@ def dsn(certificate_type, ipaddr, port, fingerprint):
     # host name that the certificate is signed. This comes from the ITDE.
     return os.environ.get("EXAHOST", f"exasol-test-database/{fingerprint}:{port}")
 
+
 def test_connection(dsn, user, password, certificate_type, ipaddr, port, fingerprint):
     connection = ExaConnection(dsn=dsn, user=user, password=password)
     connection.execute("SELECT 1")
 
-def test_connection_fails_with_incorrect_fingerpint(dsn, user, password, certificate_type, ipaddr, port):
+
+def test_connection_fails_with_incorrect_fingerpint(
+    dsn, user, password, certificate_type, ipaddr, port
+):
     def build_dsn(certificate_type, ipaddr, port):
         if certificate_type == ssl.CERT_NONE:
             return os.environ.get("EXAHOST", f"{ipaddr}/invalid:{port}")
@@ -48,5 +54,6 @@ def test_connection_fails_with_incorrect_fingerpint(dsn, user, password, certifi
         return os.environ.get("EXAHOST", f"exasol-test-database/invalid:{port}")
 
     with pytest.raises(ExaConnectionDsnError):
-        _ = ExaConnection(dsn=build_dsn(certificate_type, ipaddr, port), user=user, password=password)
-
+        _ = ExaConnection(
+            dsn=build_dsn(certificate_type, ipaddr, port), user=user, password=password
+        )

@@ -82,7 +82,9 @@ class TestGetWsOptions:
         assert len(recwarn.list) == 0
 
     @staticmethod
-    def test_verification_with_fingerprint_nocertcheck(mock_exaconnection_factory, recwarn):
+    def test_verification_with_fingerprint_nocertcheck(
+        mock_exaconnection_factory, recwarn
+    ):
         fingerprint = "nocertcheck"
         dsn = f"localhost/{fingerprint}:8563"
 

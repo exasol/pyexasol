@@ -1426,7 +1426,7 @@ class ExaConnection:
             r"(?:/(?P<fingerprint>[0-9A-Fa-f]+|nocertcheck))?"
             # Optional port (e.g. myexasol1..4.com:8564)
             r"(?::(?P<port>\d+)?)?$",
-            re.IGNORECASE
+            re.IGNORECASE,
         )
 
         # Port is applied backwards, so we iterate the whole list backwards to avoid second loop

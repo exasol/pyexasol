@@ -208,18 +208,33 @@ def test_get_websocket_connection_string_missing_ip_address(connection_mock):
     with pytest.raises(ValueError, match="IP address was not resolved"):
         connection_mock.get_websocket_connection_string("host1", None, 1234)
 
-@pytest.mark.parametrize("nocertcheckvalue", ["nocertcheck", "NOCERTCHECK", "NoCertcheck"])
-def test_websocket_connection_no_cert_check_if_fingerprint_has_value_nocertcheck(connection_mock, dsn, certificate_type, ipaddr, port, websocket_sslopt, nocertcheckvalue):
+
+@pytest.mark.parametrize(
+    "nocertcheckvalue", ["nocertcheck", "NOCERTCHECK", "NoCertcheck"]
+)
+def test_websocket_connection_no_cert_check_if_fingerprint_has_value_nocertcheck(
+    connection_mock,
+    dsn,
+    certificate_type,
+    ipaddr,
+    port,
+    websocket_sslopt,
+    nocertcheckvalue,
+):
     def build_dsn(certificate_type, ipaddr, port) -> str:
         if certificate_type == ssl.CERT_NONE:
             return os.environ.get("EXAHOST", f"{ipaddr}/{nocertcheckvalue}:{port}")
         # The host name is different for this case. As it is required to be the same
         # host name that the certificate is signed. This comes from the ITDE.
-        return os.environ.get("EXAHOST", f"exasol-test-database/{nocertcheckvalue}:{port}")
+        return os.environ.get(
+            "EXAHOST", f"exasol-test-database/{nocertcheckvalue}:{port}"
+        )
 
     connection_mock.connection.options["resolve_hostnames"] = False
-    connection_mock.connection.options['dsn'] = build_dsn(certificate_type, ipaddr, port)
-    connection_mock.connection.options['websocket_sslopt'] = None
+    connection_mock.connection.options["dsn"] = build_dsn(
+        certificate_type, ipaddr, port
+    )
+    connection_mock.connection.options["websocket_sslopt"] = None
     connection_mock.simulate_resolve_hostname("localhost", ["ip1"])
     connection_mock.init_ws()
     expected_websocket_sslopt = websocket_sslopt.copy()
