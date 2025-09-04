@@ -1,3 +1,4 @@
+import hashlib
 import os
 import ssl
 from dataclasses import dataclass
@@ -23,9 +24,17 @@ from pyexasol.exceptions import ExaConnectionDsnError
         pytest.param("nocertcheck", id="fingerpint=nocertcheck"),
         pytest.param("NOCERTCHECK", id="fingerpint=NOCERTCHECK"),
         pytest.param("NoCertcheck", id="fingerpint=NoCertcheck"),
+        pytest.param("<actual_fingerprint>", id="fingerpint=actual_fingerprint"),
     ],
 )
-def fingerprint(request):
+def fingerprint(request, ipaddr, port):
+    if request.param == "<actual_fingerprint>":
+        import websocket
+        ws = websocket.create_connection(f"wss://exasol-test-database:{port}", sslopt={"cert_reqs": ssl.CERT_NONE})
+        cert = ws.sock.getpeercert(True)
+        ws.close()
+        return hashlib.sha256(cert).hexdigest().upper()
+
     return request.param
 
 
