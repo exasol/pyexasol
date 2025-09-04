@@ -1,7 +1,9 @@
+import os
 import ssl
 from dataclasses import dataclass
 from typing import Optional
 from unittest import mock
+from unittest.mock import create_autospec
 
 import pytest
 import websocket
@@ -55,8 +57,8 @@ def connection_mock(connection):
             with mock.patch(
                 "websocket.create_connection"
             ) as create_websocket_connection_mock:
-                create_websocket_connection_mock.return_value = mock.Mock(
-                    websocket.WebSocket
+                create_websocket_connection_mock.return_value = create_autospec(
+                    websocket.WebSocket, instance=True
                 )
                 yield ConnectionMockFixture(
                     connection, get_hostname_mock, create_websocket_connection_mock
@@ -205,3 +207,30 @@ def test_get_websocket_connection_string_do_not_resolve_hostname(connection_mock
 def test_get_websocket_connection_string_missing_ip_address(connection_mock):
     with pytest.raises(ValueError, match="IP address was not resolved"):
         connection_mock.get_websocket_connection_string("host1", None, 1234)
+
+@pytest.mark.parametrize("nocertcheckvalue", ["nocertcheck", "NOCERTCHECK", "NoCertcheck"])
+def test_websocket_connection_no_cert_check_if_fingerprint_has_value_nocertcheck(connection_mock, dsn, certificate_type, ipaddr, port, websocket_sslopt, nocertcheckvalue):
+    def build_dsn(certificate_type, ipaddr, port) -> str:
+        if certificate_type == ssl.CERT_NONE:
+            return os.environ.get("EXAHOST", f"{ipaddr}/{nocertcheckvalue}:{port}")
+        # The host name is different for this case. As it is required to be the same
+        # host name that the certificate is signed. This comes from the ITDE.
+        return os.environ.get("EXAHOST", f"exasol-test-database/{nocertcheckvalue}:{port}")
+
+    connection_mock.connection.options["resolve_hostnames"] = False
+    connection_mock.connection.options['dsn'] = build_dsn(certificate_type, ipaddr, port)
+    connection_mock.connection.options['websocket_sslopt'] = None
+    connection_mock.simulate_resolve_hostname("localhost", ["ip1"])
+    connection_mock.init_ws()
+    expected_websocket_sslopt = websocket_sslopt.copy()
+    expected_websocket_sslopt["cert_reqs"] = ssl.CERT_NONE
+    if "ca_certs" in websocket_sslopt:
+        del expected_websocket_sslopt["ca_certs"]
+
+    connection_mock.assert_websocket_created(
+        f"wss://{dsn}",
+        timeout=10,
+        skip_utf8_validation=True,
+        enable_multithread=True,
+        sslopt=expected_websocket_sslopt,
+    )

@@ -115,6 +115,8 @@ For technical articles made by Exasol relating to TLS, please see:
 - `TLS connection fails <https://exasol.my.site.com/s/article/TLS-connection-fails>`__
 
 
+.. _fingerprint_verification:
+
 Fingerprint Verification
 ------------------------
 Similar to JDBC / ODBC drivers, PyExasol supports fingerprint verification.
@@ -128,8 +130,18 @@ For more information, see the ODBC entry on `fingerprint <https://docs.exasol.co
                    , password='password'
                    )
 
+Additionally, you can disable the certificate check by setting "nocertcheck" as fingerprint value:
+
+.. code-block:: python
+
+  pyexasol.connect(dsn=f'myexasol/nocertcheck:8563'
+                   , user='user'
+                   , password='password'
+                   )
 
 .. _certificate_verification:
+
+
 
 Certificate Verification
 ------------------------
@@ -244,3 +256,5 @@ change should :octicon:`alert` **never be used for production**.
                    , user='user'
                    , password='password'
                    , websocket_sslopt={"cert_reqs": ssl.CERT_NONE})
+
+Alternatively, you can disable the certificate check by setting "nocertcheck" as fingerprint value, see :ref:`fingerprint_verification`.

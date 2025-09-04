@@ -50,7 +50,7 @@ class TestGetWsOptions:
     @staticmethod
     def test_verification_with_fingerprint(mock_exaconnection_factory, recwarn):
         fingerprint = "7BBBF74F1F2B993BB81FF5F795BCA2340CC697B8DEFEB768DD6BABDF13FB2F05"
-        dsn = f"localhost:8563/{fingerprint}"
+        dsn = f"localhost/{fingerprint}:8563"
 
         connection = mock_exaconnection_factory(dsn=dsn)
         result = connection._get_ws_options(fingerprint=fingerprint)
@@ -78,5 +78,21 @@ class TestGetWsOptions:
             "skip_utf8_validation": True,
             "enable_multithread": True,
             "sslopt": websocket_sslopt,
+        }
+        assert len(recwarn.list) == 0
+
+    @staticmethod
+    def test_verification_with_fingerprint_nocertcheck(mock_exaconnection_factory, recwarn):
+        fingerprint = "nocertcheck"
+        dsn = f"localhost/{fingerprint}:8563"
+
+        connection = mock_exaconnection_factory(dsn=dsn)
+        result = connection._get_ws_options(fingerprint=fingerprint)
+
+        assert result == {
+            "timeout": 10,
+            "skip_utf8_validation": True,
+            "enable_multithread": True,
+            "sslopt": {"cert_reqs": ssl.CERT_NONE},
         }
         assert len(recwarn.list) == 0
