@@ -120,7 +120,6 @@ def test_hostname_range_with_zero_padding(connection):
     assert actual == expected
 
 
-
 @pytest.mark.configuration
 def test_invalid_fingerprint(connection):
     """
