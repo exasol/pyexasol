@@ -40,17 +40,19 @@ class SqlQuery:
     row_separator: Optional[str] = None
 
     def _build_csv_cols(self) -> str:
-        if self.csv_cols is None:
-            return ""
+        if self.csv_cols is not None:
+            safe_csv_cols_regexp = re.compile(
+                r"^(\d+|\d+\.\.\d+)(\sFORMAT='[^'\n]+')?$", re.IGNORECASE
+            )
+            for c in self.csv_cols:
+                if not safe_csv_cols_regexp.match(c):
+                    raise ValueError(f"Value [{c}] is not a safe csv_cols part")
 
-        safe_csv_cols_regexp = re.compile(
-            r"^(\d+|\d+\.\.\d+)(\sFORMAT='[^'\n]+')?$", re.IGNORECASE
-        )
-        for c in self.csv_cols:
-            if not safe_csv_cols_regexp.match(c):
-                raise ValueError(f"Value [{c}] is not a safe csv_cols part")
+            csv_cols = ",".join(self.csv_cols)
+            if csv_cols != "":
+                return f"({csv_cols})"
 
-        return f"({','.join(self.csv_cols)})"
+        return ""
 
     @staticmethod
     def _split_exa_address_into_components(exa_address: str) -> tuple[str, str | None]:
@@ -113,13 +115,14 @@ class SqlQuery:
         Return either empty string or comma-separated list of columns in parentheses,
         e.g. '("A", "B")'
         """
-        if self.columns is None:
-            return ""
-        formatted = [
-            self.connection.format.default_format_ident(c) for c in self.columns
-        ]
-        comma_sep = ",".join(formatted)
-        return f"({comma_sep})"
+        if self.columns is not None:
+            formatted = [
+                self.connection.format.default_format_ident(c) for c in self.columns
+            ]
+            comma_sep = ",".join(formatted)
+            if comma_sep != "":
+                return f"({comma_sep})"
+        return ""
 
     @property
     def _column_delimiter(self) -> Optional[str]:
