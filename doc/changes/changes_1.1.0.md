@@ -1,5 +1,7 @@
 # 1.1.0 - 2025-09-05
+
 This release adds support for the reserved word "nocertcheck" as fingerprint value, which disables the certificate check when establishing a connection.
+Besides the release fixes a bug for `ImportQuery` and `ExportQuery`. 
 
 ## Bugfix
 
