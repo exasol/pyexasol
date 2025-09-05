@@ -48,7 +48,7 @@ class TestSqlQuery:
     @staticmethod
     @pytest.mark.parametrize(
         "columns,expected",
-        [(None, ""), (["LASTNAME", "FIRSTNAME"], '("LASTNAME","FIRSTNAME")')],
+        [(None, ""), ([], ""), (["LASTNAME", "FIRSTNAME"], '("LASTNAME","FIRSTNAME")')],
     )
     def test_column_spec(sql_query, columns, expected):
         sql_query.columns = columns
@@ -59,6 +59,7 @@ class TestSqlQuery:
         "csv_cols,expected",
         [
             pytest.param(None, "", id="none_specified"),
+            pytest.param([], "", id="empty_iterable_specified"),
             pytest.param(["1..3"], "(1..3)", id="col_gap_specified"),
             pytest.param(["123"], "(123)", id="col_without_spaces"),
             pytest.param(
