@@ -1,21 +1,14 @@
 import hashlib
 import os
 import ssl
-from dataclasses import dataclass
 from typing import Optional
-from unittest import mock
-from unittest.mock import create_autospec
 
 import pytest
-import websocket
 
 from pyexasol.connection import (
     ExaConnection,
-    Host,
 )
 from pyexasol.exceptions import ExaConnectionDsnError
-
-# pylint: disable=protected-access/W0212
 
 
 @pytest.fixture(
@@ -41,31 +34,30 @@ def fingerprint(request, ipaddr, port):
     return request.param
 
 
-@pytest.fixture(scope="session")
-def dsn(certificate_type, ipaddr, port, fingerprint):
-    if certificate_type == ssl.CERT_NONE:
-        return os.environ.get("EXAHOST", f"{ipaddr}/{fingerprint}:{port}")
-    # The host name is different for this case. As it is required to be the same
-    # host name that the certificate is signed. This comes from the ITDE.
-    return os.environ.get("EXAHOST", f"exasol-test-database/{fingerprint}:{port}")
+@pytest.fixture()
+def dsn_builder(certificate_type, ipaddr, port, fingerprint):
+
+    def build_dsn(custom_fingerprint: Optional[str] = None):
+        fp = custom_fingerprint or fingerprint
+        if certificate_type == ssl.CERT_NONE:
+            return os.environ.get("EXAHOST", f"{ipaddr}/{fp}:{port}")
+        # The host name is different for this case. As it is required to be the same
+        # host name that the certificate is signed. This comes from the ITDE.
+        return os.environ.get("EXAHOST", f"exasol-test-database/{fp}:{port}")
+
+    return build_dsn
 
 
-def test_connection(dsn, user, password, certificate_type, ipaddr, port, fingerprint):
-    connection = ExaConnection(dsn=dsn, user=user, password=password)
+def test_connection(
+    dsn_builder, user, password, certificate_type, ipaddr, port, fingerprint
+):
+    connection = ExaConnection(dsn=dsn_builder(), user=user, password=password)
     connection.execute("SELECT 1")
 
 
 def test_connection_fails_with_incorrect_fingerpint(
-    dsn, user, password, certificate_type, ipaddr, port
+    dsn_builder, user, password, certificate_type, ipaddr, port
 ):
-    def build_dsn(certificate_type, ipaddr, port):
-        if certificate_type == ssl.CERT_NONE:
-            return os.environ.get("EXAHOST", f"{ipaddr}/invalid:{port}")
-        # The host name is different for this case. As it is required to be the same
-        # host name that the certificate is signed. This comes from the ITDE.
-        return os.environ.get("EXAHOST", f"exasol-test-database/invalid:{port}")
 
     with pytest.raises(ExaConnectionDsnError):
-        _ = ExaConnection(
-            dsn=build_dsn(certificate_type, ipaddr, port), user=user, password=password
-        )
+        _ = ExaConnection(dsn=dsn_builder("invalid"), user=user, password=password)
