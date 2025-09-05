@@ -96,9 +96,9 @@ class ExaConnection:
 
     def __init__(
         self,
-        dsn=None,
-        user=None,
-        password=None,
+        dsn: Optional[str] = None,
+        user: Optional[str] = None,
+        password: Optional[str] = None,
         schema: str = "",
         autocommit=constant.DEFAULT_AUTOCOMMIT,
         snapshot_transactions=None,
@@ -112,7 +112,7 @@ class ExaConnection:
         fetch_size_bytes=constant.DEFAULT_FETCH_SIZE_BYTES,
         lower_ident: bool = False,
         quote_ident: bool = False,
-        json_lib="json",
+        json_lib: str = "json",
         verbose_error: bool = True,
         debug: bool = False,
         debug_logdir=None,
@@ -268,7 +268,7 @@ class ExaConnection:
         self._login()
         self.get_attr()
 
-    def execute(self, query, query_params=None) -> ExaStatement:
+    def execute(self, query: str, query_params: Optional[dict] = None) -> ExaStatement:
         """
         Execute SQL query with optional query formatting parameters
 
@@ -291,7 +291,7 @@ class ExaConnection:
         """
         return self.cls_statement(self, query, query_params)
 
-    def execute_udf_output(self, query, query_params=None):
+    def execute_udf_output(self, query: str, query_params: Optional[dict] = None):
         """
         Execute SQL query with UDF script, capture output
 
@@ -304,7 +304,7 @@ class ExaConnection:
             query:
                 SQL query text, possibly with placeholders
             query_params:
-                Values for placeholders |
+                Values for placeholders
 
         Returns:
             Return tuple with two elements: (1) instance of :class:`pyexasol.ExaStatement`
@@ -376,7 +376,7 @@ class ExaConnection:
         """Wrapper for query 'ROLLBACK'"""
         return self.execute("ROLLBACK")
 
-    def set_autocommit(self, val):
+    def set_autocommit(self, val: str) -> None:
         """
         Set autocommit mode.
 
