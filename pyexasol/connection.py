@@ -1423,9 +1423,10 @@ class ExaConnection:
             # Optional range (e.g. myxasol1..4.com)
             r"(?:(?P<range_start>\d+)\.\.(?P<range_end>\d+)(?P<hostname_suffix>.*?))?"
             # Optional fingerprint (e.g. myexasol1..4.com/135a1d2dce102de866f58267521f4232153545a075dc85f8f7596f57e588a181)
-            r"(?:/(?P<fingerprint>[0-9A-Fa-f]+))?"
+            r"(?:/(?P<fingerprint>[0-9A-Fa-f]+|nocertcheck))?"
             # Optional port (e.g. myexasol1..4.com:8564)
-            r"(?::(?P<port>\d+)?)?$"
+            r"(?::(?P<port>\d+)?)?$",
+            re.IGNORECASE,
         )
 
         # Port is applied backwards, so we iterate the whole list backwards to avoid second loop
@@ -1513,16 +1514,17 @@ class ExaConnection:
         return [Host(hostname, ipaddr, port, fingerprint) for ipaddr in ipaddr_list]
 
     def _validate_fingerprint(self, provided_fingerprint):
-        server_fingerprint = (
-            hashlib.sha256(self._ws.sock.getpeercert(True)).hexdigest().upper()
-        )
-
-        if provided_fingerprint != server_fingerprint:
-            raise ExaConnectionFailedError(
-                self,
-                f"Provided fingerprint [{provided_fingerprint}] did not match "
-                f"server fingerprint [{server_fingerprint}]",
+        if provided_fingerprint.upper() != "NOCERTCHECK":
+            server_fingerprint = (
+                hashlib.sha256(self._ws.sock.getpeercert(True)).hexdigest().upper()
             )
+
+            if provided_fingerprint != server_fingerprint:
+                raise ExaConnectionFailedError(
+                    self,
+                    f"Provided fingerprint [{provided_fingerprint}] did not match "
+                    f"server fingerprint [{server_fingerprint}]",
+                )
 
     def _init_logger(self):
         self.logger = self.cls_logger(self, constant.DRIVER_NAME)
