@@ -1,0 +1,47 @@
+name: Performance-Checks
+
+on:
+  workflow_call:
+
+jobs:
+  performance-checks:
+    name: Performance-Tests (Python-${{ matrix.python-version }}, Exasol-${{ matrix.exasol-version}}), Run-${{ matrix.run-number }}
+    runs-on:  ubuntu-24.04
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.12"]
+        exasol-version: ["8.32.0"]
+        run-number: ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15"]
+    permissions:
+      contents: read
+    steps:
+      - name: Check out repo
+        uses: actions/checkout@v2
+
+      - name: Setup Python & Poetry Environment
+        uses: exasol/python-toolbox/.github/actions/python-environment@v1
+        with:
+          python-version: ${{ matrix.python-version }}
+          extras: "all"
+
+      - name: Start test db
+        run: >
+          poetry run -- nox -s db:start -- --db-version ${{ matrix.exasol-version }}
+
+      - name: Run performance tests
+        run: poetry run -- nox -s performance:test
+
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v4.6.2
+        with:
+          name: performance-python${{ matrix.python-version }}-exasol${{ matrix.exasol-version}}-run${{ matrix.run-number }}
+          path: test/performance/.benchmarks/0002_performance.json
+          include-hidden-files: true
+
+      - name: Stop test db
+        run: poetry run -- nox -s db:stop
+
+      - name: Run performance check against saved reference
+        run: poetry run -- nox -s performance:check
