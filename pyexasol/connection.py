@@ -1308,7 +1308,9 @@ class ExaConnection:
         failed_attempts = 0
         for hostname, ipaddr, port, fingerprint in dsn_items:
             try:
-                self._ws = self._create_websocket_connection(hostname, ipaddr, port)
+                self._ws = self._create_websocket_connection(
+                    hostname, ipaddr, port, fingerprint
+                )
             except Exception as e:
                 failed_attempts += 1
                 if failed_attempts == len(dsn_items):
@@ -1330,9 +1332,9 @@ class ExaConnection:
                 return
 
     def _create_websocket_connection(
-        self, hostname: str, ipaddr: str, port: int
+        self, hostname: str, ipaddr: str, port: int, fingerprint: Optional[str]
     ) -> websocket.WebSocket:
-        ws_options = self._get_ws_options()
+        ws_options = self._get_ws_options(fingerprint=fingerprint)
         # Use correct hostname matching IP address for each connection attempt
         if self.options["encryption"] and self.options["resolve_hostnames"]:
             ws_options["sslopt"]["server_hostname"] = hostname
@@ -1360,7 +1362,7 @@ class ExaConnection:
         else:
             return f"ws://{host}:{port}"
 
-    def _get_ws_options(self):
+    def _get_ws_options(self, fingerprint: Optional[str]) -> dict:
         options = {
             "timeout": self.options["connection_timeout"],
             "skip_utf8_validation": True,
@@ -1371,22 +1373,29 @@ class ExaConnection:
         if self.options["encryption"]:
             # refer to the `Security <https://exasol.github.io/pyexasol/master/user_guide/configuration/security.html>`__ page.
             if self.options["websocket_sslopt"] is None:
-                warn(
-                    cleandoc(
-                        """
-                        From PyExasol version ``1.0.0``, the default behavior of
-                        ExaConnection for encrypted connections is to require strict
-                        certificate validation with ``websocket_sslopt=None`` being
-                        mapped to ``{"cert_reqs": ssl.CERT_REQUIRED}``. The prior
-                        default behavior was to map such cases to
-                        ``{"cert_reqs": ssl.CERT_NONE}``. For more information about
-                        encryption & best practices, please refer to
-                        `Security <https://exasol.github.io/pyexasol/master/user_guide/configuration/security.html>`__ page.
-                        """
-                    ),
-                    PyexasolWarning,
-                )
-                options["sslopt"] = {"cert_reqs": ssl.CERT_REQUIRED}
+                # If a fingerprint is provided, then we do not use the default
+                # to require a certificate verification.
+                if fingerprint is not None:
+                    options["sslopt"] = {"cert_reqs": ssl.CERT_NONE}
+                else:
+                    # When not provided by the user, the default behavior is to require
+                    # strict certificate verification.
+                    warn(
+                        cleandoc(
+                            """
+                            From PyExasol version ``1.0.0``, the default behavior of
+                            ExaConnection for encrypted connections without a fingerprint
+                            is to require strict certificate validation with
+                            ``websocket_sslopt=None`` being mapped to
+                            ``{"cert_reqs": ssl.CERT_REQUIRED}``. The prior default behavior
+                            was to map such cases to ``{"cert_reqs": ssl.CERT_NONE}``. For
+                            more information about encryption & best practices, please refer to
+                            `Security <https://exasol.github.io/pyexasol/master/user_guide/configuration/security.html>`__ page.
+                            """
+                        ),
+                        PyexasolWarning,
+                    )
+                    options["sslopt"] = {"cert_reqs": ssl.CERT_REQUIRED}
             else:
                 options["sslopt"] = self.options["websocket_sslopt"].copy()
 
