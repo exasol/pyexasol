@@ -50,6 +50,7 @@ python = "^3.9.2"
 websocket-client = ">=1.0.1"
 rsa = "*"
 packaging = "*"
+cryptography = {version = ">=45.0.7, <46.0.0"}
 # Currently, it is necessary to pin numpy explicitly.
 # For additional details, refer to: https://github.com/numpy/numpy/issues/26710
 # Once this issue has been resolved, we should be able to remove this explicit dependency.
