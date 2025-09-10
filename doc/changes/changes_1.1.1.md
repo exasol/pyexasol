@@ -1,4 +1,4 @@
-# 1.1.1 - 2025-09-10
+# 1.1.1 - 2025-09-11
 This hotfix fixes a bug with a missing dependency in the `pyproject.toml`.
 
 ## Bugs
