@@ -1,6 +1,6 @@
 [project]
 name = "pyexasol"
-version = "1.0.1"
+version = "1.1.1"
 requires-python = ">=3.9.2,<4"
 description = "Exasol python driver with extra features"
 authors = [
@@ -50,8 +50,9 @@ classifiers = [
 websocket-client = ">=1.0.1"
 rsa = "*"
 packaging = "*"
+cryptography = {version = ">=45.0.7"}
 orjson = { version = ">=3.6", optional = true }
-pandas = { version = "^2.3", optional = true}
+pandas = { version = "^2", optional = true}
 polars = { version = "^1.10", optional = true }
 pproxy = { version = "*", optional = true }
 pyarrow = { version = "^20.0.0", optional = true}
@@ -62,6 +63,7 @@ ujson = { version = "*", optional = true }
 examples = ["pproxy"]
 orjson = ["orjson"]
 pandas = ["pandas"]
+polars = ["polars"]
 pyarrow = ["pyarrow"]
 rapidjson = ["python-rapidjson"]
 ujson = ["ujson"]

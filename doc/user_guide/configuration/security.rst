@@ -115,21 +115,9 @@ For technical articles made by Exasol relating to TLS, please see:
 - `TLS connection fails <https://exasol.my.site.com/s/article/TLS-connection-fails>`__
 
 
-Fingerprint Verification
-------------------------
-Similar to JDBC / ODBC drivers, PyExasol supports fingerprint verification.
-For more information, see the ODBC entry on `fingerprint <https://docs.exasol.com/db/latest/connect_exasol/drivers/odbc/using_odbc.htm?Highlight=prepared%20statement#fingerprint>`__.
-
-.. code-block:: python
-
-  fingerprint = "135a1d2dce102de866f58267521f4232153545a075dc85f8f7596f57e588a181"
-  pyexasol.connect(dsn=f'myexasol/{fingerprint}:8563'
-                   , user='user'
-                   , password='password'
-                   )
-
 
 .. _certificate_verification:
+
 
 Certificate Verification
 ------------------------
@@ -179,12 +167,15 @@ Client machine
     * The certificate should already be in the operating system truststore of the client machine.
 #. Private CA (Corporate CA)
     * Your IT should add it to the operating system truststore of the client machine.
+    * Or, use the fingerprint of the certificate. See :ref:`fingerprint_verification` for details.
 #. Self-signed Certificate
     * Your IT should add it to the operating system truststore of the client machine.
         1. DBA needs to fetch the certificate from the Exasol Cluster.
         2. Client Machine Admin needs to add it to the  operating system truststore.
     * Or, in case of a unprivileged user and the user can access the certificate of the Exasol database you can specify the certificate during connect.
+    * Or, use the fingerprint of the certificate. See :ref:`fingerprint_verification` for details.
     * For testing with a local DB you can disable the certificate verification (however, this should **NEVER** be used for production).
+
 
 .. _inside_a_udf:
 
@@ -199,16 +190,46 @@ Inside a User Defined Function (UDF)
     * Your DBA should upload the certificate to BucketFS and you should pass it to the connect inside of the UDF.
         * Note: The operating system truststore is part of the SLC and can only be changed during SLC creation.
           While you run a UDF, the operating system truststore inside of the UDF is read-only.
+    * Or, use the fingerprint of the certificate. See :ref:`fingerprint_verification` for details.
 #. Self-signed Certificate
     * Your DBA or you should upload the certificate to BucketFS and you should pass it to the connect inside of the UDF.
         * Note: The operating system truststore is part of the SLC and can only be changed during SLC creation.
           While you run a UDF, the operating system truststore of the UDF is read-only.
+    * Or, use the fingerprint of the certificate. See :ref:`fingerprint_verification` for details.
     * For testing with a local DB you can disable the certificate verification (however, this should **NEVER** be used for production).
 
 .. _certificate_in_pyexasol:
 
 Handling in PyExasol
 ^^^^^^^^^^^^^^^^^^^^
+
+.. _fingerprint_verification:
+
+Fingerprint Verification
+"""""""""""""""""""""""""""
+
+Similar to JDBC / ODBC drivers, PyExasol supports fingerprint verification.
+For more information, see the ODBC entry on `fingerprint <https://docs.exasol.com/db/latest/connect_exasol/drivers/odbc/using_odbc.htm?Highlight=prepared%20statement#fingerprint>`__.
+
+.. code-block:: python
+
+  fingerprint = "135a1d2dce102de866f58267521f4232153545a075dc85f8f7596f57e588a181"
+  pyexasol.connect(dsn=f'myexasol/{fingerprint}:8563'
+                   , user='user'
+                   , password='password'
+                   )
+
+Additionally, you can **disable the certificate check completely** by setting "nocertcheck" (case-insenstive) as fingerprint value:
+
+.. code-block:: python
+
+  pyexasol.connect(dsn=f'myexasol/nocertcheck:8563'
+                   , user='user'
+                   , password='password'
+                   )
+
+However, this should **NEVER** be used for production.
+
 
 Passing into the Connection
 """""""""""""""""""""""""""
@@ -244,3 +265,5 @@ change should :octicon:`alert` **never be used for production**.
                    , user='user'
                    , password='password'
                    , websocket_sslopt={"cert_reqs": ssl.CERT_NONE})
+
+Alternatively, you can disable the certificate check by setting "nocertcheck" as fingerprint value, see :ref:`fingerprint_verification`.
