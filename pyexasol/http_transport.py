@@ -297,13 +297,13 @@ class ExaSQLThread(threading.Thread):
     Thread class which re-throws any Exception to parent thread
     """
 
-    def __init__(self, connection, compression):
+    def __init__(self, connection: ExaConnection, compression: bool):
         self.connection = connection
         self.compression = compression
 
-        self.params = {}
+        self.params: dict = {}
         self.http_thread = None
-        self.exa_address_list = []
+        self.exa_address_list: list[str] = []
         self.exc = None
 
         super().__init__()
@@ -341,7 +341,13 @@ class ExaSQLExportThread(ExaSQLThread):
     Main thread is busy outputting data in callbacks
     """
 
-    def __init__(self, connection, compression, query_or_table, export_params):
+    def __init__(
+        self,
+        connection: ExaConnection,
+        compression: bool,
+        query_or_table,
+        export_params: dict,
+    ):
         super().__init__(connection, compression)
 
         self.query_or_table = query_or_table
@@ -377,7 +383,13 @@ class ExaSQLImportThread(ExaSQLThread):
     Main thread is busy parsing results in callbacks
     """
 
-    def __init__(self, connection, compression, table, import_params):
+    def __init__(
+        self,
+        connection: ExaConnection,
+        compression: bool,
+        table: str,
+        import_params: dict,
+    ):
         super().__init__(connection, compression)
 
         self.table = table

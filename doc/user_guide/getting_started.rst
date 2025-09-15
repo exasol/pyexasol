@@ -11,7 +11,7 @@ massive volumes of data with efficiency, providing a performance boost over trad
 Why Choose PyExasol?
 --------------------
 * Easy and fast access to Exasol from Python
-* Bulk import and export from/to :ref:`pandas <pandas_export_import>` and :ref:`polars <polars_export_import>` to Exasol
+* Bulk import and export from/to :ref:`pandas <pandas_export_import>`, parquet :ref:parquet <parquet_export_import>` , and :ref:`polars <polars_export_import>` to Exasol
 * Exasol UDF debugging support
 
 Prerequisites
@@ -26,8 +26,9 @@ Optional Dependencies
 ^^^^^^^^^^^^^^^^^^^^^
 
 - ``orjson`` is required for ``json_lib=orjson`` to improve JSON parsing performance
-- ``pandas`` is required for :ref:`http_transport` functions working with :class:`pandas.DataFrame`
-- ``polars`` is required for :ref:`http_transport` functions working with :class:`polars.DataFrame`
+- ``pandas`` is required for :ref:`importing_and_exporting_data` functions working with :class:`pandas.DataFrame`
+- ``polars`` is required for :ref:`importing_and_exporting_data` functions working with :class:`polars.DataFrame`
+- ``pyarrow`` is required for :ref:`importing_and_exporting_data` functions working with :class:`pyarrow.parquet`
 - ``pproxy`` is used in the :ref:`examples` to test an HTTP proxy
 - ``rapidjson`` is required for ``json_lib=rapidjson`` to improve JSON parsing performance
 - ``ujson`` is required for ``json_lib=ujson`` to improve JSON parsing performance

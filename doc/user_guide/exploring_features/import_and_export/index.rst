@@ -134,6 +134,29 @@ See :meth:`pyexasol.ExaConnection.import_from_pandas`.
 
     C.import_from_pandas(pd, "users")
 
+.. _parquet_export_import:
+
+Parquet
+^^^^^^^
+
+Import
+""""""
+See :meth:`pyexasol.ExaConnection.import_from_parquet`.
+
+.. code-block:: python
+
+    from pathlib import Path
+
+    # list[Path]: list of specific parquet files to load
+    C.import_from_parquet([Path("local_path/test.parquet"], "users")
+
+    # Path: can be either a file or directory. If it's a directory,
+    # all files matching this pattern *.parquet will be processed.
+    C.import_from_parquet(Path("local_path/test.parquet", "users")
+
+    # string: representing a filepath which already contains a glob pattern
+    C.import_from_parquet("local_path/*.parquet", "users")
+
 .. _polars_export_import:
 
 Polars

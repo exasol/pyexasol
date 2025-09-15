@@ -13,6 +13,7 @@ import urllib.parse
 import zlib
 from collections.abc import Iterable
 from inspect import cleandoc
+from pathlib import Path
 from typing import (
     TYPE_CHECKING,
     Callable,
@@ -267,8 +268,6 @@ class ExaConnection:
         self.attr: dict = {}
         self.is_closed: bool = False
 
-        self.ws_ipaddr = None
-        self.ws_port = None
         self.ws_req_count = 0
         self.ws_req_time = 0
 
@@ -569,10 +568,10 @@ class ExaConnection:
 
     def export_to_polars(
         self,
-        query_or_table,
-        query_params=None,
-        callback_params=None,
-        export_params=None,
+        query_or_table: str,
+        query_params: Optional[dict] = None,
+        callback_params: Optional[dict] = None,
+        export_params: Optional[dict] = None,
     ) -> "polars.DataFrame":
         """
         Export large amount of data from Exasol to :class:`polars.DataFrame`.
@@ -702,6 +701,35 @@ class ExaConnection:
             cb.import_from_polars, src, table, callback_params, import_params
         )
 
+    def import_from_parquet(
+        self,
+        source: Union[list[Path], Path, str],
+        table: str,
+        callback_params: Optional[dict] = None,
+        import_params: Optional[dict] = None,
+    ):
+        """
+        Import a large amount of data from :class:`pyarrow.parquet.Table`.
+
+        Args:
+            source: Local filepath specification(s) to process. Can be one of:
+                - list[pathlib.Path]: list of specific files
+                - pathlib.Path: can be either a file or directory. If it's a directory,
+                all files matching this pattern *.parquet will be processed.
+                - str: representing a filepath which already contains a glob pattern
+                (e.g., "/local_dir/*.parquet")
+            table:
+                Destination table for IMPORT.
+            callback_params:
+                Dict with additional parameters for callback function
+                `parquet.ParquetFile.iter_batches <https://arrow.apache.org/docs/python/generated/pyarrow.parquet.ParquetFile.html#pyarrow.parquet.ParquetFile.iter_batches>`__.
+            import_params:
+                Custom parameters for IMPORT query.
+        """
+        return self.import_from_callback(
+            cb.import_from_parquet, source, table, callback_params, import_params
+        )
+
     def export_to_callback(
         self,
         callback: Callable,
@@ -712,7 +740,7 @@ class ExaConnection:
         export_params: Optional[dict] = None,
     ):
         """
-        Export large amount of data to user-defined callback function
+        Export a large amount of data to a user-defined callback function
 
         Args:
             callback:
