@@ -36,7 +36,7 @@ if TYPE_CHECKING:
 
 def export_to_list(pipe, dst, **kwargs):
     """
-    Basic example how to export CSV stream into basic list of tuples
+    Basic example of how to export CSV stream into basic list of tuples
     """
     wrapped_pipe = io.TextIOWrapper(pipe, newline="\n", encoding="utf-8")
     reader = csv.reader(wrapped_pipe, lineterminator="\n", **kwargs)
@@ -46,8 +46,8 @@ def export_to_list(pipe, dst, **kwargs):
 
 def export_to_pandas(pipe, dst, **kwargs) -> "pandas.DataFrame":
     """
-    Basic example how to export into Pandas DataFrame
-    Custom params for "read_csv" may be passed in **kwargs
+    Basic example of how to export into :class:`pandas.DataFrame`
+    Custom params for :func:`pandas.DataFrame.read_csv` may be passed in `**kwargs`
     """
     import pandas
 
@@ -56,8 +56,8 @@ def export_to_pandas(pipe, dst, **kwargs) -> "pandas.DataFrame":
 
 def export_to_polars(pipe, dst, **kwargs) -> "polars.DataFrame":
     """
-    Basic example how to export into Polars DataFrame
-    Custom params for "read_csv" may be passed in **kwargs
+    Basic example of how to export into  :class:`polars.DataFrame`
+    Custom params for :func:`polars.read_csv` may be passed in `**kwargs`
     """
     import polars
 
@@ -66,7 +66,7 @@ def export_to_polars(pipe, dst, **kwargs) -> "polars.DataFrame":
 
 def export_to_file(pipe, dst):
     """
-    Basic example how to export into file or file-like object opened in binary mode
+    Basic example of how to export into file or file-like object opened in binary mode
     """
     if not hasattr(dst, "write"):
         dst = open(dst, "wb")
@@ -76,7 +76,7 @@ def export_to_file(pipe, dst):
 
 def import_from_iterable(pipe, src: Iterable, **kwargs):
     """
-    Basic example how to import from iterable object (list, dict, tuple, iterator, generator, etc.)
+    Basic example of how to import from iterable object (list, dict, tuple, iterator, generator, etc.)
     """
     if not hasattr(src, "__iter__"):
         raise ValueError("Data source is not iterable")
@@ -92,8 +92,8 @@ def import_from_iterable(pipe, src: Iterable, **kwargs):
 
 def import_from_pandas(pipe, src: "pandas.DataFrame", **kwargs):
     """
-    Basic example how to import from Pandas DataFrame
-    Custom params for "to_csv" may be passed in **kwargs
+    Basic example of how to import from :class:`pandas.DataFrame`
+    Custom params for :fun:`pandas.DataFrame.to_csv` may be passed in **kwargs
     """
     import pandas
 
@@ -142,7 +142,7 @@ def import_from_parquet(
     pipe, source: Union[list[Path], Path, str], **kwargs
 ):  # NOSONAR(S3776)
     """
-    Basic example how to import from pyarrow parquet file(s)
+    Basic example of how to import from :class:`pyarrow.parquet.Table` via parquet file(s)
 
     Args:
         source: Local filepath specification(s) to process. Can be one of:
@@ -196,8 +196,8 @@ def import_from_polars(
     pipe, src: Union["polars.LazyFrame", "polars.DataFrame"], **kwargs
 ):
     """
-    Basic example how to import from Polars DataFrame or LazyFrame
-    Custom params for "write_csv" may be passed in **kwargs
+    Basic example of how to import from :class:`polars.DataFrame` or :class:`polars.LazyFrame`
+    Custom params for :func:`polars.DataFrame.write_csv` may be passed in `**kwargs`
     """
     import polars
 
@@ -211,7 +211,7 @@ def import_from_polars(
 
 def import_from_file(pipe, src):
     """
-    Basic example how to import from file or file-like object opened in binary mode
+    Basic example of how to import from file or file-like object opened in binary mode
     """
     if not hasattr(src, "read"):
         src = open(src, "rb")
