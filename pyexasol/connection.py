@@ -543,6 +543,47 @@ class ExaConnection:
             export_params,
         )
 
+    def export_to_parquet(
+        self,
+        dst,
+        query_or_table: str,
+        query_params: Optional[dict] = None,
+        callback_params: Optional[dict] = None,
+        export_params: Optional[dict] = None,
+    ):
+        """
+        Export large amount of data from Exasol to file or file-like object using fast HTTP transport.
+
+        Note:
+            File must be opened in binary mode.
+
+        Args:
+            dst:
+                Path to file or file-like object where data will be exported to.
+            query_or_table:
+                SQL query or table from which to export data.
+            query_params:
+                Values for SQL query placeholders.
+            callback_params:
+                Dictionary with additional parameters for callback function
+                TODO Add function
+            export_params:
+                Custom parameters for EXPORT query.
+        """
+        if not export_params:
+            export_params = {}
+
+        export_params["with_column_names"] = True
+
+        return self.export_to_callback(
+            cb.export_to_parquet,
+            dst,
+            query_or_table,
+            query_params,
+            callback_params,
+            export_params,
+        )
+
     def export_to_polars(
         self,
         query_or_table: str,

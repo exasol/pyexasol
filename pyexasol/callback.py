@@ -34,14 +34,14 @@ if TYPE_CHECKING:
     import polars
 
 
-def export_to_list(pipe, dst, **kwargs):
+def export_to_list(pipe, dst, **kwargs) -> list:
     """
     Basic example of how to export CSV stream into basic list of tuples
     """
     wrapped_pipe = io.TextIOWrapper(pipe, newline="\n", encoding="utf-8")
     reader = csv.reader(wrapped_pipe, lineterminator="\n", **kwargs)
 
-    return [row for row in reader]
+    return list(reader)
 
 
 def export_to_pandas(pipe, dst, **kwargs) -> "pandas.DataFrame":
@@ -52,6 +52,21 @@ def export_to_pandas(pipe, dst, **kwargs) -> "pandas.DataFrame":
     import pandas
 
     return pandas.read_csv(pipe, skip_blank_lines=False, **kwargs)
+
+
+def export_to_parquet(pipe, dst, **kwargs) -> None:
+    """
+    Basic example of how to export into a parquet file via
+    """
+    from pyarrow import (
+        csv,
+        dataset,
+    )
+
+    # read_options, parse_options, convert_options, memory_pool
+    reader = csv.open_csv(pipe)
+    # use_threads -> default true & preserve_order -> false => rows may be out of order
+    dataset.write_dataset(reader, base_dir=dst, format="parquet", **kwargs)
 
 
 def export_to_polars(pipe, dst, **kwargs) -> "polars.DataFrame":
