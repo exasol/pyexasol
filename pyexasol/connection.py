@@ -661,11 +661,11 @@ class ExaConnection:
         import_params: Optional[dict] = None,
     ):
         """
-        Import a large amount of data from :class:`polars.DataFrame`.
+        Import a large amount of data from :class:`polars.DataFrame` or :class:`polars.LazyFrame`.
 
         Args:
             src:
-                Source :class:`polars.DataFrame` instance.
+                Source :class:`polars.DataFrame` or :class:`polars.LazyFrame` instance.
             table:
                 Destination table for IMPORT.
             callback_params:
