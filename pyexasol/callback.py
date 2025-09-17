@@ -54,24 +54,31 @@ def export_to_pandas(pipe, dst, **kwargs) -> "pandas.DataFrame":
     return pandas.read_csv(pipe, skip_blank_lines=False, **kwargs)
 
 
-def export_to_parquet(pipe, dst, **kwargs) -> None:
+def export_to_parquet(pipe, dst: Union[Path, str], **kwargs) -> None:
     """
-    Basic example of how to export into a parquet file via
+    Basic example of how to export into local parquet file(s)
+
+    Args:
+        dst: Local path to directory for exporting files. Can be one either a Path
+            or str. The default behavior is that the specified directory should be empty.
+            If this is not the case, an exception is thrown.
+        **kwargs:
+            Custom params for :func:`pyarrow.dataset.write_dataset`. This can be used
+            to specify the max number of rows per file (default is to write in only 1
+            file) and to write files in parallel (maybe out of order) or not.
     """
     from pyarrow import (
         csv,
         dataset,
     )
 
-    # read_options, parse_options, convert_options, memory_pool
     reader = csv.open_csv(pipe)
-    # use_threads -> default true & preserve_order -> false => rows may be out of order
     dataset.write_dataset(reader, base_dir=dst, format="parquet", **kwargs)
 
 
 def export_to_polars(pipe, dst, **kwargs) -> "polars.DataFrame":
     """
-    Basic example of how to export into  :class:`polars.DataFrame`
+    Basic example of how to export into :class:`polars.DataFrame`
     Custom params for :func:`polars.read_csv` may be passed in `**kwargs`
     """
     import polars
@@ -157,7 +164,7 @@ def import_from_parquet(
     pipe, source: Union[list[Path], Path, str], **kwargs
 ):  # NOSONAR(S3776)
     """
-    Basic example of how to import from :class:`pyarrow.parquet.Table` via parquet file(s)
+    Basic example of how to import from :class:`pyarrow.parquet.ParquetFile` via local parquet file(s)
 
     Args:
         source: Local filepath specification(s) to process. Can be one of:
@@ -167,7 +174,7 @@ def import_from_parquet(
             - str: representing a filepath which already contains a glob pattern
             (e.g., "/local_dir/*.parquet")
         **kwargs:
-            Custom params for :func:`pyarrow.parquet.Table.iter_batches`. This can be used
+            Custom params for :func:`pyarrow.parquet.ParquetFile.iter_batches`. This can be used
             to specify what columns should be read and their preferred order.
 
     Please note that nested or hierarchical column types are not supported.

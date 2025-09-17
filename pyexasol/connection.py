@@ -545,28 +545,30 @@ class ExaConnection:
 
     def export_to_parquet(
         self,
-        dst,
+        dst: Union[Path, str],
         query_or_table: str,
         query_params: Optional[dict] = None,
         callback_params: Optional[dict] = None,
         export_params: Optional[dict] = None,
     ):
         """
-        Export large amount of data from Exasol to file or file-like object using fast HTTP transport.
+        Export large amount of data from Exasol local parquet file(s).
 
         Note:
             File must be opened in binary mode.
 
         Args:
             dst:
-                Path to file or file-like object where data will be exported to.
+                Local path to directory for exporting files. Can be one either a Path or
+                str. The default behavior is that the specified directory should be empty.
+                If this is not the case, an exception is thrown.
             query_or_table:
                 SQL query or table from which to export data.
             query_params:
                 Values for SQL query placeholders.
             callback_params:
                 Dictionary with additional parameters for callback function
-                TODO Add function
+                `pyarrow.dataset.write_dataset <https://arrow.apache.org/docs/python/generated/pyarrow.dataset.write_dataset.html>`__.
             export_params:
                 Custom parameters for EXPORT query.
         """
