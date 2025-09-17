@@ -65,7 +65,6 @@ def certificate_type(request):
     return ssl.CERT_REQUIRED
 
 
-
 def dsn(certificate_type, ipaddr, port):
     if certificate_type == ssl.CERT_NONE:
         return os.environ.get("EXAHOST", f"{ipaddr}:{port}")
