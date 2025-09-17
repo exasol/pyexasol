@@ -9,6 +9,7 @@ import struct
 import sys
 import threading
 import zlib
+from collections.abc import Iterable
 from dataclasses import dataclass
 from ssl import SSLContext
 from typing import (
@@ -30,26 +31,28 @@ class SqlQuery:
     # set these values in param dictionary to ExaConnection
     column_delimiter: Optional[str] = None
     column_separator: Optional[str] = None
-    columns: Optional[list[str]] = None
+    columns: Optional[Iterable[str]] = None
     comment: Optional[str] = None
-    csv_cols: Optional[list[str]] = None
+    csv_cols: Optional[Iterable[str]] = None
     encoding: Optional[str] = None
     format: Optional[str] = None
     null: Optional[str] = None
     row_separator: Optional[str] = None
 
     def _build_csv_cols(self) -> str:
-        if not self.csv_cols:
-            return ""
+        if self.csv_cols is not None:
+            safe_csv_cols_regexp = re.compile(
+                r"^(\d+|\d+\.\.\d+)(\sFORMAT='[^'\n]+')?$", re.IGNORECASE
+            )
+            for c in self.csv_cols:
+                if not safe_csv_cols_regexp.match(c):
+                    raise ValueError(f"Value [{c}] is not a safe csv_cols part")
 
-        safe_csv_cols_regexp = re.compile(
-            r"^(\d+|\d+\.\.\d+)(\sFORMAT='[^'\n]+')?$", re.IGNORECASE
-        )
-        for c in self.csv_cols:
-            if not safe_csv_cols_regexp.match(c):
-                raise ValueError(f"Value [{c}] is not a safe csv_cols part")
+            csv_cols = ",".join(self.csv_cols)
+            if csv_cols != "":
+                return f"({csv_cols})"
 
-        return f"({','.join(self.csv_cols)})"
+        return ""
 
     @staticmethod
     def _split_exa_address_into_components(exa_address: str) -> tuple[str, str | None]:
@@ -112,45 +115,51 @@ class SqlQuery:
         Return either empty string or comma-separated list of columns in parentheses,
         e.g. '("A", "B")'
         """
-        if not self.columns:
-            return ""
-        formatted = [
-            self.connection.format.default_format_ident(c) for c in self.columns
-        ]
-        comma_sep = ",".join(formatted)
-        return f"({comma_sep})"
+        if self.columns is not None:
+            formatted = [
+                self.connection.format.default_format_ident(c) for c in self.columns
+            ]
+            comma_sep = ",".join(formatted)
+            if comma_sep != "":
+                return f"({comma_sep})"
+        return ""
 
     @property
     def _column_delimiter(self) -> Optional[str]:
-        if self.column_delimiter:
-            return f"COLUMN DELIMITER = {self.connection.format.quote(self.column_delimiter)}"
-        return None
+        if self.column_delimiter is None:
+            return None
+        return (
+            f"COLUMN DELIMITER = {self.connection.format.quote(self.column_delimiter)}"
+        )
 
     @property
     def _column_separator(self) -> Optional[str]:
-        if self.column_separator:
-            return f"COLUMN SEPARATOR = {self.connection.format.quote(self.column_separator)}"
-        return None
+        if self.column_separator is None:
+            return None
+        return (
+            f"COLUMN SEPARATOR = {self.connection.format.quote(self.column_separator)}"
+        )
 
     @property
     def _comment(self) -> Optional[str]:
-        if self.comment:
-            if "*/" in self.comment:
-                raise ValueError(
-                    f'Invalid comment "{self.comment}". Comment must not contain "*/".'
-                )
-            return f"/*{self.comment}*/"
-        return None
+        if self.comment is None:
+            return None
+
+        if "*/" in self.comment:
+            raise ValueError(
+                f'Invalid comment "{self.comment}". Comment must not contain "*/".'
+            )
+        return f"/*{self.comment}*/"
 
     @property
     def _encoding(self) -> Optional[str]:
-        if self.encoding:
-            return f"ENCODING = {self.connection.format.quote(self.encoding)}"
-        return None
+        if self.encoding is None:
+            return None
+        return f"ENCODING = {self.connection.format.quote(self.encoding)}"
 
     @property
     def _file_ext(self) -> str:
-        if not self.format:
+        if self.format is None:
             if self.compression:
                 return "gz"
             return "csv"
@@ -160,9 +169,9 @@ class SqlQuery:
 
     @property
     def _null(self) -> Optional[str]:
-        if self.null:
-            return f"NULL = {self.connection.format.quote(self.null)}"
-        return None
+        if self.null is None:
+            return None
+        return f"NULL = {self.connection.format.quote(self.null)}"
 
     @property
     def _url_prefix(self) -> str:
@@ -172,9 +181,9 @@ class SqlQuery:
 
     @property
     def _row_separator(self) -> Optional[str]:
-        if self.row_separator:
-            return f"ROW SEPARATOR = {self.connection.format.quote(self.row_separator)}"
-        return None
+        if self.row_separator is None:
+            return None
+        return f"ROW SEPARATOR = {self.connection.format.quote(self.row_separator)}"
 
 
 @dataclass
@@ -215,13 +224,13 @@ class ImportQuery(SqlQuery):
 
     @property
     def _skip(self) -> Optional[str]:
-        if self.skip:
-            return f"SKIP = {self.connection.format.safe_decimal(self.skip)}"
-        return None
+        if self.skip is None:
+            return None
+        return f"SKIP = {self.connection.format.safe_decimal(self.skip)}"
 
     @property
     def _trim(self) -> Optional[str]:
-        if not self.trim:
+        if self.trim is None:
             return None
 
         trim = str(self.trim).upper()
@@ -268,7 +277,7 @@ class ExportQuery(SqlQuery):
 
     @property
     def _delimit(self) -> Optional[str]:
-        if not self.delimit:
+        if self.delimit is None:
             return None
 
         delimit = str(self.delimit).upper()
@@ -278,9 +287,9 @@ class ExportQuery(SqlQuery):
 
     @property
     def _with_column_names(self) -> Optional[str]:
-        if self.with_column_names:
-            return "WITH COLUMN NAMES"
-        return None
+        if self.with_column_names is None:
+            return None
+        return "WITH COLUMN NAMES"
 
 
 class ExaSQLThread(threading.Thread):
