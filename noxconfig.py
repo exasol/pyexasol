@@ -14,13 +14,15 @@ CONTAINER_NAME = f"db_container_{CONTAINER_SUFFIX}"
 
 
 def start_test_db(
-    session: Session, port: int = DEFAULT_PORT, db_version: str = DEFAULT_DB_VERSION
+    session: Session,
+    port: int = DEFAULT_PORT,
+    db_version: str = DEFAULT_DB_VERSION,
+    with_certificate: bool = True,
 ) -> None:
     # For Docker in a VM setup, refer to the ``doc/user_guide/developer_guide.rst``
-    session.run(
+    command = [
         "itde",
         "spawn-test-environment",
-        "--create-certificates",
         "--environment-name",
         CONTAINER_SUFFIX,
         "--database-port-forward",
@@ -31,8 +33,13 @@ def start_test_db(
         db_version,
         "--db-mem-size",
         "4GB",
-        external=True,
-    )
+    ]
+    if with_certificate:
+        command.append(
+            "--create-certificates",
+        )
+
+    session.run(*command, external=True)
 
 
 def stop_test_db(session: Session) -> None:
