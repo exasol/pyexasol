@@ -12,6 +12,7 @@ def prepare_parquet_table(list_dict: list[dict]) -> pa.Table:
     table = table.set_column(
         3, "LAST_VISIT_TS", table["LAST_VISIT_TS"].cast(pa.timestamp("ns"))
     )
+    # this is not ideal as the database & Python data use bool
     return table.set_column(4, "IS_GRADUATING", table["IS_GRADUATING"].cast(pa.int64()))
 
 
@@ -30,18 +31,23 @@ class TestExportToParquet:
 
     @staticmethod
     def test_export_multiple_files(
-        connection, fill_table, tmp_path, table_name, all_data
+        connection, fill_table, tmp_path, table_name, all_data, number_entries
     ):
         expected = prepare_parquet_table(all_data.list_dict)
+        rows_per_file = 5
 
         filepath = tmp_path / "multiple_parquet_dir"
         connection.export_to_parquet(
             dst=filepath,
             query_or_table=table_name,
-            callback_params={"max_rows_per_file": 5, "max_rows_per_group": 5},
+            # parquet requires the user to set max_rows_per_group <= max_rows_per_file
+            callback_params={
+                "max_rows_per_file": rows_per_file,
+                "max_rows_per_group": rows_per_file,
+            },
         )
 
-        assert len(list(filepath.glob("*"))) == 2
+        assert len(list(filepath.glob("*"))) == number_entries / rows_per_file
         assert pq.read_table(filepath) == expected
 
 

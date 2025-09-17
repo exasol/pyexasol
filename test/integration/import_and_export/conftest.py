@@ -1,5 +1,6 @@
 import copy
 from dataclasses import dataclass
+from datetime import datetime
 from inspect import cleandoc
 from pathlib import Path
 from typing import Optional
@@ -15,6 +16,7 @@ ALL_COLUMNS = [
     "AGE",
     "SCORE",
 ]
+DATETIME_STR_FORMAT = "%Y-%m-%d %H:%M:%S.%f"
 TABLE_NAME = "USER_SCORES"
 
 
@@ -67,8 +69,13 @@ class DataSample:
         for row in self.list_dict:
             inner_list = []
             for key in selected_columns:
-                if key == "SCORE":
+                if row[key] is None:
+                    inner_list.append(row[key])
+                # float needs to be quoted
+                elif key == "SCORE":
                     inner_list.append(f"{row[key]}")
+                elif key == "LAST_VISIT_TS":
+                    inner_list.append(row[key].strftime(DATETIME_STR_FORMAT))
                 else:
                     inner_list.append(row[key])
             list_tuple.append(tuple(inner_list))
@@ -82,11 +89,12 @@ class DataSample:
         for row in self.list_dict:
             inner_list = []
             for key in selected_columns:
-                if key == "IS_GRADUATING":
-                    if row[key] is None:
-                        inner_list.append(f"{row[key]}")
-                    else:
-                        inner_list.append(f"{int(row[key])}")
+                if row[key] is None:
+                    inner_list.append(f"{row[key]}")
+                # this is not ideal as the database & Python data use bool
+                elif key == "IS_GRADUATING":
+                    inner_list.append(f"{int(row[key])}")
+                # timestamp string needs special quotation in CSV
                 elif key == "LAST_VISIT_TS":
                     inner_list.append(f'"{row[key]}"')
                 else:
@@ -108,8 +116,13 @@ class DataSample:
 
 
 @pytest.fixture
-def data_dict(faker) -> list[dict]:
-    dates = [faker.date() for _ in range(10)]
+def number_entries():
+    return 10
+
+
+@pytest.fixture
+def data_dict(faker, number_entries) -> list[dict]:
+    dates = [faker.date() for _ in range(number_entries)]
     data = [
         {
             "FIRST_NAME": faker.first_name(),
@@ -118,12 +131,14 @@ def data_dict(faker) -> list[dict]:
             # setting of faker's random seed did not seem to be
             # fixing seconds, so this was hard-coded instead of
             # using faker's datetime
-            "LAST_VISIT_TS": f"{dates[i]} 12:00:00.900000",
+            "LAST_VISIT_TS": datetime.strptime(
+                f"{dates[i]} 12:00:00.900000", DATETIME_STR_FORMAT
+            ),
             "IS_GRADUATING": faker.boolean(),
             "AGE": faker.random_int(min=18, max=65),
             "SCORE": faker.pyfloat(min_value=69, max_value=100, right_digits=2),
         }
-        for i in range(0, 10)
+        for i in range(number_entries)
     ]
 
     return sorted(data, key=lambda n: n["FIRST_NAME"])
