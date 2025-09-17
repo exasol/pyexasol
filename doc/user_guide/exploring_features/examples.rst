@@ -138,6 +138,13 @@ Pandas DataFrame
     :language: python
     :caption: IMPORT / EXPORT to and from pandas.DataFrame
 
+Parquet File
+++++++++++++
+
+.. literalinclude:: ../../../examples/b08_parquet.py
+    :language: python
+    :caption: IMPORT / EXPORT to and from parquet files(s)
+
 Polars DataFrame
 ++++++++++++++++
 

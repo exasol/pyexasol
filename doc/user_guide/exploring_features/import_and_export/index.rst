@@ -139,6 +139,18 @@ See :meth:`pyexasol.ExaConnection.import_from_pandas`.
 Parquet
 ^^^^^^^
 
+Export
+""""""
+See :meth:`pyexasol.ExaConnection.export_to_parquet`.
+
+.. code-block:: python
+
+    # Read from SQL
+    df = C.export_to_parquet("SELECT * FROM users")
+
+    # Read from table
+    df = C.export_to_parquet("users")
+
 Import
 """"""
 See :meth:`pyexasol.ExaConnection.import_from_parquet`.
