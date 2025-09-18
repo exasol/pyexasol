@@ -60,6 +60,10 @@ class Host(NamedTuple):
     fingerprint: Optional[str]
 
 
+def get_exaconnection_signature():
+    return signature(ExaConnection.__init__)
+
+
 class ExaConnection:
     """
     Warning:
@@ -232,7 +236,7 @@ class ExaConnection:
         """
 
         # convert all arguments to a dict[argument_name, argument_value]
-        sig = signature(self.__class__.__init__)
+        sig = get_exaconnection_signature()
         all_locals = locals()
         self.options = {
             param.name: all_locals[param.name]

@@ -9,25 +9,34 @@ import pytest
 from pyexasol import ExaConnection
 
 
+class CustomExaConnection(ExaConnection):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+
+
+def mock_exaconnection(connection_class, **kwargs):
+    defaults = {
+        "dsn": "localhost:8563",
+        "user": "dummy",
+        "password": "dummy",
+        "schema": "dummy",
+    }
+    config = {**defaults, **kwargs}
+
+    default_mock = MagicMock(return_value=None)
+    mocks = {
+        "_init_ws": default_mock,
+        "_login": default_mock,
+        "get_attr": default_mock,
+    }
+    with patch.multiple(connection_class, **mocks):
+        return connection_class(**config)
+
+
 @pytest.fixture(scope="session")
 def mock_exaconnection_factory():
     def _exaconnection_fixture(**kwargs) -> ExaConnection:
-        defaults = {
-            "dsn": "localhost:8563",
-            "user": "dummy",
-            "password": "dummy",
-            "schema": "dummy",
-        }
-        config = {**defaults, **kwargs}
-
-        default_mock = MagicMock(return_value=None)
-        mocks = {
-            "_init_ws": default_mock,
-            "_login": default_mock,
-            "get_attr": default_mock,
-        }
-        with patch.multiple(ExaConnection, **mocks):
-            return ExaConnection(**config)
+        return mock_exaconnection(connection_class=ExaConnection, **kwargs)
 
     return _exaconnection_fixture
 
@@ -88,6 +97,10 @@ class TestOptions:
 
         connection = mock_exaconnection_factory(**value_dict)
         assert connection.options == expected
+
+    @staticmethod
+    def test_works_for_custom_child_class():
+        mock_exaconnection(CustomExaConnection)
 
 
 class TestGetWsOptions:
