@@ -1,4 +1,5 @@
 from pathlib import Path
+from typing import Callable
 
 import pyarrow as pa
 import pytest
@@ -95,15 +96,32 @@ class TestImportFromParquet:
 
         assert select_result(connection) == reduced_import_data.list_tuple()
 
-    def test_load_files_from_glob_into_empty_table(
-        self, tmp_path, empty_table, connection, table_name, all_data
+    @pytest.mark.parametrize(
+        "source_function",
+        [
+            pytest.param(lambda x: x, id="from_directory_specified_as_Path"),
+            pytest.param(
+                lambda x: str(x) + "/*.parquet", id="from_string_specified_with_glob"
+            ),
+        ],
+    )
+    def test_load_from_multiple_files(
+        self,
+        tmp_path,
+        empty_table,
+        connection,
+        table_name,
+        all_data,
+        source_function: Callable,
     ):
         self._create_parquet_file(tmp_path / "first_file.parquet", all_data.list_dict)
         self._create_parquet_file(
             tmp_path / "second_file.parquet", [all_data.list_dict[-1]]
         )
 
-        connection.import_from_parquet(tmp_path, table_name)
+        connection.import_from_parquet(
+            source=source_function(tmp_path), table=table_name
+        )
 
         expected = all_data.list_tuple() + [all_data.list_tuple()[-1]]
         assert select_result(connection) == expected
