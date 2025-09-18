@@ -63,9 +63,20 @@ def export_to_parquet(pipe, dst: Union[Path, str], **kwargs) -> None:
             or str. The default behavior is that the specified directory should be empty.
             If this is not the case, an exception is thrown.
         **kwargs:
-            Custom params for :func:`pyarrow.dataset.write_dataset`. This can be used
-            to specify the max number of rows per file (default is to write in only 1
-            file) and to write files in parallel (maybe out of order) or not.
+            Custom params for :func:`pyarrow.dataset.write_dataset`. Some important
+            defaults to note are:
+
+              existing_data_behavior
+                  Set to ``error``, which requires that the specified ``dst`` not
+                  contain any files or an exception will be thrown.
+              max_rows_per_file
+                  Set to ``0``, which means that all rows will be written to 1 file.
+                  If ``max_rows_per_file`` is altered, ensure that ``max_rows_per_group``
+                  is set to a value less than or equal to the value of ``max_rows_per_file``.
+              use_threads
+                  Set to ``True`` and ``preserve_order`` is set to ``False``. This means
+                  that the writing of multiple files will be done in parallel and that
+                  the order is not guaranteed to be preserved.
     """
     from pyarrow import (
         csv,

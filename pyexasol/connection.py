@@ -566,6 +566,19 @@ class ExaConnection:
             callback_params:
                 Dictionary with additional parameters for callback function
                 `pyarrow.dataset.write_dataset <https://arrow.apache.org/docs/python/generated/pyarrow.dataset.write_dataset.html>`__.
+                Some important defaults to note are:
+
+                existing_data_behavior
+                   Set to ``error``, which requires that the specified ``dst`` not
+                   contain any files or an exception will be thrown..
+                max_rows_per_file
+                   Set to ``0``, which means that all rows will be written to 1 file.
+                   If ``max_rows_per_file`` is altered, ensure that ``max_rows_per_group``
+                   is set to a value less than or equal to the value of ``max_rows_per_file``.
+                use_threads
+                   Set to ``True`` and ``preserve_order`` is set to ``False``. This means
+                   that the writing of multiple files will be done in parallel and that
+                   the order is not guaranteed to be preserved.
             export_params:
                 Custom parameters for EXPORT query.
         """
