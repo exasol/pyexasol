@@ -42,7 +42,7 @@ class ExaLocalConfig:
         self.parser.read(self.path, encoding="utf-8")
 
     def get_args(self, section):
-        args = dict()
+        args = {}
 
         if not self.parser.has_section(section):
             raise ValueError(

@@ -13,6 +13,7 @@ import urllib.parse
 import zlib
 from collections.abc import Iterable
 from inspect import (
+    Signature,
     cleandoc,
     signature,
 )
@@ -60,7 +61,7 @@ class Host(NamedTuple):
     fingerprint: Optional[str]
 
 
-def get_exaconnection_signature():
+def get_exaconnection_signature() -> Signature:
     return signature(ExaConnection.__init__)
 
 
@@ -79,7 +80,7 @@ class ExaConnection:
 
         Public Attributes:
             ``attr``:
-                Read-only `dict` of attributes of current connection.
+                Read-only ``dict`` of attributes of current connection.
 
             ``login_info``:
                 Read-only ``dict`` of login information returned by second

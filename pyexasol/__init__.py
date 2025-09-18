@@ -66,8 +66,11 @@ from .version import __version__
 
 def connect(**kwargs) -> ExaConnection:
     """
-    Create a new connection object. For details regarding kwargs,
-    refer to the :class:`pyexasol.ExaConnection` class.
+    Create a new connection object.
+
+    Args:
+        **kwargs:
+            For details, refer to the :class:`pyexasol.ExaConnection` class.
     """
     return ExaConnection(**kwargs)
 
