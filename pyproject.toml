@@ -76,6 +76,7 @@ docutils = "^0.21.2"
 exasol-integration-test-docker-environment = "^4.0.0"
 faker = "^24.14.1"
 exasol-toolbox = "^1.9.0"
+pytest-benchmark = {extras = ["histogram"], version = "^5.1.0"}
 types-ujson = "^5.10.0.20250326"
 
 [tool.black]
@@ -109,8 +110,7 @@ module = [
     "turbodbc.*",
     # code we are not yet type checking
     "examples.*",
-    "test.unit.*",
-    "test.integration.*",
+    "test.*",
 ]
 ignore_errors = true
 ignore_missing_imports = true
