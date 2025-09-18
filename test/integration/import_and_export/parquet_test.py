@@ -58,7 +58,9 @@ class TestImportFromParquet:
         table = pa.Table.from_pylist(data)
         pq.write_table(table, path)
 
-    def test_load_single_file(self, tmp_path, connection, table_name, all_data):
+    def test_load_single_file(
+        self, tmp_path, empty_table, connection, table_name, all_data
+    ):
         filepath = tmp_path / "single_file.parquet"
         self._create_parquet_file(filepath, all_data.list_dict)
 
@@ -67,7 +69,13 @@ class TestImportFromParquet:
         assert select_result(connection) == all_data.list_tuple()
 
     def test_load_specific_columns(
-        self, tmp_path, connection, table_name, all_data, reduced_import_data
+        self,
+        tmp_path,
+        empty_table,
+        connection,
+        table_name,
+        all_data,
+        reduced_import_data,
     ):
         filepath = tmp_path / "single_file.parquet"
         # add a nested column, to cover edge case from user which would cause errors
@@ -88,7 +96,7 @@ class TestImportFromParquet:
         assert select_result(connection) == reduced_import_data.list_tuple()
 
     def test_load_files_from_glob_into_empty_table(
-        self, tmp_path, connection, table_name, all_data
+        self, tmp_path, empty_table, connection, table_name, all_data
     ):
         self._create_parquet_file(tmp_path / "first_file.parquet", all_data.list_dict)
         self._create_parquet_file(

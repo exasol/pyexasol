@@ -552,10 +552,7 @@ class ExaConnection:
         export_params: Optional[dict] = None,
     ):
         """
-        Export large amount of data from Exasol local parquet file(s).
-
-        Note:
-            File must be opened in binary mode.
+        Export large amounts of data from Exasol to local parquet file(s).
 
         Args:
             dst:

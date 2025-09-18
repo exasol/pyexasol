@@ -32,7 +32,7 @@ def faker_seed():
     return 12345
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture
 def empty_table(connection, table_name):
     ddl = cleandoc(
         f"""

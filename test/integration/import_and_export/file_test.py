@@ -15,7 +15,7 @@ class TestExportToFile:
 @pytest.mark.etl
 class TestImportFromFile:
     @staticmethod
-    def test_import_from_csv(connection, table_name, tmp_path, all_data):
+    def test_import_from_csv(connection, empty_table, table_name, tmp_path, all_data):
         filepath = all_data.write_csv(directory=tmp_path)
 
         connection.import_from_file(src=filepath, table=table_name)

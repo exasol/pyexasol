@@ -59,7 +59,7 @@ def export_to_parquet(pipe, dst: Union[Path, str], **kwargs) -> None:
     Basic example of how to export into local parquet file(s)
 
     Args:
-        dst: Local path to directory for exporting files. Can be one either a Path
+        dst: Local path to directory for exporting files. Can be either a Path
             or str. The default behavior is that the specified directory should be empty.
             If this is not the case, an exception is thrown.
         **kwargs:
