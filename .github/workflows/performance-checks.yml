@@ -16,6 +16,9 @@ jobs:
       - name: Set up Python & Poetry Environment
         uses: exasol/python-toolbox/.github/actions/python-environment@v1
 
+      - name: Print list
+        run: poetry run -- nox -s performance:json
+
       - name: Set list
         run: |
           list_output=$(poetry run -- nox -s performance:list)

@@ -85,9 +85,9 @@ def run_examples(session: Session) -> None:
         session.error(1)
 
 
-@nox.session(name="performance:list", python=False)
-def performance_list(session: Session) -> None:
-    """Output the list of performance tests."""
+@nox.session(name="performance:josn", python=False)
+def performance_json(session: Session) -> None:
+    """Output JSON of performance tests."""
     output = subprocess.run(
         [
             "pytest",
@@ -99,8 +99,10 @@ def performance_list(session: Session) -> None:
         text=True,
     )
     if output.returncode != 0:
-        print(output.stdout)
-        session.error(output.stderr)
+        print(output)
+        # print(output.stdout)
+        # print(out)
+        session.error()
 
     processed_output = [
         line
