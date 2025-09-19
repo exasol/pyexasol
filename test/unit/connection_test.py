@@ -1,3 +1,17 @@
+"""
+Throughout the development the :class:`pyexasol.ExaConnection`has grown to include a
+number of features. In the long-term, these will be broken it up into smaller
+encapsulated units. This would allow for more explicit testing, make the code easier to
+read & interpret, & help reduce difficulties associated with changes and potentially
+overlooked edge cases.
+
+To aid in a potential refactoring, it's useful to add mocked unit tests to cover
+the aspects of the :class:`pyexasol.ExaConnection` that are used to define the
+connection and its settings, but that these aspects themselves do not require
+the connection to be made. The components tested here are prime candidates for being
+broken out into separate, more manageable units.
+"""
+
 import ssl
 from unittest.mock import (
     MagicMock,
@@ -15,6 +29,12 @@ class CustomExaConnection(ExaConnection):
 
 
 def mock_exaconnection(connection_class, **kwargs):
+    """
+    Within the :func:`pyexasol.ExaConnection.__init__` function, external services
+    are being sent requests. To explicitly test the code around these calls, these are
+    mocked.
+    """
+
     defaults = {
         "dsn": "localhost:8563",
         "user": "dummy",
@@ -42,6 +62,15 @@ def mock_exaconnection_factory():
 
 
 class TestOptions:
+    """
+    To handle the large number of input parameters, the initial design of
+    :class:`pyexasol.ExaConnection` has all of these being put into a dictionary.
+    As code is used to generate this dictionary based on the signature of
+    the :class:`pyexasol.ExaConnection`, this test has been created to ensure
+    that the parameters & given arguments propagate as expected for both the
+    direct usage of :class:`pyexasol.ExaConnection`, as well as for its children.
+    """
+
     expected_defaults = expected = {
         "access_token": None,
         "autocommit": True,
@@ -104,6 +133,16 @@ class TestOptions:
 
 
 class TestGetWsOptions:
+    """
+    To create the websocket connection, specific parameters are passed in. In PyExasol,
+    users may connect 1) without any verification (only for non-productive environments,
+    2) with fingerprint verification, 3) with certificate verification, and 4) with
+    fingerprint & certification verification. Each of these has slightly different
+    defaults that have been decided upon based on Exasol's security guidelines. These
+    are explicitly tested here to ensure that the defaults do not wander over time
+    without explicit intention.
+    """
+
     @staticmethod
     def test_no_verification(mock_exaconnection_factory, recwarn):
         connection = mock_exaconnection_factory()
