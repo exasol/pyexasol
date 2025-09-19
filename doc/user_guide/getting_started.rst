@@ -113,6 +113,18 @@ Using pandas
     df = C.export_to_pandas("SELECT * FROM EXA_ALL_USERS")
     print(df.head())
 
+Using parquet
+"""""""""""""
+
+.. code-block:: python
+
+    # pip install pyexasol[pandas]
+    import pyexasol
+
+    C = pyexasol.connect(dsn='<host:port>', user='sys', password='exasol', compression=True)
+    df = C.export_to_parquet("SELECT * FROM EXA_ALL_USERS")
+    print(df.head())
+
 Using polars
 """"""""""""
 

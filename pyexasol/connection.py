@@ -12,7 +12,11 @@ import time
 import urllib.parse
 import zlib
 from collections.abc import Iterable
-from inspect import cleandoc
+from inspect import (
+    Signature,
+    cleandoc,
+    signature,
+)
 from pathlib import Path
 from typing import (
     TYPE_CHECKING,
@@ -57,6 +61,10 @@ class Host(NamedTuple):
     fingerprint: Optional[str]
 
 
+def get_exaconnection_signature() -> Signature:
+    return signature(ExaConnection.__init__)
+
+
 class ExaConnection:
     """
     Warning:
@@ -72,7 +80,7 @@ class ExaConnection:
 
         Public Attributes:
             ``attr``:
-                Read-only `dict` of attributes of current connection.
+                Read-only ``dict`` of attributes of current connection.
 
             ``login_info``:
                 Read-only ``dict`` of login information returned by second
@@ -93,9 +101,9 @@ class ExaConnection:
 
     def __init__(
         self,
-        dsn=None,
-        user=None,
-        password=None,
+        dsn: Optional[str] = None,
+        user: Optional[str] = None,
+        password: Optional[str] = None,
         schema: str = "",
         autocommit=constant.DEFAULT_AUTOCOMMIT,
         snapshot_transactions=None,
@@ -109,7 +117,7 @@ class ExaConnection:
         fetch_size_bytes=constant.DEFAULT_FETCH_SIZE_BYTES,
         lower_ident: bool = False,
         quote_ident: bool = False,
-        json_lib="json",
+        json_lib: str = "json",
         verbose_error: bool = True,
         debug: bool = False,
         debug_logdir=None,
@@ -228,39 +236,13 @@ class ExaConnection:
                 OpenID refresh token to use for the login process
         """
 
+        # convert all arguments to a dict[argument_name, argument_value]
+        sig = get_exaconnection_signature()
+        all_locals = locals()
         self.options = {
-            "dsn": dsn,
-            "user": user,
-            "password": password,
-            "schema": schema,
-            "autocommit": autocommit,
-            "snapshot_transactions": snapshot_transactions,
-            "connection_timeout": connection_timeout,
-            "socket_timeout": socket_timeout,
-            "query_timeout": query_timeout,
-            "compression": compression,
-            "encryption": encryption,
-            "fetch_dict": fetch_dict,
-            "fetch_mapper": fetch_mapper,
-            "fetch_size_bytes": fetch_size_bytes,
-            "lower_ident": lower_ident,
-            "quote_ident": quote_ident,
-            "json_lib": json_lib,
-            "verbose_error": verbose_error,
-            "debug": debug,
-            "debug_logdir": debug_logdir,
-            "udf_output_bind_address": udf_output_bind_address,
-            "udf_output_connect_address": udf_output_connect_address,
-            "udf_output_dir": udf_output_dir,
-            "http_proxy": http_proxy,
-            "resolve_hostnames": resolve_hostnames,
-            "client_name": client_name,
-            "client_version": client_version,
-            "client_os_username": client_os_username,
-            "protocol_version": protocol_version,
-            "websocket_sslopt": websocket_sslopt,
-            "access_token": access_token,
-            "refresh_token": refresh_token,
+            param.name: all_locals[param.name]
+            for param in sig.parameters.values()
+            if param.name != "self"
         }
 
         self.login_info: dict = {}
@@ -291,7 +273,7 @@ class ExaConnection:
         self._login()
         self.get_attr()
 
-    def execute(self, query, query_params=None) -> ExaStatement:
+    def execute(self, query: str, query_params: Optional[dict] = None) -> ExaStatement:
         """
         Execute SQL query with optional query formatting parameters
 
@@ -314,7 +296,7 @@ class ExaConnection:
         """
         return self.cls_statement(self, query, query_params)
 
-    def execute_udf_output(self, query, query_params=None):
+    def execute_udf_output(self, query: str, query_params: Optional[dict] = None):
         """
         Execute SQL query with UDF script, capture output
 
@@ -327,7 +309,7 @@ class ExaConnection:
             query:
                 SQL query text, possibly with placeholders
             query_params:
-                Values for placeholders |
+                Values for placeholders
 
         Returns:
             Return tuple with two elements: (1) instance of :class:`pyexasol.ExaStatement`
@@ -399,7 +381,7 @@ class ExaConnection:
         """Wrapper for query 'ROLLBACK'"""
         return self.execute("ROLLBACK")
 
-    def set_autocommit(self, val):
+    def set_autocommit(self, val: str) -> None:
         """
         Set autocommit mode.
 
@@ -566,6 +548,59 @@ class ExaConnection:
             export_params,
         )
 
+    def export_to_parquet(
+        self,
+        dst: Union[Path, str],
+        query_or_table: str,
+        query_params: Optional[dict] = None,
+        callback_params: Optional[dict] = None,
+        export_params: Optional[dict] = None,
+    ):
+        """
+        Export large amounts of data from Exasol to local parquet file(s).
+
+        Args:
+            dst:
+                Local path to directory for exporting files. Can be one either a Path or
+                str. The default behavior is that the specified directory should be empty.
+                If this is not the case, an exception is thrown.
+            query_or_table:
+                SQL query or table from which to export data.
+            query_params:
+                Values for SQL query placeholders.
+            callback_params:
+                Dictionary with additional parameters for callback function
+                `pyarrow.dataset.write_dataset <https://arrow.apache.org/docs/python/generated/pyarrow.dataset.write_dataset.html>`__.
+                Some important defaults to note are:
+
+                existing_data_behavior
+                   Set to ``error``, which requires that the specified ``dst`` not
+                   contain any files or an exception will be thrown..
+                max_rows_per_file
+                   Set to ``0``, which means that all rows will be written to 1 file.
+                   If ``max_rows_per_file`` is altered, ensure that ``max_rows_per_group``
+                   is set to a value less than or equal to the value of ``max_rows_per_file``.
+                use_threads
+                   Set to ``True`` and ``preserve_order`` is set to ``False``. This means
+                   that the writing of multiple files will be done in parallel and that
+                   the order is not guaranteed to be preserved.
+            export_params:
+                Custom parameters for EXPORT query.
+        """
+        if not export_params:
+            export_params = {}
+
+        export_params["with_column_names"] = True
+
+        return self.export_to_callback(
+            cb.export_to_parquet,
+            dst,
+            query_or_table,
+            query_params,
+            callback_params,
+            export_params,
+        )
+
     def export_to_polars(
         self,
         query_or_table: str,
@@ -684,11 +719,11 @@ class ExaConnection:
         import_params: Optional[dict] = None,
     ):
         """
-        Import a large amount of data from :class:`polars.DataFrame`.
+        Import a large amount of data from :class:`polars.DataFrame` or :class:`polars.LazyFrame`.
 
         Args:
             src:
-                Source :class:`polars.DataFrame` instance.
+                Source :class:`polars.DataFrame` or :class:`polars.LazyFrame` instance.
             table:
                 Destination table for IMPORT.
             callback_params:

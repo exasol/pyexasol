@@ -34,30 +34,63 @@ if TYPE_CHECKING:
     import polars
 
 
-def export_to_list(pipe, dst, **kwargs):
+def export_to_list(pipe, dst, **kwargs) -> list:
     """
-    Basic example how to export CSV stream into basic list of tuples
+    Basic example of how to export CSV stream into basic list of tuples
     """
     wrapped_pipe = io.TextIOWrapper(pipe, newline="\n", encoding="utf-8")
     reader = csv.reader(wrapped_pipe, lineterminator="\n", **kwargs)
 
-    return [row for row in reader]
+    return list(reader)
 
 
 def export_to_pandas(pipe, dst, **kwargs) -> "pandas.DataFrame":
     """
-    Basic example how to export into Pandas DataFrame
-    Custom params for "read_csv" may be passed in **kwargs
+    Basic example of how to export into :class:`pandas.DataFrame`
+    Custom params for :func:`pandas.DataFrame.read_csv` may be passed in `**kwargs`
     """
     import pandas
 
     return pandas.read_csv(pipe, skip_blank_lines=False, **kwargs)
 
 
+def export_to_parquet(pipe, dst: Union[Path, str], **kwargs) -> None:
+    """
+    Basic example of how to export into local parquet file(s)
+
+    Args:
+        dst: Local path to directory for exporting files. Can be either a Path
+            or str. The default behavior is that the specified directory should be empty.
+            If this is not the case, an exception is thrown.
+        **kwargs:
+            Custom params for :func:`pyarrow.dataset.write_dataset`. Some important
+            defaults to note are:
+
+              existing_data_behavior
+                  Set to ``error``, which requires that the specified ``dst`` not
+                  contain any files or an exception will be thrown.
+              max_rows_per_file
+                  Set to ``0``, which means that all rows will be written to 1 file.
+                  If ``max_rows_per_file`` is altered, ensure that ``max_rows_per_group``
+                  is set to a value less than or equal to the value of ``max_rows_per_file``.
+              use_threads
+                  Set to ``True`` and ``preserve_order`` is set to ``False``. This means
+                  that the writing of multiple files will be done in parallel and that
+                  the order is not guaranteed to be preserved.
+    """
+    from pyarrow import (
+        csv,
+        dataset,
+    )
+
+    reader = csv.open_csv(pipe)
+    dataset.write_dataset(reader, base_dir=dst, format="parquet", **kwargs)
+
+
 def export_to_polars(pipe, dst, **kwargs) -> "polars.DataFrame":
     """
-    Basic example how to export into Polars DataFrame
-    Custom params for "read_csv" may be passed in **kwargs
+    Basic example of how to export into :class:`polars.DataFrame`
+    Custom params for :func:`polars.read_csv` may be passed in `**kwargs`
     """
     import polars
 
@@ -66,7 +99,7 @@ def export_to_polars(pipe, dst, **kwargs) -> "polars.DataFrame":
 
 def export_to_file(pipe, dst):
     """
-    Basic example how to export into file or file-like object opened in binary mode
+    Basic example of how to export into file or file-like object opened in binary mode
     """
     if not hasattr(dst, "write"):
         dst = open(dst, "wb")
@@ -76,7 +109,7 @@ def export_to_file(pipe, dst):
 
 def import_from_iterable(pipe, src: Iterable, **kwargs):
     """
-    Basic example how to import from iterable object (list, dict, tuple, iterator, generator, etc.)
+    Basic example of how to import from iterable object (list, dict, tuple, iterator, generator, etc.)
     """
     if not hasattr(src, "__iter__"):
         raise ValueError("Data source is not iterable")
@@ -92,8 +125,8 @@ def import_from_iterable(pipe, src: Iterable, **kwargs):
 
 def import_from_pandas(pipe, src: "pandas.DataFrame", **kwargs):
     """
-    Basic example how to import from Pandas DataFrame
-    Custom params for "to_csv" may be passed in **kwargs
+    Basic example of how to import from :class:`pandas.DataFrame`
+    Custom params for :fun:`pandas.DataFrame.to_csv` may be passed in **kwargs
     """
     import pandas
 
@@ -142,7 +175,7 @@ def import_from_parquet(
     pipe, source: Union[list[Path], Path, str], **kwargs
 ):  # NOSONAR(S3776)
     """
-    Basic example how to import from pyarrow parquet file(s)
+    Basic example of how to import from :class:`pyarrow.parquet.ParquetFile` via local parquet file(s)
 
     Args:
         source: Local filepath specification(s) to process. Can be one of:
@@ -152,7 +185,7 @@ def import_from_parquet(
             - str: representing a filepath which already contains a glob pattern
             (e.g., "/local_dir/*.parquet")
         **kwargs:
-            Custom params for :func:`pyarrow.parquet.Table.iter_batches`. This can be used
+            Custom params for :func:`pyarrow.parquet.ParquetFile.iter_batches`. This can be used
             to specify what columns should be read and their preferred order.
 
     Please note that nested or hierarchical column types are not supported.
@@ -196,8 +229,8 @@ def import_from_polars(
     pipe, src: Union["polars.LazyFrame", "polars.DataFrame"], **kwargs
 ):
     """
-    Basic example how to import from Polars DataFrame or LazyFrame
-    Custom params for "write_csv" may be passed in **kwargs
+    Basic example of how to import from :class:`polars.DataFrame` or :class:`polars.LazyFrame`
+    Custom params for :func:`polars.DataFrame.write_csv` may be passed in `**kwargs`
     """
     import polars
 
@@ -211,7 +244,7 @@ def import_from_polars(
 
 def import_from_file(pipe, src):
     """
-    Basic example how to import from file or file-like object opened in binary mode
+    Basic example of how to import from file or file-like object opened in binary mode
     """
     if not hasattr(src, "read"):
         src = open(src, "rb")
