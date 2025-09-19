@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+import argparse
+import json
+import subprocess
 from pathlib import Path
 
 import nox
@@ -22,6 +25,11 @@ __all__ = [
 ]
 
 _ROOT: Path = Path(__file__).parent
+
+PERFORMANCE_TEST_DIRECTORY = _ROOT / "test/performance"
+BENCHMARK_FILEPATH = PERFORMANCE_TEST_DIRECTORY / ".benchmarks"
+PREVIOUS_BENCHMARK = BENCHMARK_FILEPATH / "0001_performance.json"
+CURRENT_BENCHMARK = BENCHMARK_FILEPATH / "0002_performance.json"
 
 
 @nox.session(name="db:start", python=False)
@@ -75,3 +83,77 @@ def run_examples(session: Session) -> None:
         for error in errors:
             print(f"- {error}")
         session.error(1)
+
+
+def _get_name_from_path(line: str) -> str:
+    name = str(Path(line).name)
+    name = name.split(".py::")[1]
+
+    for old, new in {"[": "_", "]": ""}.items():
+        name = name.replace(old, new)
+    return f"{name}"
+
+
+@nox.session(name="performance:json", python=False)
+def performance_json(session: Session) -> None:
+    """Output JSON of performance tests."""
+    output = subprocess.run(
+        [
+            "pytest",
+            "--collect-only",
+            PERFORMANCE_TEST_DIRECTORY,
+            "-q",
+        ],
+        capture_output=True,
+        text=True,
+    )
+
+    if output.returncode != 0:
+        print(output)
+        session.error()
+
+    processed_output = [
+        {"path": line, "key": _get_name_from_path(line)}
+        for line in output.stdout.splitlines()
+        if PERFORMANCE_TEST_DIRECTORY.name in line
+    ]
+
+    keys = [row["key"] for row in processed_output]
+    if len(set(keys)) != len(keys):
+        session.error("keys for identifying tests are not unique!")
+
+    config = {
+        "performance-tests": processed_output,
+        "python-version": ["3.12"],
+        "exasol-version": ["8.32.0"],
+    }
+
+    print(json.dumps(config))
+
+
+def _create_performance_test_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(
+        prog="nox -s performance:test",
+        usage="nox -s performance:test -- [-h] [-t | test_path]",
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+    )
+    parser.add_argument("test_path", help="Path to test file (can include its name)")
+    return parser
+
+
+@nox.session(name="performance:test", python=False)
+def performance_test(session: Session) -> None:
+    """
+    Execute one or more performance tests, assuming a DB already is ready,
+    and save the benchmarked results.
+    """
+    parser = _create_performance_test_parser()
+    args = parser.parse_args(session.posargs)
+
+    command = [
+        "pytest",
+        args.test_path,
+        "--benchmark-sort=name",
+        f"--benchmark-json={CURRENT_BENCHMARK}",
+    ]
+    session.run(*command)
