@@ -1,0 +1,63 @@
+name: Performance-Checks
+
+on:
+  workflow_call:
+
+jobs:
+  build-list:
+    name: Generate Performance Test List
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    steps:
+      - name: SCM Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python & Poetry Environment
+        uses: exasol/python-toolbox/.github/actions/python-environment@v1
+
+      - name: Set list
+        run: |
+          list_output=$(poetry run -- nox -s performance:list)
+          echo "list=$list_output" >> $GITHUB_OUTPUT
+          echo "$list_output"
+
+  performance-checks:
+    name: Performance-Tests (${{matrix.performance-test}}, Python-${{ matrix.python-version }}, Exasol-${{ matrix.exasol-version}})}}
+    needs: [ build-list ]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        performance-test: ${{ needs.build-list.outputs.list }}
+        python-version: [ "3.12" ]
+        exasol-version: [ "8.32.0" ]
+    permissions:
+      contents: read
+    steps:
+      - name: Check out repo
+        uses: actions/checkout@v2
+
+      - name: Set up Python & Poetry Environment
+        uses: exasol/python-toolbox/.github/actions/python-environment@v1
+        with:
+          python-version: ${{ matrix.python-version }}
+          extras: "all"
+
+#      - name: Start test db
+#        run: >
+#          poetry run -- nox -s db:start -- --db-version ${{ matrix.exasol-version }}
+#
+#      - name: Run performance tests
+#        run: poetry run -- nox -s performance:test
+#
+#      - name: Upload Artifacts
+#        uses: actions/upload-artifact@v4.6.2
+#        with:
+#          name: performance-python${{ matrix.python-version }}-exasol${{ matrix.exasol-version}}-run${{ matrix.run-number }}
+#          path: test/performance/.benchmarks/0002_performance.json
+#          include-hidden-files: true
+#
+#      - name: Stop test db
+#        run: poetry run -- nox -s db:stop

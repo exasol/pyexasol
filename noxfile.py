@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import argparse
+import json
+import subprocess
 from pathlib import Path
 
 import nox
@@ -81,6 +83,31 @@ def run_examples(session: Session) -> None:
         for error in errors:
             print(f"- {error}")
         session.error(1)
+
+
+@nox.session(name="performance:list", python=False)
+def performance_list(session: Session) -> None:
+    """Output the list of performance tests."""
+    output = subprocess.run(
+        [
+            "pytest",
+            "--collect-only",
+            PERFORMANCE_TEST_DIRECTORY,
+            "-q",
+        ],
+        capture_output=True,
+        text=True,
+    )
+    if output.returncode != 0:
+        print(output.stdout)
+        session.error(output.stderr)
+
+    processed_output = [
+        line
+        for line in output.stdout.splitlines()
+        if PERFORMANCE_TEST_DIRECTORY.name in line
+    ]
+    print(processed_output)
 
 
 def _create_performance_test_parser() -> argparse.ArgumentParser:
