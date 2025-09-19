@@ -4,38 +4,36 @@ on:
   workflow_call:
 
 jobs:
-  build-list:
-    name: Generate Performance Test List
+  build-matrix:
+    name: Generate Performance Test Matrix
     runs-on: ubuntu-24.04
     permissions:
       contents: read
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
     steps:
       - name: SCM Checkout
         uses: actions/checkout@v4
 
       - name: Set up Python & Poetry Environment
         uses: exasol/python-toolbox/.github/actions/python-environment@v1
+        with:
+          extras: "all"
 
-      - name: Print list
-        run: poetry run -- nox -s performance:json
-
-      - name: Set list
+      - name: Set matrix
+        id: set-matrix
         run: |
-          list_output=$(poetry run -- nox -s performance:list)
-          echo "list=$list_output" >> $GITHUB_OUTPUT
-          echo "$list_output"
+          poetry run -- nox -s performance:json
+          echo "matrix=$(poetry run -- nox -s performance:json)" >> $GITHUB_OUTPUT
 
-  performance-checks:
-    name: Performance-Tests (${{matrix.performance-test}}, Python-${{ matrix.python-version }}, Exasol-${{ matrix.exasol-version}})}}
-    needs: [ build-list ]
+  performance-tests:
+    name: ${{ matrix.performance-tests.key }}
+    needs: [ build-matrix ]
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     strategy:
       fail-fast: false
-      matrix:
-        performance-test: ${{ needs.build-list.outputs.list }}
-        python-version: [ "3.12" ]
-        exasol-version: [ "8.32.0" ]
+      matrix: ${{ fromJson(needs.build-matrix.outputs.matrix) }}
     permissions:
       contents: read
     steps:
@@ -51,14 +49,15 @@ jobs:
 #      - name: Start test db
 #        run: >
 #          poetry run -- nox -s db:start -- --db-version ${{ matrix.exasol-version }}
-#
-#      - name: Run performance tests
-#        run: poetry run -- nox -s performance:test
-#
+
+#      - name: Run performance test
+#        run: poetry run -- nox -s performance:test ${{ matrix.performance-tests.path}}
+#            - give name here instead?
+
 #      - name: Upload Artifacts
 #        uses: actions/upload-artifact@v4.6.2
 #        with:
-#          name: performance-python${{ matrix.python-version }}-exasol${{ matrix.exasol-version}}-run${{ matrix.run-number }}
+#          name: "${{ fromJSON(steps.multiline_step.outputs.result) }}.json"
 #          path: test/performance/.benchmarks/0002_performance.json
 #          include-hidden-files: true
 #

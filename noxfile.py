@@ -85,7 +85,16 @@ def run_examples(session: Session) -> None:
         session.error(1)
 
 
-@nox.session(name="performance:josn", python=False)
+def _get_name_from_path(line: str) -> str:
+    name = str(Path(line).name)
+    name = name.split(".py::")[1]
+
+    for old, new in {"[": "_", "]": ""}.items():
+        name = name.replace(old, new)
+    return f"{name}"
+
+
+@nox.session(name="performance:json", python=False)
 def performance_json(session: Session) -> None:
     """Output JSON of performance tests."""
     output = subprocess.run(
@@ -98,18 +107,28 @@ def performance_json(session: Session) -> None:
         capture_output=True,
         text=True,
     )
+
     if output.returncode != 0:
         print(output)
-        # print(output.stdout)
-        # print(out)
         session.error()
 
     processed_output = [
-        line
+        {"path": line, "key": _get_name_from_path(line)}
         for line in output.stdout.splitlines()
         if PERFORMANCE_TEST_DIRECTORY.name in line
     ]
-    print(processed_output)
+
+    keys = [row["key"] for row in processed_output]
+    if len(set(keys)) != len(keys):
+        session.error("keys for identifying tests are not unique!")
+
+    config = {
+        "performance-tests": processed_output,
+        "python-version": ["3.12"],
+        "exasol-version": ["8.32.0"],
+    }
+
+    print(json.dumps(config))
 
 
 def _create_performance_test_parser() -> argparse.ArgumentParser:
@@ -137,5 +156,4 @@ def performance_test(session: Session) -> None:
         "--benchmark-sort=name",
         f"--benchmark-json={CURRENT_BENCHMARK}",
     ]
-
     session.run(*command)
