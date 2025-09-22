@@ -40,6 +40,9 @@ jobs:
       - name: Setup Custom Host
         run: echo "127.0.0.1 exasol-test-database" | sudo tee -a /etc/hosts
 
+      - name: Run broken tests
+        run: poetry run -- pytest ./test/integration/transaction_test.py
+
       - name: Run Tests and Collect Coverage
         run: poetry run -- nox -s test:integration -- --coverage --db-version ${{ matrix.exasol-version }}
 
