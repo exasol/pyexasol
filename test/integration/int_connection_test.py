@@ -20,12 +20,12 @@ from pyexasol.exceptions import ExaConnectionDsnError
         pytest.param("<actual_fingerprint>", id="fingerpint=actual_fingerprint"),
     ],
 )
-def fingerprint(request, ipaddr, port):
+def fingerprint(request, dsn):
     if request.param == "<actual_fingerprint>":
         import websocket
 
         ws = websocket.create_connection(
-            f"wss://exasol-test-database:{port}", sslopt={"cert_reqs": ssl.CERT_NONE}
+            f"wss://{dsn}", sslopt={"cert_reqs": ssl.CERT_NONE}
         )
         cert = ws.sock.getpeercert(True)
         ws.close()
