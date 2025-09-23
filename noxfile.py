@@ -30,10 +30,38 @@ PREVIOUS_BENCHMARK = BENCHMARK_FILEPATH / "0001_performance.json"
 CURRENT_BENCHMARK = BENCHMARK_FILEPATH / "0002_performance.json"
 
 
+def _create_start_db_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(
+        prog="nox -s start:db",
+        usage="nox -s start:db -- [-h] [-t | --port {int} --db-version {str} --with-certificate]",
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+    )
+    parser.add_argument(
+        "--port", default=8563, type=int, help="forward port for the Exasol DB"
+    )
+    parser.add_argument(
+        "--db-version", default="8.32.0", type=str, help="Exasol DB version to be used"
+    )
+    parser.add_argument(
+        "--with-certificate",
+        default=False,
+        action="store_true",
+        help="Add a certificate to the Exasol DB",
+    )
+    return parser
+
+
 @nox.session(name="db:start", python=False)
 def start_db(session: Session) -> None:
     """Start a test database"""
-    start_test_db(session=session)
+    parser = _create_start_db_parser()
+    args = parser.parse_args(session.posargs)
+    start_test_db(
+        session=session,
+        port=args.port,
+        db_version=args.db_version,
+        with_certificate=args.with_certificate,
+    )
 
 
 @nox.session(name="db:stop", python=False)
