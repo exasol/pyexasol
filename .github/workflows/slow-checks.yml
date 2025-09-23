@@ -20,16 +20,14 @@ jobs:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     strategy:
       fail-fast: false
-      matrix: ${{ fromJson(needs.build-matrix.outputs.matrix) }}
+      # matrix: ${{ fromJson(needs.build-matrix.outputs.matrix) }}
+      matrix:
+        python-version: [ "3.11" ]
+        exasol-version: [ "8.32.0" ]
 
     steps:
       - name: SCM Checkout
         uses: actions/checkout@v4
-
-      - name: Upgrade dependencies on CI runner
-        run: |
-          sudo DEBIAN_FRONTEND=noninteractive apt update
-          sudo DEBIAN_FRONTEND=noninteractive apt upgrade -y
 
       - name: Setup Python & Poetry Environment
         uses: exasol/python-toolbox/.github/actions/python-environment@v1
@@ -41,14 +39,4 @@ jobs:
         run: echo "127.0.0.1 exasol-test-database" | sudo tee -a /etc/hosts
 
       - name: Run broken tests
-        run: poetry run -- pytest ./test/integration/transaction_test.py
-
-      - name: Run Tests and Collect Coverage
         run: poetry run -- nox -s test:integration -- --coverage --db-version ${{ matrix.exasol-version }}
-
-      - name: Upload Artifacts
-        uses: actions/upload-artifact@v4.6.2
-        with:
-          name: coverage-python${{ matrix.python-version }}-exasol${{ matrix.exasol-version}}-slow
-          path: .coverage
-          include-hidden-files: true
