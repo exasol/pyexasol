@@ -1248,6 +1248,7 @@ description = "Read metadata from Python packages"
 optional = false
 python-versions = ">=3.9"
 groups = ["dev"]
+markers = "python_version < \"3.10\""
 files = [
     {file = "importlib_metadata-8.7.0-py3-none-any.whl", hash = "sha256:e5dd1551894c77868a30651cef00984d50e1002d06942a7101d34870c5f02afd"},
     {file = "importlib_metadata-8.7.0.tar.gz", hash = "sha256:d13b81ad223b890aa16c5471f2ac3056cf76c5f10f82d6f9292f0b415f389000"},
@@ -2710,40 +2711,6 @@ files = [
 ]
 
 [[package]]
-name = "pygal"
-version = "3.0.5"
-description = "A Python svg graph plotting library"
-optional = false
-python-versions = ">=3.8"
-groups = ["dev"]
-files = [
-    {file = "pygal-3.0.5-py3-none-any.whl", hash = "sha256:a3268a5667b470c8fbbb0eca7e987561a7321caeba589d40e4c1bc16dbe71393"},
-    {file = "pygal-3.0.5.tar.gz", hash = "sha256:c0a0f34e5bc1c01975c2bfb8342ad521e293ad42e525699dd00c4d7a52c14b71"},
-]
-
-[package.dependencies]
-importlib-metadata = "*"
-
-[package.extras]
-docs = ["pygal-sphinx-directives", "sphinx", "sphinx-rtd-theme"]
-lxml = ["lxml"]
-moulinrouge = ["flask", "pygal-maps-ch", "pygal-maps-fr", "pygal-maps-world"]
-png = ["cairosvg"]
-test = ["cairosvg", "coveralls", "lxml", "pyquery", "pytest", "pytest-cov", "ruff (>=0.5.6)"]
-
-[[package]]
-name = "pygaljs"
-version = "1.0.2"
-description = "Python package providing assets from https://github.com/Kozea/pygal.js"
-optional = false
-python-versions = "*"
-groups = ["dev"]
-files = [
-    {file = "pygaljs-1.0.2-py2.py3-none-any.whl", hash = "sha256:d75e18cb21cc2cda40c45c3ee690771e5e3d4652bf57206f20137cf475c0dbe8"},
-    {file = "pygaljs-1.0.2.tar.gz", hash = "sha256:0b71ee32495dcba5fbb4a0476ddbba07658ad65f5675e4ad409baf154dec5111"},
-]
-
-[[package]]
 name = "pygments"
 version = "2.19.2"
 description = "Pygments is a syntax highlighting package written in Python."
@@ -2904,10 +2871,7 @@ files = [
 
 [package.dependencies]
 py-cpuinfo = "*"
-pygal = {version = "*", optional = true, markers = "extra == \"histogram\""}
-pygaljs = {version = "*", optional = true, markers = "extra == \"histogram\""}
 pytest = ">=8.1"
-setuptools = {version = "*", optional = true, markers = "extra == \"histogram\""}
 
 [package.extras]
 aspect = ["aspectlib"]
@@ -4129,6 +4093,7 @@ description = "Backport of pathlib-compatible object wrapper for zip files"
 optional = false
 python-versions = ">=3.9"
 groups = ["dev"]
+markers = "python_version < \"3.10\""
 files = [
     {file = "zipp-3.23.0-py3-none-any.whl", hash = "sha256:071652d6115ed432f5ce1d34c336c0adfd6a884660d1e9712a256d3d3bd4b14e"},
     {file = "zipp-3.23.0.tar.gz", hash = "sha256:a07157588a12518c9d4034df3fbbee09c814741a33ff63c05fa29d26a2404166"},
@@ -4155,4 +4120,4 @@ ujson = ["ujson"]
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.9.2,<4"
-content-hash = "4d681b89187b3a177c209050c4fa41dce215e06b1af3dec2d72fb996bc2cd25e"
+content-hash = "e3ee29335c5fb5b32caa3030331e43d80a6139d8a11c5740fff6908edaa96503"
