@@ -1,9 +1,9 @@
 from pathlib import Path
+from test.integration.import_and_export.helper import select_result
 from typing import Callable
 
 import pyarrow as pa
 import pytest
-from integration.import_and_export.helper import select_result
 from pyarrow import parquet as pq
 
 
