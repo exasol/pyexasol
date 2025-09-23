@@ -64,6 +64,19 @@ def dsn_resolved(ipaddr, port):
     return os.environ.get("EXAHOST", f"{ipaddr}:{port}")
 
 
+@pytest.fixture(
+    scope="session",
+    params=[
+        pytest.param(ssl.CERT_NONE, id="NO_CERT", marks=pytest.mark.no_cert),
+        pytest.param(ssl.CERT_REQUIRED, id="WITH_CERT", marks=pytest.mark.with_cert),
+    ],
+)
+def certificate_type(request):
+    if request.param == ssl.CERT_NONE:
+        return ssl.CERT_NONE
+    return ssl.CERT_REQUIRED
+
+
 @pytest.fixture(scope="session")
 def dsn(certificate_type, ipaddr, port):
     if certificate_type == ssl.CERT_NONE:
@@ -86,19 +99,6 @@ def password():
 @pytest.fixture(scope="session")
 def schema():
     return os.environ.get("EXASCHEMA", "PYEXASOL_TEST")
-
-
-@pytest.fixture(
-    scope="session",
-    params=[
-        pytest.param(ssl.CERT_NONE, id="NO_CERT", marks=pytest.mark.no_cert),
-        pytest.param(ssl.CERT_REQUIRED, id="WITH_CERT", marks=pytest.mark.with_cert),
-    ],
-)
-def certificate_type(request):
-    if request.param == ssl.CERT_NONE:
-        return ssl.CERT_NONE
-    return ssl.CERT_REQUIRED
 
 
 @pytest.fixture(scope="session")
