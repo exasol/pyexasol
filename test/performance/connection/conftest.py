@@ -69,7 +69,7 @@ def connection(connection_factory):
 class BenchmarkSpecifications:
     def __init__(self):
         self.initial_data_size: int = 1_000
-        self.target_data_size: int = 4_000  # _000
+        self.target_data_size: int = 4_000_000
         # In testing, it was noticed that first round always is faster (cache), so we
         # always do a warm-up round so that the aggregated values are not biased from
         # this.
