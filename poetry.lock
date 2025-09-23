@@ -521,12 +521,12 @@ version = "0.4.6"
 description = "Cross-platform colored terminal text."
 optional = false
 python-versions = "!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,!=3.4.*,!=3.5.*,!=3.6.*,>=2.7"
-groups = ["dev"]
-markers = "sys_platform == \"win32\" or platform_system == \"Windows\""
+groups = ["dev", "performance"]
 files = [
     {file = "colorama-0.4.6-py2.py3-none-any.whl", hash = "sha256:4f1d9991f5acc0ca119f9d443620b77f9d6b33703e51011c16baf57afb285fc6"},
     {file = "colorama-0.4.6.tar.gz", hash = "sha256:08695f5cb7ed6e0531a20572697297273c47b8cae5a63ffc6d6ed5c201be6e44"},
 ]
+markers = {dev = "sys_platform == \"win32\" or platform_system == \"Windows\"", performance = "sys_platform == \"win32\""}
 
 [[package]]
 name = "colorlog"
@@ -925,7 +925,7 @@ version = "1.3.0"
 description = "Backport of PEP 654 (exception groups)"
 optional = false
 python-versions = ">=3.7"
-groups = ["dev"]
+groups = ["dev", "performance"]
 markers = "python_version < \"3.11\""
 files = [
     {file = "exceptiongroup-1.3.0-py3-none-any.whl", hash = "sha256:4d111e6e0c13d0644cad6ddaa7ed0261a0b36971f6d23e7ec9b4b9097da78a10"},
@@ -1247,12 +1247,12 @@ version = "8.7.0"
 description = "Read metadata from Python packages"
 optional = false
 python-versions = ">=3.9"
-groups = ["dev"]
-markers = "python_version < \"3.10\""
+groups = ["dev", "performance"]
 files = [
     {file = "importlib_metadata-8.7.0-py3-none-any.whl", hash = "sha256:e5dd1551894c77868a30651cef00984d50e1002d06942a7101d34870c5f02afd"},
     {file = "importlib_metadata-8.7.0.tar.gz", hash = "sha256:d13b81ad223b890aa16c5471f2ac3056cf76c5f10f82d6f9292f0b415f389000"},
 ]
+markers = {dev = "python_version < \"3.10\""}
 
 [package.dependencies]
 zipp = ">=3.20"
@@ -1295,7 +1295,7 @@ version = "2.1.0"
 description = "brain-dead simple config-ini parsing"
 optional = false
 python-versions = ">=3.8"
-groups = ["dev"]
+groups = ["dev", "performance"]
 files = [
     {file = "iniconfig-2.1.0-py3-none-any.whl", hash = "sha256:9deba5723312380e77435581c6bf4935c94cbfab9b1ed33ef8d238ea168eb760"},
     {file = "iniconfig-2.1.0.tar.gz", hash = "sha256:3abbd2e30b36733fee78f9c7f7308f2d0050e88f0087fd25c2645f63c773e1c7"},
@@ -2031,7 +2031,7 @@ version = "25.0"
 description = "Core utilities for Python packages"
 optional = false
 python-versions = ">=3.8"
-groups = ["main", "dev"]
+groups = ["main", "dev", "performance"]
 files = [
     {file = "packaging-25.0-py3-none-any.whl", hash = "sha256:29572ef2b1f17581046b3a2227d5c611fb25ec70ca1ba8554b24b0e69331a484"},
     {file = "packaging-25.0.tar.gz", hash = "sha256:d443872c98d677bf60f6a1f2f8c1cb748e8fe762d2bf9d3148b5599295b0fc4f"},
@@ -2291,7 +2291,7 @@ version = "1.6.0"
 description = "plugin and hook calling mechanisms for python"
 optional = false
 python-versions = ">=3.9"
-groups = ["dev"]
+groups = ["dev", "performance"]
 files = [
     {file = "pluggy-1.6.0-py3-none-any.whl", hash = "sha256:e920276dd6813095e9377c0bc5566d94c932c33b27a3e3945d8389c374dd4746"},
     {file = "pluggy-1.6.0.tar.gz", hash = "sha256:7dcc130b76258d33b90f61b658791dede3486c3e6bfb003ee5c9bfb396dd22f3"},
@@ -2420,6 +2420,18 @@ wcwidth = "*"
 
 [package.extras]
 tests = ["pytest", "pytest-cov", "pytest-lazy-fixtures"]
+
+[[package]]
+name = "py-cpuinfo"
+version = "9.0.0"
+description = "Get CPU info with pure Python"
+optional = false
+python-versions = "*"
+groups = ["performance"]
+files = [
+    {file = "py-cpuinfo-9.0.0.tar.gz", hash = "sha256:3cdbbf3fac90dc6f118bfd64384f309edeadd902d7c8fb17f02ffa1fc3f49690"},
+    {file = "py_cpuinfo-9.0.0-py3-none-any.whl", hash = "sha256:859625bc251f64e21f077d099d4162689c762b5d6a4c3c97553d56241c9674d5"},
+]
 
 [[package]]
 name = "py-serializable"
@@ -2699,12 +2711,46 @@ files = [
 ]
 
 [[package]]
+name = "pygal"
+version = "3.0.5"
+description = "A Python svg graph plotting library"
+optional = false
+python-versions = ">=3.8"
+groups = ["performance"]
+files = [
+    {file = "pygal-3.0.5-py3-none-any.whl", hash = "sha256:a3268a5667b470c8fbbb0eca7e987561a7321caeba589d40e4c1bc16dbe71393"},
+    {file = "pygal-3.0.5.tar.gz", hash = "sha256:c0a0f34e5bc1c01975c2bfb8342ad521e293ad42e525699dd00c4d7a52c14b71"},
+]
+
+[package.dependencies]
+importlib-metadata = "*"
+
+[package.extras]
+docs = ["pygal-sphinx-directives", "sphinx", "sphinx-rtd-theme"]
+lxml = ["lxml"]
+moulinrouge = ["flask", "pygal-maps-ch", "pygal-maps-fr", "pygal-maps-world"]
+png = ["cairosvg"]
+test = ["cairosvg", "coveralls", "lxml", "pyquery", "pytest", "pytest-cov", "ruff (>=0.5.6)"]
+
+[[package]]
+name = "pygaljs"
+version = "1.0.2"
+description = "Python package providing assets from https://github.com/Kozea/pygal.js"
+optional = false
+python-versions = "*"
+groups = ["performance"]
+files = [
+    {file = "pygaljs-1.0.2-py2.py3-none-any.whl", hash = "sha256:d75e18cb21cc2cda40c45c3ee690771e5e3d4652bf57206f20137cf475c0dbe8"},
+    {file = "pygaljs-1.0.2.tar.gz", hash = "sha256:0b71ee32495dcba5fbb4a0476ddbba07658ad65f5675e4ad409baf154dec5111"},
+]
+
+[[package]]
 name = "pygments"
 version = "2.19.2"
 description = "Pygments is a syntax highlighting package written in Python."
 optional = false
 python-versions = ">=3.8"
-groups = ["dev"]
+groups = ["dev", "performance"]
 files = [
     {file = "pygments-2.19.2-py3-none-any.whl", hash = "sha256:86540386c03d588bb81d44bc3928634ff26449851e99741617ecb9037ee5ec0b"},
     {file = "pygments-2.19.2.tar.gz", hash = "sha256:636cb2477cec7f8952536970bc533bc43743542f70392ae026374600add5b887"},
@@ -2827,7 +2873,7 @@ version = "8.4.1"
 description = "pytest: simple powerful testing with Python"
 optional = false
 python-versions = ">=3.9"
-groups = ["dev"]
+groups = ["dev", "performance"]
 files = [
     {file = "pytest-8.4.1-py3-none-any.whl", hash = "sha256:539c70ba6fcead8e78eebbf1115e8b589e7565830d7d006a8723f19ac8a0afb7"},
     {file = "pytest-8.4.1.tar.gz", hash = "sha256:7c67fd69174877359ed9371ec3af8a3d2b04741818c51e5e99cc1742251fa93c"},
@@ -2844,6 +2890,30 @@ tomli = {version = ">=1", markers = "python_version < \"3.11\""}
 
 [package.extras]
 dev = ["argcomplete", "attrs (>=19.2)", "hypothesis (>=3.56)", "mock", "requests", "setuptools", "xmlschema"]
+
+[[package]]
+name = "pytest-benchmark"
+version = "5.1.0"
+description = "A ``pytest`` fixture for benchmarking code. It will group the tests into rounds that are calibrated to the chosen timer."
+optional = false
+python-versions = ">=3.9"
+groups = ["performance"]
+files = [
+    {file = "pytest-benchmark-5.1.0.tar.gz", hash = "sha256:9ea661cdc292e8231f7cd4c10b0319e56a2118e2c09d9f50e1b3d150d2aca105"},
+    {file = "pytest_benchmark-5.1.0-py3-none-any.whl", hash = "sha256:922de2dfa3033c227c96da942d1878191afa135a29485fb942e85dff1c592c89"},
+]
+
+[package.dependencies]
+py-cpuinfo = "*"
+pygal = {version = "*", optional = true, markers = "extra == \"histogram\""}
+pygaljs = {version = "*", optional = true, markers = "extra == \"histogram\""}
+pytest = ">=8.1"
+setuptools = {version = "*", optional = true, markers = "extra == \"histogram\""}
+
+[package.extras]
+aspect = ["aspectlib"]
+elasticsearch = ["elasticsearch"]
+histogram = ["pygal", "pygaljs", "setuptools"]
 
 [[package]]
 name = "python-daemon"
@@ -3149,7 +3219,7 @@ version = "80.9.0"
 description = "Easily download, build, install, upgrade, and uninstall Python packages"
 optional = false
 python-versions = ">=3.9"
-groups = ["dev"]
+groups = ["dev", "performance"]
 files = [
     {file = "setuptools-80.9.0-py3-none-any.whl", hash = "sha256:062d34222ad13e0cc312a4c02d73f059e86a4acbfbdea8f8f76b28c99f306922"},
     {file = "setuptools-80.9.0.tar.gz", hash = "sha256:f36b47402ecde768dbfafc46e8e4207b4360c654f1f3bb84475f0a28628fb19c"},
@@ -3664,7 +3734,7 @@ version = "2.2.1"
 description = "A lil' TOML parser"
 optional = false
 python-versions = ">=3.8"
-groups = ["dev"]
+groups = ["dev", "performance"]
 files = [
     {file = "tomli-2.2.1-cp311-cp311-macosx_10_9_x86_64.whl", hash = "sha256:678e4fa69e4575eb77d103de3df8a895e1591b48e740211bd1067378c69e8249"},
     {file = "tomli-2.2.1-cp311-cp311-macosx_11_0_arm64.whl", hash = "sha256:023aa114dd824ade0100497eb2318602af309e5a55595f76b626d6d9f3b7b0a6"},
@@ -3699,6 +3769,7 @@ files = [
     {file = "tomli-2.2.1-py3-none-any.whl", hash = "sha256:cb55c73c5f4408779d0cf3eef9f762b9c9f147a77de7b258bef0a5628adc85cc"},
     {file = "tomli-2.2.1.tar.gz", hash = "sha256:cd45e1dc79c835ce60f7404ec8119f2eb06d38b1deba146f07ced3bbc44505ff"},
 ]
+markers = {performance = "python_version < \"3.11\""}
 
 [[package]]
 name = "tomlkit"
@@ -3770,11 +3841,12 @@ version = "4.14.1"
 description = "Backported and Experimental Type Hints for Python 3.9+"
 optional = false
 python-versions = ">=3.9"
-groups = ["dev"]
+groups = ["dev", "performance"]
 files = [
     {file = "typing_extensions-4.14.1-py3-none-any.whl", hash = "sha256:d1e1e3b58374dc93031d6eda2420a48ea44a36c2b4766a4fdeb3710755731d76"},
     {file = "typing_extensions-4.14.1.tar.gz", hash = "sha256:38b39f4aeeab64884ce9f74c94263ef78f3c22467c8724005483154c26648d36"},
 ]
+markers = {performance = "python_version < \"3.11\""}
 
 [[package]]
 name = "typing-inspection"
@@ -4059,12 +4131,12 @@ version = "3.23.0"
 description = "Backport of pathlib-compatible object wrapper for zip files"
 optional = false
 python-versions = ">=3.9"
-groups = ["dev"]
-markers = "python_version < \"3.10\""
+groups = ["dev", "performance"]
 files = [
     {file = "zipp-3.23.0-py3-none-any.whl", hash = "sha256:071652d6115ed432f5ce1d34c336c0adfd6a884660d1e9712a256d3d3bd4b14e"},
     {file = "zipp-3.23.0.tar.gz", hash = "sha256:a07157588a12518c9d4034df3fbbee09c814741a33ff63c05fa29d26a2404166"},
 ]
+markers = {dev = "python_version < \"3.10\""}
 
 [package.extras]
 check = ["pytest-checkdocs (>=2.4)", "pytest-ruff (>=0.2.1) ; sys_platform != \"cygwin\""]
@@ -4087,4 +4159,4 @@ ujson = ["ujson"]
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.9.2,<4"
-content-hash = "1632598c3a6441eb86ff622a4d4f29f5d8083e133ee265aa2f87a41fd1ace782"
+content-hash = "926ca5cd5be1b07b48463e2e4e79b396b7cd8fbfb68c2b9cc6d072064a8fb7ef"
