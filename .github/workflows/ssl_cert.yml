@@ -18,32 +18,31 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.11"]
+        python-version: ["3.12"]
         exasol-version: ${{ fromJson(needs.build-matrix.outputs.matrix).exasol-version }}
     permissions:
       contents: read
     steps:
-      - name: "Checkout repo"
+      - name: Check out repo
         uses: actions/checkout@v2
 
-      - name: Setup Python & Poetry Environment
+      - name: Set up Python & Poetry Environment
         uses: exasol/python-toolbox/.github/actions/python-environment@v1
         with:
           python-version: ${{ matrix.python-version }}
           extras: "all"
 
-      - name: "Start test db"
-        run: >
-          poetry run -- itde spawn-test-environment --environment-name ssl
-          --database-port-forward 8563 --bucketfs-port-forward 2580
-          --docker-db-image-version ${{ matrix.exasol-version }} --db-mem-size 4GB
-          --create-certificates
+      - name: Start test db
+        run: poetry run -- nox -s db:start -- --db-version ${{ matrix.exasol-version }} --with-certificate
 
-      - name: "Pull certificate from container"
-        run: docker cp db_container_ssl:/certificates/rootCA.crt .
+      - name: Pull certificate from container
+        run: docker cp db_container_test:/certificates/rootCA.crt .
 
-      - name: "Setup custom host"
+      - name: Set up custom host
         run: echo "127.0.0.1 exasol-test-database" | sudo tee -a /etc/hosts
 
-      - name: "Run test"
+      - name: Run test
         run: poetry run -- python examples/_ssl_test.py
+
+      - name: Stop test db
+        run: poetry run -- nox -s db:stop
