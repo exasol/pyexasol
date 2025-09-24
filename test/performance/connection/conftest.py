@@ -1,11 +1,11 @@
 import os
 import ssl
 from pathlib import Path
-from test.performance.connection.helper import create_empty_table
 from typing import Final
 
 import pytest
 
+from performance.connection.helper import create_empty_table
 from pyexasol import ExaConnection
 
 

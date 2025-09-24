@@ -118,7 +118,7 @@ module = [
     "turbodbc.*",
     # code we are not yet type checking
     "examples.*",
-    "tests.*"
+    "test.*"
 ]
 ignore_errors = true
 ignore_missing_imports = true
