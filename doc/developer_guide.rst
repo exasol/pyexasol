@@ -104,7 +104,7 @@ to capture how long each execution took to run, and to calculate various statist
 values for comparative purposes.
 
 .. note::
-    ``pytest-benchmark`` is not include in the ``dev`` dependencies due to an odd
+    ``pytest-benchmark`` is not included in the ``dev`` dependencies due to an odd
     correlation observed when executing the integration tests. This was observed
     with ``pytest-benchmark`` version 5.1.0 and its dependency ``py-cpuinfo`` 9.0.0.
     Namely, when executing the integration tests with Python 3.11, we saw that the
@@ -118,7 +118,7 @@ DB
 If you manually run some tests or want to try something out, you can start and stop the database manually using ``nox -s db:start`` and ``nox -s db:stop``.
 
 Preparing & Triggering a Release
---------------------------------
+++++++++++++++++++++++++++++++++
 
 The `exasol-toolbox` provides nox tasks to semi-automate the release process:
 
