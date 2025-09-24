@@ -2,6 +2,7 @@ import os
 import ssl
 from pathlib import Path
 from test.performance.connection.helper import create_empty_table
+from typing import Final
 
 import pytest
 
@@ -68,21 +69,21 @@ def connection(connection_factory):
 
 class BenchmarkSpecifications:
     def __init__(self):
-        self.initial_data_size: int = 1_000
-        self.target_data_size: int = 4_000_000
+        self.initial_data_size: Final[int] = 1_000
+        self.target_data_size: Final[int] = 4_000_000
         # In testing, it was noticed that first round always is faster (cache), so we
         # always do a warm-up round so that the aggregated values are not biased from
         # this.
-        self.warm_up_rounds: int = 1
+        self.warm_up_rounds: Final[int] = 1
         # If other settings are changed, it's useful to look at the "data" values for
         # each run to see if any patterns emerge, like every 7th run is longer, as
         # there may be other unforeseen consequences -- like when DB flushing occurs --
         # in running a test multiple times. Such consequences can lead to a bias in the
         # aggregated values too.
-        self.rounds: int = 15
+        self.rounds: Final[int] = 15
         iterations, final_export_size = self.calculate_iterations()
-        self.final_data_size = final_export_size
-        self.iterations: int = iterations
+        self.final_data_size: Final[int] = final_export_size
+        self.iterations: Final[int] = iterations
 
     def calculate_iterations(self) -> tuple[int, int]:
         """
