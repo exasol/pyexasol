@@ -13,13 +13,13 @@ from pyarrow import dataset
 from pyexasol import ExaConnection
 
 
-def get_csv_length(filepath: Path) -> int:
+def _get_csv_length(filepath: Path) -> int:
     with Path(filepath).open(mode="r", encoding="utf-8") as file:
         reader = csv.reader(file)
         return len(list(reader))
 
 
-def get_parquet_length(filepath: Path) -> int:
+def _get_parquet_length(filepath: Path) -> int:
     parquet_dataset = dataset.dataset(filepath)
     return sum(
         row_group.num_rows
@@ -28,24 +28,24 @@ def get_parquet_length(filepath: Path) -> int:
     )
 
 
-def get_list_length(exported_list: list) -> int:
+def _get_list_length(exported_list: list) -> int:
     return len(exported_list)
 
 
-def get_pandas_dataframe_length(exported_pandas: pd.DataFrame) -> int:
+def _get_pandas_dataframe_length(exported_pandas: pd.DataFrame) -> int:
     return exported_pandas.shape[0]
 
 
-def get_polars_dataframe_length(exported_polars: pl.DataFrame) -> int:
+def _get_polars_dataframe_length(exported_polars: pl.DataFrame) -> int:
     return exported_polars.shape[0]
 
 
 @pytest.mark.parametrize(
     "export_method, file_length_function",
     [
-        pytest.param("export_to_list", get_list_length, id="list"),
-        pytest.param("export_to_pandas", get_pandas_dataframe_length, id="pandas"),
-        pytest.param("export_to_polars", get_polars_dataframe_length, id="polars"),
+        pytest.param("export_to_list", _get_list_length, id="list"),
+        pytest.param("export_to_pandas", _get_pandas_dataframe_length, id="pandas"),
+        pytest.param("export_to_polars", _get_polars_dataframe_length, id="polars"),
     ],
 )
 def test_export_methods_to_memory(
@@ -74,12 +74,12 @@ def test_export_methods_to_memory(
 @pytest.mark.parametrize(
     "export_method, file_extension, file_length_function, callback_params",
     [
-        pytest.param("export_to_file", "csv", get_csv_length, None, id="csv"),
+        pytest.param("export_to_file", "csv", _get_csv_length, None, id="csv"),
         # writes files to directory so no file_extension is needed
         pytest.param(
             "export_to_parquet",
             "",
-            get_parquet_length,
+            _get_parquet_length,
             {"existing_data_behavior": "overwrite_or_ignore"},
             id="parquet",
         ),
