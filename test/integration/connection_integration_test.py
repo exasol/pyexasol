@@ -216,8 +216,8 @@ def test_websocket_connection_no_cert_check_if_fingerprint_has_value_nocertcheck
     connection_mock,
     dsn,
     certificate_type,
-    ipaddr,
-    port,
+    default_ipaddr,
+    default_port,
     websocket_sslopt,
     nocertcheckvalue,
 ):
@@ -232,7 +232,7 @@ def test_websocket_connection_no_cert_check_if_fingerprint_has_value_nocertcheck
 
     connection_mock.connection.options["resolve_hostnames"] = False
     connection_mock.connection.options["dsn"] = build_dsn(
-        certificate_type, ipaddr, port
+        certificate_type, default_ipaddr, default_port
     )
     connection_mock.connection.options["websocket_sslopt"] = None
     connection_mock.simulate_resolve_hostname("localhost", ["ip1"])
