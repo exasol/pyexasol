@@ -78,6 +78,15 @@ faker = "^24.14.1"
 exasol-toolbox = "^1.9.0"
 types-ujson = "^5.10.0.20250326"
 
+[tool.poetry.group.performance]
+optional = true
+
+[tool.poetry.group.performance.dependencies]
+# pytest-benchmark is kept separate from the other dev dependencies due to
+# observed correlated issues when running other tests. For further details, see
+# the `Performance Tests` section of the ``doc/user_guide/developer_guide.rst``.
+pytest-benchmark = {extras = ["histogram"], version = "^5.1.0"}
+
 [tool.black]
 line-length = 88
 verbose = false
@@ -109,8 +118,7 @@ module = [
     "turbodbc.*",
     # code we are not yet type checking
     "examples.*",
-    "test.unit.*",
-    "test.integration.*",
+    "test.*"
 ]
 ignore_errors = true
 ignore_missing_imports = true

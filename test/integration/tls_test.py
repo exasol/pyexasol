@@ -61,5 +61,6 @@ def test_connect_with_valid_fingerprint(
 @pytest.mark.tls
 def test_connect_with_invalid_fingerprint_fails(dsn_with_invalid_fingerprint):
     with pytest.raises(ExaConnectionFailedError) as exec_info:
-        pyexasol.connect(dsn=dsn_with_invalid_fingerprint)
+        with pyexasol.connect(dsn=dsn_with_invalid_fingerprint):
+            pass
     assert "did not match server fingerprint" in str(exec_info.value)

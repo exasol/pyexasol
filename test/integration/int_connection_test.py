@@ -20,12 +20,12 @@ from pyexasol.exceptions import ExaConnectionDsnError
         pytest.param("<actual_fingerprint>", id="fingerpint=actual_fingerprint"),
     ],
 )
-def fingerprint(request, ipaddr, port):
+def fingerprint(request, dsn):
     if request.param == "<actual_fingerprint>":
         import websocket
 
         ws = websocket.create_connection(
-            f"wss://exasol-test-database:{port}", sslopt={"cert_reqs": ssl.CERT_NONE}
+            f"wss://{dsn}", sslopt={"cert_reqs": ssl.CERT_NONE}
         )
         cert = ws.sock.getpeercert(True)
         ws.close()
@@ -35,28 +35,34 @@ def fingerprint(request, ipaddr, port):
 
 
 @pytest.fixture()
-def dsn_builder(certificate_type, ipaddr, port, fingerprint):
+def dsn_builder(certificate_type, default_ipaddr, default_port, fingerprint):
 
     def build_dsn(custom_fingerprint: Optional[str] = None):
         fp = custom_fingerprint or fingerprint
         if certificate_type == ssl.CERT_NONE:
-            return os.environ.get("EXAHOST", f"{ipaddr}/{fp}:{port}")
+            return os.environ.get("EXAHOST", f"{default_ipaddr}/{fp}:{default_port}")
         # The host name is different for this case. As it is required to be the same
         # host name that the certificate is signed. This comes from the ITDE.
-        return os.environ.get("EXAHOST", f"exasol-test-database/{fp}:{port}")
+        return os.environ.get("EXAHOST", f"exasol-test-database/{fp}:{default_port}")
 
     return build_dsn
 
 
 def test_connection(
-    dsn_builder, user, password, certificate_type, ipaddr, port, fingerprint
+    dsn_builder,
+    user,
+    password,
+    certificate_type,
+    default_ipaddr,
+    default_port,
+    fingerprint,
 ):
     connection = ExaConnection(dsn=dsn_builder(), user=user, password=password)
     connection.execute("SELECT 1")
 
 
 def test_connection_fails_with_incorrect_fingerpint(
-    dsn_builder, user, password, certificate_type, ipaddr, port
+    dsn_builder, user, password, certificate_type, default_ipaddr, default_port
 ):
 
     with pytest.raises(ExaConnectionDsnError):

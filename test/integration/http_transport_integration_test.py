@@ -4,8 +4,8 @@ from pyexasol.http_transport import ExaHTTPTransportWrapper
 
 
 @pytest.fixture
-def http_transport_wrapper_with_mocks(ipaddr, port):
-    return ExaHTTPTransportWrapper(ipaddr=ipaddr, port=port)
+def http_transport_wrapper_with_mocks(default_ipaddr, default_port):
+    return ExaHTTPTransportWrapper(ipaddr=default_ipaddr, port=default_port)
 
 
 ERROR_MESSAGE = "Error from callback"
