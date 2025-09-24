@@ -53,7 +53,7 @@ Integration Tests
 
 .. attention::
 
-   As a Docker container with a test databases needs to be started for the integration tests, it may take a bit before the tests themselves start executing. After the tests have been run, the database will be shut down again.
+   As a Docker container with a test database needs to be started for the integration tests, it may take a bit before the tests themselves start executing. After the tests have been run, the database will be shut down again.
 
    If you are running Docker inside of a VM and are running the integration tests with `ssl.CERT_REQUIRED`, inside your VM map the `exasol-test-database` to the associated IP address.
    This mapping is required due to how the certificate was created & for hostname resolution.
@@ -78,6 +78,40 @@ Integration Tests
     nox -s test:integration
 
 Passing additional arguments to pytest works the same as for the unit tests.
+
+Performance Tests
+-----------------
+
+.. attention::
+
+   For the performance tests, a Docker container with a test database needs to be started.
+   This can be done with ``poetry run -- nox -s db:start``.
+
+   As these tests are meant to measure the performance of functions, the tests
+   are expected to take a bit to set up and execute. If you are running the tests
+   for the first time, it is recommend that you modify the throughput data values
+   to a smaller value; this can be done by modifying :attr:`BenchmarkSpecifications.target_data_size`.
+
+To execute the performance tests, you need to additionally execute:
+
+.. code-block:: shell
+
+    poetry install --with performance
+
+This installs `pytest-benchmark <https://pypi.org/project/pytest-benchmark/>__`,
+which provides a pytest fixture ``benchmark`` to re-run tests a specified number of times,
+to capture how long each execution took to run, and to calculate various statistical
+values for comparative purposes.
+
+.. note::
+    ``pytest-benchmark`` is not include in the ``dev`` dependencies due to an odd
+    correlation observed when executing the integration tests. This was observed
+    with ``pytest-benchmark`` version 5.1.0 and its dependency ``py-cpuinfo`` 9.0.0.
+    Namely, when executing the integration tests with Python 3.11, we saw that the
+    tests in ``transaction_test.py`` consistently failed. This was not observed
+    for other Python versions and could not be correlated with other changes at the
+    time of investigation.
+
 
 DB
 --
