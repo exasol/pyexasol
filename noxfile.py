@@ -83,7 +83,7 @@ def run_examples(session: Session) -> None:
         session.error(1)
 
 
-def _create_performance_test_parser() -> argparse.ArgumentParser:
+def _create_performance_test_arg_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="nox -s performance:test",
         usage="nox -s performance:test -- [-h] [-t | test_path]",
@@ -99,7 +99,7 @@ def performance_test(session: Session) -> None:
     Execute one or more performance tests, assuming a DB already is ready,
     and save the benchmarked results.
     """
-    parser = _create_performance_test_parser()
+    parser = _create_performance_test_arg_parser()
     args = parser.parse_args(session.posargs)
 
     command = [
