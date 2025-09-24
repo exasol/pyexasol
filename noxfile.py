@@ -24,7 +24,7 @@ __all__ = [
 
 _ROOT: Path = Path(__file__).parent
 
-PERFORMANCE_TEST_DIRECTORY = _ROOT / "test/performance"
+PERFORMANCE_TEST_DIRECTORY = _ROOT / "test" / "performance"
 BENCHMARK_FILEPATH = PERFORMANCE_TEST_DIRECTORY / ".benchmarks"
 PREVIOUS_BENCHMARK = BENCHMARK_FILEPATH / "0001_performance.json"
 CURRENT_BENCHMARK = BENCHMARK_FILEPATH / "0002_performance.json"
