@@ -1,2 +1,3 @@
 poetry.lock             linguist-generated=true
 test/data/csv/*.csv     linguist-generated=true
+test/performance/.benchmarks/0001_performance.json linguist-generated=true
