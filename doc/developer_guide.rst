@@ -129,10 +129,15 @@ cause and, if deemed relevant, update the
 saved from the CI run (i.e. from the relevant artifact):
 
 * Is it a new test?
+
   * Then, add it to the JSON file.
+
 * Was a test removed?
+
   * If we meant to remove it, remove it from the JSON file.
+
 * What change made that impacted the tests?
+
   * If it's a change we intended and cannot improve upon, then alter the corresponding
     benchmark results in the JSON file.
 
