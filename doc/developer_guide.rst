@@ -35,6 +35,11 @@ which you can activate with `pre-commit <https://pre-commit.com/>`_
 Running tests
 ++++++++++++++
 
+.. note::
+    If you manually run some integration or performance tests or want to try something out,
+    you can start and stop a test database manually using ``nox -s db:start`` and
+    ``nox -s db:stop``.
+
 Unit Tests
 ----------
 
@@ -112,10 +117,24 @@ values for comparative purposes.
     for other Python versions and could not be correlated with other changes at the
     time of investigation.
 
+Updating the Benchmark JSON File
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-DB
---
-If you manually run some tests or want to try something out, you can start and stop the database manually using ``nox -s db:start`` and ``nox -s db:stop``.
+To ensure that PyExasol's functional performance does not degrade over time, the
+performance tests are executed in the CI, which provides semi-homogeneous runners, and
+their results are compared in the workflow ``performance-checks.yml`` per pull request.
+If the comparison fails, a developer should scrutinize the changes to determine the
+cause and, if deemed relevant, update the
+``test/performance/.benchmarks/0001_performance.json`` with results
+saved from the CI run (i.e. from the relevant artifact):
+
+* Is it a new test?
+  * Then, add it to the JSON file.
+* Was a test removed?
+  * If we meant to remove it, remove it from the JSON file.
+* What change made that impacted the tests?
+  * If it's a change we intended and cannot improve upon, then alter the corresponding
+    benchmark results in the JSON file.
 
 Preparing & Triggering a Release
 ++++++++++++++++++++++++++++++++
