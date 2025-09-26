@@ -97,7 +97,7 @@ jobs:
 
       - name: Check contents
         run: |
-          poetry run -- nox -s performance:combine -- |
+          poetry run -- nox -s performance:combine -- \
             --path './artifacts/*/*.json'
 
       - name: Upload Artifacts
