@@ -2,4 +2,4 @@
 
 ## Documentation
 
-* #260: Fix examples for import_from_parquet to have balanced brackets
+* #260: Fixed examples for `import_from_parquet` to have balanced brackets
