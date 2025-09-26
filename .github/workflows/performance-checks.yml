@@ -57,7 +57,7 @@ jobs:
         run: |
           poetry run -- nox -s performance:test -- \
             --test-path ${{ matrix.performance-tests.path}} \
-            --file-name ${{ matrix.performance-tests.key }}
+            --file-name ${{ matrix.performance-tests.key }}.json
 
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4.6.2
