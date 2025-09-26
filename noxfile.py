@@ -11,8 +11,8 @@ from dataclasses import (
 )
 from pathlib import Path
 from typing import (
-    Any,
     Optional,
+    Union,
 )
 
 import nox
@@ -249,9 +249,9 @@ def performance_combine(session: Session) -> None:
 @dataclass
 class Benchmark:
     filepath: Path
-    benchmark_data: list[dict[str, Any]] = field(init=False)
+    benchmark_data: list[dict[str, Union[dict, str]]] = field(init=False)
 
-    def get_test(self, fullname: str) -> Optional[dict[str, float]]:
+    def get_test(self, fullname: str) -> Optional[dict[str, Union[dict, str]]]:
         match_test = list(
             filter(lambda x: x["fullname"] == fullname, self.benchmark_data)
         )
@@ -266,7 +266,7 @@ class Benchmark:
 
     @property
     def fullname_tests(self) -> set[str]:
-        return {entry["fullname"] for entry in self.benchmark_data}
+        return {entry["fullname"] for entry in self.benchmark_data}  # type: ignore
 
 
 @dataclass
@@ -278,8 +278,8 @@ class CompareBenchmarks:
 
     def _check_for_error(
         self,
-        previous_test: Optional[dict[str, float]],
-        current_test: Optional[dict[str, float]],
+        previous_test: Optional[dict[str, Union[dict, str]]],
+        current_test: Optional[dict[str, Union[dict, str]]],
     ) -> Optional[str]:
         if previous_test is None:
             return "is not present in previous_benchmark"
@@ -287,7 +287,7 @@ class CompareBenchmarks:
             return "is not present in current_benchmark"
         else:
             median_ratio = (
-                current_test["stats"]["median"] / previous_test["stats"]["median"]
+                current_test["stats"]["median"] / previous_test["stats"]["median"]  # type: ignore
             )
             percent_difference = median_ratio - 1
             if percent_difference > self.relative_median_threshold:
@@ -299,15 +299,24 @@ class CompareBenchmarks:
     def _initialize_errors(self) -> None:
         self.errors = []
 
+    @staticmethod
     def _print_compared_results(
-        self,
-        previous_test: Optional[dict[str, float]],
-        current_test: Optional[dict[str, float]],
+        previous_test: Optional[dict[str, Union[dict, str]]],
+        current_test: Optional[dict[str, Union[dict, str]]],
     ) -> None:
-        def get_stats_value(stats: Optional[dict[str, float]]) -> str:
-            if stats is None:
+        def get_machine_info(
+            test: Optional[dict[str, Union[dict, str]]], key: str
+        ) -> str:
+            if test is None:
                 return ""
-            return f"{previous_test['stats'][row_title]:.2f}"
+            return test["machine_info"]["cpu"][key]  # type: ignore
+
+        def get_stats_value(
+            test: Optional[dict[str, Union[dict, str]]], key: str
+        ) -> str:
+            if test is None:
+                return ""
+            return f"{test['stats'][key]:.2f}"  # type: ignore
 
         console = Console()
         table = Table()
@@ -316,17 +325,17 @@ class CompareBenchmarks:
         table.add_column("current_benchmark")
 
         # add machine-info.cpu info
-        for row_title in ["arch", "brand_raw", "hz_actual_friendly"]:
+        for row_name in ["arch", "brand_raw", "hz_actual_friendly"]:
             table.add_row(
-                row_title,
-                previous_test["machine_info"]["cpu"][row_title],
-                current_test["machine_info"]["cpu"][row_title],
+                row_name,
+                get_machine_info(previous_test, row_name),
+                get_machine_info(current_test, row_name),
             )
 
         table.add_section()
 
         # add statistics
-        for row_title in [
+        for row_name in [
             "min",
             "max",
             "median",
@@ -339,9 +348,9 @@ class CompareBenchmarks:
             "hd15iqr",
         ]:
             table.add_row(
-                row_title,
-                get_stats_value(previous_test),
-                get_stats_value(current_test),
+                row_name,
+                get_stats_value(previous_test, key=row_name),
+                get_stats_value(current_test, key=row_name),
             )
 
         console.print(table)
