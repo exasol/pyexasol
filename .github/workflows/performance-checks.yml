@@ -106,3 +106,7 @@ jobs:
           name: performance_combined.json
           path: test/performance/.benchmarks/0002_performance.json
           include-hidden-files: true
+
+      - name: Performance check
+        run: |
+           poetry run -- nox -s performance:check

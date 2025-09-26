@@ -5,13 +5,23 @@ import copy
 import glob
 import json
 import subprocess
+from dataclasses import (
+    dataclass,
+    field,
+)
 from pathlib import Path
+from typing import (
+    Any,
+    Optional,
+)
 
 import nox
 
 # imports all nox task provided by the toolbox
 from exasol.toolbox.nox.tasks import *  # pylint: disable=wildcard-import disable=unused-wildcard-import
 from nox import Session
+from rich.console import Console
+from rich.table import Table
 
 from noxconfig import (
     start_test_db,
@@ -125,7 +135,7 @@ def _get_name_from_path(line: str) -> str:
 
 @nox.session(name="performance:json", python=False)
 def performance_json(session: Session) -> None:
-    """Output JSON of performance tests."""
+    """Output JSON of performance tests for running in the CI."""
     output = subprocess.run(
         [
             "pytest",
@@ -234,3 +244,181 @@ def performance_combine(session: Session) -> None:
 
     new_json = json.dumps({"benchmarks": new_json_list}, indent=4)
     CURRENT_BENCHMARK.write_text(new_json)
+
+
+@dataclass
+class Benchmark:
+    filepath: Path
+    benchmark_data: list[dict[str, Any]] = field(init=False)
+
+    def get_test(self, fullname: str) -> Optional[dict[str, float]]:
+        match_test = list(
+            filter(lambda x: x["fullname"] == fullname, self.benchmark_data)
+        )
+        if len(match_test) == 1:
+            return match_test[0]
+        return None
+
+    def set_benchmark_data(self) -> None:
+        file_json = self.filepath.read_text()
+        file_dict = json.loads(file_json)
+        self.benchmark_data = file_dict["benchmarks"]
+
+    @property
+    def fullname_tests(self) -> set[str]:
+        return {entry["fullname"] for entry in self.benchmark_data}
+
+
+@dataclass
+class CompareBenchmarks:
+    previous_benchmark: Benchmark
+    current_benchmark: Benchmark
+    relative_median_threshold: float
+    errors: list[str] = field(init=False)
+
+    def _check_for_error(
+        self,
+        previous_test: Optional[dict[str, float]],
+        current_test: Optional[dict[str, float]],
+    ) -> Optional[str]:
+        if previous_test is None:
+            return "is not present in previous_benchmark"
+        elif current_test is None:
+            return "is not present in current_benchmark"
+        else:
+            median_ratio = (
+                current_test["stats"]["median"] / previous_test["stats"]["median"]
+            )
+            percent_difference = median_ratio - 1
+            if percent_difference > self.relative_median_threshold:
+                return "is slower than in previous_benchmark"
+            elif percent_difference < -self.relative_median_threshold:
+                return "is faster than in previous_benchmark"
+        return None
+
+    def _initialize_errors(self) -> None:
+        self.errors = []
+
+    def _print_compared_results(
+        self,
+        previous_test: Optional[dict[str, float]],
+        current_test: Optional[dict[str, float]],
+    ) -> None:
+        def get_stats_value(stats: Optional[dict[str, float]]) -> str:
+            if stats is None:
+                return ""
+            return f"{previous_test['stats'][row_title]:.2f}"
+
+        console = Console()
+        table = Table()
+        table.add_column("Metric")
+        table.add_column("previous_benchmark")
+        table.add_column("current_benchmark")
+
+        # add machine-info.cpu info
+        for row_title in ["arch", "brand_raw", "hz_actual_friendly"]:
+            table.add_row(
+                row_title,
+                previous_test["machine_info"]["cpu"][row_title],
+                current_test["machine_info"]["cpu"][row_title],
+            )
+
+        table.add_section()
+
+        # add statistics
+        for row_title in [
+            "min",
+            "max",
+            "median",
+            "mean",
+            "stddev",
+            "iqr",
+            "q1",
+            "q3",
+            "ld15iqr",
+            "hd15iqr",
+        ]:
+            table.add_row(
+                row_title,
+                get_stats_value(previous_test),
+                get_stats_value(current_test),
+            )
+
+        console.print(table)
+
+    def do_comparison(self) -> list[str]:
+        self._initialize_errors()
+
+        tests = (
+            self.current_benchmark.fullname_tests
+            | self.previous_benchmark.fullname_tests
+        )
+        for test in sorted(tests):
+            print(f"\033[92m[TEST] {test}\033[0m")
+
+            previous_test = self.previous_benchmark.get_test(test)
+            current_test = self.current_benchmark.get_test(test)
+
+            error_message = self._check_for_error(
+                previous_test=previous_test, current_test=current_test
+            )
+            if error_message is not None:
+                print(f"\033[91m{error_message}\033[0m")
+                self.errors.append(f"- {test} {error_message}")
+
+            self._print_compared_results(
+                previous_test=previous_test, current_test=current_test
+            )
+        return self.errors
+
+
+@nox.session(name="performance:check", python=False)
+def performance_check(session: Session) -> None:
+    """Compare previous & current results of benchmarked performance tests.
+
+    An exception is raised if any of the following conditions are met:
+     - A test is present in only the previous or current results.
+     - A test is present in both results, but their medians differ by more than 5% in
+       either direction.
+
+    Note:
+      As tests are matched based on their full name, if a test is renamed or moved,
+      this would result in the names not being matched up properly and at least one
+      exception being raised.
+
+    In the event of reasonable changes, the benchmark file should be updated as
+    specified in the section `Updating the Benchmark JSON File` of the
+    ``doc/developer_guide``. If substantial changes are needed, like the condition
+    for comparing the tests is flakey, then many runs (> 15) should be done in the CI
+    to collect metrics to develop a new comparison threshold.
+
+    Note:
+      While it was not selected due to time-constraints and out-of-the-box performance,
+      it would be nice to use a non-parameterized test, like the
+      `Mann-Whitney U test <https://en.wikipedia.org/wiki/Mann%E2%80%93Whitney_U_test>`
+      to determine if the benchmarked results significantly deviated, as opposed to the
+      metric and threshold limit employed here.
+
+    The JSON files used for comparison are created using the ``pytest-benchmark``
+    package. While that package provides a CLI to compare benchmark files,
+    unfortunately, it does not indicate when a test is not present in the previous
+    benchmark data nor does it indicate if a test is running faster than before
+    (only slower).
+    """
+    previous_benchmark = Benchmark(PREVIOUS_BENCHMARK)
+    previous_benchmark.set_benchmark_data()
+
+    current_benchmark = Benchmark(CURRENT_BENCHMARK)
+    current_benchmark.set_benchmark_data()
+
+    compare_benchmarks = CompareBenchmarks(
+        previous_benchmark=previous_benchmark,
+        current_benchmark=current_benchmark,
+        # medians must be with 5% of one another
+        relative_median_threshold=0.05,
+    )
+    errors = compare_benchmarks.do_comparison()
+
+    if errors:
+        errors = ["\nthe comparison failed due to:"] + errors
+        session.error("\n".join(errors))
