@@ -17,6 +17,8 @@ def dsn(default_ipaddr, default_port):
 class BenchmarkSpecifications:
     def __init__(self):
         self.initial_data_size: Final[int] = 1_000
+        # This value was chosen with the specified data creation to generate
+        # around 1 GB of throughput.
         self.target_data_size: Final[int] = 4_000_000
         # In testing, it was noticed that first round always is faster (cache), so we
         # always do a warm-up round so that the aggregated values are not biased from
