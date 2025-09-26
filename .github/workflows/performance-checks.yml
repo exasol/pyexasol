@@ -54,13 +54,16 @@ jobs:
           poetry run -- nox -s db:start -- --db-version ${{ matrix.exasol-version }}
 
       - name: Run performance test
-        run: poetry run -- nox -s performance:test -- ${{ matrix.performance-tests.path}}
+        run: |
+          poetry run -- nox -s performance:test -- \
+            --test-path ${{ matrix.performance-tests.path}} \
+            --file-name ${{ matrix.performance-tests.key }}
 
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4.6.2
         with:
           name: "performance_${{ matrix.performance-tests.key }}"
-          path: test/performance/.benchmarks/0002_performance.json
+          path: test/performance/.benchmarks/${{matrix.performance-tests.key}}.json
           include-hidden-files: true
 
       - name: Stop test db
@@ -93,4 +96,13 @@ jobs:
           path: ./artifacts
 
       - name: Check contents
-        run: ls -R
+        run: |
+          poetry run -- nox -s performance:combine -- |
+            --path './artifacts/*/*.json'
+
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v4.6.2
+        with:
+          name: performance_combined.json
+          path: test/performance/.benchmarks/0002_performance.json
+          include-hidden-files: true
