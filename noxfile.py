@@ -157,10 +157,18 @@ def performance_json(session: Session) -> None:
 def _create_performance_test_arg_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="nox -s performance:test",
-        usage="nox -s performance:test -- [-h] [-t | test_path]",
+        usage="nox -s performance:test -- [-h] [--test_path {test_path} --file-name {file_name}]",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
-    parser.add_argument("test_path", help="Path to test file (can include its name)")
+    parser.add_argument(
+        "--test-path", dest="test_path", help="Path to test file (can include its name)"
+    )
+    parser.add_argument(
+        "--file-name",
+        dest="file_name",
+        help="Name under with to save the created benchmark file",
+        default=CURRENT_BENCHMARK.name,
+    )
     return parser
 
 
@@ -172,11 +180,12 @@ def performance_test(session: Session) -> None:
     """
     parser = _create_performance_test_arg_parser()
     args = parser.parse_args(session.posargs)
+    file_path = BENCHMARK_FILEPATH / args.file_name
 
     command = [
         "pytest",
         args.test_path,
         "--benchmark-sort=name",
-        f"--benchmark-json={CURRENT_BENCHMARK}",
+        f"--benchmark-json={file_path}",
     ]
     session.run(*command)
