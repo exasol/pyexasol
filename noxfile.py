@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import argparse
+import copy
+import glob
 import json
 import subprocess
 from pathlib import Path
@@ -189,3 +191,46 @@ def performance_test(session: Session) -> None:
         f"--benchmark-json={file_path}",
     ]
     session.run(*command)
+
+
+def _create_performance_combine_arg_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(
+        prog="nox -s performance:combine",
+        usage="nox -s performance:test -- [-h] [--path {path}]",
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+    )
+    parser.add_argument(
+        "--path",
+        dest="path",
+        help="Path specifier for files to combine; should include glob(s) ending with *.json",
+    )
+    return parser
+
+
+@nox.session(name="performance:combine", python=False)
+def performance_combine(session: Session) -> None:
+    """
+    Combine performance benchmarks from multiple JSON files to one
+    file.
+    """
+    parser = _create_performance_combine_arg_parser()
+    args = parser.parse_args(session.posargs)
+
+    matches = glob.glob(args.path)
+    files = sorted(
+        [filepath for i in matches if (filepath := Path(i)) and filepath.is_file()]
+    )
+
+    new_json_list = []
+    for file in files:
+        file_dict = json.loads(file.read_text())
+        for entry in file_dict["benchmarks"]:
+            entry_dict = copy.deepcopy(entry)
+            entry_dict["machine_info"] = copy.deepcopy(file_dict["machine_info"])
+            entry_dict["commit_info"] = copy.deepcopy(file_dict["commit_info"])
+            entry_dict["datetime"] = copy.deepcopy(file_dict["datetime"])
+            entry_dict["version"] = copy.deepcopy(file_dict["version"])
+            new_json_list.append(entry_dict)
+
+    new_json = json.dumps({"benchmarks": new_json_list}, indent=4)
+    CURRENT_BENCHMARK.write_text(new_json)
