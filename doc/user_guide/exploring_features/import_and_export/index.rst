@@ -145,11 +145,11 @@ See :meth:`pyexasol.ExaConnection.export_to_parquet`.
 
 .. code-block:: python
 
-    # Read from SQL
-    df = C.export_to_parquet("SELECT * FROM users")
+    # Read from SQL & write to parquet file in dst
+    C.export_to_parquet(dst=Path("local_empty_directory"), query_or_table="SELECT * FROM users")
 
-    # Read from table
-    df = C.export_to_parquet("users")
+    # Read from table & write to parquet file in dst
+    C.export_to_parquet(dst="local_empty_directory", query_or_table="users")
 
 Import
 """"""
@@ -160,14 +160,14 @@ See :meth:`pyexasol.ExaConnection.import_from_parquet`.
     from pathlib import Path
 
     # list[Path]: list of specific parquet files to load
-    C.import_from_parquet([Path("local_path/test.parquet")], "users")
+    C.import_from_parquet(source=[Path("local_path/test.parquet")], table="users")
 
     # Path: can be either a file or directory. If it's a directory,
     # all files matching this pattern *.parquet will be processed.
-    C.import_from_parquet(Path("local_path/test.parquet"), "users")
+    C.import_from_parquet(source=Path("local_path/test.parquet"), table="users")
 
     # string: representing a filepath which already contains a glob pattern
-    C.import_from_parquet("local_path/*.parquet", "users")
+    C.import_from_parquet(source="local_path/*.parquet", table="users")
 
 .. _polars_export_import:
 
