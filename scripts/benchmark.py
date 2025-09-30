@@ -63,9 +63,8 @@ class CompareBenchmarks:
             return "is not present in current_benchmark"
         else:
             median_ratio = (
-                current_test["stats"]["median"]
-                / previous_test["stats"]["median"]
-                # type: ignore
+                current_test["stats"]["median"]  # type: ignore
+                / previous_test["stats"]["median"]  # type: ignore
             )
             percent_difference = median_ratio - 1
             if percent_difference > self.relative_median_threshold:
