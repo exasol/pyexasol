@@ -14,6 +14,7 @@ from exasol.toolbox.nox.tasks import *  # pylint: disable=wildcard-import disabl
 from nox import Session
 
 from noxconfig import (
+    DEFAULT_DB_VERSION,
     start_test_db,
     stop_test_db,
 )
@@ -48,7 +49,10 @@ def _create_start_db_parser() -> argparse.ArgumentParser:
         "--port", default=8563, type=int, help="forward port for the Exasol DB"
     )
     parser.add_argument(
-        "--db-version", default="8.32.0", type=str, help="Exasol DB version to be used"
+        "--db-version",
+        default=DEFAULT_DB_VERSION,
+        type=str,
+        help="Exasol DB version to be used",
     )
     parser.add_argument(
         "--with-certificate",
@@ -154,7 +158,7 @@ def performance_json(session: Session) -> None:
     config = {
         "performance-tests": processed_output,
         "python-version": ["3.12"],
-        "exasol-version": ["8.32.0"],
+        "exasol-version": [DEFAULT_DB_VERSION],
     }
 
     print(json.dumps(config))
