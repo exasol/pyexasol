@@ -118,7 +118,7 @@ Using parquet
 
 .. code-block:: python
 
-    # pip install pyexasol[pandas]
+    # pip install pyexasol[pyarrow]
     import pyexasol
 
     C = pyexasol.connect(dsn='<host:port>', user='sys', password='exasol', compression=True)
