@@ -23,8 +23,8 @@ jobs:
     permissions:
       contents: read
     steps:
-      - name: "Checkout repo"
-        uses: actions/checkout@v2
+      - name: Check out repo
+        uses: actions/checkout@v5
 
       - name: Set up Python & Poetry Environment
         uses: exasol/python-toolbox/.github/actions/python-environment@v1

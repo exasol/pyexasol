@@ -12,8 +12,8 @@ jobs:
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
     steps:
-      - name: SCM Checkout
-        uses: actions/checkout@v4
+      - name: Check out repo
+        uses: actions/checkout@v5
 
       - name: Set up Python & Poetry Environment
         uses: exasol/python-toolbox/.github/actions/python-environment@v1
@@ -23,8 +23,9 @@ jobs:
       - name: Set matrix
         id: set-matrix
         run: |
-          poetry run -- nox -s performance:json
-          echo "matrix=$(poetry run -- nox -s performance:json)" >> $GITHUB_OUTPUT
+          PERF_JSON=$(poetry run -- nox -s performance:json)
+          echo "$PERF_JSON"
+          echo "matrix=$(PERF_JSON)" >> $GITHUB_OUTPUT
 
   performance-tests:
     name: ${{ matrix.performance-tests.key }}
@@ -38,7 +39,7 @@ jobs:
       contents: read
     steps:
       - name: Check out repo
-        uses: actions/checkout@v2
+        uses: actions/checkout@v5
 
       - name: Set up Python & Poetry Environment
         uses: exasol/python-toolbox/.github/actions/python-environment@v1
@@ -81,7 +82,7 @@ jobs:
       contents: read
     steps:
       - name: Check out repo
-        uses: actions/checkout@v2
+        uses: actions/checkout@v5
 
       - name: Set up Python & Poetry Environment
         uses: exasol/python-toolbox/.github/actions/python-environment@v1
