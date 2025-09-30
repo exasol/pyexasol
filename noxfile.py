@@ -128,7 +128,7 @@ def _get_name_from_path(line: str) -> str:
 
     for old, new in {".py::": "__", "[": "_", "]": ""}.items():
         name = name.replace(old, new)
-    return f"{name}"
+    return name
 
 
 @nox.session(name="performance:json", python=False)
