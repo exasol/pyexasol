@@ -18,7 +18,15 @@ class Benchmark:
     filepath: Path
     benchmark_data: list[dict[str, Union[dict, str]]] = field(init=False)
 
+    def _check_benchmark_data(self):
+        if not hasattr(self, "benchmark_data"):
+            raise ValueError(
+                "benchmark_data must be initialized with `set_benchmark_data`"
+            )
+
     def get_test(self, fullname: str) -> Optional[dict[str, Union[dict, str]]]:
+        self._check_benchmark_data()
+
         match_test = list(
             filter(lambda x: x["fullname"] == fullname, self.benchmark_data)
         )
@@ -33,6 +41,7 @@ class Benchmark:
 
     @property
     def fullname_tests(self) -> set[str]:
+        self._check_benchmark_data()
         return {entry["fullname"] for entry in self.benchmark_data}  # type: ignore
 
 
