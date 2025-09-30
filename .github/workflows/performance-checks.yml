@@ -1,0 +1,113 @@
+name: Performance-Checks
+
+on:
+  workflow_call:
+
+jobs:
+  build-matrix:
+    name: Generate Performance Test Matrix
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+    steps:
+      - name: Check out repo
+        uses: actions/checkout@v5
+
+      - name: Set up Python & Poetry Environment
+        uses: exasol/python-toolbox/.github/actions/python-environment@v1
+        with:
+          extras: "all"
+
+      - name: Set matrix
+        id: set-matrix
+        run: |
+          PERF_JSON=$(poetry run -- nox -s performance:json)
+          echo "$PERF_JSON"
+          echo "matrix=$PERF_JSON" >> $GITHUB_OUTPUT
+
+  performance-tests:
+    name: ${{ matrix.performance-tests.key }}
+    needs: [ build-matrix ]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJson(needs.build-matrix.outputs.matrix) }}
+    permissions:
+      contents: read
+    steps:
+      - name: Check out repo
+        uses: actions/checkout@v5
+
+      - name: Set up Python & Poetry Environment
+        uses: exasol/python-toolbox/.github/actions/python-environment@v1
+        with:
+          python-version: ${{ matrix.python-version }}
+          extras: "all"
+
+      - name: Install performance dependency
+        run: poetry install --with performance
+
+      - name: Start test db
+        run: >
+          poetry run -- nox -s db:start -- --db-version ${{ matrix.exasol-version }}
+
+      - name: Run performance test
+        run: |
+          poetry run -- nox -s performance:test -- \
+            --test-path ${{ matrix.performance-tests.path}} \
+            --file-name ${{ matrix.performance-tests.key }}.json
+
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v4.6.2
+        with:
+          name: "performance_${{ matrix.performance-tests.key }}"
+          path: test/performance/.benchmarks/${{matrix.performance-tests.key}}.json
+          include-hidden-files: true
+
+      - name: Stop test db
+        run: poetry run -- nox -s db:stop
+
+  performance-checks:
+    name: Performance Checks
+    needs: [ build-matrix, performance-tests ]
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: [ "3.12"]
+    permissions:
+      contents: read
+    steps:
+      - name: Check out repo
+        uses: actions/checkout@v5
+
+      - name: Set up Python & Poetry Environment
+        uses: exasol/python-toolbox/.github/actions/python-environment@v1
+        with:
+          python-version: ${{ matrix.python-version }}
+          extras: "all"
+
+      - name: Download Artifacts
+        uses: actions/download-artifact@v5.0.0
+        with:
+          pattern: performance*
+          path: ./artifacts
+
+      - name: Check contents
+        run: |
+          poetry run -- nox -s performance:combine -- \
+            --path './artifacts/*/*.json'
+
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v4.6.2
+        with:
+          name: performance_combined.json
+          path: test/performance/.benchmarks/0002_performance.json
+          include-hidden-files: true
+
+      - name: Performance check
+        run: |
+           poetry run -- nox -s performance:check

@@ -18,15 +18,15 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.11"]
+        python-version: ["3.12"]
         exasol-version: ${{ fromJson(needs.build-matrix.outputs.matrix).exasol-version }}
     permissions:
       contents: read
     steps:
-      - name: "Checkout repo"
-        uses: actions/checkout@v2
+      - name: Check out repo
+        uses: actions/checkout@v5
 
-      - name: Setup Python & Poetry Environment
+      - name: Set up Python & Poetry Environment
         uses: exasol/python-toolbox/.github/actions/python-environment@v1
         with:
           python-version: ${{ matrix.python-version }}
@@ -36,19 +36,14 @@ jobs:
         id: fix-vm-crash
         run: sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
 
-      - name: "Start test db"
-        run: >
-          poetry run -- itde spawn-test-environment --environment-name test
-          --database-port-forward 8563 --bucketfs-port-forward 2580
-          --docker-db-image-version ${{ matrix.exasol-version }} --db-mem-size 4GB
+      - name: Start test db
+        run: poetry run -- nox -s db:start -- --db-version ${{ matrix.exasol-version }}
 
-      - name: "Wait for Exasol container (UDF extraction)"
+      - name: Wait for Exasol container (UDF extraction)
         run: poetry run -- python examples/_wait_container.py
 
-      - name: "Run examples"
-        run: |
-          poetry run -- nox -s run:examples
+      - name: Run examples
+        run: poetry run -- nox -s run:examples
 
-      - name: "Stop test db"
-        run: |
-          docker kill db_container_test
+      - name: Stop test db
+        run: poetry run -- nox -s db:stop
