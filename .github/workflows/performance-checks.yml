@@ -25,7 +25,7 @@ jobs:
         run: |
           PERF_JSON=$(poetry run -- nox -s performance:json)
           echo "$PERF_JSON"
-          echo "matrix=$(PERF_JSON)" >> $GITHUB_OUTPUT
+          echo "matrix=$PERF_JSON" >> $GITHUB_OUTPUT
 
   performance-tests:
     name: ${{ matrix.performance-tests.key }}
