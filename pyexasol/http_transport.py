@@ -283,7 +283,7 @@ class ExportQuery(SqlQuery):
         delimit = str(self.delimit).upper()
         if delimit not in ("AUTO", "ALWAYS", "NEVER"):
             raise ValueError(f"Invalid value for export parameter DELIMIT: {delimit}")
-        return delimit
+        return f"DELIMIT={delimit}"
 
     @property
     def _with_column_names(self) -> Optional[str]:
