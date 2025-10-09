@@ -361,7 +361,8 @@ class TestExportQuery:
 
     @staticmethod
     @pytest.mark.parametrize(
-        "delimit,expected", [("auto", "AUTO"), ("AutO", "AUTO"), (None, None)]
+        "delimit,expected",
+        [("auto", "DELIMIT=AUTO"), ("AutO", "DELIMIT=AUTO"), (None, None)],
     )
     def test_delimit(export_sql_query, delimit, expected):
         export_sql_query.delimit = delimit
