@@ -1,12 +1,6 @@
 import pytest
 
 
-# @pytest.fixture
-# def connection(connection_factory):
-#     with connection_factory(compression=True) as con:
-#         yield con
-#
-#
 @pytest.fixture
 def connection_without_resolving_hostnames(connection_factory):
     with connection_factory(compression=True, resolve_hostnames=False) as con:
