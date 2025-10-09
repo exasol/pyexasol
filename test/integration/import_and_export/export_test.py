@@ -35,6 +35,17 @@ class TestExportParams:
         assert actual_filepath.read_text() == all_data.csv_str()
 
     @staticmethod
+    def test_delimit(connection, fill_table, tmp_path, table_name, all_data):
+        actual_filepath = tmp_path / "actual.csv"
+        params = {"delimit": "AUTO"}
+
+        connection.export_to_file(
+            dst=actual_filepath, query_or_table=table_name, export_params=params
+        )
+
+        assert actual_filepath.read_text() == all_data.csv_str()
+
+    @staticmethod
     def test_with_column_names(connection, fill_table, tmp_path, table_name, all_data):
         actual_filepath = tmp_path / "actual.csv"
         params = {"with_column_names": True}
