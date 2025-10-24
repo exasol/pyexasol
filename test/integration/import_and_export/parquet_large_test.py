@@ -6,11 +6,10 @@ from typing import Callable
 
 import pyarrow as pa
 import pytest
-from integration.import_and_export.data_sample import DataSample
+from integration.import_and_export.data_sample import DataSample, DATETIME_STR_FORMAT
 from integration.import_and_export.helper import select_result
 from pyarrow import parquet as pq
 
-DATETIME_STR_FORMAT = "%Y-%m-%d %H:%M:%S.%f"
 ALL_COLUMNS = [
     "FIRST_NAME",
     "LAST_NAME",
@@ -62,7 +61,7 @@ def empty_table(connection, table_name):
 
 @pytest.fixture
 def number_entries():
-    return 100
+    return 2000
 
 
 @pytest.fixture

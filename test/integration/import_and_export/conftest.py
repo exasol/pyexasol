@@ -8,7 +8,7 @@ from pathlib import Path
 from typing import Optional
 
 import pytest
-from integration.import_and_export.data_sample import DataSample
+from integration.import_and_export.data_sample import DataSample, DATETIME_STR_FORMAT
 
 ALL_COLUMNS = [
     "FIRST_NAME",
@@ -19,7 +19,7 @@ ALL_COLUMNS = [
     "AGE",
     "SCORE",
 ]
-DATETIME_STR_FORMAT = "%Y-%m-%d %H:%M:%S.%f"
+
 TABLE_NAME = "USER_SCORES"
 
 
