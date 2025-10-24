@@ -87,8 +87,9 @@ def export_to_parquet(pipe, dst: Union[Path, str], **kwargs) -> None:
     parse_options = csv.ParseOptions(newlines_in_values=True)
     read_options = csv.ReadOptions(use_threads=False)
     reader = csv.open_csv(pipe, read_options=read_options, parse_options=parse_options)
-    dataset.write_dataset(reader, base_dir=dst, use_threads=False, format="parquet", **kwargs)
-
+    dataset.write_dataset(
+        reader, base_dir=dst, use_threads=False, format="parquet", **kwargs
+    )
 
 
 def export_to_polars(pipe, dst, **kwargs) -> "polars.DataFrame":
