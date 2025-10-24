@@ -84,16 +84,10 @@ def export_to_parquet(pipe, dst: Union[Path, str], **kwargs) -> None:
         dataset,
     )
 
-    with tempfile.TemporaryDirectory() as tmpdir:
-        output_path = Path(tmpdir) / "tmp.csv"
-        with open(output_path, "w") as f:
-            for line in pipe.readlines():
-                f.write(line.decode("utf-8"))
-
-        parse_options = csv.ParseOptions(newlines_in_values=True)
-        reader = csv.open_csv(output_path, parse_options=parse_options)
-        dataset.write_dataset(reader, base_dir=dst, format="parquet", **kwargs)
-
+    parse_options = csv.ParseOptions(newlines_in_values=True)
+    read_options = csv.ReadOptions(use_threads=False)
+    reader = csv.open_csv(pipe, read_options=read_options, parse_options=parse_options)
+    dataset.write_dataset(reader, base_dir=dst, use_threads=False, format="parquet", **kwargs)
 
 
 
