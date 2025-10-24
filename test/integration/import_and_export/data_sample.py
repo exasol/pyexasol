@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
 from typing import Optional
+from io import StringIO
 
 DATETIME_STR_FORMAT = "%Y-%m-%d %H:%M:%S.%f"
 
