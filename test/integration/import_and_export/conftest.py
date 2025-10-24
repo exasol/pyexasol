@@ -8,7 +8,10 @@ from pathlib import Path
 from typing import Optional
 
 import pytest
-from integration.import_and_export.data_sample import DataSample, DATETIME_STR_FORMAT
+from integration.import_and_export.data_sample import (
+    DATETIME_STR_FORMAT,
+    DataSample,
+)
 
 ALL_COLUMNS = [
     "FIRST_NAME",

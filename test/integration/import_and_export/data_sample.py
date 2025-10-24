@@ -6,6 +6,7 @@ from typing import Optional
 
 DATETIME_STR_FORMAT = "%Y-%m-%d %H:%M:%S.%f"
 
+
 @dataclass
 class DataSample:
     columns: list[str]
