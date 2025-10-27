@@ -69,34 +69,37 @@ def number_entries():
 
 @pytest.fixture
 def data_dict(faker, number_entries) -> list[dict]:
-    dates = [faker.date() for _ in range(number_entries)]
-    data = [
-        {
-            "FIRST_NAME": faker.first_name(),
-            "LAST_NAME": faker.last_name(),
-            "REGISTER_DT": dates[i],
-            # setting of faker's random seed did not seem to be
-            # fixing seconds, so this was hard-coded instead of
-            # using faker's datetime
-            "LAST_VISIT_TS": datetime.strptime(
-                f"{dates[i]} 12:00:00.900000", DATETIME_STR_FORMAT
-            ),
-            "IS_GRADUATING": faker.boolean(),
-            "AGE": faker.random_int(min=18, max=65),
-            "SCORE": faker.pyfloat(min_value=69, max_value=100, right_digits=2),
-            "WITH_QUOTES": f"{faker.first_name()}'{faker.last_name()}",
-            "WITH_DOUBLE_QUOTES": f'{faker.first_name()}"{faker.last_name()}',
-            "WITH_COMMA": f"{faker.first_name()},{faker.last_name()}",
-            "WITH_SEMICOLON": f"{faker.first_name()};{faker.last_name()}",
-            "WITH_PIPE": f"{faker.first_name()}|{faker.last_name()}",
-            **{
-                f"WITH_NEWLINE_{j + 1}": f"{faker.first_name()}\n{faker.last_name()}\n"
-                * (j + 1)
-                for j in range(10)
-            },
-        }
-        for i in range(number_entries)
-    ]
+    data = []
+    for i in range(number_entries):
+        first_name = faker.first_name()
+        last_name = faker.last_name()
+        date = faker.date()
+
+        data.append(
+            {
+                "FIRST_NAME": first_name,
+                "LAST_NAME": last_name,
+                "REGISTER_DT": date,
+                # setting of faker's random seed did not seem to be
+                # fixing seconds, so this was hard-coded instead of
+                # using faker's datetime
+                "LAST_VISIT_TS": datetime.strptime(
+                    f"{date} 12:00:00.900000", DATETIME_STR_FORMAT
+                ),
+                "IS_GRADUATING": faker.boolean(),
+                "AGE": faker.random_int(min=18, max=65),
+                "SCORE": faker.pyfloat(min_value=69, max_value=100, right_digits=2),
+                "WITH_QUOTES": f"{first_name}'{last_name}",
+                "WITH_DOUBLE_QUOTES": f'{first_name}"{last_name}',
+                "WITH_COMMA": f"{first_name},{last_name}",
+                "WITH_SEMICOLON": f"{first_name};{last_name}",
+                "WITH_PIPE": f"{first_name}|{last_name}",
+                **{
+                    f"WITH_NEWLINE_{j + 1}": f"{first_name}\n{last_name}\n" * (j + 1)
+                    for j in range(10)
+                },
+            }
+        )
 
     return sorted(data, key=lambda n: n["FIRST_NAME"])
 
