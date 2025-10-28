@@ -91,8 +91,18 @@ def export_to_parquet(pipe, dst: Union[Path, str], **kwargs) -> None:
                 f.write(line.decode("utf-8"))
 
         parse_options = csv.ParseOptions(newlines_in_values=True)
-        reader = csv.open_csv(output_path, parse_options=parse_options)
-        dataset.write_dataset(reader, base_dir=dst, format="parquet", **kwargs)
+        read_options = csv.ReadOptions(use_threads=False)
+        reader = csv.open_csv(
+            output_path, read_options=read_options, parse_options=parse_options
+        )
+        dataset.write_dataset(
+            reader,
+            base_dir=dst,
+            format="parquet",
+            use_threads=False,
+            preserve_order=True,
+            **kwargs,
+        )
 
 
 def export_to_polars(pipe, dst, **kwargs) -> "polars.DataFrame":
