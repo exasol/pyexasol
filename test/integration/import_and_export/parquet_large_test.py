@@ -1,8 +1,6 @@
 import copy
 from datetime import datetime
 from inspect import cleandoc
-from pathlib import Path
-from typing import Callable
 
 import pyarrow as pa
 import pytest
@@ -10,7 +8,6 @@ from integration.import_and_export.data_sample import (
     DATETIME_STR_FORMAT,
     DataSample,
 )
-from integration.import_and_export.helper import select_result
 from pyarrow import parquet as pq
 
 ALL_COLUMNS = [
