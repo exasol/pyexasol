@@ -80,6 +80,7 @@ class Config(BaseConfig):
 
 
 PROJECT_CONFIG = Config(
-    # Changes for 2025.1.x have not yet been made
-    exasol_versions=BaseConfig().exasol_versions[:2],
+    # Changes for 7.x and 2025.1.x have not yet been made (#273)
+    # 7.x works for all but examples/UDFs
+    exasol_versions=(BaseConfig().exasol_versions[1],),
 )
