@@ -46,11 +46,11 @@ jobs:
       contents: read
 
 # Will re-activate in #262
-#  performance-checks:
-#    needs: [ run-slow-tests ]
-#    uses: ./.github/workflows/performance-checks.yml
-#    permissions:
-#      contents: read
+  performance-checks:
+    needs: [ run-slow-tests ]
+    uses: ./.github/workflows/performance-checks.yml
+    permissions:
+      contents: read
 
   # This job ensures inputs have been executed successfully.
   approve-merge:
