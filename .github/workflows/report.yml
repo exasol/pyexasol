@@ -14,7 +14,7 @@ jobs:
 
     steps:
       - name: SCM Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           fetch-depth: 0
 
@@ -22,7 +22,7 @@ jobs:
         uses: exasol/python-toolbox/.github/actions/python-environment@v1
 
       - name: Download Artifacts
-        uses: actions/download-artifact@v5.0.0
+        uses: actions/download-artifact@v6
         with:
           path: ./artifacts
 
@@ -41,7 +41,7 @@ jobs:
         run: poetry run -- nox -s project:report -- --format json | tee metrics.json
 
       - name: Upload Artifacts
-        uses: actions/upload-artifact@v4.6.2
+        uses: actions/upload-artifact@v5
         with:
           name: metrics.json
           path: metrics.json

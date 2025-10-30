@@ -47,7 +47,9 @@ classifiers = [
 ]
 
 [tool.poetry.dependencies]
-websocket-client = ">=1.0.1"
+# websocket-client was down-pinned to <1.9.0 due to tests failures.
+# This will be resolved in https://github.com/exasol/pyexasol/issues/274.
+websocket-client = ">=1.0.1,<1.9.0"
 rsa = "*"
 packaging = "*"
 cryptography = {version = ">=45.0.7"}
@@ -75,7 +77,7 @@ pytest = ">=7.0.0,<9"
 docutils = "^0.21.2"
 exasol-integration-test-docker-environment = "^4.0.0"
 faker = "^24.14.1"
-exasol-toolbox = "^1.9.0"
+exasol-toolbox = "^1.12.0"
 types-ujson = "^5.10.0.20250326"
 
 [tool.poetry.group.performance]
