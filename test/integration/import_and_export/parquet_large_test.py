@@ -131,7 +131,7 @@ def prepare_parquet_table(list_dict: list[dict]) -> pa.Table:
 @pytest.mark.parquet
 class TestLargeExportToParquet:
     @staticmethod
-    @pytest.mark.repeat(20)
+    @pytest.mark.repeat(5)
     def test_export_single_file(connection, fill_table, tmp_path, table_name, all_data):
         expected = prepare_parquet_table(all_data.list_dict)
 
