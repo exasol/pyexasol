@@ -57,7 +57,7 @@ orjson = { version = ">=3.6", optional = true }
 pandas = { version = "^2", optional = true}
 polars = { version = "^1.10", optional = true }
 pproxy = { version = "*", optional = true }
-pyarrow = { version = "^20.0.0", optional = true}
+pyarrow = { version = "^21.0.0", optional = true}
 python-rapidjson = { version = "*", optional = true }
 ujson = { version = "*", optional = true }
 
@@ -79,6 +79,7 @@ exasol-integration-test-docker-environment = "^4.0.0"
 faker = "^24.14.1"
 exasol-toolbox = "^1.12.0"
 types-ujson = "^5.10.0.20250326"
+pytest-repeat = ">=0.9.4, <1.0.0"
 
 [tool.poetry.group.performance]
 optional = true
