@@ -3,7 +3,7 @@
 ## Bugfix
 
 * #263: Fixed usage of `delimit` in `export_to_*` functions
-* #269: Fixed `export_to_parquet` to handle new lines & preserve order
+* #267: Fixed `export_to_parquet` to handle new lines & preserve order
 
 ## Documentation
 
