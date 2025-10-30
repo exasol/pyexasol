@@ -80,7 +80,8 @@ class Config(BaseConfig):
 
 
 PROJECT_CONFIG = Config(
-    # Changes for 7.x and 2025.1.x have not yet been made (#273)
-    # 7.x works for all but examples/UDFs
+    # Changes for 7.x and 2025.1.x have not yet been made. 7.x works for all tests,
+    # except for the examples/UDFs. These will be resolved in:
+    # https://github.com/exasol/pyexasol/issues/273
     exasol_versions=(BaseConfig().exasol_versions[1],),
 )
