@@ -80,7 +80,7 @@ def test_export_methods_to_memory(
             "export_to_parquet",
             "",
             _get_parquet_length,
-            {"existing_data_behavior": "overwrite_or_ignore"},
+            {},
             id="parquet",
         ),
     ],

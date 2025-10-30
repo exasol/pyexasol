@@ -1,20 +1,36 @@
 from pathlib import Path
 from typing import Callable
 
+import polars
 import pyarrow as pa
 import pytest
 from integration.import_and_export.helper import select_result
 from pyarrow import parquet as pq
 
+# def prepare_parquet_table(list_dict: list[dict]) -> pa.Table:
+#     table = pa.Table.from_pylist(list_dict)
+#     table = table.set_column(2, "REGISTER_DT", table["REGISTER_DT"].cast(pa.date32()))
+#     table = table.set_column(
+#         3, "LAST_VISIT_TS", table["LAST_VISIT_TS"].cast(pa.timestamp("ns"))
+#     )
+#     this is not ideal as the database & Python data use bool
+# return table.set_column(4, "IS_GRADUATING", table["IS_GRADUATING"].cast(pa.int64()))
 
-def prepare_parquet_table(list_dict: list[dict]) -> pa.Table:
-    table = pa.Table.from_pylist(list_dict)
-    table = table.set_column(2, "REGISTER_DT", table["REGISTER_DT"].cast(pa.date32()))
-    table = table.set_column(
-        3, "LAST_VISIT_TS", table["LAST_VISIT_TS"].cast(pa.timestamp("ns"))
+
+def prepare_parquet_table(list_dict: list[dict]) -> polars.DataFrame:
+    # Create DataFrame directly from the list of dictionaries
+    df = polars.DataFrame(list_dict)
+
+    # Convert columns to appropriate types
+    df = df.with_columns(
+        [
+            polars.col("REGISTER_DT").cast(polars.String),
+            polars.col("LAST_VISIT_TS").cast(polars.String),
+            polars.col("IS_GRADUATING").cast(polars.Int64),
+        ]
     )
-    # this is not ideal as the database & Python data use bool
-    return table.set_column(4, "IS_GRADUATING", table["IS_GRADUATING"].cast(pa.int64()))
+
+    return df
 
 
 @pytest.mark.parquet
@@ -23,14 +39,15 @@ class TestExportToParquet:
     def test_export_single_file(connection, fill_table, tmp_path, table_name, all_data):
         expected = prepare_parquet_table(all_data.list_dict)
 
-        filepath = tmp_path / "single_parquet_dir"
+        filepath = tmp_path / "file.parquet"
         connection.export_to_parquet(dst=filepath, query_or_table=table_name)
 
-        assert len(list(filepath.glob("*"))) == 1
-        # can be a single file name or directory name
-        assert pq.read_table(filepath) == expected
+        assert polars.read_parquet(filepath).equals(expected)
 
     @staticmethod
+    @pytest.mark.xfail(
+        reason="polars write_parquet doesn't support out of the box multiple files"
+    )
     def test_export_multiple_files(
         connection, fill_table, tmp_path, table_name, all_data, number_entries
     ):

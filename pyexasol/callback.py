@@ -79,22 +79,27 @@ def export_to_parquet(pipe, dst: Union[Path, str], **kwargs) -> None:
                   that the writing of multiple files will be done in parallel and that
                   the order is not guaranteed to be preserved.
     """
-    from pyarrow import (
-        csv,
-        dataset,
-    )
+    # from pyarrow import (
+    #     csv,
+    #     dataset,
+    # )
 
-    parse_options = csv.ParseOptions(newlines_in_values=True)
-    read_options = csv.ReadOptions(use_threads=False)
-    reader = csv.open_csv(pipe, read_options=read_options, parse_options=parse_options)
-    dataset.write_dataset(
-        reader,
-        base_dir=dst,
-        format="parquet",
-        use_threads=False,
-        preserve_order=True,
-        **kwargs,
-    )
+    # parse_options = csv.ParseOptions(newlines_in_values=True)
+    # read_options = csv.ReadOptions(use_threads=False)
+    # reader = csv.open_csv(pipe, read_options=read_options, parse_options=parse_options)
+    # dataset.write_dataset(
+    #     reader,
+    #     base_dir=dst,
+    #     format="parquet",
+    #     use_threads=False,
+    #     preserve_order=True,
+    #     **kwargs,
+    # )
+
+    import polars
+
+    df = polars.read_csv(pipe)
+    df.write_parquet(dst, **kwargs)
 
 
 def export_to_polars(pipe, dst, **kwargs) -> "polars.DataFrame":
