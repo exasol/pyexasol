@@ -8,7 +8,7 @@ tossed due to improper formatting.
 
 Additionally, the `export_to_parquet` has been modified to handle new line characters.
 Previously, new line characters would have resulted in an exception being tossed. With
-this change, a slight degradation is performance has been noted, but with the current
+this change, a slight degradation in performance has been noted, but with the current
 setup, this is currently unavoidable.
 
 ## Bugfix
