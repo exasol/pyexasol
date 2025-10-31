@@ -1,4 +1,7 @@
 # 1.2.1 - 2025-10-31
+
+## Summary
+
 This release fixes the `export_to_*` functions to properly handle delimit in the
 generated EXPORT statement. Previously, this would have resulted in an exception being
 tossed due to improper formatting.
