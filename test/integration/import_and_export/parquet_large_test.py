@@ -141,3 +141,33 @@ class TestLargeExportToParquet:
         assert len(list(filepath.glob("*"))) == 1
         # can be a single file name or directory name
         assert pq.read_table(filepath) == expected
+
+    @staticmethod
+    @pytest.mark.repeat(10)
+    def test_export_single_file_in_non_empty_folder_with_try_block(
+        connection, fill_table, tmp_path, table_name, all_data
+    ):
+        filepath = tmp_path / "single_parquet_dir"
+        filepath.mkdir()
+        empty_file = filepath / "empty_file.txt"
+        empty_file.touch()
+
+        try:
+            filepath = tmp_path / "single_parquet_dir"
+            connection.export_to_parquet(dst=filepath, query_or_table=table_name)
+        except Exception as e:
+            print(f"Fehler beim Parquet-Export: {e}")
+            assert False
+
+    @staticmethod
+    @pytest.mark.repeat(10)
+    def test_export_single_file_in_non_empty_folder(
+        connection, fill_table, tmp_path, table_name, all_data
+    ):
+        filepath = tmp_path / "single_parquet_dir"
+        filepath.mkdir()
+        empty_file = filepath / "empty_file.txt"
+        empty_file.touch()
+
+        filepath = tmp_path / "single_parquet_dir"
+        connection.export_to_parquet(dst=filepath, query_or_table=table_name)
