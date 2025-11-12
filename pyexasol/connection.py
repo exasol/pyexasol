@@ -562,8 +562,17 @@ class ExaConnection:
         Args:
             dst:
                 Local path to directory for exporting files. Can be one either a Path or
-                str. The default behavior is that the specified directory should be empty.
-                If this is not the case, an exception is thrown.
+                str. **The default behavior, which can be changed via `callback_params`,
+                is that the specified directory should be empty.** If that is not
+                the case, one of these exceptions may be thrown:
+
+                    pyarrow.lib.ArrowInvalid:
+                        Could not write to <dst> Parquet Export from Exasol via Python Container/parquet as the directory is not empty and existing_data_behavior is to error
+                    ValueError:
+                        I/O operation on closed file.
+                    DB error message:
+                        ETL-5106: Following error occured while writing data to external connection [https://172.0.0.1:8653/000.csv failed after 200009 bytes. [OpenSSL SSL_read: SSL_ERROR_SYSCALL, errno 0],[56],[Failure when receiving data from the peer]] (Session: XXXXX)
+
             query_or_table:
                 SQL query or table from which to export data.
             query_params:
@@ -575,7 +584,7 @@ class ExaConnection:
 
                 existing_data_behavior
                    Set to ``error``, which requires that the specified ``dst`` not
-                   contain any files or an exception will be thrown..
+                   contain any files or an exception will be thrown.
                 max_rows_per_file
                    Set to ``0``, which means that all rows will be written to 1 file.
                    If ``max_rows_per_file`` is altered, ensure that ``max_rows_per_group``
