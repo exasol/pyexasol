@@ -25,6 +25,21 @@ interfaces that follow the same pattern:
 For more advanced users, check out the documentation on :ref:`http_transport_parallel`
 to parallelize importing or exporting data.
 
+.. warning::
+
+    The :ref:`variants` used to import data to and export data from an Exasol database
+    are built on top of a common callback pattern. In this shared interface, three
+    Python threads are interacting:
+
+    * Thread 1 is consuming the http[s] stream sent by the database and is writing it to a pipe.
+    * Thread 2 (the main thread, the caller of the ``import_*`` or ``export_*``) is processing the data from the pipe.
+    * Thread 3 is running the EXPORT statement against the DB.
+
+   Usually, an exception in one thread is likely to cause other exceptions in other threads.
+
+   :octicon:`alert` **Thus, Depending on the exact timing, a user might see different error messages.**
+   This also gets more complicated depending on which binary packages are involved, as these also use threads to some extent.
+
 .. _variants:
 
 Variants

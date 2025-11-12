@@ -59,9 +59,19 @@ def export_to_parquet(pipe, dst: Union[Path, str], **kwargs) -> None:
     Basic example of how to export into local parquet file(s)
 
     Args:
-        dst: Local path to directory for exporting files. Can be either a Path
-            or str. The default behavior is that the specified directory should be empty.
-            If this is not the case, an exception is thrown.
+        dst:
+            Local path to directory for exporting files. Can be one either a Path or
+            str. **The default behavior, which can be changed via** `**kwargs`,
+            **is that the specified directory should be empty.** If that is not the case,
+            one of these exceptions may be thrown:
+
+                    pyarrow.lib.ArrowInvalid:
+                        Could not write to <dst> Parquet Export from Exasol via Python Container/parquet as the directory is not empty and existing_data_behavior is to error
+                    ValueError:
+                        I/O operation on closed file.
+                    DB error message:
+                        ETL-5106: Following error occured while writing data to external connection [https://172.0.0.1:8653/000.csv failed after 200009 bytes. [OpenSSL SSL_read: SSL_ERROR_SYSCALL, errno 0],[56],[Failure when receiving data from the peer]] (Session: XXXXX)
+
         **kwargs:
             Custom params for :func:`pyarrow.dataset.write_dataset`. Some important
             defaults to note are:
@@ -77,6 +87,14 @@ def export_to_parquet(pipe, dst: Union[Path, str], **kwargs) -> None:
                   Set to ``True`` and ``preserve_order`` is set to ``False``. This means
                   that the writing of multiple files will be done in parallel and that
                   the order is not guaranteed to be preserved.
+
+
+        Raises:
+            pyarrow.lib.ArrowInvalid: If the specified directory is not empty and
+                existing_data_behavior is set to error.
+            ValueError: I/O operation on closed file.
+
+
     """
     from pyarrow import (
         csv,
