@@ -70,7 +70,7 @@ def export_to_parquet(pipe, dst: Union[Path, str], **kwargs) -> None:
                     ValueError:
                         I/O operation on closed file.
                     DB error message:
-                        ETL-5106: Following error occured while writing data to external connection [https://172.0.0.1:8653/000.csv failed after 200009 bytes. [OpenSSL SSL_read: SSL_ERROR_SYSCALL, errno 0],[56],[Failure when receiving data from the peer]] (Session: XXXXX)
+                        ETL-5106: Following error occured while writing data to external connection [<dsn>/000.csv failed after 200009 bytes. [OpenSSL SSL_read: SSL_ERROR_SYSCALL, errno 0],[56],[Failure when receiving data from the peer]] (Session: XXXXX)
 
         **kwargs:
             Custom params for :func:`pyarrow.dataset.write_dataset`. Some important
