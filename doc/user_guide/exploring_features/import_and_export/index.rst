@@ -37,7 +37,7 @@ to parallelize importing or exporting data.
 
    Usually, an exception in one thread is likely to cause other exceptions in other threads.
 
-   :octicon:`alert` **Thus, Depending on the exact timing, a user might see different error messages.**
+   :octicon:`alert` **Thus, depending on the exact timing, a user might see different error messages.**
    This also gets more complicated depending on which binary packages are involved, as these also use threads to some extent.
 
 .. _variants:
