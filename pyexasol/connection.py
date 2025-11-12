@@ -562,8 +562,8 @@ class ExaConnection:
         Args:
             dst:
                 Local path to directory for exporting files. Can be one either a Path or
-                str. **The default behavior, which can be changed via `callback_params`,
-                is that the specified directory should be empty.** If that is not
+                str. **The default behavior, which can be changed via** ``callback_params``,
+                **is that the specified directory should be empty.** If that is not
                 the case, one of these exceptions may be thrown:
 
                     pyarrow.lib.ArrowInvalid:
