@@ -1,14 +1,130 @@
 import os
+from io import BytesIO
 from pathlib import Path
 
 import pyarrow as pa
 import pyarrow.parquet as pq
 import pytest
+from pyarrow import dataset
+from pyarrow.lib import ArrowInvalid
 
 from pyexasol.callback import (
+    check_export_to_parquet_directory_setting,
+    export_to_parquet,
     get_parquet_files,
     import_from_parquet,
 )
+
+
+class TestCheckExportToParquetDirectorySetting:
+    @staticmethod
+    def test_non_existing_directory_passes(tmp_path):
+        check_export_to_parquet_directory_setting(dst=tmp_path / "dummy")
+
+    @staticmethod
+    def test_existing_but_not_directory_fails(tmp_path):
+        dst = tmp_path / "dummy"
+        dst.touch()
+
+        with pytest.raises(ValueError, match="exists and is not a directory"):
+            check_export_to_parquet_directory_setting(dst=dst)
+
+    @staticmethod
+    def test_existing_and_empty_directory_passes(tmp_path):
+        dst = tmp_path / "dummy"
+        dst.mkdir()
+
+        check_export_to_parquet_directory_setting(dst=dst)
+
+    @staticmethod
+    def test_existing_and_non_empty_directory_fails(tmp_path):
+        dst = tmp_path / "dummy"
+        dst.mkdir()
+        filepath = dst / "file.txt"
+        filepath.touch()
+
+        with pytest.raises(ValueError, match="contains existing files"):
+            check_export_to_parquet_directory_setting(dst=dst)
+
+    @staticmethod
+    @pytest.mark.parametrize(
+        "existing_data_behavior", ("overwrite_or_ignore", "delete_matching")
+    )
+    def test_existing_and_non_empty_directory_passes(tmp_path, existing_data_behavior):
+        dst = tmp_path / "dummy"
+        dst.mkdir()
+        filepath = dst / "file.txt"
+        filepath.touch()
+
+        check_export_to_parquet_directory_setting(
+            dst=dst, callback_params={"existing_data_behavior": existing_data_behavior}
+        )
+
+
+@pytest.fixture
+def pipe():
+    data = """name,age,city\nAlice,25,New York\nBob,30,London"""
+    return BytesIO(data.encode())
+
+
+class TestExportToParquet:
+    @staticmethod
+    def get_row_count(filepath: Path) -> int:
+        parquet_dataset = dataset.dataset(filepath)
+        return sum(
+            row_group.num_rows
+            for fragment in parquet_dataset.get_fragments()
+            for row_group in fragment.row_groups
+        )
+
+    def test_non_existing_directory_passes(self, tmp_path, pipe):
+        dst = tmp_path / "dummy"
+
+        export_to_parquet(pipe=pipe, dst=dst)
+        assert self.get_row_count(dst) == 2
+
+    def test_existing_but_not_directory_fails(self, tmp_path, pipe):
+        filepath = tmp_path / "dummy"
+        filepath.touch()
+
+        with pytest.raises(FileExistsError, match="Cannot create directory"):
+            export_to_parquet(pipe=pipe, dst=filepath)
+
+    def test_existing_and_empty_directory_passes(self, tmp_path, pipe):
+        dst = tmp_path / "dummy"
+        dst.mkdir()
+
+        export_to_parquet(pipe=pipe, dst=dst)
+        assert self.get_row_count(dst) == 2
+
+    def test_existing_and_non_empty_directory_fails(self, tmp_path, pipe):
+        dst = tmp_path / "dummy"
+        dst.mkdir()
+        filepath = dst / "file.parquet"
+        filepath.touch()
+
+        with pytest.raises(ArrowInvalid, match="Could not write to"):
+            export_to_parquet(pipe=pipe, dst=dst)
+
+    @pytest.mark.parametrize(
+        "existing_data_behavior", ("overwrite_or_ignore", "delete_matching")
+    )
+    def test_existing_and_non_empty_directory_passes(
+        self, tmp_path, pipe, existing_data_behavior
+    ):
+        dst = tmp_path / "dummy"
+        dst.mkdir()
+        filepath = dst / "file.txt"
+        filepath.touch()
+
+        callback_params = {"existing_data_behavior": existing_data_behavior}
+        export_to_parquet(pipe=pipe, dst=dst, **callback_params)
+
+        # This is only needed as files are not deleted & for the test to
+        # read from all files present in the directory.
+        if existing_data_behavior == "overwrite_or_ignore":
+            filepath.unlink()
+        assert self.get_row_count(dst) == 2
 
 
 class TestGetParquetFiles:
