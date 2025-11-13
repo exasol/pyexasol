@@ -130,14 +130,6 @@ def export_to_parquet(pipe, dst: Union[Path, str], **kwargs) -> None:
                   Set to ``True`` and ``preserve_order`` is set to ``False``. This means
                   that the writing of multiple files will be done in parallel and that
                   the order is not guaranteed to be preserved.
-
-
-        Raises:
-            pyarrow.lib.ArrowInvalid: If the specified directory is not empty and
-                existing_data_behavior is set to error.
-            ValueError: I/O operation on closed file.
-
-
     """
     from pyarrow import (
         csv,
