@@ -26,6 +26,7 @@ from collections.abc import Iterable
 from pathlib import Path
 from typing import (
     TYPE_CHECKING,
+    Optional,
     Union,
 )
 
@@ -54,6 +55,45 @@ def export_to_pandas(pipe, dst, **kwargs) -> "pandas.DataFrame":
     return pandas.read_csv(pipe, skip_blank_lines=False, **kwargs)
 
 
+def check_export_to_parquet_directory_setting(
+    dst: Union[Path, str], callback_params: Optional[dict] = None
+) -> None:
+    """
+    Check that the dst directory is in an allowed state:
+      - does not yet exist
+      - does exist but is empty
+      - does exist, is not empty, and the callback_params['existing_data_behavior'] is "overwrite_or_ignore" or "delete_matching"
+    If this is not the case, then an exception is raised.
+
+    Without this function, when the aforementioned conditions were not met and
+    :meth:`pyexasol.ExaConnection.export_to_parquet` was executed, then an exception would be
+    raised:
+      - `FileExistsError: [Errno 17] Cannot create directory '<dst>': non-directory entry exists. Detail: [errno 17] File exists`
+      - `pyarrow.lib.ArrowInvalid: Could not write to <dst> Parquet Export from Exasol via
+    Python Container/parquet as the directory is not empty and existing_data_behavior
+    is to error`. However, due to the three threads used in the underlying callback
+    pattern, it is possible that another final exception would be raised, as
+    discussed on `Importing and Exporting Data <https://exasol.github.io/pyexasol/master/user_guide/exploring_features/import_and_export/index.html>`__.
+    """
+    dir_path = Path(dst)
+    if not dir_path.exists():
+        return
+
+    if not dir_path.is_dir():
+        raise ValueError(f"'{dst}' exists and is not a directory")
+
+    if not callback_params:
+        callback_params = {}
+
+    existing_data_behavior = callback_params.get("existing_data_behavior")
+    allowed_existing_data_behavior = ("overwrite_or_ignore", "delete_matching")
+    if existing_data_behavior not in allowed_existing_data_behavior:
+        if any(dir_path.iterdir()):
+            raise ValueError(
+                f"'{dst}' contains existing files and `callback_params['existing_data_behavior']` is not one of these values: {allowed_existing_data_behavior}."
+            )
+
+
 def export_to_parquet(pipe, dst: Union[Path, str], **kwargs) -> None:
     """
     Basic example of how to export into local parquet file(s)
@@ -72,6 +112,9 @@ def export_to_parquet(pipe, dst: Union[Path, str], **kwargs) -> None:
                     DB error message:
                         ETL-5106: Following error occured while writing data to external connection [https://172.0.0.1:8653/000.csv failed after 200009 bytes. [OpenSSL SSL_read: SSL_ERROR_SYSCALL, errno 0],[56],[Failure when receiving data from the peer]] (Session: XXXXX)
 
+            To better detect this earlier on, it is recommended to use
+            :func:`pyexasol.callback.check_export_to_parquet_directory_setting`.
+
         **kwargs:
             Custom params for :func:`pyarrow.dataset.write_dataset`. Some important
             defaults to note are:
@@ -87,14 +130,6 @@ def export_to_parquet(pipe, dst: Union[Path, str], **kwargs) -> None:
                   Set to ``True`` and ``preserve_order`` is set to ``False``. This means
                   that the writing of multiple files will be done in parallel and that
                   the order is not guaranteed to be preserved.
-
-
-        Raises:
-            pyarrow.lib.ArrowInvalid: If the specified directory is not empty and
-                existing_data_behavior is set to error.
-            ValueError: I/O operation on closed file.
-
-
     """
     from pyarrow import (
         csv,

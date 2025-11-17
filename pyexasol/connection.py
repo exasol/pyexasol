@@ -566,12 +566,21 @@ class ExaConnection:
                 **is that the specified directory should be empty.** If that is not
                 the case, one of these exceptions may be thrown:
 
+                    ValueError
+                        '<dst>' exists and is not a directory
+                    ValueError
+                        '<dst>' contains existing files and `callback_params['existing_data_behavior']` is not one of these values: ("overwrite_or_ignore", "delete_matching").
                     pyarrow.lib.ArrowInvalid:
                         Could not write to <dst> Parquet Export from Exasol via Python Container/parquet as the directory is not empty and existing_data_behavior is to error
                     ValueError:
                         I/O operation on closed file.
                     DB error message:
                         ETL-5106: Following error occured while writing data to external connection [https://172.0.0.1:8653/000.csv failed after 200009 bytes. [OpenSSL SSL_read: SSL_ERROR_SYSCALL, errno 0],[56],[Failure when receiving data from the peer]] (Session: XXXXX)
+
+                The ValueError exceptions would come from a check we provide via :func:`pyexasol.callback.check_export_to_parquet_directory_setting`.
+                The purpose of calling this check is to detect issues before executing code within the callback pattern, which uses three threads.
+                If a user has a different issue than we anticipated, it's possible the one of the other three exceptions is tossed for this, as
+                discussed on `Importing and Exporting Data <https://exasol.github.io/pyexasol/master/user_guide/exploring_features/import_and_export/index.html>`__.
 
             query_or_table:
                 SQL query or table from which to export data.
@@ -598,6 +607,10 @@ class ExaConnection:
         """
         if not export_params:
             export_params = {}
+
+        cb.check_export_to_parquet_directory_setting(
+            dst=dst, callback_params=callback_params
+        )
 
         export_params["with_column_names"] = True
 

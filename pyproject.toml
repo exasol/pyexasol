@@ -1,6 +1,6 @@
 [project]
 name = "pyexasol"
-version = "1.2.2"
+version = "1.3.0"
 requires-python = ">=3.9.2,<4"
 description = "Exasol python driver with extra features"
 authors = [
