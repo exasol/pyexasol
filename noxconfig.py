@@ -73,10 +73,6 @@ class Config(BaseConfig):
         "venv",
     )
     plugins: list = [StartDB, StopDB]
-    # need --keep-runtime-typing, as pydantic with python3.9 does not accept str | None
-    # format, and it is not resolved with from __future__ import annotations. pyupgrade
-    # will keep switching Optional[str] to str | None leading to issues.
-    pyupgrade_args: tuple = ("--py39-plus", "--keep-runtime-typing")
 
 
 PROJECT_CONFIG = Config(
