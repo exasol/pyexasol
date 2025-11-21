@@ -17,7 +17,7 @@ jobs:
         uses: actions/checkout@v5
 
       - name: Setup Python & Poetry Environment
-        uses: exasol/python-toolbox/.github/actions/python-environment@v1
+        uses: exasol/python-toolbox/.github/actions/python-environment@v3
 
       - name: Generate matrix
         run: poetry run -- nox -s matrix:all
