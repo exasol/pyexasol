@@ -42,6 +42,7 @@ classifiers = [
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
     "Intended Audience :: Developers",
     "Topic :: Database",
 ]
@@ -57,7 +58,7 @@ orjson = { version = ">=3.6", optional = true }
 pandas = { version = "^2", optional = true}
 polars = { version = "^1.10", optional = true }
 pproxy = { version = "*", optional = true }
-pyarrow = { version = "^21.0.0", optional = true}
+pyarrow = { version = "^22.0.0", optional = true}
 python-rapidjson = { version = "*", optional = true }
 ujson = { version = "*", optional = true }
 
