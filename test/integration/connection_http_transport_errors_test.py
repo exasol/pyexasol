@@ -39,7 +39,7 @@ def test_abort_query(connection, dev_null, statement):
     def export_cb(pipe, dst, **kwargs):
         connection.abort_query()
         # Make sure abort has time to propagate
-        time.sleep(1)
+        time.sleep(3)
         shutil.copyfileobj(pipe, dev_null)
 
     with pytest.raises(pyexasol.exceptions.ExaError):
