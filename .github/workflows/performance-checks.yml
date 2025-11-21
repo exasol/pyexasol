@@ -16,7 +16,7 @@ jobs:
         uses: actions/checkout@v5
 
       - name: Set up Python & Poetry Environment
-        uses: exasol/python-toolbox/.github/actions/python-environment@v1
+        uses: exasol/python-toolbox/.github/actions/python-environment@v3
         with:
           extras: "all"
 
@@ -42,7 +42,7 @@ jobs:
         uses: actions/checkout@v5
 
       - name: Set up Python & Poetry Environment
-        uses: exasol/python-toolbox/.github/actions/python-environment@v1
+        uses: exasol/python-toolbox/.github/actions/python-environment@v3
         with:
           python-version: ${{ matrix.python-version }}
           extras: "all"
@@ -61,7 +61,7 @@ jobs:
             --file-name ${{ matrix.performance-tests.key }}.json
 
       - name: Upload Artifacts
-        uses: actions/upload-artifact@v4.6.2
+        uses: actions/upload-artifact@v5
         with:
           name: "performance_${{ matrix.performance-tests.key }}"
           path: test/performance/.benchmarks/${{matrix.performance-tests.key}}.json
@@ -85,13 +85,13 @@ jobs:
         uses: actions/checkout@v5
 
       - name: Set up Python & Poetry Environment
-        uses: exasol/python-toolbox/.github/actions/python-environment@v1
+        uses: exasol/python-toolbox/.github/actions/python-environment@v3
         with:
           python-version: ${{ matrix.python-version }}
           extras: "all"
 
       - name: Download Artifacts
-        uses: actions/download-artifact@v5.0.0
+        uses: actions/download-artifact@v6
         with:
           pattern: performance*
           path: ./artifacts
@@ -102,7 +102,7 @@ jobs:
             --path './artifacts/*/*.json'
 
       - name: Upload Artifacts
-        uses: actions/upload-artifact@v4.6.2
+        uses: actions/upload-artifact@v5
         with:
           name: performance_combined.json
           path: test/performance/.benchmarks/0002_performance.json
