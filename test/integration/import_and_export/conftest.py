@@ -1,11 +1,6 @@
 import copy
-import csv
-from dataclasses import dataclass
 from datetime import datetime
 from inspect import cleandoc
-from io import StringIO
-from pathlib import Path
-from typing import Optional
 
 import pytest
 from integration.import_and_export.data_sample import (

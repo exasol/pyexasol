@@ -1,6 +1,5 @@
 import pytest
 
-import pyexasol
 from pyexasol import (
     ExaAuthError,
     ExaCommunicationError,

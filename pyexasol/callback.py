@@ -26,7 +26,6 @@ from collections.abc import Iterable
 from pathlib import Path
 from typing import (
     TYPE_CHECKING,
-    Optional,
     Union,
 )
 
@@ -56,7 +55,7 @@ def export_to_pandas(pipe, dst, **kwargs) -> "pandas.DataFrame":
 
 
 def check_export_to_parquet_directory_setting(
-    dst: Union[Path, str], callback_params: Optional[dict] = None
+    dst: Path | str, callback_params: dict | None = None
 ) -> None:
     """
     Check that the dst directory is in an allowed state:
@@ -94,7 +93,7 @@ def check_export_to_parquet_directory_setting(
             )
 
 
-def export_to_parquet(pipe, dst: Union[Path, str], **kwargs) -> None:
+def export_to_parquet(pipe, dst: Path | str, **kwargs) -> None:
     """
     Basic example of how to export into local parquet file(s)
 
@@ -206,7 +205,7 @@ def import_from_pandas(pipe, src: "pandas.DataFrame", **kwargs):
     )
 
 
-def get_parquet_files(source: Union[list[Path], Path, str]) -> list[Path]:
+def get_parquet_files(source: list[Path] | Path | str) -> list[Path]:
     if isinstance(source, str):
         matches = glob.glob(source)
         return sorted(
@@ -234,7 +233,7 @@ def get_parquet_files(source: Union[list[Path], Path, str]) -> list[Path]:
 
 
 def import_from_parquet(
-    pipe, source: Union[list[Path], Path, str], **kwargs
+    pipe, source: list[Path] | Path | str, **kwargs
 ):  # NOSONAR(S3776)
     """
     Basic example of how to import from :class:`pyarrow.parquet.ParquetFile` via local parquet file(s)
@@ -258,9 +257,7 @@ def import_from_parquet(
         types,
     )
 
-    def ensure_no_nested_columns(
-        schema, requested_columns: Union[list[str], None]
-    ) -> None:
+    def ensure_no_nested_columns(schema, requested_columns: list[str] | None) -> None:
         nested_fields = []
         for field in schema:
             if not types.is_nested(field.type):

@@ -1,7 +1,6 @@
 import os
 import ssl
 from dataclasses import dataclass
-from typing import Optional
 from unittest import mock
 from unittest.mock import create_autospec
 
@@ -32,7 +31,7 @@ class ConnectionMockFixture:
     def assert_websocket_created(self, url: str, **args: dict):
         self.create_websocket_connection_mock.assert_called_once_with(url, **args)
 
-    def resolve_hostname(self, hostname: str, port: int, fingerprint: Optional[str]):
+    def resolve_hostname(self, hostname: str, port: int, fingerprint: str | None):
         return self.connection._resolve_hostname(hostname, port, fingerprint)
 
     def process_dsn(self, dsn: str):
@@ -42,7 +41,7 @@ class ConnectionMockFixture:
         self.connection._init_ws()
 
     def get_websocket_connection_string(
-        self, hostname: str, ipaddr: Optional[str], port: int
+        self, hostname: str, ipaddr: str | None, port: int
     ) -> str:
         return self.connection._get_websocket_connection_string(hostname, ipaddr, port)
 

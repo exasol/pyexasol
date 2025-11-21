@@ -13,7 +13,6 @@ from dataclasses import (
     dataclass,
 )
 from functools import wraps
-from typing import Optional
 
 import pyexasol.exceptions
 from exasol.driver.websocket._errors import (
@@ -29,11 +28,11 @@ class MetaData:
 
     name: str
     type_code: TypeCode
-    display_size: Optional[int] = None
-    internal_size: Optional[int] = None
-    precision: Optional[int] = None
-    scale: Optional[int] = None
-    null_ok: Optional[bool] = None
+    display_size: int | None = None
+    internal_size: int | None = None
+    precision: int | None = None
+    scale: int | None = None
+    null_ok: bool | None = None
 
 
 def _pyexasol2dbapi_metadata(name, metadata) -> MetaData:

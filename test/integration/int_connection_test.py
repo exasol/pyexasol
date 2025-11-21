@@ -1,7 +1,6 @@
 import hashlib
 import os
 import ssl
-from typing import Optional
 
 import pytest
 
@@ -37,7 +36,7 @@ def fingerprint(request, dsn):
 @pytest.fixture()
 def dsn_builder(certificate_type, default_ipaddr, default_port, fingerprint):
 
-    def build_dsn(custom_fingerprint: Optional[str] = None):
+    def build_dsn(custom_fingerprint: str | None = None):
         fp = custom_fingerprint or fingerprint
         if certificate_type == ssl.CERT_NONE:
             return os.environ.get("EXAHOST", f"{default_ipaddr}/{fp}:{default_port}")
