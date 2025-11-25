@@ -3,8 +3,6 @@ import weakref
 
 import pytest
 
-import pyexasol
-
 
 @pytest.mark.misc
 def test_exa_statement_gets_garbage_collected(connection):

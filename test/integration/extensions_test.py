@@ -1,7 +1,5 @@
 import pytest
 
-import pyexasol
-
 
 @pytest.mark.extensions
 class TestExaExtension:
