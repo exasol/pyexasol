@@ -18,7 +18,7 @@ Prerequisites
 -------------
 
 - Exasol >= 7.1
-- Python >= 3.9
+- Python >= 3.10
 
 .. _optional_dependencies:
 
