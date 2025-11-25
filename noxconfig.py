@@ -33,6 +33,8 @@ def start_test_db(
         db_version,
         "--db-mem-size",
         "4GB",
+        "--log-level",
+        "DEBUG",
     ]
     if with_certificate:
         command.append(
