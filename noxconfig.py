@@ -36,10 +36,10 @@ def start_test_db(
         "--log-level",
         "DEBUG",
     ]
-    if with_certificate:
-        command.append(
-            "--create-certificates",
-        )
+    # if with_certificate:
+    #     command.append(
+    #         "--create-certificates",
+    #     )
 
     session.run(*command, external=True)
 

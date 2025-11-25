@@ -1,7 +1,6 @@
 import decimal
 import os
 import ssl
-import subprocess
 import uuid
 from collections import namedtuple
 from inspect import cleandoc
@@ -22,17 +21,18 @@ def container_name():
 
 @pytest.fixture(scope="session")
 def certificate(tmp_path_factory, container_name) -> Path:
-    tmp_dir = tmp_path_factory.mktemp("certificate")
-    file_path = tmp_dir / "rootCA.crt"
-
-    command = ["docker", "cp", f"{container_name}:/certificates/rootCA.crt", file_path]
-    subprocess.run(
-        command,
-        check=True,
-        text=True,
-        capture_output=True,
-    )
-    return file_path
+    pass
+    # tmp_dir = tmp_path_factory.mktemp("certificate")
+    # file_path = tmp_dir / "rootCA.crt"
+    #
+    # command = ["docker", "cp", f"{container_name}:/certificates/rootCA.crt", file_path]
+    # subprocess.run(
+    #     command,
+    #     check=True,
+    #     text=True,
+    #     capture_output=True,
+    # )
+    # return file_path
 
 
 @pytest.fixture(scope="session")
