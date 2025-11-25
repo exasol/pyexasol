@@ -2,7 +2,6 @@ from inspect import cleandoc
 
 import pytest
 
-import pyexasol
 from pyexasol import ExaRuntimeError
 
 

@@ -2,8 +2,6 @@ from inspect import cleandoc
 
 import pytest
 
-import pyexasol
-
 
 @pytest.fixture
 def disable_query_cache_for_session(connection):

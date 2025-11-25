@@ -1,7 +1,5 @@
 import pytest
 
-import pyexasol
-
 
 @pytest.fixture
 def multiple_connection_factory(connection_factory):

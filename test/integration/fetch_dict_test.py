@@ -1,7 +1,5 @@
 import pytest
 
-import pyexasol
-
 
 # For the fetch_dict tests we need to configure the connection accordingly (fetch_dict=True)
 @pytest.fixture

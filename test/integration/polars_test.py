@@ -1,5 +1,3 @@
-from inspect import cleandoc
-
 import polars as pl
 import pytest
 
