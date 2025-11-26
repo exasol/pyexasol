@@ -4,10 +4,6 @@ from dataclasses import (
     field,
 )
 from pathlib import Path
-from typing import (
-    Optional,
-    Union,
-)
 
 from rich.console import Console
 from rich.table import Table
@@ -16,7 +12,7 @@ from rich.table import Table
 @dataclass
 class Benchmark:
     filepath: Path
-    benchmark_data: list[dict[str, Union[dict, str]]] = field(init=False)
+    benchmark_data: list[dict[str, dict | str]] = field(init=False)
 
     def _check_benchmark_data(self):
         if not hasattr(self, "benchmark_data"):
@@ -24,7 +20,7 @@ class Benchmark:
                 "benchmark_data must be initialized with `set_benchmark_data`"
             )
 
-    def get_test(self, fullname: str) -> Optional[dict[str, Union[dict, str]]]:
+    def get_test(self, fullname: str) -> dict[str, dict | str] | None:
         self._check_benchmark_data()
 
         match_test = list(
@@ -54,9 +50,9 @@ class CompareBenchmarks:
 
     def _check_for_error(
         self,
-        previous_test: Optional[dict[str, Union[dict, str]]],
-        current_test: Optional[dict[str, Union[dict, str]]],
-    ) -> Optional[str]:
+        previous_test: dict[str, dict | str] | None,
+        current_test: dict[str, dict | str] | None,
+    ) -> str | None:
         if previous_test is None:
             return "is not present in previous_benchmark"
         elif current_test is None:
@@ -78,19 +74,15 @@ class CompareBenchmarks:
 
     @staticmethod
     def _print_compared_results(
-        previous_test: Optional[dict[str, Union[dict, str]]],
-        current_test: Optional[dict[str, Union[dict, str]]],
+        previous_test: dict[str, dict | str] | None,
+        current_test: dict[str, dict | str] | None,
     ) -> None:
-        def get_machine_info(
-            test: Optional[dict[str, Union[dict, str]]], key: str
-        ) -> str:
+        def get_machine_info(test: dict[str, dict | str] | None, key: str) -> str:
             if test is None:
                 return ""
             return test["machine_info"]["cpu"][key]  # type: ignore
 
-        def get_stats_value(
-            test: Optional[dict[str, Union[dict, str]]], key: str
-        ) -> str:
+        def get_stats_value(test: dict[str, dict | str] | None, key: str) -> str:
             if test is None:
                 return ""
             return f"{test['stats'][key]:.2f}"  # type: ignore

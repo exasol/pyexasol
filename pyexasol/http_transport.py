@@ -12,11 +12,7 @@ import zlib
 from collections.abc import Iterable
 from dataclasses import dataclass
 from ssl import SSLContext
-from typing import (
-    TYPE_CHECKING,
-    Optional,
-    Union,
-)
+from typing import TYPE_CHECKING
 
 from packaging.version import Version
 
@@ -29,15 +25,15 @@ class SqlQuery:
     connection: ExaConnection
     compression: bool
     # set these values in param dictionary to ExaConnection
-    column_delimiter: Optional[str] = None
-    column_separator: Optional[str] = None
-    columns: Optional[Iterable[str]] = None
-    comment: Optional[str] = None
-    csv_cols: Optional[Iterable[str]] = None
-    encoding: Optional[str] = None
-    format: Optional[str] = None
-    null: Optional[str] = None
-    row_separator: Optional[str] = None
+    column_delimiter: str | None = None
+    column_separator: str | None = None
+    columns: Iterable[str] | None = None
+    comment: str | None = None
+    csv_cols: Iterable[str] | None = None
+    encoding: str | None = None
+    format: str | None = None
+    null: str | None = None
+    row_separator: str | None = None
 
     def _build_csv_cols(self) -> str:
         if self.csv_cols is not None:
@@ -97,7 +93,7 @@ class SqlQuery:
         return files
 
     @staticmethod
-    def _get_query_str(query_lines: list[Optional[str]]) -> str:
+    def _get_query_str(query_lines: list[str | None]) -> str:
         filtered_query_lines = [q for q in query_lines if q is not None]
         return "\n".join(filtered_query_lines)
 
@@ -125,7 +121,7 @@ class SqlQuery:
         return ""
 
     @property
-    def _column_delimiter(self) -> Optional[str]:
+    def _column_delimiter(self) -> str | None:
         if self.column_delimiter is None:
             return None
         return (
@@ -133,7 +129,7 @@ class SqlQuery:
         )
 
     @property
-    def _column_separator(self) -> Optional[str]:
+    def _column_separator(self) -> str | None:
         if self.column_separator is None:
             return None
         return (
@@ -141,7 +137,7 @@ class SqlQuery:
         )
 
     @property
-    def _comment(self) -> Optional[str]:
+    def _comment(self) -> str | None:
         if self.comment is None:
             return None
 
@@ -152,7 +148,7 @@ class SqlQuery:
         return f"/*{self.comment}*/"
 
     @property
-    def _encoding(self) -> Optional[str]:
+    def _encoding(self) -> str | None:
         if self.encoding is None:
             return None
         return f"ENCODING = {self.connection.format.quote(self.encoding)}"
@@ -168,7 +164,7 @@ class SqlQuery:
         return self.format
 
     @property
-    def _null(self) -> Optional[str]:
+    def _null(self) -> str | None:
         if self.null is None:
             return None
         return f"NULL = {self.connection.format.quote(self.null)}"
@@ -180,7 +176,7 @@ class SqlQuery:
         return "http://"
 
     @property
-    def _row_separator(self) -> Optional[str]:
+    def _row_separator(self) -> str | None:
         if self.row_separator is None:
             return None
         return f"ROW SEPARATOR = {self.connection.format.quote(self.row_separator)}"
@@ -189,8 +185,8 @@ class SqlQuery:
 @dataclass
 class ImportQuery(SqlQuery):
     # set these values in param dictionary to ExaConnection
-    skip: Optional[Union[str, int]] = None
-    trim: Optional[str] = None
+    skip: str | int | None = None
+    trim: str | None = None
 
     def build_query(self, table: str, exa_address_list: list[str]) -> str:
         query_lines = [
@@ -223,13 +219,13 @@ class ImportQuery(SqlQuery):
         return f"IMPORT INTO {table}{self._column_spec} FROM CSV"
 
     @property
-    def _skip(self) -> Optional[str]:
+    def _skip(self) -> str | None:
         if self.skip is None:
             return None
         return f"SKIP = {self.connection.format.safe_decimal(self.skip)}"
 
     @property
-    def _trim(self) -> Optional[str]:
+    def _trim(self) -> str | None:
         if self.trim is None:
             return None
 
@@ -242,8 +238,8 @@ class ImportQuery(SqlQuery):
 @dataclass
 class ExportQuery(SqlQuery):
     # set these values in param dictionary to ExaConnection
-    delimit: Optional[str] = None
-    with_column_names: Optional[str] = None
+    delimit: str | None = None
+    with_column_names: str | None = None
 
     def build_query(self, table: str, exa_address_list: list[str]) -> str:
         query_lines = [
@@ -276,7 +272,7 @@ class ExportQuery(SqlQuery):
         return f"EXPORT {table}{self._column_spec} INTO CSV"
 
     @property
-    def _delimit(self) -> Optional[str]:
+    def _delimit(self) -> str | None:
         if self.delimit is None:
             return None
 
@@ -286,7 +282,7 @@ class ExportQuery(SqlQuery):
         return f"DELIMIT={delimit}"
 
     @property
-    def _with_column_names(self) -> Optional[str]:
+    def _with_column_names(self) -> str | None:
         if self.with_column_names is None:
             return None
         return "WITH COLUMN NAMES"
@@ -595,7 +591,7 @@ class ExaHTTPTransportWrapper:
 class ExaTCPServer(socketserver.TCPServer):
     exa_address_ipaddr: str
     exa_address_port: int
-    exa_address_public_key: Optional[str] = None
+    exa_address_public_key: str | None = None
 
     total_clients: int = 0
     is_terminated: bool = False
