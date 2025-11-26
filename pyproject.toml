@@ -41,6 +41,7 @@ classifiers = [
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
     "Intended Audience :: Developers",
     "Topic :: Database",
 ]
@@ -76,7 +77,7 @@ pytest = ">=7.0.0,<9"
 docutils = "^0.21.2"
 exasol-integration-test-docker-environment = "^4.0.0"
 faker = "^24.14.1"
-exasol-toolbox = "^1.12.0"
+exasol-toolbox = "^3.0.0"
 types-ujson = "^5.10.0.20250326"
 pytest-repeat = ">=0.9.4, <1.0.0"
 
@@ -124,6 +125,16 @@ module = [
 ]
 ignore_errors = true
 ignore_missing_imports = true
+
+[tool.ruff.lint]
+extend-ignore = [
+    "E",      # Syntax errors
+    "F",      # Pyflakes rules (excluding F401)
+    "UP",     # pyupgrade rules
+    "D",      # Docstring rules
+]
+extend-select = ["F401"]
+unfixable = []
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

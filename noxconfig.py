@@ -73,7 +73,6 @@ class Config(BaseConfig):
         "venv",
     )
     plugins: list = [StartDB, StopDB]
-    pyupgrade_args: tuple = ("--py310-plus",)
 
 
 PROJECT_CONFIG = Config(
