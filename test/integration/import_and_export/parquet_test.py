@@ -1,5 +1,5 @@
+from collections.abc import Callable
 from pathlib import Path
-from typing import Callable
 from unittest import mock
 
 import pyarrow as pa

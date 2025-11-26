@@ -1,9 +1,6 @@
 import csv
+from collections.abc import Callable
 from pathlib import Path
-from typing import (
-    Callable,
-    Optional,
-)
 
 import pandas as pd
 import polars as pl
@@ -95,7 +92,7 @@ def test_export_methods_to_file(
     export_method: str,
     file_extension: str,
     file_length_function: Callable,
-    callback_params: Optional[dict],
+    callback_params: dict | None,
 ):
     export_dst = tmp_path / f"test_data{file_extension}"
 

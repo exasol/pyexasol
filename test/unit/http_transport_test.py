@@ -1,4 +1,3 @@
-from typing import Optional
 from unittest.mock import (
     Mock,
     patch,
@@ -69,7 +68,7 @@ class TestSqlQuery:
             ),
         ],
     )
-    def test_build_csv_cols(sql_query, csv_cols: Optional[list[str]], expected: str):
+    def test_build_csv_cols(sql_query, csv_cols: list[str] | None, expected: str):
         sql_query.csv_cols = csv_cols
         assert sql_query._build_csv_cols() == expected
 
@@ -221,7 +220,7 @@ class TestSqlQuery:
         ],
     )
     def test_file_ext(
-        sql_query, compression: bool, file_ext: Optional[str], expected: str
+        sql_query, compression: bool, file_ext: str | None, expected: str
     ):
         sql_query.compression = compression
         sql_query.format = file_ext
