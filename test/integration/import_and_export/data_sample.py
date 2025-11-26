@@ -3,7 +3,6 @@ from dataclasses import dataclass
 from datetime import datetime
 from io import StringIO
 from pathlib import Path
-from typing import Optional
 
 DATETIME_STR_FORMAT = "%Y-%m-%d %H:%M:%S.%f"
 
@@ -37,7 +36,7 @@ class DataSample:
             return f'"{value.strftime(DATETIME_STR_FORMAT)}"'
         return value
 
-    def list_tuple(self, selected_columns: Optional[list[str]] = None) -> list[tuple]:
+    def list_tuple(self, selected_columns: list[str] | None = None) -> list[tuple]:
         if selected_columns is None:
             selected_columns = self.columns
 
@@ -51,7 +50,7 @@ class DataSample:
             for row in self.list_dict
         ]
 
-    def csv_str(self, selected_columns: Optional[list[str]] = None) -> str:
+    def csv_str(self, selected_columns: list[str] | None = None) -> str:
         if selected_columns is None:
             selected_columns = self.columns
 
@@ -66,7 +65,7 @@ class DataSample:
             return output.getvalue()
 
     def write_csv(
-        self, directory: Path, selected_columns: Optional[list[str]] = None
+        self, directory: Path, selected_columns: list[str] | None = None
     ) -> Path:
         filepath = directory / "data.csv"
 
