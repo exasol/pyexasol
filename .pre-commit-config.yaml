@@ -8,7 +8,7 @@ repos:
         types: [ python ]
         pass_filenames: false
         language: system
-        entry: poetry run -- nox -s project:fix
+        entry: poetry run -- nox -s format:fix
         stages: [ pre-commit ]
 
   - repo: https://github.com/pre-commit/pre-commit-hooks
