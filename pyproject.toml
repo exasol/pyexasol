@@ -59,7 +59,7 @@ polars = { version = "^1.10", optional = true }
 pproxy = { version = "^1.0.0,<3", optional = true }
 pyarrow = { version = "^21.0.0", optional = true}
 python-rapidjson = { version = "^1.0.0", optional = true }
-ujson = { version = "*", optional = true }
+ujson = { version = ">=1.0.0,<6", optional = true }
 
 [tool.poetry.extras]
 examples = ["pproxy"]
