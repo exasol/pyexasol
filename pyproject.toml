@@ -51,7 +51,7 @@ classifiers = [
 # This will be resolved in https://github.com/exasol/pyexasol/issues/274.
 websocket-client = ">=1.0.1,<1.9.0"
 rsa = "*"
-packaging = "*"
+packaging = ">=24.0,<26.0"
 cryptography = {version = ">=45.0.7"}
 orjson = { version = ">=3.6", optional = true }
 pandas = { version = "^2", optional = true}
