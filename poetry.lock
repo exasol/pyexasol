@@ -2888,21 +2888,19 @@ tests = ["pytest (>=5.4.1)", "pytest-cov (>=2.8.1)", "pytest-mypy (>=0.8.0)", "p
 
 [[package]]
 name = "pproxy"
-version = "2.7.9"
+version = "1.9.9"
 description = "Proxy server that can tunnel among remote servers by regex rules."
 optional = true
 python-versions = ">=3.6"
 groups = ["main"]
 markers = "extra == \"examples\" or extra == \"all\""
 files = [
-    {file = "pproxy-2.7.9-py3-none-any.whl", hash = "sha256:a073d02616a47c43e1d20a547918c307dbda598c6d53869b165025f3cfe58e80"},
+    {file = "pproxy-1.9.9-py3-none-any.whl", hash = "sha256:f2f1c8ac7ee3eebcd87794f964287913051b2e484c367f48bbd43f22f6b05e1d"},
+    {file = "pproxy-1.9.9.tar.gz", hash = "sha256:070b4a13ea2c3b88cdea3fb87bb032416649b095a003ba848accb2417393976d"},
 ]
 
 [package.extras]
-accelerated = ["pycryptodome (>=3.7.2)", "uvloop (>=0.13.0)"]
-daemon = ["python-daemon (>=2.2.3)"]
-quic = ["aioquic (>=0.9.7)"]
-sshtunnel = ["asyncssh (>=2.5.0)"]
+accelerated = ["pycryptodome"]
 
 [[package]]
 name = "pre-commit"
@@ -5155,4 +5153,4 @@ ujson = ["ujson"]
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.10,<3.15"
-content-hash = "d67655a346b40eb1db64b5165b5ba5c3020351698b221870b7939d02a9ad0204"
+content-hash = "2019bd1a1b3eef2b6569cc8f1f20297f24650d8d72d7852307441d0f305d14d3"
