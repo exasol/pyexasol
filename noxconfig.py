@@ -1,11 +1,13 @@
 from __future__ import annotations
 
-from collections.abc import Iterable
 from pathlib import Path
 
 from exasol.toolbox.config import BaseConfig
 from exasol.toolbox.nox.plugin import hookimpl
 from nox import Session
+from pydantic import (
+    computed_field,
+)
 
 DEFAULT_PORT = 8563
 DEFAULT_DB_VERSION = "8.29.6"
@@ -63,19 +65,23 @@ class StopDB:
 
 
 class Config(BaseConfig):
-    root: Path = Path(__file__).parent
-    doc: Path = Path(__file__).parent / "doc"
-    version_file: Path = Path(__file__).parent / "pyexasol" / "version.py"
-    source: Path = Path("pyexasol")
-    path_filters: Iterable[str] = (
-        "dist",
-        ".eggs",
-        "venv",
-    )
-    plugins: list = [StartDB, StopDB]
+    @computed_field  # type: ignore[misc]
+    @property
+    def source_code_path(self) -> Path:
+        """
+        Path to the source code of the project.
+
+        In pyexasol, this needs to be overridden due to a custom directory setup.
+        This will be addressed in:
+            https://github.com/exasol/pyexasol/issues/295
+        """
+        return self.root_path / self.project_name
 
 
 PROJECT_CONFIG = Config(
+    root_path=Path(__file__).parent,
+    project_name="pyexasol",
+    plugins_for_nox_sessions=(StartDB, StopDB),
     # Python 3.14 is left out due to issues installing pyarrow
     # & a known issue in the ITDE & will be resolved in:
     # https://github.com/exasol/pyexasol/issues/285
@@ -83,5 +89,5 @@ PROJECT_CONFIG = Config(
     # Changes for 7.x and 2025.1.x have not yet been made. 7.x works for all tests,
     # except for the examples/UDFs. These will be resolved in:
     # https://github.com/exasol/pyexasol/issues/273
-    exasol_versions=(BaseConfig().exasol_versions[1],),
+    exasol_versions=("8.29.13",),
 )
