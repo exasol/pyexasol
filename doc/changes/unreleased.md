@@ -9,4 +9,5 @@ This release drops support for Python 3.9, which reached its end-of-life in 2025
 
 ## Internal
 
-* #283: Updated the exasol-toolbox to 3.0.0 
+* #283: Updated the exasol-toolbox to 3.0.0
+* #294: Updated the exasol-toolbox to 4.0.0
