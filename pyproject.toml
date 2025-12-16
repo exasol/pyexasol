@@ -142,7 +142,7 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.sonar]
 projectKey = "com.exasol:pyexasol"
-hostUrl = "https://sonarcloud.io"
+host.url = "https://sonarcloud.io"
 organization = "exasol"
 
 [tool.pytest.ini_options]
