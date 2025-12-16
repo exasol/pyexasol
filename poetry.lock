@@ -1043,14 +1043,14 @@ files = [
 
 [[package]]
 name = "exasol-integration-test-docker-environment"
-version = "4.3.0"
+version = "5.0.0"
 description = "Integration Test Docker Environment for Exasol"
 optional = false
-python-versions = "<4,>=3.9.2"
+python-versions = "<3.15,>=3.10"
 groups = ["dev"]
 files = [
-    {file = "exasol_integration_test_docker_environment-4.3.0-py3-none-any.whl", hash = "sha256:0f694a2c723617c189b84c145a18154e2a40f2fb58f98c73b39277af740de7c6"},
-    {file = "exasol_integration_test_docker_environment-4.3.0.tar.gz", hash = "sha256:2c82bd667be4b654d48ea5c43617c31608f3ec73312c8b6b51b2bb324a75ced6"},
+    {file = "exasol_integration_test_docker_environment-5.0.0-py3-none-any.whl", hash = "sha256:b5d35ad409155f7705ec8c3f261f519295061c82b7ccd56cab39bb5097863b7c"},
+    {file = "exasol_integration_test_docker_environment-5.0.0.tar.gz", hash = "sha256:66dc7cbe628bdaabdd6924a428e56bfdd817ea226eed7663fb33c378427282c4"},
 ]
 
 [package.dependencies]
@@ -2335,7 +2335,7 @@ description = "Fundamental package for array computing in Python"
 optional = true
 python-versions = ">=3.11"
 groups = ["main"]
-markers = "python_version >= \"3.11\" and (extra == \"pandas\" or extra == \"all\")"
+markers = "(extra == \"pandas\" or extra == \"all\") and python_version >= \"3.11\""
 files = [
     {file = "numpy-2.3.4-cp311-cp311-macosx_10_9_x86_64.whl", hash = "sha256:e78aecd2800b32e8347ce49316d3eaf04aed849cd5b38e0af39f829a4e59f5eb"},
     {file = "numpy-2.3.4-cp311-cp311-macosx_11_0_arm64.whl", hash = "sha256:7fd09cc5d65bda1e79432859c40978010622112e9194e581e3415a3eccc7f43f"},
@@ -5154,5 +5154,5 @@ ujson = ["ujson"]
 
 [metadata]
 lock-version = "2.1"
-python-versions = ">=3.10,<4"
-content-hash = "755016d345f889fd6e06183d5a6bada2f414a77e932a5fc3a6d25aa0d7ceb657"
+python-versions = ">=3.10,<3.15"
+content-hash = "cb477e9549203b70a008eab1fb2db7d71f265ba16a23138f0c53d164b66e58f1"
