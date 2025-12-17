@@ -16,7 +16,7 @@ jobs:
         uses: actions/checkout@v5
 
       - name: Set up Python & Poetry Environment
-        uses: exasol/python-toolbox/.github/actions/python-environment@v3
+        uses: exasol/python-toolbox/.github/actions/python-environment@v4
         with:
           extras: "all"
 
@@ -42,7 +42,7 @@ jobs:
         uses: actions/checkout@v5
 
       - name: Set up Python & Poetry Environment
-        uses: exasol/python-toolbox/.github/actions/python-environment@v3
+        uses: exasol/python-toolbox/.github/actions/python-environment@v4
         with:
           python-version: ${{ matrix.python-version }}
           extras: "all"
@@ -85,7 +85,7 @@ jobs:
         uses: actions/checkout@v5
 
       - name: Set up Python & Poetry Environment
-        uses: exasol/python-toolbox/.github/actions/python-environment@v3
+        uses: exasol/python-toolbox/.github/actions/python-environment@v4
         with:
           python-version: ${{ matrix.python-version }}
           extras: "all"
