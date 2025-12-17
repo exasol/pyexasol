@@ -25,13 +25,13 @@ from typing import (
     Optional,
     Union,
 )
+from warnings import warn
 
 import websocket
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import padding
 from packaging.version import Version
 
-from warnings import warn
 from . import callback as cb
 from .exceptions import *
 from .ext import ExaExtension
@@ -1351,8 +1351,7 @@ class ExaConnection:
     def _encrypt_password(self, public_key_pem):
         public_key = serialization.load_pem_public_key(public_key_pem.encode())
         encrypted_data = public_key.encrypt(
-            self.options["password"].encode(),
-            padding.PKCS1v15()
+            self.options["password"].encode(), padding.PKCS1v15()
         )
         return base64.b64encode(encrypted_data).decode()
 
