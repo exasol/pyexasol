@@ -27,8 +27,9 @@ from typing import (
 )
 from warnings import warn
 
-import rsa
 import websocket
+from cryptography.hazmat.primitives import serialization
+from cryptography.hazmat.primitives.asymmetric import padding
 from packaging.version import Version
 
 from . import callback as cb
@@ -1348,10 +1349,11 @@ class ExaConnection:
         return auth_params
 
     def _encrypt_password(self, public_key_pem):
-        pk = rsa.PublicKey.load_pkcs1(public_key_pem.encode())
-        return base64.b64encode(
-            rsa.encrypt(self.options["password"].encode(), pk)
-        ).decode()
+        public_key = serialization.load_pem_public_key(public_key_pem.encode())
+        encrypted_data = public_key.encrypt(
+            self.options["password"].encode(), padding.PKCS1v15()
+        )
+        return base64.b64encode(encrypted_data).decode()
 
     def _init_ws(self):
         """
