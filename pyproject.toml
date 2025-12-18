@@ -50,7 +50,6 @@ classifiers = [
 # websocket-client was down-pinned to <1.9.0 due to tests failures.
 # This will be resolved in https://github.com/exasol/pyexasol/issues/274.
 websocket-client = ">=1.0.1,<1.9.0"
-rsa = "*"
 packaging = "*"
 cryptography = {version = ">=45.0.7"}
 orjson = { version = ">=3.6", optional = true }
