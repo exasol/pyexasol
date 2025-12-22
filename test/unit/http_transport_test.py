@@ -377,12 +377,21 @@ class TestExportQuery:
 
     @staticmethod
     @pytest.mark.parametrize(
-        "with_column_names,expected",
-        [("with_column_names", "WITH COLUMN NAMES"), (None, None)],
+        "value,expected",
+        [(True, "WITH COLUMN NAMES"), (False, None)],
     )
-    def test_with_column_names(export_sql_query, with_column_names, expected):
-        export_sql_query.with_column_names = with_column_names
+    def test_with_column_names(export_sql_query, value, expected):
+        export_sql_query.with_column_names = value
         assert export_sql_query._with_column_names == expected
+
+    @staticmethod
+    @pytest.mark.parametrize("value", ["False", "true", "abc", 1, 0])
+    def test_with_column_names_wrong_value_raises_exception(export_sql_query, value):
+        export_sql_query.with_column_names = value
+        with pytest.raises(
+            ValueError, match="Invalid value for export parameter WITH_COLUMNS"
+        ):
+            _ = export_sql_query._with_column_names
 
 
 ERROR_MESSAGE = "Error from callback"

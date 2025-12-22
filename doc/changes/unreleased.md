@@ -2,6 +2,10 @@
 
 This release drops support for Python 3.9, which reached its end-of-life in 2025-10.
 
+## Bugfix
+
+* #265: Improved usage of `with_column_names` in `export_params` from being a flag to being strictly boolean
+
 ## Refactoring
 
 * #287: Removed unused imports (primarily in test files)
