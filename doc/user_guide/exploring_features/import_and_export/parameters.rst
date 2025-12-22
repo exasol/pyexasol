@@ -62,7 +62,9 @@ method. When the code is executed, these are validated using the :class:`pyexaso
      - Row separator for CSV (line-endings)
    * - with_column_names
      - True
-     - Add column names as the first line, which may be useful for external APIs (e.g. pandas)
+     - Add column names as the first line, which may be useful for external APIs (e.g. pandas).
+       The default value for this is False, except for `export_to_pandas`,
+       `export_to_parquet`, and `export_to_polars` where it is set to True.
 
 .. _import_params:
 

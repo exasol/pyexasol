@@ -239,7 +239,7 @@ class ImportQuery(SqlQuery):
 class ExportQuery(SqlQuery):
     # set these values in param dictionary to ExaConnection
     delimit: str | None = None
-    with_column_names: str | None = None
+    with_column_names: bool = False
 
     def build_query(self, table: str, exa_address_list: list[str]) -> str:
         query_lines = [
@@ -283,7 +283,12 @@ class ExportQuery(SqlQuery):
 
     @property
     def _with_column_names(self) -> str | None:
-        if self.with_column_names is None:
+        if not isinstance(self.with_column_names, bool):
+            raise ValueError(
+                "Invalid value for export parameter WITH_COLUMNS: "
+                f"{self.with_column_names}. Only a boolean is allowed."
+            )
+        if self.with_column_names is False:
             return None
         return "WITH COLUMN NAMES"
 
