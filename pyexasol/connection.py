@@ -11,7 +11,10 @@ import threading
 import time
 import urllib.parse
 import zlib
-from collections.abc import Iterable
+from collections.abc import (
+    Callable,
+    Iterable,
+)
 from inspect import (
     Signature,
     cleandoc,
@@ -20,9 +23,7 @@ from inspect import (
 from pathlib import Path
 from typing import (
     TYPE_CHECKING,
-    Callable,
     NamedTuple,
-    Optional,
     Union,
 )
 from warnings import warn
@@ -57,9 +58,9 @@ class Host(NamedTuple):
     """This represents a resolved host name with its IP address and port number."""
 
     hostname: str
-    ip_address: Optional[str]
+    ip_address: str | None
     port: int
-    fingerprint: Optional[str]
+    fingerprint: str | None
 
 
 def get_exaconnection_signature() -> Signature:
@@ -102,9 +103,9 @@ class ExaConnection:
 
     def __init__(
         self,
-        dsn: Optional[str] = None,
-        user: Optional[str] = None,
-        password: Optional[str] = None,
+        dsn: str | None = None,
+        user: str | None = None,
+        password: str | None = None,
         schema: str = "",
         autocommit=constant.DEFAULT_AUTOCOMMIT,
         snapshot_transactions=None,
@@ -131,9 +132,9 @@ class ExaConnection:
         client_version=None,
         client_os_username=None,
         protocol_version=constant.PROTOCOL_V3,
-        websocket_sslopt: Optional[dict] = None,
-        access_token: Optional[str] = None,
-        refresh_token: Optional[str] = None,
+        websocket_sslopt: dict | None = None,
+        access_token: str | None = None,
+        refresh_token: str | None = None,
     ):
         """
         Exasol connection object
@@ -274,7 +275,7 @@ class ExaConnection:
         self._login()
         self.get_attr()
 
-    def execute(self, query: str, query_params: Optional[dict] = None) -> ExaStatement:
+    def execute(self, query: str, query_params: dict | None = None) -> ExaStatement:
         """
         Execute SQL query with optional query formatting parameters
 
@@ -297,7 +298,7 @@ class ExaConnection:
         """
         return self.cls_statement(self, query, query_params)
 
-    def execute_udf_output(self, query: str, query_params: Optional[dict] = None):
+    def execute_udf_output(self, query: str, query_params: dict | None = None):
         """
         Execute SQL query with UDF script, capture output
 
@@ -438,8 +439,8 @@ class ExaConnection:
         self,
         dst,
         query_or_table: str,
-        query_params: Optional[dict] = None,
-        export_params: Optional[dict] = None,
+        query_params: dict | None = None,
+        export_params: dict | None = None,
     ):
         """
         Export large amount of data from Exasol to file or file-like object using fast HTTP transport.
@@ -472,8 +473,8 @@ class ExaConnection:
     def export_to_list(
         self,
         query_or_table: str,
-        query_params: Optional[dict] = None,
-        export_params: Optional[dict] = None,
+        query_params: dict | None = None,
+        export_params: dict | None = None,
     ) -> list:
         """
         Export large amount of data from Exasol to basic Python `list` using fast HTTP transport.
@@ -505,9 +506,9 @@ class ExaConnection:
     def export_to_pandas(
         self,
         query_or_table: str,
-        query_params: Optional[dict] = None,
-        callback_params: Optional[dict] = None,
-        export_params: Optional[dict] = None,
+        query_params: dict | None = None,
+        callback_params: dict | None = None,
+        export_params: dict | None = None,
     ) -> "pandas.DataFrame":
         """
         Export large amount of data from Exasol to :class:`pandas.DataFrame`.
@@ -551,11 +552,11 @@ class ExaConnection:
 
     def export_to_parquet(
         self,
-        dst: Union[Path, str],
+        dst: Path | str,
         query_or_table: str,
-        query_params: Optional[dict] = None,
-        callback_params: Optional[dict] = None,
-        export_params: Optional[dict] = None,
+        query_params: dict | None = None,
+        callback_params: dict | None = None,
+        export_params: dict | None = None,
     ):
         """
         Export large amounts of data from Exasol to local parquet file(s).
@@ -627,9 +628,9 @@ class ExaConnection:
     def export_to_polars(
         self,
         query_or_table: str,
-        query_params: Optional[dict] = None,
-        callback_params: Optional[dict] = None,
-        export_params: Optional[dict] = None,
+        query_params: dict | None = None,
+        callback_params: dict | None = None,
+        export_params: dict | None = None,
     ) -> "polars.DataFrame":
         """
         Export large amount of data from Exasol to :class:`polars.DataFrame`.
@@ -671,7 +672,7 @@ class ExaConnection:
             export_params,
         )
 
-    def import_from_file(self, src, table: str, import_params: Optional[dict] = None):
+    def import_from_file(self, src, table: str, import_params: dict | None = None):
         """
         Import a large amount of data from a file or file-like object.
 
@@ -691,7 +692,7 @@ class ExaConnection:
         )
 
     def import_from_iterable(
-        self, src: Iterable, table: str, import_params: Optional[dict] = None
+        self, src: Iterable, table: str, import_params: dict | None = None
     ):
         """
         Import a large amount of data from an ``iterable`` Python object.
@@ -713,8 +714,8 @@ class ExaConnection:
         self,
         src: "pandas.DataFrame",
         table: str,
-        callback_params: Optional[dict] = None,
-        import_params: Optional[dict] = None,
+        callback_params: dict | None = None,
+        import_params: dict | None = None,
     ):
         """
         Import a large amount of data from :class:`pandas.DataFrame`.
@@ -738,8 +739,8 @@ class ExaConnection:
         self,
         src: Union["polars.LazyFrame", "polars.DataFrame"],
         table: str,
-        callback_params: Optional[dict] = None,
-        import_params: Optional[dict] = None,
+        callback_params: dict | None = None,
+        import_params: dict | None = None,
     ):
         """
         Import a large amount of data from :class:`polars.DataFrame` or :class:`polars.LazyFrame`.
@@ -761,10 +762,10 @@ class ExaConnection:
 
     def import_from_parquet(
         self,
-        source: Union[list[Path], Path, str],
+        source: list[Path] | Path | str,
         table: str,
-        callback_params: Optional[dict] = None,
-        import_params: Optional[dict] = None,
+        callback_params: dict | None = None,
+        import_params: dict | None = None,
     ):
         """
         Import a large amount of data from :class:`pyarrow.parquet.Table`.
@@ -793,9 +794,9 @@ class ExaConnection:
         callback: Callable,
         dst,
         query_or_table: str,
-        query_params: Optional[dict] = None,
-        callback_params: Optional[dict] = None,
-        export_params: Optional[dict] = None,
+        query_params: dict | None = None,
+        callback_params: dict | None = None,
+        export_params: dict | None = None,
     ):
         """
         Export a large amount of data to a user-defined callback function
@@ -890,8 +891,8 @@ class ExaConnection:
         callback: Callable,
         src,
         table: str,
-        callback_params: Optional[dict] = None,
-        import_params: Optional[dict] = None,
+        callback_params: dict | None = None,
+        import_params: dict | None = None,
     ):
         """
         Import a large amount of data from a user-defined callback function.
@@ -1060,7 +1061,7 @@ class ExaConnection:
         return int(self.login_info.get("protocolVersion", 0))
 
     @property
-    def exasol_db_version(self) -> Optional[Version]:
+    def exasol_db_version(self) -> Version | None:
         """
         Version of the Exasol database of the current session.
 
@@ -1391,7 +1392,7 @@ class ExaConnection:
                 return
 
     def _create_websocket_connection(
-        self, hostname: str, ipaddr: str, port: int, fingerprint: Optional[str]
+        self, hostname: str, ipaddr: str, port: int, fingerprint: str | None
     ) -> websocket.WebSocket:
         ws_options = self._get_ws_options(fingerprint=fingerprint)
         # Use correct hostname matching IP address for each connection attempt
@@ -1409,7 +1410,7 @@ class ExaConnection:
             raise e
 
     def _get_websocket_connection_string(
-        self, hostname: str, ipaddr: Optional[str], port: int
+        self, hostname: str, ipaddr: str | None, port: int
     ) -> str:
         host = hostname
         if self.options["resolve_hostnames"]:
@@ -1421,7 +1422,7 @@ class ExaConnection:
         else:
             return f"ws://{host}:{port}"
 
-    def _get_ws_options(self, fingerprint: Optional[str]) -> dict:
+    def _get_ws_options(self, fingerprint: str | None) -> dict:
         options = {
             "timeout": self.options["connection_timeout"],
             "skip_utf8_validation": True,
@@ -1581,7 +1582,7 @@ class ExaConnection:
         return result
 
     def _resolve_hostname(
-        self, hostname: str, port: int, fingerprint: Optional[str]
+        self, hostname: str, port: int, fingerprint: str | None
     ) -> list[Host]:
         """
         Resolve all IP addresses for hostname and add port.
