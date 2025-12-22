@@ -81,6 +81,7 @@ faker = "^24.14.1"
 exasol-toolbox = "^4.0.0"
 types-ujson = "^5.10.0.20250326"
 pytest-repeat = ">=0.9.4, <1.0.0"
+pandas-stubs = "^2.3.3.251219"
 
 [tool.poetry.group.performance]
 optional = true
@@ -112,8 +113,6 @@ max-module-lines = 800
 
 [[tool.mypy.overrides]]
 module = [
-    # pandas-stubs only for python >=3.10,<4.0.0, but we support 3.9 too
-    "pandas.*",
     # no stubs available as of 2025
     "orjson.*",
     "rapidjson.*",
