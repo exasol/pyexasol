@@ -52,7 +52,7 @@ classifiers = [
 websocket-client = ">=1.0.1,<1.9.0"
 packaging = "24.1.0"
 cryptography = {version = ">=45.0.7"}
-orjson = { version = ">=3.6", optional = true }
+orjson = { version = "^3.6", optional = true }
 pandas = { version = "^2", optional = true}
 polars = { version = "^1.10", optional = true }
 pproxy = { version = "*", optional = true }
