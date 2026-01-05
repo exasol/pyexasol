@@ -51,14 +51,18 @@ classifiers = [
 # This will be resolved in https://github.com/exasol/pyexasol/issues/274.
 websocket-client = ">=1.0.1,<1.9.0"
 packaging = ">=24.1.0,<26.0.0"
+# The cryptography package only rapidly increases their major version.
+# We anticipate that the stable API stays stable, and if we encounter a breaking
+# change, upstream projects can narrow the range.
 cryptography = {version = ">=45.0.7"}
 orjson = { version = "^3.6", optional = true }
 pandas = { version = "^2", optional = true}
 polars = { version = "^1.10", optional = true }
 pproxy = { version = "*", optional = true }
 # The pyarrow package rapidly increases the major version, not the minor version.
-# So, we want to give a bit of leeway here.
-pyarrow = { version = ">=21.0.0,<25.0.0", optional = true}
+# We anticipate that the stable API stays stable, and if we encounter a breaking
+# change, upstream projects can narrow the range.
+pyarrow = { version = ">=21.0.0", optional = true}
 python-rapidjson = { version = "^1.21", optional = true }
 ujson = { version = "^5.10", optional = true }
 
