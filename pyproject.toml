@@ -4,8 +4,8 @@ version = "2.0.0"
 requires-python = ">=3.10,<3.15"
 description = "Exasol python driver with extra features"
 authors = [
-    {name="Vitaly Markov", email="wild.desu@gmail.com"},
-    {name="Exasol AG", email="opensource@exasol.com"},
+    { name = "Vitaly Markov", email = "wild.desu@gmail.com" },
+    { name = "Exasol AG", email = "opensource@exasol.com" },
 ]
 readme = "README.md"
 license = "MIT"
@@ -18,7 +18,39 @@ keywords = [
     "import",
     "export"
 ]
-dynamic = ["classifiers", "dependencies"]
+dynamic = ["classifiers"]
+dependencies = [
+    # websocket-client was down-pinned to <1.9.0 due to tests failures.
+    # This will be resolved in https://github.com/exasol/pyexasol/issues/274.
+    "websocket-client>=1.0.1,<1.9.0",
+    "packaging>=24.1.0,<26.0.0",
+    # The cryptography package follow a  Firefox-inspired version scheme which increases
+    # the major version for all feature-releases independent of breaking changes.
+    # We anticipate that the stable API stays stable, and if we encounter a breaking
+    # change, upstream projects can narrow the range.
+    "cryptography>=45.0.7",
+]
+
+[project.optional-dependencies]
+examples = ["pproxy"]
+orjson = ["orjson>=3.6,<4.0"]
+pandas = ["pandas>=2.0.0,<3.0.0"]
+polars = ["polars>=1.10.0,<2.0.0"]
+# The pyarrow package rapidly increases major version. We anticipate that the stable
+# API stays stable, and if we encounter a breaking change, upstream projects can
+# narrow the range.
+pyarrow = ["pyarrow>=21.0.0"]
+rapidjson = ["python-rapidjson>=1.21.0,<2.0.0"]
+ujson = ["ujson>=5.10.0,<6.0.0"]
+all = [
+    "pproxy",
+    "orjson>=3.6,<4.0",
+    "pandas>=2.0.0,<3.0.0",
+    "polars>=1.10.0,<2.0.0",
+    "pyarrow>=21.0.0",
+    "python-rapidjson>=1.21.0,<2.0.0",
+    "ujson>=5.10.0,<6.0.0"
+]
 
 [project.urls]
 Homepage = "https://www.exasol.com/"
@@ -46,36 +78,7 @@ classifiers = [
     "Topic :: Database",
 ]
 
-[tool.poetry.dependencies]
-# websocket-client was down-pinned to <1.9.0 due to tests failures.
-# This will be resolved in https://github.com/exasol/pyexasol/issues/274.
-websocket-client = ">=1.0.1,<1.9.0"
-packaging = ">=24.1.0,<26.0.0"
-# The cryptography package follow a  Firefox-inspired version scheme which increases
-# the major version for all feature-releases independent of breaking changes.
-# We anticipate that the stable API stays stable, and if we encounter a breaking
-# change, upstream projects can narrow the range.
-cryptography = {version = ">=45.0.7"}
-orjson = { version = "^3.6", optional = true }
-pandas = { version = "^2", optional = true}
-polars = { version = "^1.10", optional = true }
-pproxy = { version = "*", optional = true }
-# The pyarrow package rapidly increases major version. We anticipate that the stable
-# API stays stable, and if we encounter a breaking change, upstream projects can narrow
-# the range.
-pyarrow = { version = ">=21.0.0", optional = true}
-python-rapidjson = { version = "^1.21", optional = true }
-ujson = { version = "^5.10", optional = true }
 
-[tool.poetry.extras]
-examples = ["pproxy"]
-orjson = ["orjson"]
-pandas = ["pandas"]
-polars = ["polars"]
-pyarrow = ["pyarrow"]
-rapidjson = ["python-rapidjson"]
-ujson = ["ujson"]
-all = ["pproxy", "orjson", "pandas", "polars", "pyarrow", "python-rapidjson", "ujson"]
 
 [tool.poetry.group.dev.dependencies]
 nox = "^2023.4.22"
@@ -95,7 +98,7 @@ optional = true
 # pytest-benchmark is kept separate from the other dev dependencies due to
 # observed correlated issues when running other tests. For further details, see
 # the `Performance Tests` section of the ``doc/user_guide/developer_guide.rst``.
-pytest-benchmark = {extras = ["histogram"], version = "^5.1.0"}
+pytest-benchmark = { extras = ["histogram"], version = "^5.1.0" }
 
 [tool.black]
 line-length = 88
@@ -133,10 +136,10 @@ ignore_missing_imports = true
 
 [tool.ruff.lint]
 extend-ignore = [
-    "E",      # Syntax errors
-    "F",      # Pyflakes rules (excluding F401)
-    "UP",     # pyupgrade rules
-    "D",      # Docstring rules
+    "E", # Syntax errors
+    "F", # Pyflakes rules (excluding F401)
+    "UP", # pyupgrade rules
+    "D", # Docstring rules
 ]
 extend-select = ["F401"]
 unfixable = []
