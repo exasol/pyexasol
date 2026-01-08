@@ -1,4 +1,4 @@
-# 2.0.0 - 2026-01-07
+# 2.0.0 - 2026-01-08
 
 This major release:
 * drops support for Python 3.9, which reached its end-of-life in 2025-10.
