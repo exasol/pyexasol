@@ -16,8 +16,10 @@ jobs:
         uses: actions/checkout@v5
 
       - name: Set up Python & Poetry Environment
-        uses: exasol/python-toolbox/.github/actions/python-environment@v4
+        uses: exasol/python-toolbox/.github/actions/python-environment@v5
         with:
+          python-version: "3.10"
+          poetry-version: "2.3.0"
           extras: "all"
 
       - name: Set matrix
@@ -42,9 +44,10 @@ jobs:
         uses: actions/checkout@v5
 
       - name: Set up Python & Poetry Environment
-        uses: exasol/python-toolbox/.github/actions/python-environment@v4
+        uses: exasol/python-toolbox/.github/actions/python-environment@v5
         with:
           python-version: ${{ matrix.python-version }}
+          poetry-version: "2.3.0"
           extras: "all"
 
       - name: Install performance dependency
@@ -85,9 +88,10 @@ jobs:
         uses: actions/checkout@v5
 
       - name: Set up Python & Poetry Environment
-        uses: exasol/python-toolbox/.github/actions/python-environment@v4
+        uses: exasol/python-toolbox/.github/actions/python-environment@v5
         with:
           python-version: ${{ matrix.python-version }}
+          poetry-version: "2.3.0"
           extras: "all"
 
       - name: Download Artifacts
