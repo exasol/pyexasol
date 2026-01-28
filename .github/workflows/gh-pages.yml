@@ -7,27 +7,30 @@ on:
 jobs:
 
   build-documentation:
-    runs-on: ubuntu-24.04
+    runs-on: "ubuntu-24.04"
     permissions:
       contents: read
     steps:
       - name: SCM Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
       - name: Setup Python & Poetry Environment
-        uses: exasol/python-toolbox/.github/actions/python-environment@v4
+        uses: exasol/python-toolbox/.github/actions/python-environment@v5
+        with:
+          python-version: "3.10"
+          poetry-version: "2.3.0"
 
       - name: Build Documentation
         run: |
           poetry run -- nox -s docs:multiversion
-          rm -r .html-documentation/*/.doctrees
+          mv .html-documentation html-documentation
 
       - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-pages-artifact@v4
         with:
-          path: .html-documentation
+          path: html-documentation
 
   deploy-documentation:
     needs: [ build-documentation ]
@@ -38,7 +41,7 @@ jobs:
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
-    runs-on: ubuntu-24.04
+    runs-on: "ubuntu-24.04"
     steps:
       - name: Deploy to GitHub Pages
         id: deployment

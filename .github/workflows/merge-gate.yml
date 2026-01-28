@@ -13,7 +13,7 @@ jobs:
 
   run-slow-tests:
     name: Run Slow Tests
-    runs-on: ubuntu-24.04
+    runs-on: "ubuntu-24.04"
     permissions:
       contents: read
 
@@ -55,7 +55,7 @@ jobs:
   # This job ensures inputs have been executed successfully.
   approve-merge:
     name: Allow Merge
-    runs-on: ubuntu-24.04
+    runs-on: "ubuntu-24.04"
     permissions:
       contents: read
     # If you need additional jobs to be part of the merge gate, add them below

@@ -6,7 +6,7 @@ on:
 jobs:
 
   report:
-    runs-on: ubuntu-24.04
+    runs-on: "ubuntu-24.04"
     permissions:
       contents: read
     env:
@@ -14,15 +14,18 @@ jobs:
 
     steps:
       - name: SCM Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
       - name: Setup Python & Poetry Environment
-        uses: exasol/python-toolbox/.github/actions/python-environment@v4
+        uses: exasol/python-toolbox/.github/actions/python-environment@v5
+        with:
+          python-version: "3.10"
+          poetry-version: "2.3.0"
 
       - name: Download Artifacts
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v7
         with:
           path: ./artifacts
 
@@ -41,7 +44,7 @@ jobs:
         run: poetry run -- nox -s project:report -- --format json | tee metrics.json
 
       - name: Upload Artifacts
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: metrics.json
           path: metrics.json
