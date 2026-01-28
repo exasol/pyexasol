@@ -1076,45 +1076,46 @@ simplejson = ">=3.16.0"
 
 [[package]]
 name = "exasol-toolbox"
-version = "4.0.1"
+version = "5.0.0"
 description = "Your one-stop solution for managing all standard tasks and core workflows of your Python project."
 optional = false
 python-versions = "<4.0,>=3.10"
 groups = ["dev"]
 files = [
-    {file = "exasol_toolbox-4.0.1-py3-none-any.whl", hash = "sha256:5b4179ba6936bf8d4e63570846ecede381f9db79539752438ea120a7b0fa3df0"},
-    {file = "exasol_toolbox-4.0.1.tar.gz", hash = "sha256:0e180289f23e0f562aefa890ffb6cd35099f99aedda2d2735faf762263dd50f6"},
+    {file = "exasol_toolbox-5.0.0-py3-none-any.whl", hash = "sha256:eb391dbbe0baac62dea94948ea4fd6d16b153dc35c20a162a84f96ddd4c153af"},
+    {file = "exasol_toolbox-5.0.0.tar.gz", hash = "sha256:c00a6ed1830cc3dd95bbd3733d7f521fd4f85cf503cbc73fda07f9b51ebff32a"},
 ]
 
 [package.dependencies]
-bandit = {version = ">=1.7.9,<2.0.0", extras = ["toml"]}
+bandit = {version = ">=1.7.9,<2", extras = ["toml"]}
 black = ">=24.1.0,<26"
 coverage = ">=6.4.4,<8.0.0"
 furo = ">=2022.9.15"
-import-linter = ">=2.0,<3.0"
+import-linter = ">=2.0,<3"
 importlib-resources = ">=5.12.0"
-isort = ">=7.0.0,<8.0.0"
-jinja2 = ">=3.1.6,<4.0.0"
+isort = ">=7.0.0,<8"
+jinja2 = ">=3.1.6,<4"
 mypy = ">=0.971"
 myst-parser = ">=2.0.0,<4"
 nox = ">=2022.8.7"
-pip-audit = ">=2.7.3,<3.0.0"
-pip-licenses = ">=5.0.0,<6.0.0"
-pluggy = ">=1.5.0,<2.0.0"
+pip-audit = ">=2.7.3,<3"
+pip-licenses = ">=5.0.0,<6"
+pluggy = ">=1.5.0,<2"
 pre-commit = ">=4,<5"
-pydantic = ">=2.11.5,<3.0.0"
+pydantic = ">=2.11.5,<3"
 pylint = ">=2.15.4"
-pysonar = ">=1.0.1.1548,<2.0.0.0"
+pysonar = ">=1.0.1.1548,<2"
 pytest = ">=7.2.2,<10"
 pyupgrade = ">=2.38.2,<4.0.0"
-ruff = ">=0.14.5,<0.15.0"
+pyyaml = ">=6.0.3,<7.0.0"
+ruff = ">=0.14.5,<0.15"
 shibuya = ">=2024.5.14"
 sphinx = ">=5.3,<8"
-sphinx-copybutton = ">=0.5.0,<0.6.0"
+sphinx-copybutton = ">=0.5.0,<0.6"
 sphinx-design = ">=0.5.0,<1"
-sphinx-inline-tabs = ">=2023.4.21,<2024.0.0"
-sphinx-toolbox = ">=4.0.0,<5.0.0"
-twine = ">=6.1.0,<7.0.0"
+sphinx-inline-tabs = ">=2023.4.21,<2024"
+sphinx-toolbox = ">=4.0.0,<5"
+twine = ">=6.1.0,<7"
 typer = {version = ">=0.7.0", extras = ["all"]}
 
 [[package]]
@@ -5497,4 +5498,4 @@ ujson = ["ujson"]
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.10,<3.15"
-content-hash = "c8af31f97544f5a97c98bccc1318dce0c1b48668e90f277625fae980a99a3c18"
+content-hash = "89e386cb12b05b8c75250f0ad6641dcc04383b3747c9d2357ce8a521fa201f86"

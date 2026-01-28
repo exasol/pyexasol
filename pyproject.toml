@@ -80,14 +80,14 @@ dev = [
     "docutils>=0.21.2,<0.22",
     "exasol-integration-test-docker-environment>=5.0.0,<6",
     "faker>=24.14.1,<25",
-    "exasol-toolbox>=4.0.0,<5",
+    "exasol-toolbox>=5.0.0,<6",
     "types-ujson>=5.10.0.20250326,<6",
     "pytest-repeat>=0.9.4, <1.0.0",
     "pandas-stubs>=2.3.3.251219,<3",
 ]
 
 [tool.poetry]
-requires-poetry = ">=2.1.0"
+requires-poetry = ">=2.3.0"
 packages = [
     { include = "pyexasol" },
     { include = "pyexasol_utils" },
