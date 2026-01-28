@@ -13,11 +13,13 @@ jobs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
     steps:
       - name: Check out repo
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: Set up Python & Poetry Environment
-        uses: exasol/python-toolbox/.github/actions/python-environment@v4
+        uses: exasol/python-toolbox/.github/actions/python-environment@v5
         with:
+          python-version: "3.10"
+          poetry-version: "2.3.0"
           extras: "all"
 
       - name: Set matrix
@@ -39,12 +41,13 @@ jobs:
       contents: read
     steps:
       - name: Check out repo
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: Set up Python & Poetry Environment
-        uses: exasol/python-toolbox/.github/actions/python-environment@v4
+        uses: exasol/python-toolbox/.github/actions/python-environment@v5
         with:
           python-version: ${{ matrix.python-version }}
+          poetry-version: "2.3.0"
           extras: "all"
 
       - name: Install performance dependency
@@ -61,7 +64,7 @@ jobs:
             --file-name ${{ matrix.performance-tests.key }}.json
 
       - name: Upload Artifacts
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: "performance_${{ matrix.performance-tests.key }}"
           path: test/performance/.benchmarks/${{matrix.performance-tests.key}}.json
@@ -82,16 +85,17 @@ jobs:
       contents: read
     steps:
       - name: Check out repo
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: Set up Python & Poetry Environment
-        uses: exasol/python-toolbox/.github/actions/python-environment@v4
+        uses: exasol/python-toolbox/.github/actions/python-environment@v5
         with:
           python-version: ${{ matrix.python-version }}
+          poetry-version: "2.3.0"
           extras: "all"
 
       - name: Download Artifacts
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v7
         with:
           pattern: performance*
           path: ./artifacts
@@ -102,7 +106,7 @@ jobs:
             --path './artifacts/*/*.json'
 
       - name: Upload Artifacts
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: performance_combined.json
           path: test/performance/.benchmarks/0002_performance.json

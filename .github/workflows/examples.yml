@@ -24,12 +24,13 @@ jobs:
       contents: read
     steps:
       - name: Check out repo
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: Set up Python & Poetry Environment
-        uses: exasol/python-toolbox/.github/actions/python-environment@v4
+        uses: exasol/python-toolbox/.github/actions/python-environment@v5
         with:
           python-version: ${{ matrix.python-version }}
+          poetry-version: "2.3.0"
           extras: "all"
 
       - name: Fix VM Crash in UDFs
