@@ -1076,14 +1076,14 @@ simplejson = ">=3.16.0"
 
 [[package]]
 name = "exasol-toolbox"
-version = "5.0.0"
+version = "5.1.1"
 description = "Your one-stop solution for managing all standard tasks and core workflows of your Python project."
 optional = false
 python-versions = "<4.0,>=3.10"
 groups = ["dev"]
 files = [
-    {file = "exasol_toolbox-5.0.0-py3-none-any.whl", hash = "sha256:eb391dbbe0baac62dea94948ea4fd6d16b153dc35c20a162a84f96ddd4c153af"},
-    {file = "exasol_toolbox-5.0.0.tar.gz", hash = "sha256:c00a6ed1830cc3dd95bbd3733d7f521fd4f85cf503cbc73fda07f9b51ebff32a"},
+    {file = "exasol_toolbox-5.1.1-py3-none-any.whl", hash = "sha256:0640240b32679163a0eea5f32fafb98f149e9a7e37944b9f7b24865a842a8cee"},
+    {file = "exasol_toolbox-5.1.1.tar.gz", hash = "sha256:bbef30c7c8a26c6621761edccce31146153e1e78dc2a883dbda5527a4637aab8"},
 ]
 
 [package.dependencies]
@@ -1107,7 +1107,7 @@ pylint = ">=2.15.4"
 pysonar = ">=1.0.1.1548,<2"
 pytest = ">=7.2.2,<10"
 pyupgrade = ">=2.38.2,<4.0.0"
-pyyaml = ">=6.0.3,<7.0.0"
+ruamel-yaml = ">=0.18.0,<=0.18.16"
 ruff = ">=0.14.5,<0.15"
 shibuya = ">=2024.5.14"
 sphinx = ">=5.3,<8"
@@ -1115,6 +1115,7 @@ sphinx-copybutton = ">=0.5.0,<0.6"
 sphinx-design = ">=0.5.0,<1"
 sphinx-inline-tabs = ">=2023.4.21,<2024"
 sphinx-toolbox = ">=4.0.0,<5"
+sphinxcontrib-mermaid = ">=2.0.0,<3.0.0"
 twine = ">=6.1.0,<7"
 typer = {version = ">=0.7.0", extras = ["all"]}
 
@@ -4856,6 +4857,26 @@ files = [
 test = ["flake8", "mypy", "pytest"]
 
 [[package]]
+name = "sphinxcontrib-mermaid"
+version = "2.0.0"
+description = "Mermaid diagrams in your Sphinx-powered docs"
+optional = false
+python-versions = ">=3.10"
+groups = ["dev"]
+files = [
+    {file = "sphinxcontrib_mermaid-2.0.0-py3-none-any.whl", hash = "sha256:59a73249bbee2c74b1a4db036f8e8899ade65982bdda6712cf22b4f4e9874bb5"},
+    {file = "sphinxcontrib_mermaid-2.0.0.tar.gz", hash = "sha256:cf4f7d453d001132eaba5d1fdf53d42049f02e913213cf8337427483bfca26f4"},
+]
+
+[package.dependencies]
+jinja2 = "*"
+pyyaml = "*"
+sphinx = "*"
+
+[package.extras]
+test = ["defusedxml", "myst-parser", "pytest", "ruff", "sphinx"]
+
+[[package]]
 name = "sphinxcontrib-qthelp"
 version = "2.0.0"
 description = "sphinxcontrib-qthelp is a sphinx extension which outputs QtHelp documents"
@@ -5498,4 +5519,4 @@ ujson = ["ujson"]
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.10,<3.15"
-content-hash = "89e386cb12b05b8c75250f0ad6641dcc04383b3747c9d2357ce8a521fa201f86"
+content-hash = "d28bc04e0ea8306b211cb14f214bb7cdfc4b410c847acfd81de78a1e77ad9d09"
