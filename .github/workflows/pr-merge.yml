@@ -26,7 +26,8 @@ jobs:
       id-token: write
 
   metrics:
-    needs: [ ci-job ]
+    needs:
+      - ci-job
     uses: ./.github/workflows/report.yml
     secrets: inherit
     permissions:

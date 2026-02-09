@@ -15,7 +15,8 @@ jobs:
       contents: read
 
   cd-job:
-    needs: [ check-tag-version-job ]
+    needs:
+      - check-tag-version-job
     name: Continuous Delivery
     uses: ./.github/workflows/build-and-publish.yml
     permissions:
@@ -24,7 +25,8 @@ jobs:
       PYPI_TOKEN: ${{ secrets.PYPI_TOKEN }}
 
   publish-docs:
-    needs: [ cd-job ]
+    needs:
+      - cd-job
     name: Publish Documentation
     uses: ./.github/workflows/gh-pages.yml
     permissions:

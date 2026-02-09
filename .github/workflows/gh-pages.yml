@@ -33,7 +33,8 @@ jobs:
           path: html-documentation
 
   deploy-documentation:
-    needs: [ build-documentation ]
+    needs:
+      - build-documentation
     permissions:
       contents: read
       pages: write
