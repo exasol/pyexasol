@@ -4,7 +4,7 @@ on:
   workflow_call:
     secrets:
       PYPI_TOKEN:
-          required: true
+        required: true
 
 jobs:
 
@@ -35,7 +35,7 @@ jobs:
       - name: GitHub Release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: >
+        run: >-
           gh release create ${GITHUB_REF_NAME}
           --title ${GITHUB_REF_NAME}
           --notes-file ./doc/changes/changes_${GITHUB_REF_NAME}.md

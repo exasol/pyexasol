@@ -12,7 +12,7 @@ jobs:
       contents: read
 
   run-slow-tests:
-    name: Run Slow Tests
+    name: Run Slow Tests?
     runs-on: "ubuntu-24.04"
     permissions:
       contents: read
@@ -27,7 +27,8 @@ jobs:
 
   slow-checks:
     name: Slow
-    needs: [ run-slow-tests ]
+    needs:
+      - run-slow-tests
     uses: ./.github/workflows/slow-checks.yml
     secrets: inherit
     permissions:
@@ -60,10 +61,13 @@ jobs:
       contents: read
     # If you need additional jobs to be part of the merge gate, add them below
     # In #262, re-add performance-checks to needs list
-    needs: [ fast-checks, slow-checks, examples, ssl_cert ]
+    needs:
+      - fast-checks
+      - slow-checks
+      - examples
+      - ssl_cert
 
     # Each job requires a step, so we added this dummy step.
     steps:
       - name: Approve
-        run: |
-          echo "Merge Approved"
+        run: echo "Merge Approved"
