@@ -4,19 +4,17 @@ on:
   workflow_call:
 
 jobs:
-
-  fast-checks:
-    name: Fast
+  run-fast-checks:
+    name: Run Fast Checks
     uses: ./.github/workflows/checks.yml
     permissions:
       contents: read
 
-  run-slow-tests:
-    name: Run Slow Tests?
+  approve-run-slow-tests:
+    name: Approve Running Slow Tests?
     runs-on: "ubuntu-24.04"
     permissions:
       contents: read
-
     # Even though the environment "manual-approval" will be created automatically,
     # it still needs to be configured to require interactive review.
     # See project settings on GitHub (Settings / Environments / manual-approval).
@@ -25,48 +23,46 @@ jobs:
       - name: Tests
         run: echo "Slow tests approved"
 
-  slow-checks:
-    name: Slow
+  run-slow-checks:
+    name: Run Slow Checks
     needs:
-      - run-slow-tests
+      - approve-run-slow-tests
     uses: ./.github/workflows/slow-checks.yml
     secrets: inherit
     permissions:
       contents: read
 
   examples:
-    needs: [ run-slow-tests ]
+    needs: [ approve-run-slow-tests ]
     uses: ./.github/workflows/examples.yml
     permissions:
       contents: read
 
   ssl_cert:
-    needs: [ run-slow-tests ]
+    needs: [ approve-run-slow-tests ]
     uses: ./.github/workflows/ssl_cert.yml
     permissions:
       contents: read
 
 # Will re-activate in #262
 #  performance-checks:
-#    needs: [ run-slow-tests ]
+#    needs: [ approve-run-slow-tests ]
 #    uses: ./.github/workflows/performance-checks.yml
 #    permissions:
 #      contents: read
 
   # This job ensures inputs have been executed successfully.
-  approve-merge:
+  allow-merge:
     name: Allow Merge
     runs-on: "ubuntu-24.04"
     permissions:
       contents: read
     # If you need additional jobs to be part of the merge gate, add them below
-    # In #262, re-add performance-checks to needs list
     needs:
-      - fast-checks
-      - slow-checks
+      - run-fast-checks
+      - run-slow-checks
       - examples
       - ssl_cert
-
     # Each job requires a step, so we added this dummy step.
     steps:
       - name: Approve

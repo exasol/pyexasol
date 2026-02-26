@@ -7,12 +7,10 @@ on:
       - 'master'
 
 jobs:
-
   # This job can be removed if certain preconditions are met. See
   # https://exasol.github.io/python-toolbox/user_guide/workflows.html#pr-merge-workflow
-
-  ci-job:
-    name: Checks
+  run-fast-checks:
+    name: Run Fast Checks
     uses: ./.github/workflows/checks.yml
     permissions:
       contents: read
@@ -25,9 +23,9 @@ jobs:
       pages: write
       id-token: write
 
-  metrics:
+  report:
     needs:
-      - ci-job
+      - run-fast-checks
     uses: ./.github/workflows/report.yml
     secrets: inherit
     permissions:

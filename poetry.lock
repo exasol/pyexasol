@@ -1076,14 +1076,14 @@ simplejson = ">=3.16.0"
 
 [[package]]
 name = "exasol-toolbox"
-version = "5.1.1"
+version = "6.0.0"
 description = "Your one-stop solution for managing all standard tasks and core workflows of your Python project."
 optional = false
 python-versions = "<4.0,>=3.10"
 groups = ["dev"]
 files = [
-    {file = "exasol_toolbox-5.1.1-py3-none-any.whl", hash = "sha256:0640240b32679163a0eea5f32fafb98f149e9a7e37944b9f7b24865a842a8cee"},
-    {file = "exasol_toolbox-5.1.1.tar.gz", hash = "sha256:bbef30c7c8a26c6621761edccce31146153e1e78dc2a883dbda5527a4637aab8"},
+    {file = "exasol_toolbox-6.0.0-py3-none-any.whl", hash = "sha256:327a743938fb4fd78701068480ed5bda9f466b434de769a251f6294647e3ec92"},
+    {file = "exasol_toolbox-6.0.0.tar.gz", hash = "sha256:cac9f5b847feaf53a3808f14ba2ebc03a533865aa3c1ea7754c14c001e8945e5"},
 ]
 
 [package.dependencies]
@@ -1116,6 +1116,7 @@ sphinx-design = ">=0.5.0,<1"
 sphinx-inline-tabs = ">=2023.4.21,<2024"
 sphinx-toolbox = ">=4.0.0,<5"
 sphinxcontrib-mermaid = ">=2.0.0,<3.0.0"
+structlog = ">=25.5.0,<26.0.0"
 twine = ">=6.1.0,<7"
 typer = {version = ">=0.7.0", extras = ["all"]}
 
@@ -4948,6 +4949,21 @@ files = [
 ]
 
 [[package]]
+name = "structlog"
+version = "25.5.0"
+description = "Structured Logging for Python"
+optional = false
+python-versions = ">=3.8"
+groups = ["dev"]
+files = [
+    {file = "structlog-25.5.0-py3-none-any.whl", hash = "sha256:a8453e9b9e636ec59bd9e79bbd4a72f025981b3ba0f5837aebf48f02f37a7f9f"},
+    {file = "structlog-25.5.0.tar.gz", hash = "sha256:098522a3bebed9153d4570c6d0288abf80a031dfdb2048d59a49e9dc2190fc98"},
+]
+
+[package.dependencies]
+typing-extensions = {version = "*", markers = "python_version < \"3.11\""}
+
+[[package]]
 name = "tabulate"
 version = "0.9.0"
 description = "Pretty-print tabular data"
@@ -5519,4 +5535,4 @@ ujson = ["ujson"]
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.10,<3.15"
-content-hash = "d28bc04e0ea8306b211cb14f214bb7cdfc4b410c847acfd81de78a1e77ad9d09"
+content-hash = "8b4329554a7610a143e7ec0e2999bc3c29c2c67aec3dc7cdd98ffef76ce36e03"
