@@ -1,2 +1,14 @@
+# Core Data and Locks
 poetry.lock             linguist-generated=true
 test/data/csv/*.csv     linguist-generated=true
+
+# PTB GitHub Workflows (CI/CD & Publishing)
+.github/workflows/build-and-publish.yml linguist-generated=true
+.github/workflows/check-release-tag.yml linguist-generated=true
+.github/workflows/ci.yml                linguist-generated=true
+.github/workflows/cd.yml                linguist-generated=true
+.github/workflows/gh-pages.yml          linguist-generated=true
+.github/workflows/matrix-*.yml          linguist-generated=true
+.github/workflows/pr-merge.yml          linguist-generated=true
+.github/workflows/report.yml            linguist-generated=true
+.github/workflows/slow-checks.yml       linguist-generated=true
