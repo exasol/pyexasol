@@ -5,27 +5,31 @@ on:
     outputs:
       matrix:
         description: "Generates the all versions build matrix"
-        value: ${{ jobs.all_versions.outputs.matrix }}
+        value: ${{ jobs.set-matrix-all.outputs.matrix }}
 
 jobs:
-  all_versions:
+  set-matrix-all:
     runs-on: "ubuntu-24.04"
     permissions:
       contents: read
     steps:
-      - name: SCM Checkout
+      - name: Check out Repository
+        id: check-out-repository
         uses: actions/checkout@v6
 
-      - name: Setup Python & Poetry Environment
-        uses: exasol/python-toolbox/.github/actions/python-environment@v5
+      - name: Set up Python & Poetry Environment
+        id: set-up-python-and-poetry-environment
+        uses: exasol/python-toolbox/.github/actions/python-environment@v6
         with:
           python-version: "3.10"
           poetry-version: "2.3.0"
 
-      - name: Generate matrix
+      - name: Generate Matrix
+        id: generate-matrix
         run: poetry run -- nox -s matrix:all
 
-      - id: set-matrix
+      - name: Set Matrix
+        id: set-matrix
         run: |
           echo "matrix=$(poetry run -- nox -s matrix:all)" >> $GITHUB_OUTPUT
 

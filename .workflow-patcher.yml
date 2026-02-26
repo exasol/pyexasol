@@ -1,0 +1,44 @@
+workflows:
+  - name: checks
+    step_customizations:
+      - action: REPLACE
+        job: lint-typing
+        step_id: set-up-python-and-poetry-environment
+        content:
+          # Install extras so that usage of optional dependencies are also type checked
+          - name: Set up Python & Poetry Environment
+            id: set-up-python-and-poetry-environment
+            uses: exasol/python-toolbox/.github/actions/python-environment@v6
+            with:
+              python-version: ${{ matrix.python-versions }}
+              poetry-version: "2.3.0"
+              extras: "all"
+      - action: REPLACE
+        job: run-unit-tests
+        step_id: set-up-python-and-poetry-environment
+        content:
+          # Install extras so that unit tests for optional dependencies can run
+          - name: Set up Python & Poetry Environment
+            id: set-up-python-and-poetry-environment
+            uses: exasol/python-toolbox/.github/actions/python-environment@v6
+            with:
+              python-version: ${{ matrix.python-versions }}
+              poetry-version: "2.3.0"
+              extras: "all"
+  - name: slow-checks
+    step_customizations:
+      - action: REPLACE
+        job: run-integration-tests
+        step_id: set-up-python-and-poetry-environment
+        content:
+        # Install extras & need custom host for DSN difference in certificate
+        - name: Set up Python & Poetry Environment
+          id: set-up-python-and-poetry-environment
+          uses: exasol/python-toolbox/.github/actions/python-environment@v6
+          with:
+            python-version: ${{ matrix.python-version }}
+            poetry-version: "2.3.0"
+            extras: "all"
+        - name: Set up Custom Host
+          id: set-up-custom-host
+          run: echo "127.0.0.1 exasol-test-database" | sudo tee -a /etc/hosts

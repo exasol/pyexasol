@@ -11,45 +11,53 @@ jobs:
       contents: read
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
     steps:
-      - name: SCM Checkout
+      - name: Check out Repository
+        id: check-out-repository
         uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
-      - name: Setup Python & Poetry Environment
-        uses: exasol/python-toolbox/.github/actions/python-environment@v5
+      - name: Set up Python & Poetry Environment
+        id: set-up-python-and-poetry-environment
+        uses: exasol/python-toolbox/.github/actions/python-environment@v6
         with:
           python-version: "3.10"
           poetry-version: "2.3.0"
 
       - name: Download Artifacts
+        id: download-artifacts
         uses: actions/download-artifact@v7
         with:
           path: ./artifacts
 
       - name: Copy Artifacts into Root Folder
+        id: copy-artifacts-into-root-folder
         run: poetry run -- nox -s artifacts:copy -- artifacts
 
       - name: Validate Artifacts
+        id: validate-artifacts
         run: poetry run -- nox -s artifacts:validate
 
-      - name: Upload to sonar
+      - name: Upload to Sonar
+        id: upload-to-sonar
         env:
           SONAR_TOKEN: "${{ secrets.SONAR_TOKEN }}"
         run: poetry run -- nox -s sonar:check
 
       - name: Generate Report
+        id: generate-report
         run: poetry run -- nox -s project:report -- --format json | tee metrics.json
 
       - name: Upload Artifacts
+        id: upload-artifacts
         uses: actions/upload-artifact@v6
         with:
           name: metrics.json
           path: metrics.json
 
       - name: Generate GitHub Summary
+        id: generate-github-summary
         run: |-
           echo -e "# Summary\n" >> $GITHUB_STEP_SUMMARY
           poetry run -- nox -s project:report -- --format markdown >> $GITHUB_STEP_SUMMARY

@@ -8,16 +8,15 @@ on:
     - cron: "0 0 1/7 * *"
 
 jobs:
-
-  CI:
+  merge-gate:
     uses: ./.github/workflows/merge-gate.yml
     secrets: inherit
     permissions:
       contents: read
 
-  Metrics:
+  report:
     needs:
-      - CI
+      - merge-gate
     uses: ./.github/workflows/report.yml
     secrets: inherit
     permissions:
