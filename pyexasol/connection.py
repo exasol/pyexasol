@@ -818,6 +818,9 @@ class ExaConnection:
         Returns:
             result of callback function
 
+        Raises:
+            TypeError: callback argument isn't callable.
+
         Warnings:
             - This function may run out of memory
 
@@ -830,7 +833,9 @@ class ExaConnection:
             ... )
         """
         if not callable(callback):
-            raise ValueError("Callback argument is not callable")
+            raise TypeError(
+                f"`callback` must be callable. Received: {callback!r} (type: {type(callback).__name__})"
+            )
 
         if callback_params is None:
             callback_params = {}
@@ -910,8 +915,13 @@ class ExaConnection:
                 Custom parameters for IMPORT query.
 
         Raises:
-            ValueError: callback argument isn't callable.
+            TypeError: callback argument isn't callable.
         """
+        if not callable(callback):
+            raise TypeError(
+                f"`callback` must be callable. Received: {callback!r} (type: {type(callback).__name__})"
+            )
+
         if callback_params is None:
             callback_params = {}
 
@@ -921,9 +931,6 @@ class ExaConnection:
         compression = (
             False if ("format" in import_params) else self.options["compression"]
         )
-
-        if not callable(callback):
-            raise ValueError("Callback argument is not callable")
 
         http_thread = ExaHttpThread(
             self.ws_ipaddr,  # type: ignore
