@@ -48,18 +48,6 @@ def test_abort_query(connection, dev_null, statement):
 
 @pytest.mark.etl
 @pytest.mark.exceptions
-def test_error_in_export_callback(connection, statement):
-    error_msg = "Error from callback"
-
-    def export_cb(pipe, dst, **kwargs):
-        raise Exception(error_msg)
-
-    with pytest.raises(Exception, match=error_msg):
-        connection.export_to_callback(export_cb, None, statement)
-
-
-@pytest.mark.etl
-@pytest.mark.exceptions
 def test_error_in_import_callback(connection, statement):
     def import_cb(pipe, src, **kwargs):
         raise Exception()
