@@ -94,3 +94,19 @@ class TestExportGeneral:
         )
 
         assert actual_filepath.read_text() == all_data.csv_str()
+
+
+@pytest.mark.etl
+@pytest.mark.exceptions
+class TestExportToCallbackExceptions:
+    @staticmethod
+    def test_only_export_callback_has_exception(connection, fill_table, table_name):
+        error_msg = "Error from callback"
+
+        def export_cb(pipe, dst, **kwargs):
+            raise Exception(error_msg)
+
+        with pytest.raises(Exception, match=error_msg):
+            connection.export_to_callback(
+                callback=export_cb, dst=None, query_or_table=table_name
+            )
