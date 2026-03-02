@@ -1,5 +1,10 @@
 import pytest
-from pyexasol.exceptions import ExaQueryError
+
+from pyexasol.exceptions import (
+    ExaCallbackError,
+    ExaQueryError,
+)
+
 
 @pytest.fixture
 def connection_without_resolving_hostnames(connection_factory):
@@ -104,9 +109,9 @@ class TestExportToCallbackExceptions:
         error_msg = "Error from callback"
 
         def export_cb(pipe, dst, **kwargs):
-            raise Exception(error_msg)
+            raise ValueError(error_msg)
 
-        with pytest.raises(Exception, match=error_msg):
+        with pytest.raises(ValueError, match=error_msg):
             connection.export_to_callback(
                 callback=export_cb, dst=None, query_or_table=table_name
             )
@@ -122,3 +127,23 @@ class TestExportToCallbackExceptions:
             connection.export_to_callback(
                 callback=export_cb, dst=actual_filepath, query_or_table="DOES_NOT_EXIST"
             )
+
+    @staticmethod
+    def test_both_export_callback_and_sql_have_exceptions(connection):
+        error_msg = "Error from callback"
+
+        def export_cb(pipe, dst, **kwargs):
+            raise ValueError(error_msg)
+
+        with pytest.raises(ExaCallbackError) as ex:
+            connection.export_to_callback(
+                callback=export_cb, dst=None, query_or_table="DOES_NOT_EXIST"
+            )
+
+        assert ex.value.callback.__name__ == "export_cb"
+        assert repr(ex.value.callback_error) == repr(ValueError(error_msg))
+        assert isinstance(ex.value.sql_thread_error, ExaQueryError)
+        assert (
+            "object DOES_NOT_EXIST not found [line 1, column 8] "
+            in ex.value.sql_thread_error.message
+        )

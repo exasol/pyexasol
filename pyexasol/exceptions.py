@@ -1,3 +1,7 @@
+from collections.abc import Callable
+from inspect import cleandoc
+from textwrap import indent
+
 from . import constant
 
 
@@ -140,6 +144,107 @@ class ExaConnectionFailedError(ExaConnectionError):
 class ExaConcurrencyError(ExaError):
     """
     Detected an attempt to run multiple queries in multiple threads at the same time
+    """
+
+    pass
+
+
+class ExaCallbackError(Exception):
+    """
+    Base class for ExaExportError and ExaImportError
+    """
+
+    def __init__(
+        self,
+        callback: Callable,
+        caught_exception: Exception,
+        http_thread_error: Exception | None,
+        sql_thread_error: ExaError | None,
+    ):
+        self.callback = callback
+        self.caught_exception = caught_exception
+        self.http_thread_error = http_thread_error
+        self.sql_thread_error = sql_thread_error
+
+    def __str__(self):
+        str_caught_exception = ""
+        if (
+            self.caught_exception is not self.sql_thread_error
+            and self.caught_exception is not self.http_thread_error
+        ):
+            str_caught_exception = (
+                cleandoc(
+                    f"""
+            [Caught Exception]
+            * exception raised: `{repr(self.caught_exception)}`
+            """
+                )
+                + "\n\n"
+            )
+
+        str_http_thread_error = ""
+        if self.http_thread_error:
+            str_http_thread_error = (
+                cleandoc(
+                    """
+            [Exception in `http_thread`]
+            """
+                )
+                + "\n\n"
+            )
+
+        str_sql_error = ""
+        if self.sql_thread_error:
+            sql_str = str(self.sql_thread_error).strip()
+            indented_sql = indent(sql_str, " " * 2)
+            str_sql_error = (
+                cleandoc(
+                    f"""
+            [Exception in `sql_thread`]
+            * exception raised: {self.sql_thread_error.__class__.__name__}
+            """
+                )
+                + f"\n{indented_sql}"
+            )
+
+        return "\n" + cleandoc(
+            f"""{str_caught_exception}{str_http_thread_error}{str_sql_error}"""
+        )
+
+
+class ExaExportError(ExaCallbackError):
+    """
+    Raised when a method relying on :class:`pyexasol.connection.ExaConnection:export_to_callback`
+    fails due to an exception raised in the execution of `export_to_callback`.
+    This method relies on two threaded processes `http_thread` and `sql_thread`.
+    As such, there may be one or more exceptions simultaneously raised, with a race
+    condition as to which is raised and caught first. Additionally, it might be
+    possible that re-running the same problematic code can lead to slightly
+    different values in this exception, as potentially an exception was not yet
+    experienced on that particularly thread when it was terminated. Furthermore, as
+    there are a multitude of different exceptions possible, it is still up to the user
+    to use this information, coupled with the traceback, to resolve the root cause(s)
+    of the exception(s). It's not easily possible or reliable for PyExasol to determine
+    the root cause(s).
+    """
+
+    pass
+
+
+class ExaImportError(ExaCallbackError):
+    """
+    Raised when a method relying on :class:`pyexasol.connection.ExaConnection:import_from_callback`
+    fails due to an exception raised in the execution of `import_from_callback`.
+    This method relies on two threaded processes `http_thread` and `sql_thread`.
+    As such, there may be one or more exceptions simultaneously raised, with a race
+    condition as to which is raised and caught first. Additionally, it might be
+    possible that re-running the same problematic code can lead to slightly
+    different values in this exception, as potentially an exception was not yet
+    experienced on that particularly thread when it was terminated. Furthermore, as
+    there are a multitude of different exceptions possible, it is still up to the user
+    to use this information, coupled with the traceback, to resolve the root cause(s)
+    of the exception(s). It's not easily possible or reliable for PyExasol to determine
+    the root cause(s).
     """
 
     pass

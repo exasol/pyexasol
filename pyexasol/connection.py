@@ -12,12 +12,10 @@ import time
 import urllib.parse
 import zlib
 from collections.abc import (
-    Callable,
     Iterable,
 )
 from inspect import (
     Signature,
-    cleandoc,
     signature,
 )
 from pathlib import Path
@@ -874,7 +872,7 @@ class ExaConnection:
 
             return result
 
-        except (Exception, KeyboardInterrupt) as e:
+        except (Exception, KeyboardInterrupt) as ex:
             http_thread.terminate()
             http_thread.join()
 
@@ -885,11 +883,12 @@ class ExaConnection:
                 self.abort_query()
                 sql_thread.join()
 
-            # Give SQL exception higher priority
-            if sql_thread.exc:
-                raise sql_thread.exc
-
-            raise e
+            raise ExaExportError(
+                callback=callback,
+                caught_exception=ex,
+                http_thread_error=http_thread.exc,
+                sql_thread_error=sql_thread.exc,
+            ) from ex
 
     def import_from_callback(
         self,
@@ -954,7 +953,7 @@ class ExaConnection:
 
             return result
 
-        except (Exception, KeyboardInterrupt) as e:
+        except (Exception, KeyboardInterrupt) as ex:
             http_thread.terminate()
             http_thread.join()
 
@@ -965,11 +964,12 @@ class ExaConnection:
                 self.abort_query()
                 sql_thread.join()
 
-            # Give SQL exception higher priority
-            if sql_thread.exc:
-                raise sql_thread.exc
-
-            raise e
+            raise ExaImportError(
+                callback=callback,
+                caught_exception=ex,
+                http_thread_error=http_thread.exc,
+                sql_thread_error=sql_thread.exc,
+            ) from ex
 
     def export_parallel(
         self, exa_address_list, query_or_table, query_params=None, export_params=None
