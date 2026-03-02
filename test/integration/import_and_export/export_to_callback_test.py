@@ -1,5 +1,5 @@
 import pytest
-
+from pyexasol.exceptions import ExaQueryError
 
 @pytest.fixture
 def connection_without_resolving_hostnames(connection_factory):
@@ -109,4 +109,16 @@ class TestExportToCallbackExceptions:
         with pytest.raises(Exception, match=error_msg):
             connection.export_to_callback(
                 callback=export_cb, dst=None, query_or_table=table_name
+            )
+
+    @staticmethod
+    def test_only_sql_has_exception(connection, tmp_path):
+        actual_filepath = tmp_path / "actual.csv"
+
+        def export_cb(pipe, dst, **kwargs):
+            dst.write_bytes(pipe.read())
+
+        with pytest.raises(ExaQueryError, match="object DOES_NOT_EXIST not found"):
+            connection.export_to_callback(
+                callback=export_cb, dst=actual_filepath, query_or_table="DOES_NOT_EXIST"
             )

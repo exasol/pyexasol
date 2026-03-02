@@ -25,16 +25,6 @@ def invalid_statement():
 
 @pytest.mark.etl
 @pytest.mark.exceptions
-def test_sql_error(connection, dev_null, invalid_statement):
-    def export_cb(pipe, dst, **kwargs):
-        shutil.copyfileobj(pipe, dev_null)
-
-    with pytest.raises(pyexasol.exceptions.ExaQueryError):
-        connection.export_to_callback(export_cb, None, invalid_statement)
-
-
-@pytest.mark.etl
-@pytest.mark.exceptions
 def test_abort_query(connection, dev_null, statement):
     def export_cb(pipe, dst, **kwargs):
         connection.abort_query()
