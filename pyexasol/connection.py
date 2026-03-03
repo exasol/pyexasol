@@ -12,10 +12,12 @@ import time
 import urllib.parse
 import zlib
 from collections.abc import (
+    Callable,
     Iterable,
 )
 from inspect import (
     Signature,
+    cleandoc,
     signature,
 )
 from pathlib import Path
@@ -32,7 +34,21 @@ from cryptography.hazmat.primitives.asymmetric import padding
 from packaging.version import Version
 
 from . import callback as cb
-from .exceptions import *
+from . import constant
+from .exceptions import (
+    ExaAuthError,
+    ExaCommunicationError,
+    ExaConcurrencyError,
+    ExaConnectionDsnError,
+    ExaConnectionFailedError,
+    ExaExportError,
+    ExaImportError,
+    ExaQueryAbortError,
+    ExaQueryError,
+    ExaQueryTimeoutError,
+    ExaRequestError,
+    ExaRuntimeError,
+)
 from .ext import ExaExtension
 from .formatter import ExaFormatter
 from .http_transport import (
@@ -884,7 +900,6 @@ class ExaConnection:
                 sql_thread.join()
 
             raise ExaExportError(
-                callback=callback,
                 caught_exception=ex,
                 http_thread_error=http_thread.exc,
                 sql_thread_error=sql_thread.exc,
@@ -965,7 +980,6 @@ class ExaConnection:
                 sql_thread.join()
 
             raise ExaImportError(
-                callback=callback,
                 caught_exception=ex,
                 http_thread_error=http_thread.exc,
                 sql_thread_error=sql_thread.exc,

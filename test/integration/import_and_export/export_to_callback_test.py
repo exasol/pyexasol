@@ -1,7 +1,7 @@
 import pytest
 
 from pyexasol.exceptions import (
-    ExaCallbackError,
+    ExaExportError,
     ExaQueryError,
 )
 
@@ -105,43 +105,51 @@ class TestExportGeneral:
 @pytest.mark.exceptions
 class TestExportToCallbackExceptions:
     @staticmethod
-    def test_only_export_callback_has_exception(connection, fill_table, table_name):
-        error_msg = "Error from callback"
+    def test_export_callback_has_exception(connection, fill_table, table_name):
+        error = ValueError("Error from callback")
 
         def export_cb(pipe, dst, **kwargs):
-            raise ValueError(error_msg)
+            raise error
 
-        with pytest.raises(ValueError, match=error_msg):
+        with pytest.raises(ExaExportError) as ex:
             connection.export_to_callback(
                 callback=export_cb, dst=None, query_or_table=table_name
             )
 
+        assert ex.value.caught_exception is error
+        assert ex.value.sql_thread_error is None
+        assert ex.value.http_thread_error is None
+
     @staticmethod
-    def test_only_sql_has_exception(connection, tmp_path):
+    def test_sql_has_exception(connection, tmp_path):
         actual_filepath = tmp_path / "actual.csv"
 
         def export_cb(pipe, dst, **kwargs):
             dst.write_bytes(pipe.read())
 
-        with pytest.raises(ExaQueryError, match="object DOES_NOT_EXIST not found"):
+        with pytest.raises(ExaExportError) as ex:
             connection.export_to_callback(
                 callback=export_cb, dst=actual_filepath, query_or_table="DOES_NOT_EXIST"
             )
 
+        assert ex.value.caught_exception is not None
+        assert ex.value.http_thread_error is None
+        assert ex.value.sql_thread_error is ex.value.caught_exception
+
     @staticmethod
-    def test_both_export_callback_and_sql_have_exceptions(connection):
-        error_msg = "Error from callback"
+    def test_export_callback_and_sql_have_different_exceptions(connection):
+        error = ValueError("Error from callback")
 
         def export_cb(pipe, dst, **kwargs):
-            raise ValueError(error_msg)
+            raise error
 
-        with pytest.raises(ExaCallbackError) as ex:
+        with pytest.raises(ExaExportError) as ex:
             connection.export_to_callback(
                 callback=export_cb, dst=None, query_or_table="DOES_NOT_EXIST"
             )
 
-        assert ex.value.callback.__name__ == "export_cb"
-        assert repr(ex.value.callback_error) == repr(ValueError(error_msg))
+        assert ex.value.caught_exception is error
+        assert ex.value.http_thread_error is None
         assert isinstance(ex.value.sql_thread_error, ExaQueryError)
         assert (
             "object DOES_NOT_EXIST not found [line 1, column 8] "
