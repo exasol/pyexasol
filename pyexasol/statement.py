@@ -378,6 +378,8 @@ class ExaStatement:
         if "parameterData" in ret["responseData"]:
             self.parameter_data = ret["responseData"]["parameterData"]
 
+        print("--> ret -->", ret)
+
         self._init_result_set(ret)
 
     def execute_prepared(self, data=None):
