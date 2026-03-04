@@ -114,7 +114,7 @@ class TestExportGeneral:
 @pytest.mark.exceptions
 class TestExportToCallbackExceptions:
     @staticmethod
-    def test_export_callback_has_exception(connection, fill_table, table_name):
+    def test_export_callback_has_exception(connection, empty_table, table_name):
         error = ValueError("Error from callback")
 
         def export_cb(pipe, dst, **kwargs):
@@ -128,7 +128,7 @@ class TestExportToCallbackExceptions:
         assert ex.value.exceptions == [error]
 
     @staticmethod
-    def test_http_thread_has_exception(connection, tmp_path, fill_table, table_name):
+    def test_http_thread_has_exception(connection, tmp_path, empty_table, table_name):
         actual_filepath = tmp_path / "actual.csv"
 
         def export_cb(pipe, dst, **kwargs):
@@ -164,7 +164,7 @@ class TestExportToCallbackExceptions:
         assert "object DOES_NOT_EXIST not found" in ex.value.exceptions[0].message
 
     @staticmethod
-    def test_abort_query(connection, tmp_path, fill_table, table_name):
+    def test_abort_query(connection, tmp_path, empty_table, table_name):
         """
         Due to a race condition, it's difficult to create a test with
         connection.abort_query() that ensures that an exception would be raised.
