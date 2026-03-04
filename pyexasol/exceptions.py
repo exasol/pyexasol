@@ -1,5 +1,4 @@
-from inspect import cleandoc
-from textwrap import indent
+import traceback
 
 from . import constant
 
@@ -157,61 +156,33 @@ class ExaCallbackError(Exception):
 
     def __init__(
         self,
-        caught_exception: Exception,
-        http_thread_error: Exception | None,
-        sql_thread_error: ExaError | None,
+        exceptions: tuple[Exception | None, ...],
     ):
-        self.caught_exception = caught_exception
-        self.http_thread_error = http_thread_error
-        self.sql_thread_error = sql_thread_error
+        # filter out unique Exceptions but preserve order
+        self.exceptions = list(dict.fromkeys(x for x in exceptions if x is not None))
+
+        num_exceptions = len(self.exceptions)
+        ending = ""
+        if num_exceptions > 1:
+            ending = "s"
+
+        suffix = f" ({num_exceptions} sub-exception{ending})"
+        self.message += suffix
         super().__init__(self, self.message)
 
     def __str__(self):
-        header = f"{self.message}"
+        parts = [self.message]
+        for i, ex in enumerate(self.exceptions, 1):
+            sep = f"+---------------- {i} ----------------"
+            parts.append(sep)
 
-        str_caught_exception = ""
-        if (
-            self.caught_exception is not self.sql_thread_error
-            and self.caught_exception is not self.http_thread_error
-        ):
-            str_caught_exception = (
-                cleandoc(
-                    f"""
-            [Caught Exception]
-            * exception raised: `{repr(self.caught_exception)}`
-            """
-                )
-                + "\n\n"
-            )
+            trace_lines = traceback.format_exception(type(ex), ex, ex.__traceback__)
 
-        str_http_thread_error = ""
-        if self.http_thread_error:
-            str_http_thread_error = (
-                cleandoc(
-                    """
-                [Exception in `http_thread`]
-                """
-                )
-                + "\n\n"
-            )
+            for line in "".join(trace_lines).strip().split("\n"):
+                parts.append(f"| {line}")
+        parts.append("+------------------------------------")
 
-        str_sql_error = ""
-        if self.sql_thread_error:
-            sql_str = str(self.sql_thread_error).strip()
-            indented_sql = indent(sql_str, " " * 2)
-            str_sql_error = (
-                cleandoc(
-                    f"""
-            [Exception in `sql_thread`]
-            * exception raised: {self.sql_thread_error.__class__.__name__}
-            """
-                )
-                + f"\n{indented_sql}"
-            )
-
-        return "\n" + cleandoc(
-            f"""{header}{str_caught_exception}{str_http_thread_error}{str_sql_error}"""
-        )
+        return "\n" + "\n".join(parts)
 
 
 class ExaExportError(ExaCallbackError):

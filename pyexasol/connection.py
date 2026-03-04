@@ -900,9 +900,7 @@ class ExaConnection:
                 sql_thread.join()
 
             raise ExaExportError(
-                caught_exception=ex,
-                http_thread_error=http_thread.exc,
-                sql_thread_error=sql_thread.exc,
+                exceptions=(ex, http_thread.exc, sql_thread.exc),
             ) from ex
 
     def import_from_callback(
@@ -980,9 +978,7 @@ class ExaConnection:
                 sql_thread.join()
 
             raise ExaImportError(
-                caught_exception=ex,
-                http_thread_error=http_thread.exc,
-                sql_thread_error=sql_thread.exc,
+                exceptions=(ex, http_thread.exc, sql_thread.exc),
             ) from ex
 
     def export_parallel(

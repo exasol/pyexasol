@@ -116,9 +116,7 @@ class TestExportToCallbackExceptions:
                 callback=export_cb, dst=None, query_or_table=table_name
             )
 
-        assert ex.value.caught_exception is error
-        assert ex.value.sql_thread_error is None
-        assert ex.value.http_thread_error is None
+        assert ex.value.exceptions == [error]
 
     @staticmethod
     def test_sql_has_exception(connection, tmp_path):
@@ -132,12 +130,11 @@ class TestExportToCallbackExceptions:
                 callback=export_cb, dst=actual_filepath, query_or_table="DOES_NOT_EXIST"
             )
 
-        assert ex.value.caught_exception is not None
-        assert ex.value.http_thread_error is None
-        assert ex.value.sql_thread_error is ex.value.caught_exception
+        assert len(ex.value.exceptions) == 1
+        assert isinstance(ex.value.exceptions[0], ExaQueryError)
 
     @staticmethod
-    def test_export_callback_and_sql_have_different_exceptions(connection):
+    def test_export_callback_and_sql_have_exceptions(connection):
         error = ValueError("Error from callback")
 
         def export_cb(pipe, dst, **kwargs):
@@ -148,10 +145,6 @@ class TestExportToCallbackExceptions:
                 callback=export_cb, dst=None, query_or_table="DOES_NOT_EXIST"
             )
 
-        assert ex.value.caught_exception is error
-        assert ex.value.http_thread_error is None
-        assert isinstance(ex.value.sql_thread_error, ExaQueryError)
-        assert (
-            "object DOES_NOT_EXIST not found [line 1, column 8] "
-            in ex.value.sql_thread_error.message
-        )
+        assert len(ex.value.exceptions) == 2
+        assert ex.value.exceptions[0] == error
+        assert isinstance(ex.value.exceptions[1], ExaQueryError)
