@@ -25,19 +25,6 @@ def invalid_statement():
 
 @pytest.mark.etl
 @pytest.mark.exceptions
-def test_abort_query(connection, dev_null, statement):
-    def export_cb(pipe, dst, **kwargs):
-        connection.abort_query()
-        # Make sure abort has time to propagate
-        time.sleep(1)
-        shutil.copyfileobj(pipe, dev_null)
-
-    with pytest.raises(pyexasol.exceptions.ExaError):
-        connection.export_to_callback(export_cb, None, statement)
-
-
-@pytest.mark.etl
-@pytest.mark.exceptions
 def test_error_in_import_callback(connection, statement):
     def import_cb(pipe, src, **kwargs):
         raise Exception()

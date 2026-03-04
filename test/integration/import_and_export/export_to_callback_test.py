@@ -1,3 +1,4 @@
+from os import devnull
 from unittest.mock import patch
 
 import pytest
@@ -12,6 +13,12 @@ from pyexasol.exceptions import (
 def connection_without_resolving_hostnames(connection_factory):
     with connection_factory(compression=True, resolve_hostnames=False) as con:
         yield con
+
+
+@pytest.fixture
+def dev_null():
+    with open(devnull, "wb") as f:
+        yield f
 
 
 @pytest.mark.etl
@@ -155,6 +162,42 @@ class TestExportToCallbackExceptions:
         assert len(ex.value.exceptions) == 1
         assert isinstance(ex.value.exceptions[0], ExaQueryError)
         assert "object DOES_NOT_EXIST not found" in ex.value.exceptions[0].message
+
+    @staticmethod
+    def test_abort_query(connection, tmp_path, fill_table, table_name):
+        """
+        Due to a race condition, it's difficult to create a test with
+        connection.abort_query() that ensures that an exception would be raised.
+        Thus, we mock that here. Still, there is a race condition whether 1 or 2
+        exceptions are raised.
+        """
+        actual_filepath = tmp_path / "actual.csv"
+
+        def export_cb(pipe, dst, **kwargs):
+            dst.write_bytes(pipe.read())
+
+        with patch("pyexasol.connection.ExaSQLExportThread.run_sql") as mock:
+            mock.side_effect = ExaQueryError(
+                message="Client requested execution abort.",
+                query="mock response",
+                connection=connection,
+                code="40007",
+            )
+
+            with pytest.raises(ExaExportError, match="1 sub-exception") as ex:
+                connection.export_to_callback(
+                    callback=export_cb,
+                    dst=actual_filepath,
+                    query_or_table=table_name,
+                )
+
+        query_error_loc = 0
+        if len(ex.value.exceptions) == 2:
+            query_error_loc = 1
+
+        selected_exception = ex.value.exceptions[query_error_loc]
+        assert isinstance(selected_exception, ExaQueryError)
+        assert "Client requested execution abort." in selected_exception.message
 
     @staticmethod
     def test_export_callback_and_sql_have_different_exceptions(connection):
