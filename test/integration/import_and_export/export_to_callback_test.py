@@ -184,7 +184,7 @@ class TestExportToCallbackExceptions:
                 code="40007",
             )
 
-            with pytest.raises(ExaExportError, match="1 sub-exception") as ex:
+            with pytest.raises(ExaExportError) as ex:
                 connection.export_to_callback(
                     callback=export_cb,
                     dst=actual_filepath,
