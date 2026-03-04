@@ -1,3 +1,5 @@
+from unittest.mock import patch
+
 import pytest
 
 from pyexasol.exceptions import (
@@ -111,7 +113,7 @@ class TestExportToCallbackExceptions:
         def export_cb(pipe, dst, **kwargs):
             raise error
 
-        with pytest.raises(ExaExportError) as ex:
+        with pytest.raises(ExaExportError, match="1 sub-exception") as ex:
             connection.export_to_callback(
                 callback=export_cb, dst=None, query_or_table=table_name
             )
@@ -119,22 +121,43 @@ class TestExportToCallbackExceptions:
         assert ex.value.exceptions == [error]
 
     @staticmethod
-    def test_sql_has_exception(connection, tmp_path):
+    def test_http_thread_has_exception(connection, tmp_path, fill_table, table_name):
         actual_filepath = tmp_path / "actual.csv"
 
         def export_cb(pipe, dst, **kwargs):
             dst.write_bytes(pipe.read())
 
-        with pytest.raises(ExaExportError) as ex:
+        with patch("pyexasol.connection.ExaHttpThread.join_with_exc") as mock:
+            mock.side_effect = BrokenPipeError("Broken pipe in http_thread")
+
+            with pytest.raises(ExaExportError, match="1 sub-exception") as ex:
+                connection.export_to_callback(
+                    callback=export_cb,
+                    dst=actual_filepath,
+                    query_or_table=table_name,
+                )
+
+        assert len(ex.value.exceptions) == 1
+        assert isinstance(ex.value.exceptions[0], BrokenPipeError)
+
+    @staticmethod
+    def test_sql_thread_has_exception(connection, tmp_path):
+        actual_filepath = tmp_path / "actual.csv"
+
+        def export_cb(pipe, dst, **kwargs):
+            dst.write_bytes(pipe.read())
+
+        with pytest.raises(ExaExportError, match="1 sub-exception") as ex:
             connection.export_to_callback(
                 callback=export_cb, dst=actual_filepath, query_or_table="DOES_NOT_EXIST"
             )
 
         assert len(ex.value.exceptions) == 1
         assert isinstance(ex.value.exceptions[0], ExaQueryError)
+        assert "object DOES_NOT_EXIST not found" in ex.value.exceptions[0].message
 
     @staticmethod
-    def test_export_callback_and_sql_have_exceptions(connection):
+    def test_export_callback_and_sql_have_different_exceptions(connection):
         error = ValueError("Error from callback")
 
         def export_cb(pipe, dst, **kwargs):
