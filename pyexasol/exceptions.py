@@ -156,7 +156,7 @@ class ExaCallbackError(Exception):
 
     def __init__(
         self,
-        exceptions: tuple[Exception | None, ...],
+        exceptions: tuple[Exception | KeyboardInterrupt | None, ...],
     ):
         # filter out unique Exceptions but preserve order
         self.exceptions = list(dict.fromkeys(x for x in exceptions if x is not None))
