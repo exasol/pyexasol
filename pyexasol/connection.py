@@ -291,7 +291,7 @@ class ExaConnection:
 
     def create_prepared_statement(self, sql: str) -> ExaStatement:
         """
-        Create prepared statement 
+        Create prepared statement
 
         Args:
             sql:
@@ -305,8 +305,8 @@ class ExaConnection:
             >>> exa_stmt = con.create_prepared_statement(
             ...        sql="SELECT * FROM ? WHERE col1=?",
             ...)
-            exa_stmt.execute_prepared( [('users', 'bar')] )
-        """        
+            >>> exa_stmt.execute_prepared( [('users', 'bar')] )
+        """
         return self.cls_statement(self, sql, prepare=True)
 
     def execute(self, query: str, query_params: dict | None = None) -> ExaStatement:
