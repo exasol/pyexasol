@@ -163,14 +163,18 @@ class TestImportFromCallbackExceptions:
         assert "Client requested execution abort." in selected_exception.message
 
     @staticmethod
-    def test_closed_ws_connection(connection, dev_null, empty_table):
+    def test_closed_ws_connection(
+        connection_factory, connection, dev_null, empty_table
+    ):
+        new_connection = connection_factory()
+
         def import_cb(pipe, src, **kwargs):
-            connection.close(disconnect=False)
+            new_connection.close(disconnect=False)
             time.sleep(1)
             shutil.copyfileobj(pipe, dev_null)
 
         with pytest.raises(ExaImportError):
-            connection.import_from_callback(import_cb, None, empty_table)
+            new_connection.import_from_callback(import_cb, None, empty_table)
 
     @staticmethod
     def test_export_callback_and_sql_have_different_exceptions(connection):
