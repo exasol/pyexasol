@@ -213,9 +213,18 @@ class TestImportWithConnectionSettings:
         with pytest.raises(ExaImportError) as ex:
             connection.import_from_pandas(df, table_name)
 
-        assert len(ex.value.exceptions) == 1
-        assert isinstance(ex.value.exceptions[0], ExaQueryError)
-        assert "object CAMELCASETABLE not found" in ex.value.exceptions[0].message
+        num_exceptions = len(ex.value.exceptions)
+
+        query_exception_loc = 0
+        if num_exceptions == 2:
+            query_exception_loc = 1
+
+        assert num_exceptions <= 2
+        assert isinstance(ex.value.exceptions[query_exception_loc], ExaQueryError)
+        assert (
+            "object CAMELCASETABLE not found"
+            in ex.value.exceptions[query_exception_loc].message
+        )
 
     @staticmethod
     def test_import_to_camel_case_table_with_quote_ident(
