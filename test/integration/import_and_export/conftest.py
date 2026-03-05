@@ -113,3 +113,4 @@ def fill_table(connection, table_name, empty_table, data_dict):
     insert = f"INSERT INTO {table_name} VALUES({{FIRST_NAME}}, {{LAST_NAME}}, {{REGISTER_DT}}, {{LAST_VISIT_TS}}, {{IS_GRADUATING}}, {{AGE}}, {{SCORE}});"
     for row in data_dict:
         connection.execute(insert, row)
+    return table_name
