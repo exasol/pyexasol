@@ -1,3 +1,6 @@
+import os
+import shutil
+import time
 from unittest.mock import patch
 
 import pytest
@@ -7,6 +10,12 @@ from pyexasol.exceptions import (
     ExaImportError,
     ExaQueryError,
 )
+
+
+@pytest.fixture
+def dev_null():
+    with open(os.devnull, "wb") as f:
+        yield f
 
 
 @pytest.mark.etl
@@ -152,6 +161,16 @@ class TestImportFromCallbackExceptions:
         selected_exception = ex.value.exceptions[query_error_loc]
         assert isinstance(selected_exception, ExaQueryError)
         assert "Client requested execution abort." in selected_exception.message
+
+    @staticmethod
+    def test_closed_ws_connection(connection, dev_null, empty_table):
+        def import_cb(pipe, src, **kwargs):
+            connection.close(disconnect=False)
+            time.sleep(1)
+            shutil.copyfileobj(pipe, dev_null)
+
+        with pytest.raises(ExaImportError):
+            connection.import_from_callback(import_cb, None, empty_table)
 
     @staticmethod
     def test_export_callback_and_sql_have_different_exceptions(connection):
