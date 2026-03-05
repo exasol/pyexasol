@@ -195,3 +195,25 @@ class TestExportToCallbackExceptions:
         assert len(ex.value.exceptions) == 2
         assert ex.value.exceptions[0] == error
         assert isinstance(ex.value.exceptions[1], ExaQueryError)
+
+
+@pytest.mark.configuration
+class TestExportWithConnectionSettings:
+    @staticmethod
+    def test_export_camel_case_table_without_quote_ident_fails(
+        connection, camel_case_table
+    ):
+        with pytest.raises(ExaExportError) as ex:
+            connection.export_to_pandas(camel_case_table[0])
+
+        assert len(ex.value.exceptions) == 2
+        assert isinstance(ex.value.exceptions[1], ExaQueryError)
+        assert "object CAMELCASETABLE not found" in ex.value.exceptions[1].message
+
+    @staticmethod
+    def test_export_camel_case_table_with_quote_ident(
+        connection_with_quote_indent, camel_case_table
+    ):
+        df = connection_with_quote_indent.export_to_pandas(camel_case_table[0])
+
+        assert df.to_dict() == {"camelCaseColumn!": {0: 1, 1: 2, 2: 3}}

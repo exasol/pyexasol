@@ -7,8 +7,10 @@ import pytest
 from integration.import_and_export.helper import select_result
 
 from pyexasol.exceptions import (
+    ExaCommunicationError,
     ExaImportError,
     ExaQueryError,
+    ExaRuntimeError,
 )
 
 
@@ -173,8 +175,12 @@ class TestImportFromCallbackExceptions:
             time.sleep(1)
             shutil.copyfileobj(pipe, dev_null)
 
-        with pytest.raises(ExaImportError):
+        with pytest.raises(ExaImportError) as ex:
             new_connection.import_from_callback(import_cb, None, empty_table)
+
+        assert len(ex.value.exceptions) == 2
+        # race condition: the caught exception depends on how far the thread was
+        assert type(ex.value.exceptions[1]) in (ExaCommunicationError, ExaRuntimeError)
 
     @staticmethod
     def test_export_callback_and_sql_have_different_exceptions(connection):
@@ -191,3 +197,37 @@ class TestImportFromCallbackExceptions:
         assert len(ex.value.exceptions) == 2
         assert ex.value.exceptions[0] == error
         assert isinstance(ex.value.exceptions[1], ExaQueryError)
+
+
+@pytest.mark.configuration
+class TestImportWithConnectionSettings:
+    @staticmethod
+    def test_import_to_camel_case_table_without_quote_ident_fails(
+        connection, empty_camel_case_table
+    ):
+        import pandas as pd
+
+        table_name, column_name = empty_camel_case_table
+
+        df = pd.DataFrame({column_name: [1, 2, 3]})
+        with pytest.raises(ExaImportError) as ex:
+            connection.import_from_pandas(df, table_name)
+
+        assert len(ex.value.exceptions) == 1
+        assert isinstance(ex.value.exceptions[0], ExaQueryError)
+        assert "object CAMELCASETABLE not found" in ex.value.exceptions[0].message
+
+    @staticmethod
+    def test_import_to_camel_case_table_with_quote_ident(
+        connection_with_quote_indent, empty_camel_case_table
+    ):
+        import pandas as pd
+
+        table_name, column_name = empty_camel_case_table
+
+        df = pd.DataFrame({column_name: [1, 2, 3]})
+        connection_with_quote_indent.import_from_pandas(df, table_name)
+
+        result = connection_with_quote_indent.export_to_pandas(table_name).to_dict()
+
+        assert result == df.to_dict()
