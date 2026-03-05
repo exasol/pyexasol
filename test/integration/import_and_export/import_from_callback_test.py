@@ -21,42 +21,42 @@ def dev_null():
 @pytest.mark.etl
 class TestImportParams:
     @staticmethod
-    def test_with_no_params(connection, empty_table, table_name, tmp_path, all_data):
+    def test_with_no_params(connection, empty_table, tmp_path, all_data):
         filepath = all_data.write_csv(directory=tmp_path)
 
-        connection.import_from_file(src=filepath, table=table_name)
+        connection.import_from_file(src=filepath, table=empty_table)
 
         assert select_result(connection) == all_data.list_tuple()
 
     @staticmethod
-    def test_csv_cols(connection, empty_table, table_name, tmp_path, all_data):
+    def test_csv_cols(connection, empty_table, tmp_path, all_data):
         filepath = all_data.write_csv(directory=tmp_path)
         params = {"csv_cols": ["1..7"]}
 
         connection.import_from_file(
-            src=filepath, table=table_name, import_params=params
+            src=filepath, table=empty_table, import_params=params
         )
 
         assert select_result(connection) == all_data.list_tuple()
 
     @staticmethod
-    def test_skip(connection, empty_table, table_name, tmp_path, all_data):
+    def test_skip(connection, empty_table, tmp_path, all_data):
         filepath = all_data.write_csv(directory=tmp_path)
         params = {"skip": 1}
 
         connection.import_from_file(
-            src=filepath, table=table_name, import_params=params
+            src=filepath, table=empty_table, import_params=params
         )
 
         assert select_result(connection) == all_data.list_tuple()[1:]
 
     @staticmethod
-    def test_trim(connection, empty_table, table_name, tmp_path, all_data):
+    def test_trim(connection, empty_table, tmp_path, all_data):
         filepath = all_data.write_csv(directory=tmp_path)
         params = {"trim": "TRIM"}
 
         connection.import_from_file(
-            src=filepath, table=table_name, import_params=params
+            src=filepath, table=empty_table, import_params=params
         )
 
         assert select_result(connection) == all_data.list_tuple()
@@ -66,7 +66,7 @@ class TestImportParams:
 @pytest.mark.exceptions
 class TestImportFromCallbackExceptions:
     @staticmethod
-    def test_import_callback_has_exception(connection, empty_table, table_name):
+    def test_import_callback_has_exception(connection, empty_table):
         error = ValueError("Error from callback")
 
         def import_cb(pipe, src, **kwargs):
@@ -74,7 +74,7 @@ class TestImportFromCallbackExceptions:
 
         with pytest.raises(ExaImportError, match="2 sub-exceptions") as ex:
             connection.import_from_callback(
-                callback=import_cb, src=None, table=table_name
+                callback=import_cb, src=None, table=empty_table
             )
 
         assert len(ex.value.exceptions) == 2
@@ -86,7 +86,7 @@ class TestImportFromCallbackExceptions:
         )
 
     @staticmethod
-    def test_http_thread_has_exception(connection, tmp_path, empty_table, table_name):
+    def test_http_thread_has_exception(connection, tmp_path, empty_table):
         actual_filepath = tmp_path / "actual.csv"
 
         def import_cb(pipe, src, **kwargs):
@@ -99,7 +99,7 @@ class TestImportFromCallbackExceptions:
                 connection.import_from_callback(
                     callback=import_cb,
                     src=actual_filepath,
-                    table=table_name,
+                    table=empty_table,
                 )
 
         assert len(ex.value.exceptions) == 2
@@ -127,7 +127,7 @@ class TestImportFromCallbackExceptions:
         assert "object DOES_NOT_EXIST not found" in ex.value.exceptions[0].message
 
     @staticmethod
-    def test_abort_query(connection, tmp_path, empty_table, table_name):
+    def test_abort_query(connection, tmp_path, empty_table):
         """
         Due to a race condition, it's difficult to create a test with
         connection.abort_query() that ensures that an exception would be raised.
@@ -151,7 +151,7 @@ class TestImportFromCallbackExceptions:
                 connection.import_from_callback(
                     callback=import_cb,
                     src=actual_filepath,
-                    table=table_name,
+                    table=empty_table,
                 )
 
         query_error_loc = 0
