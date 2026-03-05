@@ -21,57 +21,52 @@ def dev_null():
         yield f
 
 
+@pytest.fixture
+def output_filepath(tmp_path):
+    return tmp_path / "actual.csv"
+
+
 @pytest.mark.etl
 class TestExportParams:
     @staticmethod
-    def test_with_no_params(connection, fill_table, tmp_path, all_data):
-        actual_filepath = tmp_path / "actual.csv"
+    def test_with_no_params(connection, fill_table, output_filepath, all_data):
+        connection.export_to_file(dst=output_filepath, query_or_table=fill_table)
 
-        connection.export_to_file(dst=actual_filepath, query_or_table=fill_table)
-
-        assert actual_filepath.read_text() == all_data.csv_str()
+        assert output_filepath.read_text() == all_data.csv_str()
 
     @staticmethod
-    def test_csv_cols(connection, fill_table, tmp_path, all_data):
-        actual_filepath = tmp_path / "actual.csv"
+    def test_csv_cols(connection, fill_table, output_filepath, all_data):
         params = {"csv_cols": ["1..7"]}
-
         connection.export_to_file(
-            dst=actual_filepath, query_or_table=fill_table, export_params=params
+            dst=output_filepath, query_or_table=fill_table, export_params=params
         )
 
-        assert actual_filepath.read_text() == all_data.csv_str()
+        assert output_filepath.read_text() == all_data.csv_str()
 
     @staticmethod
-    def test_delimit(connection, fill_table, tmp_path, all_data):
-        actual_filepath = tmp_path / "actual.csv"
+    def test_delimit(connection, fill_table, output_filepath, all_data):
         params = {"delimit": "AUTO"}
-
         connection.export_to_file(
-            dst=actual_filepath, query_or_table=fill_table, export_params=params
+            dst=output_filepath, query_or_table=fill_table, export_params=params
         )
 
-        assert actual_filepath.read_text() == all_data.csv_str()
+        assert output_filepath.read_text() == all_data.csv_str()
 
     @staticmethod
-    def test_without_column_names(connection, fill_table, tmp_path, all_data):
-        actual_filepath = tmp_path / "actual.csv"
+    def test_without_column_names(connection, fill_table, output_filepath, all_data):
+        connection.export_to_file(dst=output_filepath, query_or_table=fill_table)
 
-        connection.export_to_file(dst=actual_filepath, query_or_table=fill_table)
-
-        assert actual_filepath.read_text() == all_data.csv_str()
+        assert output_filepath.read_text() == all_data.csv_str()
 
     @staticmethod
-    def test_with_column_names(connection, fill_table, tmp_path, all_data):
-        actual_filepath = tmp_path / "actual.csv"
+    def test_with_column_names(connection, fill_table, output_filepath, all_data):
         params = {"with_column_names": True}
-
         connection.export_to_file(
-            dst=actual_filepath, query_or_table=fill_table, export_params=params
+            dst=output_filepath, query_or_table=fill_table, export_params=params
         )
 
         expected_header = ",".join(all_data.columns) + "\n"
-        assert actual_filepath.read_text() == expected_header + all_data.csv_str()
+        assert output_filepath.read_text() == expected_header + all_data.csv_str()
 
 
 @pytest.mark.etl
@@ -80,29 +75,25 @@ class TestExportGeneral:
     def test_without_resolving_hostname(
         connection_without_resolving_hostnames,
         fill_table,
-        tmp_path,
+        output_filepath,
         all_data,
     ):
-        actual_filepath = tmp_path / "actual.csv"
-
         connection_without_resolving_hostnames.export_to_file(
-            dst=actual_filepath, query_or_table=fill_table
+            dst=output_filepath, query_or_table=fill_table
         )
 
-        assert actual_filepath.read_text() == all_data.csv_str()
+        assert output_filepath.read_text() == all_data.csv_str()
 
     @staticmethod
-    def test_custom_export_callback(connection, fill_table, tmp_path, all_data):
-        actual_filepath = tmp_path / "actual.csv"
-
+    def test_custom_export_callback(connection, fill_table, output_filepath, all_data):
         def export_cb(pipe, dst):
             dst.write_bytes(pipe.read())
 
         connection.export_to_callback(
-            callback=export_cb, dst=actual_filepath, query_or_table=fill_table
+            callback=export_cb, dst=output_filepath, query_or_table=fill_table
         )
 
-        assert actual_filepath.read_text() == all_data.csv_str()
+        assert output_filepath.read_text() == all_data.csv_str()
 
 
 @pytest.mark.etl
@@ -123,9 +114,7 @@ class TestExportToCallbackExceptions:
         assert ex.value.exceptions == [error]
 
     @staticmethod
-    def test_http_thread_has_exception(connection, tmp_path, empty_table):
-        actual_filepath = tmp_path / "actual.csv"
-
+    def test_http_thread_has_exception(connection, output_filepath, empty_table):
         def export_cb(pipe, dst, **kwargs):
             dst.write_bytes(pipe.read())
 
@@ -135,7 +124,7 @@ class TestExportToCallbackExceptions:
             with pytest.raises(ExaExportError, match="1 sub-exception") as ex:
                 connection.export_to_callback(
                     callback=export_cb,
-                    dst=actual_filepath,
+                    dst=output_filepath,
                     query_or_table=empty_table,
                 )
 
@@ -143,15 +132,13 @@ class TestExportToCallbackExceptions:
         assert isinstance(ex.value.exceptions[0], BrokenPipeError)
 
     @staticmethod
-    def test_sql_thread_has_exception(connection, tmp_path):
-        actual_filepath = tmp_path / "actual.csv"
-
+    def test_sql_thread_has_exception(connection, output_filepath):
         def export_cb(pipe, dst, **kwargs):
             dst.write_bytes(pipe.read())
 
         with pytest.raises(ExaExportError, match="1 sub-exception") as ex:
             connection.export_to_callback(
-                callback=export_cb, dst=actual_filepath, query_or_table="DOES_NOT_EXIST"
+                callback=export_cb, dst=output_filepath, query_or_table="DOES_NOT_EXIST"
             )
 
         assert len(ex.value.exceptions) == 1
@@ -159,14 +146,13 @@ class TestExportToCallbackExceptions:
         assert "object DOES_NOT_EXIST not found" in ex.value.exceptions[0].message
 
     @staticmethod
-    def test_abort_query(connection, tmp_path, empty_table):
+    def test_abort_query(connection, output_filepath, empty_table):
         """
         Due to a race condition, it's difficult to create a test with
         connection.abort_query() that ensures that an exception would be raised.
         Thus, we mock that here. Still, there is a race condition whether 1 or 2
         exceptions are raised.
         """
-        actual_filepath = tmp_path / "actual.csv"
 
         def export_cb(pipe, dst, **kwargs):
             dst.write_bytes(pipe.read())
@@ -182,7 +168,7 @@ class TestExportToCallbackExceptions:
             with pytest.raises(ExaExportError) as ex:
                 connection.export_to_callback(
                     callback=export_cb,
-                    dst=actual_filepath,
+                    dst=output_filepath,
                     query_or_table=empty_table,
                 )
 
