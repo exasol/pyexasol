@@ -834,6 +834,8 @@ class ExaConnection:
 
         Raises:
             TypeError: callback argument isn't callable.
+            ExaExportError: one or more exceptions occurred when executing the
+               callback function.
 
         Warnings:
             - This function may run out of memory
@@ -928,6 +930,8 @@ class ExaConnection:
 
         Raises:
             TypeError: callback argument isn't callable.
+            ExaImportError: one or more exceptions occurred when executing the
+               callback function.
         """
         if not callable(callback):
             raise TypeError(
