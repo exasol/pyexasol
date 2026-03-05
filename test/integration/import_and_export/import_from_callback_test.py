@@ -18,6 +18,11 @@ def dev_null():
         yield f
 
 
+@pytest.fixture
+def input_filepath(tmp_path):
+    return tmp_path / "test.csv"
+
+
 @pytest.mark.etl
 class TestImportParams:
     @staticmethod
@@ -86,9 +91,7 @@ class TestImportFromCallbackExceptions:
         )
 
     @staticmethod
-    def test_http_thread_has_exception(connection, tmp_path, empty_table):
-        actual_filepath = tmp_path / "actual.csv"
-
+    def test_http_thread_has_exception(connection, input_filepath, empty_table):
         def import_cb(pipe, src, **kwargs):
             pipe.write(b"dummy_data\n")
 
@@ -98,7 +101,7 @@ class TestImportFromCallbackExceptions:
             with pytest.raises(ExaImportError, match="2 sub-exceptions") as ex:
                 connection.import_from_callback(
                     callback=import_cb,
-                    src=actual_filepath,
+                    src=input_filepath,
                     table=empty_table,
                 )
 
@@ -111,15 +114,13 @@ class TestImportFromCallbackExceptions:
         )
 
     @staticmethod
-    def test_sql_thread_has_exception(connection, tmp_path):
-        actual_filepath = tmp_path / "actual.csv"
-
+    def test_sql_thread_has_exception(connection, input_filepath):
         def import_cb(pipe, src, **kwargs):
             pipe.write(b"dummy_data\n")
 
         with pytest.raises(ExaImportError, match="1 sub-exception") as ex:
             connection.import_from_callback(
-                callback=import_cb, src=actual_filepath, table="DOES_NOT_EXIST"
+                callback=import_cb, src=input_filepath, table="DOES_NOT_EXIST"
             )
 
         assert len(ex.value.exceptions) == 1
@@ -127,14 +128,13 @@ class TestImportFromCallbackExceptions:
         assert "object DOES_NOT_EXIST not found" in ex.value.exceptions[0].message
 
     @staticmethod
-    def test_abort_query(connection, tmp_path, empty_table):
+    def test_abort_query(connection, input_filepath, empty_table):
         """
         Due to a race condition, it's difficult to create a test with
         connection.abort_query() that ensures that an exception would be raised.
         Thus, we mock that here. Still, there is a race condition whether 1 or 2
         exceptions are raised.
         """
-        actual_filepath = tmp_path / "actual.csv"
 
         def import_cb(pipe, src, **kwargs):
             pipe.write(b"dummy_data\n")
@@ -150,7 +150,7 @@ class TestImportFromCallbackExceptions:
             with pytest.raises(ExaImportError) as ex:
                 connection.import_from_callback(
                     callback=import_cb,
-                    src=actual_filepath,
+                    src=input_filepath,
                     table=empty_table,
                 )
 

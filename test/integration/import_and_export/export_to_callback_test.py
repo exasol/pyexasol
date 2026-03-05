@@ -23,7 +23,7 @@ def dev_null():
 
 @pytest.fixture
 def output_filepath(tmp_path):
-    return tmp_path / "actual.csv"
+    return tmp_path / "test.csv"
 
 
 @pytest.mark.etl
