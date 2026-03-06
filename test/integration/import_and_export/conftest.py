@@ -114,3 +114,47 @@ def fill_table(connection, empty_table, data_dict):
     for row in data_dict:
         connection.execute(insert, row)
     return empty_table
+
+
+@pytest.fixture
+def connection_with_quote_indent(connection_factory):
+    con = connection_factory(quote_ident=True)
+    yield con
+    con.close()
+
+
+@pytest.fixture
+def empty_camel_case_table(connection):
+    table_name = "camelCaseTable"
+    column_name = "camelCaseColumn!"
+    ddl = cleandoc(
+        f"""
+        CREATE OR REPLACE TABLE "{table_name}"
+        (
+            "{column_name}" DECIMAL(18,0)
+        )
+        """
+    )
+    connection.execute(ddl)
+    connection.commit()
+
+    yield table_name, column_name
+
+    ddl = f'DROP TABLE IF EXISTS "{table_name}" CASCADE;'
+    connection.execute(ddl)
+    connection.commit()
+
+
+@pytest.fixture
+def filled_camel_case_table(connection, empty_camel_case_table):
+    table_name, column_name = empty_camel_case_table
+    ddl = cleandoc(
+        f"""
+        INSERT INTO "{table_name}" VALUES
+        (1), (2), (3);
+        """
+    )
+    connection.execute(ddl)
+    connection.commit()
+
+    yield table_name, column_name
