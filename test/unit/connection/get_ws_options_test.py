@@ -64,7 +64,7 @@ class TestGetWsOptions:
         dsn = f"localhost/{expected_fingerprint}:8563"
 
         connection = mock_exaconnection_factory(dsn=dsn)
-        hostname, ipaddr, port, fingerprint = connection._process_dsn(dsn=dsn)[0]
+        _, _, _, fingerprint = connection._process_dsn(dsn=dsn)[0]
         assert fingerprint == expected_fingerprint
 
         result = connection._get_ws_options(fingerprint=fingerprint)
@@ -105,7 +105,7 @@ class TestGetWsOptions:
         dsn = f"localhost/{expected_fingerprint}:8563"
 
         connection = mock_exaconnection_factory(dsn=dsn)
-        hostname, ipaddr, port, fingerprint = connection._process_dsn(dsn=dsn)[0]
+        _, _, _, fingerprint = connection._process_dsn(dsn=dsn)[0]
         assert fingerprint == expected_fingerprint.upper()
 
         result = connection._get_ws_options(fingerprint=fingerprint)
