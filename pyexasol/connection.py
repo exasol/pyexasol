@@ -819,7 +819,7 @@ class ExaConnection:
             result of callback function
 
         Raises:
-            TypeError: callback argument isn't callable.
+            TypeError: callback argument is not Callable.
 
         Warnings:
             - This function may run out of memory
@@ -915,7 +915,7 @@ class ExaConnection:
                 Custom parameters for IMPORT query.
 
         Raises:
-            TypeError: callback argument isn't callable.
+            TypeError: callback argument is not Callable.
         """
         if not callable(callback):
             raise TypeError(
