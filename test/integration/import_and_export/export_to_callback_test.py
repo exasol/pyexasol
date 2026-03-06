@@ -177,3 +177,19 @@ class TestExportToCallbackExceptions:
         selected_exception = ex.value.exceptions[query_error_loc]
         assert isinstance(selected_exception, ExaQueryError)
         assert "Client requested execution abort." in selected_exception.message
+
+    @staticmethod
+    def test_export_callback_and_sql_have_different_exceptions(connection):
+        error = ValueError("Error from callback")
+
+        def export_cb(pipe, dst, **kwargs):
+            raise error
+
+        with pytest.raises(ExaExportError) as ex:
+            connection.export_to_callback(
+                callback=export_cb, dst=None, query_or_table="DOES_NOT_EXIST"
+            )
+
+        assert len(ex.value.exceptions) == 2
+        assert ex.value.exceptions[0] == error
+        assert isinstance(ex.value.exceptions[1], ExaQueryError)
