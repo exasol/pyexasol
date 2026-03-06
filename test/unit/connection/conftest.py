@@ -1,7 +1,7 @@
 """
-Throughout the development the :class:`pyexasol.ExaConnection`has grown to include a
-number of features. In the long-term, these will be broken it up into smaller
-encapsulated units. This would allow for more explicit testing, make the code easier to
+Throughout the development the :class:`pyexasol.ExaConnection` has grown to include a
+number of features. In the long-term, these will be broken up into smaller units.
+This would allow for more explicit testing, make the code easier to
 read & interpret, & help reduce difficulties associated with changes and potentially
 overlooked edge cases.
 
@@ -24,9 +24,8 @@ from pyexasol import ExaConnection
 
 def mock_exaconnection(connection_class, **kwargs):
     """
-    Within the :func:`pyexasol.ExaConnection.__init__` function, external services
-    are being sent requests. To explicitly test the code around these calls, these are
-    mocked.
+    :func:`pyexasol.ExaConnection.__init__` already sends requests to external services.
+    To explicitly test the code around these calls, these services are mocked.
     """
 
     defaults = {
