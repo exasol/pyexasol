@@ -6,17 +6,39 @@ from ssl import (
 
 class TestGetWsOptions:
     """
-    To create the websocket connection, specific parameters are passed in. In PyExasol,
-    users may connect 1) without any verification (only for non-productive environments,
-    2) with fingerprint verification, 3) with certificate verification, and 4) with
-    fingerprint & certification verification. Each of these has slightly different
-    defaults that have been decided upon based on Exasol's security guidelines. These
-    are explicitly tested here to ensure that the defaults do not wander over time
-    without explicit intention.
+    To create the websocket connection, specific parameters are passed into it.
+    In PyExasol, users may connect:
+        1) using the default behavior where certificate verification is required
+           - The certificate being verified would be automatically retrieved from an
+             OS-specific truststore.
+        2) by providing a fingerprint in their DSN
+          - The fingerprint is extracted from the DSN and used for fingerprint
+            verification. As a convenience, PyExasol automatically turns off the
+            default of certificate verification.
+       3) by providing a certificate stored in another location.
+         - As it is currently coded, users must add
+           `websocket_sslopt["cert_reqs"] = CERT_REQUIRED` for certificate
+           verification to be turned on. This is because the code directly takes the
+           value passed into `websocket_sslopt`. Otherwise, this behaves similar to 1).
+       4) by turning off certificate verification by passing a case-insensitive
+          `nocertcheck` as a fingerprint in their DSN.
+          - Unlike 2), this only deactivates certificate verification; the
+            `nocertcheck` value is not passed onto the websocket connection. The
+            motivation for adding this is that customers are used to this experience
+            from other drivers, like the
+            `JDBC driver <https://docs.exasol.com/db/latest/connect_exasol/drivers/jdbc.htm>`__.
+          - Customers have been explicitly warned that this is a security risk and
+            that this value should ONLY be used in testing environments.
+
+    Each of these has slightly different defaults that have been decided upon based on
+    Exasol's security guidelines. These are explicitly tested here to ensure that the
+    defaults do not wander over time without explicit intention.
     """
 
     @staticmethod
-    def test_no_verification(mock_exaconnection_factory, recwarn):
+    def test_default_with_certificate_in_truststore(
+        mock_exaconnection_factory, recwarn
+    ):
         connection = mock_exaconnection_factory()
         result = connection._get_ws_options(fingerprint=None)
 
@@ -26,6 +48,11 @@ class TestGetWsOptions:
             "enable_multithread": True,
             "sslopt": {"cert_reqs": CERT_REQUIRED},
         }
+        # To help (new) users of PyExasol, a warning message is emitted to make it clear
+        # that the default behavior is to require a certificate from
+        # an OS-specific truststore and to verify it. This makes it easier for a user
+        # to debug the issue if the websocket connection returns an exception,
+        # indicating that a connection could not be made with the provided credentials.
         assert len(recwarn.list) == 1
         assert "From PyExasol version ``1.0.0``," in str(recwarn.list[0].message)
 
@@ -47,8 +74,10 @@ class TestGetWsOptions:
 
     @staticmethod
     def test_verification_with_certificate(mock_exaconnection_factory, recwarn):
-        # if websocket_sslopt is defined, like here, this is propagated as is without
-        # any checks for this function
+        # If websocket_sslopt is defined, like here, this is propagated as is without
+        # any checks for this function. This means that a customer must provide
+        # `websocket_sslopt["cert_reqs"]= CERT_REQUIRED` to activate certificate
+        # verification.
 
         websocket_sslopt = {"cert_reqs": CERT_REQUIRED, "ca_certs": "rootCA.crt"}
 
