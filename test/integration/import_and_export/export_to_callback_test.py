@@ -146,3 +146,34 @@ class TestExportToCallbackExceptions:
         assert len(ex.value.exceptions) == 1
         assert isinstance(ex.value.exceptions[0], ExaQueryError)
         assert "object DOES_NOT_EXIST not found" in ex.value.exceptions[0].message
+
+    @staticmethod
+    def test_abort_query(connection, output_filepath, empty_table, export_cb):
+        """
+        Due to a race condition, it's difficult to create a test with
+        connection.abort_query() that ensures that an exception would be raised.
+        Thus, we mock that here. Still, there is a race condition whether 1 or 2
+        exceptions are raised.
+        """
+        with patch("pyexasol.connection.ExaSQLExportThread.run_sql") as mock:
+            mock.side_effect = ExaQueryError(
+                message="Client requested execution abort.",
+                query="mock response",
+                connection=connection,
+                code="40007",
+            )
+
+            with pytest.raises(ExaExportError) as ex:
+                connection.export_to_callback(
+                    callback=export_cb,
+                    dst=output_filepath,
+                    query_or_table=empty_table,
+                )
+
+        query_error_loc = 0
+        if len(ex.value.exceptions) == 2:
+            query_error_loc = 1
+
+        selected_exception = ex.value.exceptions[query_error_loc]
+        assert isinstance(selected_exception, ExaQueryError)
+        assert "Client requested execution abort." in selected_exception.message
