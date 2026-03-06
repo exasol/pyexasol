@@ -1,6 +1,11 @@
+from unittest.mock import patch
+
 import pytest
 
-from pyexasol.exceptions import ExaQueryError
+from pyexasol.exceptions import (
+    ExaExportError,
+    ExaQueryError,
+)
 
 
 @pytest.fixture
@@ -100,20 +105,44 @@ class TestExportGeneral:
 @pytest.mark.exceptions
 class TestExportToCallbackExceptions:
     @staticmethod
-    def test_only_export_callback_has_exception(connection, fill_table):
-        error_msg = "Error from callback"
+    def test_export_callback_has_exception(connection, empty_table):
+        error = ValueError("Error from callback")
 
         def export_cb(pipe, dst, **kwargs):
-            raise Exception(error_msg)
+            raise error
 
-        with pytest.raises(Exception, match=error_msg):
+        with pytest.raises(ExaExportError, match="1 sub-exception") as ex:
             connection.export_to_callback(
-                callback=export_cb, dst=None, query_or_table=fill_table
+                callback=export_cb, dst=None, query_or_table=empty_table
             )
 
+        assert ex.value.exceptions == [error]
+
     @staticmethod
-    def test_only_sql_has_exception(connection, output_filepath, export_cb):
-        with pytest.raises(ExaQueryError, match="object DOES_NOT_EXIST not found"):
+    def test_http_thread_has_exception(
+        connection, output_filepath, empty_table, export_cb
+    ):
+
+        with patch("pyexasol.connection.ExaHttpThread.join_with_exc") as mock:
+            mock.side_effect = BrokenPipeError("Broken pipe in http_thread")
+
+            with pytest.raises(ExaExportError, match="1 sub-exception") as ex:
+                connection.export_to_callback(
+                    callback=export_cb,
+                    dst=output_filepath,
+                    query_or_table=empty_table,
+                )
+
+        assert len(ex.value.exceptions) == 1
+        assert isinstance(ex.value.exceptions[0], BrokenPipeError)
+
+    @staticmethod
+    def test_sql_thread_has_exception(connection, output_filepath, export_cb):
+        with pytest.raises(ExaExportError, match="1 sub-exception") as ex:
             connection.export_to_callback(
                 callback=export_cb, dst=output_filepath, query_or_table="DOES_NOT_EXIST"
             )
+
+        assert len(ex.value.exceptions) == 1
+        assert isinstance(ex.value.exceptions[0], ExaQueryError)
+        assert "object DOES_NOT_EXIST not found" in ex.value.exceptions[0].message
