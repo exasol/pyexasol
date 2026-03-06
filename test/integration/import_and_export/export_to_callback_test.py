@@ -1,5 +1,7 @@
 import pytest
+
 from pyexasol.exceptions import ExaQueryError
+
 
 @pytest.fixture
 def connection_without_resolving_hostnames(connection_factory):
