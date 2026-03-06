@@ -34,7 +34,19 @@ from cryptography.hazmat.primitives.asymmetric import padding
 from packaging.version import Version
 
 from . import callback as cb
-from .exceptions import *
+from . import constant
+from .exceptions import (
+    ExaAuthError,
+    ExaCommunicationError,
+    ExaConcurrencyError,
+    ExaConnectionDsnError,
+    ExaConnectionFailedError,
+    ExaQueryAbortError,
+    ExaQueryError,
+    ExaQueryTimeoutError,
+    ExaRequestError,
+    ExaRuntimeError,
+)
 from .ext import ExaExtension
 from .formatter import ExaFormatter
 from .http_transport import (
@@ -358,7 +370,7 @@ class ExaConnection:
             )
 
             stmt = self.execute(query, query_params)
-            log_files = sorted(list(stmt_output_dir.glob("*.log")))
+            log_files = sorted(stmt_output_dir.glob("*.log"))
 
             if len(log_files) > 0:
                 script_output.join_with_exc()
@@ -1261,8 +1273,9 @@ class ExaConnection:
 
         Warnings:
 
-            This function should be called from a separate thread and has no response
-            Response should be checked in the main thread which started execution of query
+            This function should be called from a separate thread and has no response.
+            The response should be checked in the main thread which started the
+            execution of the query.
 
             There are three possible outcomes of calling this function:
 
@@ -1677,7 +1690,7 @@ class ExaConnection:
     def _init_meta(self):
         self.meta = self.cls_meta(self)
 
-    def _get_stmt_output_dir(self):
+    def _get_stmt_output_dir(self) -> Path:
         import pathlib
         import tempfile
 
@@ -1686,7 +1699,7 @@ class ExaConnection:
         else:
             base_output_dir = tempfile.gettempdir()
 
-        # Create unique sub-directory for every statement of every session
+        # Create unique subdirectory for every statement of every session
         self._udf_output_count += 1
 
         stmt_output_dir = (
