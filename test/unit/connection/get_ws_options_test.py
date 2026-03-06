@@ -58,10 +58,15 @@ class TestGetWsOptions:
 
     @staticmethod
     def test_verification_with_fingerprint(mock_exaconnection_factory, recwarn):
-        fingerprint = "7BBBF74F1F2B993BB81FF5F795BCA2340CC697B8DEFEB768DD6BABDF13FB2F05"
-        dsn = f"localhost/{fingerprint}:8563"
+        expected_fingerprint = (
+            "7BBBF74F1F2B993BB81FF5F795BCA2340CC697B8DEFEB768DD6BABDF13FB2F05"
+        )
+        dsn = f"localhost/{expected_fingerprint}:8563"
 
         connection = mock_exaconnection_factory(dsn=dsn)
+        hostname, ipaddr, port, fingerprint = connection._process_dsn(dsn=dsn)[0]
+        assert fingerprint == expected_fingerprint
+
         result = connection._get_ws_options(fingerprint=fingerprint)
 
         assert result == {
@@ -96,10 +101,13 @@ class TestGetWsOptions:
     def test_verification_with_fingerprint_nocertcheck(
         mock_exaconnection_factory, recwarn
     ):
-        fingerprint = "nocertcheck"
-        dsn = f"localhost/{fingerprint}:8563"
+        expected_fingerprint = "nocertcheck"
+        dsn = f"localhost/{expected_fingerprint}:8563"
 
         connection = mock_exaconnection_factory(dsn=dsn)
+        hostname, ipaddr, port, fingerprint = connection._process_dsn(dsn=dsn)[0]
+        assert fingerprint == expected_fingerprint.upper()
+
         result = connection._get_ws_options(fingerprint=fingerprint)
 
         assert result == {
