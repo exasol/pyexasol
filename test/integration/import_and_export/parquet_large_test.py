@@ -1,6 +1,7 @@
 import copy
 from datetime import datetime
 from inspect import cleandoc
+from unittest import mock
 
 import pyarrow as pa
 import pytest
@@ -9,6 +10,12 @@ from integration.import_and_export.data_sample import (
     DataSample,
 )
 from pyarrow import parquet as pq
+
+from pyexasol.connection import cb
+from pyexasol.exceptions import (
+    ExaExportError,
+    ExaQueryError,
+)
 
 ALL_COLUMNS = [
     "FIRST_NAME",
@@ -141,3 +148,32 @@ class TestLargeExportToParquet:
         assert len(list(filepath.glob("*"))) == 1
         # can be a single file name or directory name
         assert pq.read_table(filepath) == expected
+
+    @staticmethod
+    def test_export_single_file_with_cascading_error(
+        connection, fill_table, tmp_path, table_name, all_data
+    ):
+        filepath = tmp_path / "single_parquet_dir" / "part-0.parquet"
+        filepath.parent.mkdir()
+        filepath.touch()
+
+        prepare_parquet_table(all_data.list_dict)
+
+        with mock.patch.object(
+            cb, "check_export_to_parquet_directory_setting", return_value=True
+        ):
+            with pytest.raises(ExaExportError) as ex:
+                connection.export_to_parquet(dst=filepath, query_or_table=table_name)
+
+        num_errors = len(ex.value.exceptions)
+
+        # There is a race condition within `export_to_callback`. It may have up to
+        # 2 exceptions reported.
+        assert num_errors >= 1
+        assert isinstance(ex.value.exceptions[0], FileExistsError)
+        if num_errors == 2:
+            assert isinstance(ex.value.exceptions[1], ExaQueryError)
+            assert (
+                "ETL-5106: Following error occured while writing data to external connection"
+                in ex.value.exceptions[1].message
+            )
