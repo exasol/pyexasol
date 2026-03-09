@@ -203,3 +203,22 @@ class ExaExportError(ExaCallbackError):
     """
 
     message = "Error in executing `export_to_callback`"
+
+
+class ExaImportError(ExaCallbackError):
+    """
+    Raised when a method relying on :meth:`pyexasol.connection.ExaConnection.import_from_callback`
+    fails due to an exception raised in the execution of `import_from_callback`.
+    This method relies on two threaded processes `http_thread` and `sql_thread`.
+    As such, there may be one or more exceptions simultaneously raised, with a race
+    condition as to which is raised and caught first. Additionally, it might be
+    possible that re-running the same problematic code can lead to slightly
+    different values in this catch-all exception, as potentially an exception was not
+    yet experienced on that particularly thread when it was terminated. Furthermore,
+    as there are a multitude of different exceptions possible, it is still up to the
+    user to use this information, coupled with the traceback, to resolve the root
+    cause(s) of the exception(s). It's not easily possible or reliable for PyExasol to
+    determine the root cause(s).
+    """
+
+    message = "Error in executing `import_from_callback`"
