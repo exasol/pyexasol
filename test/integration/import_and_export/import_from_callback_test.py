@@ -1,6 +1,11 @@
 import pytest
 from integration.import_and_export.helper import select_result
 
+from pyexasol.exceptions import (
+    ExaImportError,
+    ExaQueryError,
+)
+
 
 @pytest.fixture
 def import_cb():
@@ -113,3 +118,27 @@ class TestImportGeneral:
         )
 
         assert select_result(connection) == all_data.list_tuple()
+
+
+@pytest.mark.etl
+@pytest.mark.exceptions
+class TestImportFromCallbackExceptions:
+    @staticmethod
+    def test_import_callback_has_exception(connection, empty_table):
+        error = ValueError("Error from callback")
+
+        def import_cb(pipe, src, **kwargs):
+            raise error
+
+        with pytest.raises(ExaImportError, match="2 sub-exceptions") as ex:
+            connection.import_from_callback(
+                callback=import_cb, src=None, table=empty_table
+            )
+
+        assert len(ex.value.exceptions) == 2
+        assert ex.value.exceptions[0] == error
+        assert isinstance(ex.value.exceptions[1], ExaQueryError)
+        assert (
+            "Following error occured while reading data"
+            in ex.value.exceptions[1].message
+        )

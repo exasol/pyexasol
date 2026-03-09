@@ -20,16 +20,6 @@ def statement():
 
 @pytest.mark.etl
 @pytest.mark.exceptions
-def test_error_in_import_callback(connection, statement):
-    def import_cb(pipe, src, **kwargs):
-        raise Exception()
-
-    with pytest.raises(pyexasol.exceptions.ExaQueryError):
-        connection.import_from_callback(import_cb, None, "users")
-
-
-@pytest.mark.etl
-@pytest.mark.exceptions
 def test_closed_ws_connection(connection, dev_null, statement):
     def import_cb(pipe, src, **kwargs):
         connection.close(disconnect=False)
