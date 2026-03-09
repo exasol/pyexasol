@@ -9,12 +9,6 @@ from pyexasol.exceptions import (
 
 
 @pytest.fixture
-def connection_without_resolving_hostnames(connection_factory):
-    with connection_factory(compression=True, resolve_hostnames=False) as con:
-        yield con
-
-
-@pytest.fixture
 def output_filepath(tmp_path):
     return tmp_path / "test_output.csv"
 
@@ -122,7 +116,6 @@ class TestExportToCallbackExceptions:
     def test_http_thread_has_exception(
         connection, output_filepath, empty_table, export_cb
     ):
-
         with patch("pyexasol.connection.ExaHttpThread.join_with_exc") as mock:
             mock.side_effect = BrokenPipeError("Broken pipe in http_thread")
 

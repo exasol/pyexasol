@@ -117,6 +117,12 @@ def fill_table(connection, empty_table, data_dict):
 
 
 @pytest.fixture
+def connection_without_resolving_hostnames(connection_factory):
+    with connection_factory(compression=True, resolve_hostnames=False) as con:
+        yield con
+
+
+@pytest.fixture
 def connection_with_quote_indent(connection_factory):
     con = connection_factory(quote_ident=True)
     yield con

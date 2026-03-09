@@ -45,3 +45,20 @@ class TestImportParams:
         )
 
         assert select_result(connection) == all_data.list_tuple()
+
+
+@pytest.mark.etl
+class TestImportGeneral:
+    @staticmethod
+    def test_without_resolving_hostname(
+        connection_without_resolving_hostnames, empty_table, tmp_path, all_data
+    ):
+        filepath = all_data.write_csv(directory=tmp_path)
+        connection_without_resolving_hostnames.import_from_file(
+            src=filepath, table=empty_table
+        )
+
+        assert (
+            select_result(connection_without_resolving_hostnames)
+            == all_data.list_tuple()
+        )
