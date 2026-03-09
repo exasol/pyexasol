@@ -1,9 +1,13 @@
+import time
+
 import pytest
 from integration.import_and_export.helper import select_result
 
 from pyexasol.exceptions import (
+    ExaCommunicationError,
     ExaImportError,
     ExaQueryError,
+    ExaRuntimeError,
 )
 
 
@@ -142,3 +146,21 @@ class TestImportFromCallbackExceptions:
             "Following error occured while reading data"
             in ex.value.exceptions[1].message
         )
+
+    @staticmethod
+    def test_closed_ws_connection(
+        connection_factory, connection, empty_table, import_cb
+    ):
+        new_connection = connection_factory()
+
+        def import_cb_with_close(pipe, src, **kwargs):
+            new_connection.close(disconnect=False)
+            time.sleep(1)
+            import_cb(pipe, src, **kwargs)
+
+        with pytest.raises(ExaImportError) as ex:
+            new_connection.import_from_callback(import_cb_with_close, None, empty_table)
+
+        assert len(ex.value.exceptions) == 2
+        # race condition: the caught exception depends on how far the thread was
+        assert type(ex.value.exceptions[1]) in (ExaCommunicationError, ExaRuntimeError)
