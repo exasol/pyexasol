@@ -34,6 +34,34 @@ class TestImportParams:
         assert select_result(connection) == all_data.list_tuple()
 
     @staticmethod
+    def test_swapped_columns(connection, empty_table, tmp_path, all_data):
+        params = {
+            "columns": [
+                "FIRST_NAME",
+                "LAST_NAME",
+                "REGISTER_DT",
+                "LAST_VISIT_TS",
+                # These two columns are switched in the imported data
+                # relative to the table's DDL definition.
+                "AGE",
+                "IS_GRADUATING",
+                "SCORE",
+            ]
+        }
+        filepath = all_data.write_csv(
+            directory=tmp_path, selected_columns=params["columns"]
+        )
+
+        connection.import_from_file(
+            src=filepath, table=empty_table, import_params=params
+        )
+
+        # Despite two columns being swapped in the input data, it was inserted
+        # correctly into the table, as the user indicated in the parameters that
+        # the columns were in a different order.
+        assert select_result(connection) == all_data.list_tuple()
+
+    @staticmethod
     def test_skip(connection, empty_table, tmp_path, all_data):
         filepath = all_data.write_csv(directory=tmp_path)
         offset = 2
