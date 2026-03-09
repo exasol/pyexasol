@@ -252,3 +252,46 @@ class TestImportFromCallbackExceptions:
         assert ex.value.exceptions[0] == error
         assert isinstance(ex.value.exceptions[1], ExaQueryError)
         assert len(ex.value.exceptions) == 2
+
+
+@pytest.mark.configuration
+class TestImportWithConnectionSettings:
+    @staticmethod
+    def test_import_to_camel_case_table_without_quote_ident_fails(
+        connection, empty_camel_case_table
+    ):
+        import pandas as pd
+
+        table_name, column_name = empty_camel_case_table
+
+        df = pd.DataFrame({column_name: [1, 2, 3]})
+        with pytest.raises(ExaImportError) as ex:
+            connection.import_from_pandas(df, table_name)
+
+        num_exceptions = len(ex.value.exceptions)
+
+        query_exception_loc = 0
+        if num_exceptions == 2:
+            query_exception_loc = 1
+
+        assert num_exceptions <= 2
+        assert isinstance(ex.value.exceptions[query_exception_loc], ExaQueryError)
+        assert (
+            "object CAMELCASETABLE not found"
+            in ex.value.exceptions[query_exception_loc].message
+        )
+
+    @staticmethod
+    def test_import_to_camel_case_table_with_quote_ident(
+        connection_with_quote_indent, empty_camel_case_table
+    ):
+        import pandas as pd
+
+        table_name, column_name = empty_camel_case_table
+
+        df = pd.DataFrame({column_name: [1, 2, 3]})
+        connection_with_quote_indent.import_from_pandas(df, table_name)
+
+        result = connection_with_quote_indent.export_to_pandas(table_name).to_dict()
+
+        assert result == df.to_dict()
