@@ -42,6 +42,7 @@ from .exceptions import (
     ExaConnectionDsnError,
     ExaConnectionFailedError,
     ExaExportError,
+    ExaImportError,
     ExaQueryAbortError,
     ExaQueryError,
     ExaQueryTimeoutError,
@@ -968,7 +969,7 @@ class ExaConnection:
 
             return result
 
-        except (Exception, KeyboardInterrupt) as e:
+        except (Exception, KeyboardInterrupt) as ex:
             http_thread.terminate()
             http_thread.join()
 
@@ -979,11 +980,10 @@ class ExaConnection:
                 self.abort_query()
                 sql_thread.join()
 
-            # Give SQL exception higher priority
-            if sql_thread.exc:
-                raise sql_thread.exc
-
-            raise e
+            raise ExaImportError(
+                connection=self,
+                exceptions=(ex, http_thread.exc, sql_thread.exc),
+            ) from ex
 
     def export_parallel(
         self, exa_address_list, query_or_table, query_params=None, export_params=None

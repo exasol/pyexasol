@@ -8,3 +8,4 @@
 * #311: Updated  to `exasol-toolbox` 6.0.0
 * #317: Added check to `export_to_callback` and `import_from_callback` to ensure that the provided `callback` is `Callable`; if not, an exception is raised.
 * #319: Improved error handling in the multithreaded `export_to_callback` so that all recorded exceptions are passed in `ExaExportError`
+* #313: Improved error handling in the multithreaded `import_from_callback` so that all recorded exceptions are passed in `ExaImportError`

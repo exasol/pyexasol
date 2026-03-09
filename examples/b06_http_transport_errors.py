@@ -9,15 +9,17 @@ import pprint
 import shutil
 import threading
 import time
-import traceback
 
 import examples._config as config
 import pyexasol
+from pyexasol.exceptions import (
+    ExaExportError,
+    ExaImportError,
+)
 
 printer = pprint.PrettyPrinter(indent=4, width=140)
 
 dev_null = open(os.devnull, "wb")
-
 
 C = pyexasol.connect(
     dsn=config.dsn,
@@ -34,16 +36,13 @@ C = pyexasol.connect(
 ###
 
 
-def observer_callback(pipe, dst, **kwargs):
+def observer_callback(pipe, dst, **kwargs) -> None:
     print(f"Threads running: {threading.active_count()}")
     shutil.copyfileobj(pipe, dev_null)
-
-    return
 
 
 C.export_to_callback(observer_callback, None, "SELECT * FROM users LIMIT 1000")
 print("--- Finished Observer callback (normal execution) ---\n")
-
 
 ###
 # SQL error
@@ -52,8 +51,8 @@ print("--- Finished Observer callback (normal execution) ---\n")
 
 try:
     C.export_to_callback(observer_callback, None, "SELECT * FROM usersaaa LIMIT 1000")
-except Exception as e:
-    traceback.print_exc()
+except ExaExportError as ex:
+    print(ex)
 
 print("--- Finished Observer callback (SQL error) ---\n")
 
@@ -63,19 +62,17 @@ print("--- Finished Observer callback (SQL error) ---\n")
 ###
 
 
-def abort_query_callback(pipe, dst, **kwargs):
+def abort_query_callback(pipe, dst, **kwargs) -> None:
     C.abort_query()
     time.sleep(2)
 
     shutil.copyfileobj(pipe, dev_null)
 
-    return
-
 
 try:
     C.export_to_callback(abort_query_callback, None, "SELECT * FROM users LIMIT 1000")
-except pyexasol.ExaError as e:
-    traceback.print_exc()
+except ExaExportError as ex:
+    print(ex)
 
 print("--- Finished Abort Query ---\n")
 
@@ -94,8 +91,8 @@ def runtime_error_callback(pipe, dst, **kwargs):
 
 try:
     C.export_to_callback(runtime_error_callback, None, "SELECT * FROM users LIMIT 1000")
-except Exception as e:
-    traceback.print_exc()
+except ExaExportError as ex:
+    print(ex)
 
 print("--- Finished Runtime Error EXPORT Callback ---\n")
 
@@ -114,8 +111,8 @@ def runtime_error_callback(pipe, src, **kwargs):
 
 try:
     C.import_from_callback(runtime_error_callback, None, "users_copy")
-except Exception as e:
-    traceback.print_exc()
+except ExaImportError as ex:
+    print(ex)
 
 print("--- Finished Runtime Error IMPORT Callback ---\n")
 
@@ -125,20 +122,18 @@ print("--- Finished Runtime Error IMPORT Callback ---\n")
 ###
 
 
-def close_connection_callback(pipe, dst, **kwargs):
+def close_connection_callback(pipe, dst, **kwargs) -> None:
     C.close(disconnect=False)
     time.sleep(1)
 
     shutil.copyfileobj(pipe, dev_null)
-
-    return
 
 
 try:
     C.export_to_callback(
         close_connection_callback, None, "SELECT * FROM users LIMIT 1000"
     )
-except Exception as e:
-    traceback.print_exc()
+except ExaExportError as e:
+    print(e)
 
 print("--- Finished Close Connection ---\n")
