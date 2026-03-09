@@ -2,6 +2,16 @@ import pytest
 from integration.import_and_export.helper import select_result
 
 
+@pytest.fixture
+def import_cb():
+    """Provides a standard custom import callback function."""
+
+    def _callback(pipe, src, **kwargs):
+        pipe.write(src.read_bytes())
+
+    return _callback
+
+
 @pytest.mark.etl
 class TestImportParams:
     @staticmethod
@@ -54,6 +64,7 @@ class TestImportGeneral:
         connection_without_resolving_hostnames, empty_table, tmp_path, all_data
     ):
         filepath = all_data.write_csv(directory=tmp_path)
+
         connection_without_resolving_hostnames.import_from_file(
             src=filepath, table=empty_table
         )
@@ -62,3 +73,15 @@ class TestImportGeneral:
             select_result(connection_without_resolving_hostnames)
             == all_data.list_tuple()
         )
+
+    @staticmethod
+    def test_custom_import_callback(
+        connection, empty_table, tmp_path, all_data, import_cb
+    ):
+        filepath = all_data.write_csv(directory=tmp_path)
+
+        connection.import_from_callback(
+            callback=import_cb, src=filepath, table=empty_table
+        )
+
+        assert select_result(connection) == all_data.list_tuple()

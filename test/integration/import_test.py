@@ -60,17 +60,3 @@ def test_import_with_reordered_columns(connection, empty_table, csv_file, swaped
     actual = set(result.fetchall())
 
     assert actual == expected
-
-
-@pytest.mark.etl
-def test_custom_import_callback(connection, empty_table, csv_file, data):
-    def import_cb(pipe, src):
-        pipe.write(src.read_bytes())
-
-    connection.import_from_callback(import_cb, csv_file, empty_table)
-    result = connection.execute(f"SELECT * FROM {empty_table};")
-
-    expected = set(data)
-    actual = set(result.fetchall())
-
-    assert actual == expected
