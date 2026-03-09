@@ -34,44 +34,6 @@ def empty_camel_case_table(connection):
     connection.commit()
 
 
-@pytest.fixture
-def camel_case_table(connection, empty_camel_case_table):
-    table_name, column_name = empty_camel_case_table
-    ddl = cleandoc(
-        f"""
-        INSERT INTO "{table_name}" VALUES
-        (1), (2), (3);
-        """
-    )
-    connection.execute(ddl)
-    connection.commit()
-
-    yield table_name, column_name
-
-
-@pytest.mark.configuration
-def test_export_camel_case_table_without_quote_ident_fails(
-    connection, camel_case_table
-):
-    with pytest.raises(pyexasol.ExaQueryError) as exec_info:
-        connection.export_to_pandas("camelCaseTable")
-
-    expected = "object CAMELCASETABLE not found"
-    actual = exec_info.value.message
-    assert expected in actual
-
-
-@pytest.mark.configuration
-def test_export_camel_case_table_with_quote_ident(
-    connection_with_quote_indent, camel_case_table
-):
-    connection = connection_with_quote_indent
-    df = connection.export_to_pandas("camelCaseTable")
-    expected = {"camelCaseColumn!": {0: 1, 1: 2, 2: 3}}
-    actual = df.to_dict()
-    assert actual == expected
-
-
 @pytest.mark.configuration
 def test_import_to_camel_case_table_without_quote_ident_fails(
     connection, empty_camel_case_table

@@ -34,7 +34,20 @@ from cryptography.hazmat.primitives.asymmetric import padding
 from packaging.version import Version
 
 from . import callback as cb
-from .exceptions import *
+from . import constant
+from .exceptions import (
+    ExaAuthError,
+    ExaCommunicationError,
+    ExaConcurrencyError,
+    ExaConnectionDsnError,
+    ExaConnectionFailedError,
+    ExaExportError,
+    ExaQueryAbortError,
+    ExaQueryError,
+    ExaQueryTimeoutError,
+    ExaRequestError,
+    ExaRuntimeError,
+)
 from .ext import ExaExtension
 from .formatter import ExaFormatter
 from .http_transport import (
@@ -358,7 +371,7 @@ class ExaConnection:
             )
 
             stmt = self.execute(query, query_params)
-            log_files = sorted(list(stmt_output_dir.glob("*.log")))
+            log_files = sorted(stmt_output_dir.glob("*.log"))
 
             if len(log_files) > 0:
                 script_output.join_with_exc()
@@ -820,6 +833,8 @@ class ExaConnection:
 
         Raises:
             TypeError: callback argument is not Callable.
+            ExaExportError: one or more exceptions occurred when executing the
+               callback function.
 
         Warnings:
             - This function may run out of memory
@@ -874,7 +889,7 @@ class ExaConnection:
 
             return result
 
-        except (Exception, KeyboardInterrupt) as e:
+        except (Exception, KeyboardInterrupt) as ex:
             http_thread.terminate()
             http_thread.join()
 
@@ -885,11 +900,10 @@ class ExaConnection:
                 self.abort_query()
                 sql_thread.join()
 
-            # Give SQL exception higher priority
-            if sql_thread.exc:
-                raise sql_thread.exc
-
-            raise e
+            raise ExaExportError(
+                connection=self,
+                exceptions=(ex, http_thread.exc, sql_thread.exc),
+            ) from ex
 
     def import_from_callback(
         self,
@@ -1261,8 +1275,9 @@ class ExaConnection:
 
         Warnings:
 
-            This function should be called from a separate thread and has no response
-            Response should be checked in the main thread which started execution of query
+            This function should be called from a separate thread and has no response.
+            The response should be checked in the main thread which started the
+            execution of the query.
 
             There are three possible outcomes of calling this function:
 
@@ -1677,7 +1692,7 @@ class ExaConnection:
     def _init_meta(self):
         self.meta = self.cls_meta(self)
 
-    def _get_stmt_output_dir(self):
+    def _get_stmt_output_dir(self) -> Path:
         import pathlib
         import tempfile
 
@@ -1686,7 +1701,7 @@ class ExaConnection:
         else:
             base_output_dir = tempfile.gettempdir()
 
-        # Create unique sub-directory for every statement of every session
+        # Create unique subdirectory for every statement of every session
         self._udf_output_count += 1
 
         stmt_output_dir = (
