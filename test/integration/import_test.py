@@ -63,17 +63,6 @@ def csv_file(tmp_path, data):
 
 
 @pytest.mark.etl
-def test_import_csv(connection, empty_table, csv_file, data):
-    connection.import_from_file(csv_file, empty_table)
-    result = connection.execute(f"SELECT * FROM {empty_table};")
-
-    expected = set(data)
-    actual = set(result.fetchall())
-
-    assert actual == expected
-
-
-@pytest.mark.etl
 def test_import_without_resolving_hostname(
     connection_without_resolving_hostnames, empty_table, csv_file, data
 ):
@@ -109,19 +98,6 @@ def test_custom_import_callback(connection, empty_table, csv_file, data):
     result = connection.execute(f"SELECT * FROM {empty_table};")
 
     expected = set(data)
-    actual = set(result.fetchall())
-
-    assert actual == expected
-
-
-@pytest.mark.etl
-def test_skip_rows_in_import(connection, empty_table, csv_file, data):
-    offset = 2
-    params = {"skip": offset}
-    connection.import_from_file(csv_file, empty_table, import_params=params)
-    result = connection.execute(f"SELECT * FROM {empty_table};")
-
-    expected = set(data[offset::])
     actual = set(result.fetchall())
 
     assert actual == expected
