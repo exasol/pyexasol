@@ -21,7 +21,6 @@ from unittest.mock import (
 import pytest
 
 from pyexasol import ExaConnection
-from pyexasol.statement import ExaStatement
 
 
 class CustomExaConnection(ExaConnection):
@@ -52,27 +51,6 @@ def mock_exaconnection(connection_class, **kwargs):
     }
     with patch.multiple(connection_class, **mocks):
         return connection_class(**config)
-
-
-class TrackingExaStatement(ExaStatement):
-    def __init__(
-        self,
-        connection,
-        query=None,
-        query_params=None,
-        prepare=False,
-        meta_nosql=False,
-        **options,
-    ):
-        self.prepare = prepare
-        super().__init__(
-            connection=connection,
-            query=query,
-            query_params=query_params,
-            prepare=prepare,
-            meta_nosql=meta_nosql,
-            **options,
-        )
 
 
 @pytest.fixture(scope="session")
@@ -241,7 +219,6 @@ class TestGetWsOptions:
 )
 def test_create_prepared_statement(mock_exaconnection_factory, sql, num_columns):
     connection = mock_exaconnection_factory()
-    # # connection.cls_statement = ExaStatement
     connection.req = MagicMock(
         return_value={
             "responseData": {
@@ -250,105 +227,10 @@ def test_create_prepared_statement(mock_exaconnection_factory, sql, num_columns)
                     "numColumns": num_columns,
                     "columns": [{}] * num_columns,
                 },
-                "results": [{"resultType": "rowCount", "rowCount": 0}],
+                "results": [{"resultType": "rowCount", "rowCount": ...}],
             }
         }
     )
-
-    {
-        "status": "ok",
-        "responseData": {
-            "statementHandle": 1,
-            "parameterData": {
-                "numColumns": 2,
-                "columns": [
-                    {
-                        "name": "",
-                        "dataType": {"type": "DECIMAL", "precision": 18, "scale": 0},
-                    },
-                    {
-                        "name": "",
-                        "dataType": {
-                            "type": "VARCHAR",
-                            "size": 16,
-                            "characterSet": "UTF8",
-                        },
-                    },
-                ],
-            },
-            "results": [{"resultType": "rowCount", "rowCount": 0}],
-            "numResults": 1,
-        },
-    }
-    {
-        "status": "ok",
-        "responseData": {
-            "statementHandle": 1,
-            "parameterData": {
-                "numColumns": 1,
-                "columns": [
-                    {
-                        "name": "",
-                        "dataType": {"type": "DECIMAL", "precision": 18, "scale": 0},
-                    }
-                ],
-            },
-            "results": [{"resultType": "rowCount", "rowCount": 0}],
-            "numResults": 1,
-        },
-    }
-    {
-        "status": "ok",
-        "responseData": {
-            "statementHandle": 1,
-            "parameterData": {
-                "numColumns": 2,
-                "columns": [
-                    {
-                        "name": "",
-                        "dataType": {"type": "DECIMAL", "precision": 18, "scale": 0},
-                    },
-                    {
-                        "name": "",
-                        "dataType": {
-                            "type": "VARCHAR",
-                            "size": 16,
-                            "characterSet": "UTF8",
-                        },
-                    },
-                ],
-            },
-            "results": [
-                {
-                    "resultType": "resultSet",
-                    "resultSet": {
-                        "numColumns": 2,
-                        "numRows": 0,
-                        "numRowsInMessage": 0,
-                        "columns": [
-                            {
-                                "name": "ID",
-                                "dataType": {
-                                    "type": "DECIMAL",
-                                    "precision": 18,
-                                    "scale": 0,
-                                },
-                            },
-                            {
-                                "name": "NAME",
-                                "dataType": {
-                                    "type": "VARCHAR",
-                                    "size": 16,
-                                    "characterSet": "UTF8",
-                                },
-                            },
-                        ],
-                    },
-                }
-            ],
-            "numResults": 1,
-        },
-    }
 
     stmt = connection.create_prepared_statement(sql)
 
@@ -358,8 +240,7 @@ def test_create_prepared_statement(mock_exaconnection_factory, sql, num_columns)
             "sqlText": sql,
         }
     )
-    # assert stmt.query == sql
-    # assert stmt.statement_handle is not None
-    # assert stmt.parameter_data["numColumns"] == num_columns
-    # assert stmt.result_type = "rowCount"
-    # assert stmt.row_count = 0
+    assert stmt.query == sql
+    assert stmt.statement_handle is not None
+    assert stmt.parameter_data["numColumns"] == num_columns
+    assert stmt.result_type == "rowCount" or stmt.result_type == "resultSet"

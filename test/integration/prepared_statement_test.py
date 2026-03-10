@@ -2,7 +2,7 @@ from inspect import cleandoc
 
 import pytest
 
-from pyexasol import ExaQueryError
+from pyexasol.exceptions import ExaRequestError
 
 
 @pytest.fixture
@@ -100,7 +100,9 @@ def test_create_prepared_statement_update_raises_for_wrong_parameter_type(
         f"UPDATE {seeded_table} SET NAME = ? WHERE ID = ?;"
     )
 
-    with pytest.raises(ExaQueryError):
+    with pytest.raises(
+        ExaRequestError, match="invalid character value for cast; Value: 'not-a-number'"
+    ):
         prep_stmt.execute_prepared([("Updated", "not-a-number")])
 
 
@@ -112,5 +114,29 @@ def test_create_prepared_statement_delete_raises_for_missing_parameter(
         f"DELETE FROM {seeded_table} WHERE ID = ? AND NAME = ?;"
     )
 
-    with pytest.raises(ExaQueryError):
+    with pytest.raises(
+        ExaRequestError,
+        match="the number of column metadata objects is not the same as the number of data colums",
+    ):
         prep_stmt.execute_prepared([(1,)])
+
+
+@pytest.mark.exceptions
+def test_prepared_statement_close(connection, seeded_table):
+    prep_stmt = connection.create_prepared_statement(
+        f"SELECT ID, NAME FROM {seeded_table} ORDER BY ID, NAME;"
+    )
+
+    prep_stmt.execute_prepared()
+
+    expected = [(0, "A"), (1, "B"), (2, "C")]
+    actual = prep_stmt.fetchall()
+
+    assert actual == expected
+
+    prep_stmt.close()
+    # Error message could be improved to report the already closed statement
+    with pytest.raises(
+        ExaRequestError, match="JSON value '/statementHandle' is not an integer"
+    ):
+        prep_stmt.execute_prepared()
