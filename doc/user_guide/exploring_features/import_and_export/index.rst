@@ -27,18 +27,27 @@ to parallelize importing or exporting data.
 
 .. warning::
 
-    The :ref:`variants` used to import data to and export data from an Exasol database
-    are built on top of a common callback pattern. In this shared interface, three
-    Python threads are interacting:
+   The :ref:`variants` for importing and exporting data in Exasol are built on a
+   shared callback pattern involving three concurrent Python threads:
 
-    * Thread 1 is consuming the http[s] stream sent by the database and is writing it to a pipe.
-    * Thread 2 (the main thread, the caller of the ``import_*`` or ``export_*``) is processing the data from the pipe.
-    * Thread 3 is running the EXPORT statement against the DB.
+    #. Main Thread: The caller of ``import_*`` or ``export_*``, which processes data from that pipe.
+    #. HTTP Thread: Consumes the HTTP[S] stream from the database and writes it to a pipe.
+    #. SQL Thread: Executes the actual SQL ``IMPORT`` or ``EXPORT`` statement against the DB.
 
-   Usually, an exception in one thread is likely to cause other exceptions in other threads.
+    **Error Handling**
+    Because these threads are interdependent, a failure in one typically triggers
+    secondary exceptions in the others. Since PyExasol version 2.1.0, the library
+    monitors all three sources for exceptions. Any caught exceptions are bundled into a
+    custom exception (:class:`pyexasol.exceptions.ExaImportError` or
+    :class:`pyexasol.exceptions.ExaExportError`), which also displays the tracebacks.
 
-   :octicon:`alert` **Thus, depending on the exact timing, a user might see different error messages.**
-   This also gets more complicated depending on which binary packages are involved, as these also use threads to some extent.
+    :octicon:`alert`
+    **Variable Error Messages**: Depending on the exact timing of the failure and the
+    specific binary packages in use (which may introduce their own internal threading),
+    the reported error messages may vary between executions of the same failing task.
+    For instance, an error in the callback function may or may not propagate to the
+    SQL thread when the exception was caught. Thus, between runs, you might
+    catch between 1 to 2 sub-exceptions.
 
 .. _variants:
 
