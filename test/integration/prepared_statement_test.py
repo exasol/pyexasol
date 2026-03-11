@@ -92,6 +92,22 @@ def test_create_prepared_statement_select_all_without_params2(connection, seeded
     assert actual == expected
 
 
+@pytest.mark.basic
+def test_prepared_statement_select_after_insert(connection, seeded_table):
+    prepared = connection.create_prepared_statement(
+        f"SELECT ID, NAME FROM {seeded_table} ORDER BY ID, NAME;"
+    )
+
+    prepared.execute_prepared()
+    assert prepared.fetchall() == [(0, "A"), (1, "B"), (2, "C")]
+
+    connection.execute(f"INSERT INTO {seeded_table} VALUES (3, 'D');")
+    connection.commit()
+
+    prepared.execute_prepared()
+    assert prepared.fetchall() == [(0, "A"), (1, "B"), (2, "C"), (3, "D")]
+
+
 @pytest.mark.exceptions
 def test_create_prepared_statement_update_raises_for_wrong_parameter_type(
     connection, seeded_table

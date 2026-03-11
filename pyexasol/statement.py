@@ -396,12 +396,23 @@ class ExaStatement:
             }
         )
 
-        print("--> ret -->", ret)
-
         self.execution_time = self.connection.ws_req_time
         self._init_result_set(ret)
 
     def _init_result_set(self, ret):
+        # Reset fetch state because prepared statements are reusable and may
+        # be executed multiple times.
+        self.data_zip = zip()
+        self.col_names = []
+        self.col_types = []
+        self.num_columns = 0
+        self.num_rows_total = 0
+        self.num_rows_chunk = 0
+        self.row_count = 0
+        self.pos_total = 0
+        self.pos_chunk = 0
+        self.result_set_handle = None
+
         res = ret["responseData"]["results"][0]
 
         self.result_type = res["resultType"]
