@@ -244,3 +244,92 @@ def test_create_prepared_statement(mock_exaconnection_factory, sql, num_columns)
     assert stmt.statement_handle is not None
     assert stmt.parameter_data["numColumns"] == num_columns
     assert stmt.result_type == "rowCount" or stmt.result_type == "resultSet"
+
+
+def test_execute_prepared(mock_exaconnection_factory):
+    connection = mock_exaconnection_factory()
+    connection.req = MagicMock(
+        side_effect=[
+            {
+                "responseData": {
+                    "statementHandle": 7,
+                    "parameterData": {
+                        "numColumns": 2,
+                        "columns": [{}, {}],
+                    },
+                    "results": [{"resultType": "rowCount", "rowCount": 0}],
+                }
+            },
+            {
+                "responseData": {
+                    "results": [
+                        {
+                            "resultType": "resultSet",
+                            "resultSet": {
+                                "resultSetHandle": 11,
+                                "columns": [
+                                    {"name": "ID", "dataType": {}},
+                                    {"name": "NAME", "dataType": {}},
+                                ],
+                                "numColumns": 2,
+                                "numRows": 2,
+                                "numRowsInMessage": 2,
+                                "data": [[0, 1], ["A", "B"]],
+                            },
+                        }
+                    ]
+                }
+            },
+        ]
+    )
+
+    stmt = connection.create_prepared_statement(
+        "SELECT ID, NAME FROM S.T WHERE ID = ? AND NAME = ?"
+    )
+    stmt.execute_prepared([(0, "A"), (1, "B")])
+
+    assert connection.req.call_args_list[1].args[0] == {
+        "command": "executePreparedStatement",
+        "statementHandle": 7,
+        "numColumns": 2,
+        "numRows": 2,
+        "columns": [{}, {}],
+        "data": [(0, 1), ("A", "B")],
+    }
+    assert stmt.result_type == "resultSet"
+    assert stmt.rowcount() == 2
+    assert stmt.column_names() == ["ID", "NAME"]
+    assert stmt.fetchall() == [(0, "A"), (1, "B")]
+
+
+def test_prepared_statement_close_closes_handles(mock_exaconnection_factory):
+    connection = mock_exaconnection_factory()
+    connection.req = MagicMock(
+        return_value={
+            "responseData": {
+                "statementHandle": 7,
+                "parameterData": {
+                    "numColumns": 0,
+                    "columns": [],
+                },
+                "results": [{"resultType": "rowCount", "rowCount": 0}],
+            }
+        }
+    )
+
+    stmt = connection.create_prepared_statement("SELECT * FROM S.T")
+    stmt.result_set_handle = 99
+    stmt.statement_handle = 7
+
+    stmt.close()
+
+    assert connection.req.call_args_list[-2].args[0] == {
+        "command": "closeResultSet",
+        "resultSetHandles": [99],
+    }
+    assert connection.req.call_args_list[-1].args[0] == {
+        "command": "closePreparedStatement",
+        "statementHandle": 7,
+    }
+    assert stmt.result_set_handle is None
+    assert stmt.statement_handle is None
