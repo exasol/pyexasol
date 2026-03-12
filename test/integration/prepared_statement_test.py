@@ -93,7 +93,7 @@ def test_create_prepared_statement_select_all_without_params2(connection, seeded
 
 
 @pytest.mark.basic
-def test_prepared_statement_select_after_insert(connection, seeded_table):
+def test_multiple_executes_select_with_insert_in_between(connection, seeded_table):
     prepared = connection.create_prepared_statement(
         f"SELECT ID, NAME FROM {seeded_table} ORDER BY ID, NAME;"
     )
@@ -106,6 +106,16 @@ def test_prepared_statement_select_after_insert(connection, seeded_table):
 
     prepared.execute_prepared()
     assert prepared.fetchall() == [(0, "A"), (1, "B"), (2, "C"), (3, "D")]
+
+
+@pytest.mark.basic
+def test_multiple_executes_dml(connection, seeded_table):
+    prepared = connection.create_prepared_statement(
+        f"DELETE FROM {seeded_table} WHERE ID = ? AND NAME = ?;"
+    )
+
+    prepared.execute_prepared([(0, "A")])
+    prepared.execute_prepared([(1, "B"), (2, "C")])
 
 
 @pytest.mark.exceptions
