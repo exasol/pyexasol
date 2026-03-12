@@ -209,8 +209,73 @@ class TestGetWsOptions:
         assert len(recwarn.list) == 0
 
 
+def _create_prepared_statement_response(num_params, result):
+    return {
+        "responseData": {
+            "statementHandle": 1,
+            "parameterData": {
+                "numColumns": num_params,
+                "columns": [{}] * num_params,
+            },
+            "results": [result],
+        }
+    }
+
+
+def _result_set_result(*, num_columns, num_rows, columns, data=None):
+    result_set = {
+        "numColumns": num_columns,
+        "numRows": num_rows,
+        "numRowsInMessage": num_rows,
+        "columns": columns,
+    }
+    if data is not None:
+        result_set["data"] = data
+
+    return {
+        "resultType": "resultSet",
+        "resultSet": result_set,
+    }
+
+
+def _assert_execute_prepared_request(connection, *, num_columns, num_rows, data):
+    connection.req.assert_called_with(
+        {
+            "command": "executePreparedStatement",
+            "statementHandle": 1,
+            "numColumns": num_columns,
+            "numRows": num_rows,
+            "columns": [{}] * num_columns,
+            "data": data,
+        }
+    )
+
+
+def _assert_prepared_statement_state(
+    prep_stmt,
+    *,
+    query,
+    result_type,
+    data,
+    num_columns,
+    num_rows_total,
+    num_rows_chunk,
+    row_count,
+):
+    assert prep_stmt.query == query
+    assert prep_stmt.statement_handle is not None
+    assert prep_stmt.result_type == result_type
+    assert [list(col) for col in zip(*prep_stmt.data_zip)] == data
+    assert prep_stmt.num_columns == num_columns
+    assert prep_stmt.num_rows_total == num_rows_total
+    assert prep_stmt.num_rows_chunk == num_rows_chunk
+    assert prep_stmt.row_count == row_count
+    assert prep_stmt.pos_total == 0
+    assert prep_stmt.pos_chunk == 0
+
+
 @pytest.mark.parametrize(
-    "sql,num_columns",
+    "sql,num_params",
     [
         ("INSERT INTO S.T VALUES (?, ?)", 2),
         ("UPDATE S.T SET name='Updated' WHERE id = ?", 1),
@@ -218,20 +283,14 @@ class TestGetWsOptions:
     ],
 )
 def test_create_prepared_statement_with_dml(
-    mock_exaconnection_factory, sql, num_columns
+    mock_exaconnection_factory, sql, num_params
 ):
     connection = mock_exaconnection_factory()
     connection.req = MagicMock(
-        return_value={
-            "responseData": {
-                "statementHandle": 1,
-                "parameterData": {
-                    "numColumns": num_columns,
-                    "columns": [{}] * num_columns,
-                },
-                "results": [{"resultType": "rowCount", "rowCount": 0}],
-            }
-        }
+        return_value=_create_prepared_statement_response(
+            num_params=num_params,
+            result={"resultType": "rowCount", "rowCount": 0},
+        )
     )
 
     prep_stmt = connection.create_prepared_statement(sql)
@@ -242,47 +301,32 @@ def test_create_prepared_statement_with_dml(
             "sqlText": sql,
         }
     )
-    assert prep_stmt.query == sql
-    assert prep_stmt.statement_handle is not None
-    assert prep_stmt.result_type == "rowCount"
-
-    assert [list(col) for col in zip(*prep_stmt.data_zip)] == []
-    assert prep_stmt.num_columns == 0
-    assert prep_stmt.num_rows_total == 0
-    assert prep_stmt.num_rows_chunk == 0
-    assert prep_stmt.row_count == 0
-    assert prep_stmt.pos_total == 0
-    assert prep_stmt.pos_chunk == 0
+    _assert_prepared_statement_state(
+        prep_stmt,
+        query=sql,
+        result_type="rowCount",
+        data=[],
+        num_columns=0,
+        num_rows_total=0,
+        num_rows_chunk=0,
+        row_count=0,
+    )
 
 
 def test_create_prepared_statement_with_select(mock_exaconnection_factory):
-    sql = "SELECT * FROM S.T WHERE ID = ? AND NAME = ?"
-    num_columns = 2
+    sql = "SELECT ID, NAME FROM S.T WHERE ID = ? AND NAME = ?"
+    metadata_columns = [
+        {"name": "ID", "dataType": ...},
+        {"name": "NAME", "dataType": ...},
+    ]
     connection = mock_exaconnection_factory()
     connection.req = MagicMock(
-        return_value={
-            "responseData": {
-                "statementHandle": 1,
-                "parameterData": {
-                    "numColumns": num_columns,
-                    "columns": [{}] * num_columns,
-                },
-                "results": [
-                    {
-                        "resultType": "resultSet",
-                        "resultSet": {
-                            "numColumns": 2,
-                            "numRows": 0,
-                            "numRowsInMessage": 0,
-                            "columns": [
-                                {"name": "ID", "dataType": ...},
-                                {"name": "NAME", "dataType": ...},
-                            ],
-                        },
-                    }
-                ],
-            }
-        }
+        return_value=_create_prepared_statement_response(
+            num_params=2,
+            result=_result_set_result(
+                num_columns=2, num_rows=0, columns=metadata_columns
+            ),
+        )
     )
 
     prep_stmt = connection.create_prepared_statement(sql)
@@ -294,32 +338,25 @@ def test_create_prepared_statement_with_select(mock_exaconnection_factory):
         }
     )
 
-    assert prep_stmt.query == sql
-    assert prep_stmt.statement_handle is not None
-    assert prep_stmt.result_type == "resultSet"
-
-    assert [list(col) for col in zip(*prep_stmt.data_zip)] == []
-    assert prep_stmt.num_columns == 2
-    assert prep_stmt.num_rows_total == 0
-    assert prep_stmt.num_rows_chunk == 0
-    assert prep_stmt.row_count == 0
-    assert prep_stmt.pos_total == 0
-    assert prep_stmt.pos_chunk == 0
+    _assert_prepared_statement_state(
+        prep_stmt,
+        query=sql,
+        result_type="resultSet",
+        data=[],
+        num_columns=2,
+        num_rows_total=0,
+        num_rows_chunk=0,
+        row_count=0,
+    )
 
 
 def test_execute_prepared_dml(mock_exaconnection_factory):
     connection = mock_exaconnection_factory()
     connection.req = MagicMock(
-        return_value={
-            "responseData": {
-                "statementHandle": 1,
-                "parameterData": {
-                    "numColumns": 2,
-                    "columns": [{}] * 2,
-                },
-                "results": [{"resultType": "rowCount", "rowCount": 0}],
-            }
-        }
+        return_value=_create_prepared_statement_response(
+            num_params=2,
+            result={"resultType": "rowCount", "rowCount": 0},
+        )
     )
     sql = "INSERT INTO S.T VALUES (?, ?)"
     prep_stmt = connection.create_prepared_statement(sql)
@@ -333,87 +370,53 @@ def test_execute_prepared_dml(mock_exaconnection_factory):
     )
     prep_stmt.execute_prepared([(0, "A"), (1, "B")])
 
-    connection.req.assert_called_with(
-        {
-            "command": "executePreparedStatement",
-            "statementHandle": 1,
-            "numColumns": 2,
-            "numRows": 2,
-            "columns": [{}, {}],
-            "data": [(0, 1), ("A", "B")],
-        }
+    _assert_execute_prepared_request(
+        connection,
+        num_columns=2,
+        num_rows=2,
+        data=[(0, 1), ("A", "B")],
     )
-
-    assert prep_stmt.query == sql
-    assert prep_stmt.statement_handle is not None
-    assert prep_stmt.result_type == "rowCount"
-
-    assert [list(col) for col in zip(*prep_stmt.data_zip)] == []
-    assert prep_stmt.num_columns == 0
-    assert prep_stmt.num_rows_total == 0
-    assert prep_stmt.num_rows_chunk == 0
-    assert prep_stmt.row_count == 2
-    assert prep_stmt.pos_total == 0
-    assert prep_stmt.pos_chunk == 0
+    _assert_prepared_statement_state(
+        prep_stmt,
+        query=sql,
+        result_type="rowCount",
+        data=[],
+        num_columns=0,
+        num_rows_total=0,
+        num_rows_chunk=0,
+        row_count=2,
+    )
 
 
 def test_execute_prepared_select(mock_exaconnection_factory):
     connection = mock_exaconnection_factory()
+    metadata_columns = [
+        {"name": "ID", "dataType": ...},
+        {"name": "NAME", "dataType": ...},
+    ]
+    expected_data = [[0, 0, 0, 0], ["A", "A", "A", "A"]]
     connection.req = MagicMock(
-        return_value={
-            "responseData": {
-                "statementHandle": 1,
-                "parameterData": {"numColumns": 2, "columns": [{}] * 2},
-                "results": [
-                    {
-                        "resultType": "resultSet",
-                        "resultSet": {
-                            "numColumns": 2,
-                            "numRows": 0,
-                            "numRowsInMessage": 0,
-                            "columns": [
-                                {"name": "ID", "dataType": ...},
-                                {"name": "NAME", "dataType": ...},
-                            ],
-                        },
-                    }
-                ],
-            }
-        }
+        return_value=_create_prepared_statement_response(
+            num_params=2,
+            result=_result_set_result(
+                num_columns=2,
+                num_rows=0,
+                columns=metadata_columns,
+            ),
+        )
     )
-    sql = "SELECT * FROM S.T WHERE ID = ? AND NAME = ?"
+    sql = "SELECT ID, NAME FROM S.T WHERE ID = ? AND NAME = ?"
     prep_stmt = connection.create_prepared_statement(sql)
     connection.req = MagicMock(
         return_value={
             "responseData": {
                 "results": [
-                    {
-                        "resultType": "resultSet",
-                        "resultSet": {
-                            "numColumns": 2,
-                            "numRows": 4,
-                            "numRowsInMessage": 4,
-                            "columns": [
-                                {
-                                    "name": "ID",
-                                    "dataType": {
-                                        "type": "DECIMAL",
-                                        "precision": 18,
-                                        "scale": 0,
-                                    },
-                                },
-                                {
-                                    "name": "NAME",
-                                    "dataType": {
-                                        "type": "VARCHAR",
-                                        "size": 16,
-                                        "characterSet": "UTF8",
-                                    },
-                                },
-                            ],
-                            "data": [[0, 0, 0, 0], ["A", "A", "A", "A"]],
-                        },
-                    }
+                    _result_set_result(
+                        num_columns=2,
+                        num_rows=4,
+                        data=expected_data,
+                        columns=metadata_columns,
+                    )
                 ],
                 "numResults": 1,
             }
@@ -421,46 +424,28 @@ def test_execute_prepared_select(mock_exaconnection_factory):
     )
     prep_stmt.execute_prepared([(0, "A")])
 
-    connection.req.assert_called_with(
-        {
-            "command": "executePreparedStatement",
-            "statementHandle": 1,
-            "numColumns": 2,
-            "numRows": 1,
-            "columns": [{}, {}],
-            "data": [(0,), ("A",)],
-        }
+    _assert_execute_prepared_request(
+        connection, num_columns=2, num_rows=1, data=[(0,), ("A",)]
     )
-
-    assert prep_stmt.query == sql
-    assert prep_stmt.statement_handle is not None
-    assert prep_stmt.result_type == "resultSet"
-
-    assert [list(col) for col in zip(*prep_stmt.data_zip)] == [
-        [0, 0, 0, 0],
-        ["A", "A", "A", "A"],
-    ]
-    assert prep_stmt.num_columns == 2
-    assert prep_stmt.num_rows_total == 4
-    assert prep_stmt.num_rows_chunk == 4
-    assert prep_stmt.row_count == 0
-    assert prep_stmt.pos_total == 0
-    assert prep_stmt.pos_chunk == 0
+    _assert_prepared_statement_state(
+        prep_stmt,
+        query=sql,
+        result_type="resultSet",
+        data=expected_data,
+        num_columns=2,
+        num_rows_total=4,
+        num_rows_chunk=4,
+        row_count=0,
+    )
 
 
 def test_prepared_statement_close(mock_exaconnection_factory):
     connection = mock_exaconnection_factory()
     connection.req = MagicMock(
-        return_value={
-            "responseData": {
-                "statementHandle": 1,
-                "parameterData": {
-                    "numColumns": 2,
-                    "columns": [{}] * 2,
-                },
-                "results": [{"resultType": "rowCount", "rowCount": 0}],
-            }
-        }
+        return_value=_create_prepared_statement_response(
+            num_params=2,
+            result={"resultType": "rowCount", "rowCount": 0},
+        )
     )
 
     prep_stmt = connection.create_prepared_statement("INSERT INTO S.T VALUES (?, ?);")
