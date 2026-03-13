@@ -381,6 +381,10 @@ class ExaStatement:
         self._init_result_set(ret)
 
     def execute_prepared(self, data=None):
+        if self.connection.is_closed or not self.statement_handle:
+            raise ExaRuntimeError(
+                self.connection, "Prepared statement is already closed"
+            )
         ret = self.connection.req(
             {
                 "command": "executePreparedStatement",
@@ -397,6 +401,10 @@ class ExaStatement:
         )
 
         self.execution_time = self.connection.ws_req_time
+        # Reset fetch state because prepared statements are reusable and may
+        # be executed multiple times.
+        self.pos_total = 0
+        self.pos_chunk = 0
         self._init_result_set(ret)
 
     def _init_result_set(self, ret):
