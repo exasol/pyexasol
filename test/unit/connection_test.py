@@ -256,7 +256,6 @@ def _assert_prepared_statement_state(
     *,
     query,
     result_type,
-    data,
     num_columns,
     num_rows_total,
     num_rows_chunk,
@@ -265,7 +264,6 @@ def _assert_prepared_statement_state(
     assert prep_stmt.query == query
     assert prep_stmt.statement_handle is not None
     assert prep_stmt.result_type == result_type
-    assert [list(col) for col in zip(*prep_stmt.data_zip)] == data
     assert prep_stmt.num_columns == num_columns
     assert prep_stmt.num_rows_total == num_rows_total
     assert prep_stmt.num_rows_chunk == num_rows_chunk
@@ -305,7 +303,6 @@ def test_create_prepared_statement_with_dml(
         prep_stmt,
         query=sql,
         result_type="rowCount",
-        data=[],
         num_columns=0,
         num_rows_total=0,
         num_rows_chunk=0,
@@ -342,7 +339,6 @@ def test_create_prepared_statement_with_select(mock_exaconnection_factory):
         prep_stmt,
         query=sql,
         result_type="resultSet",
-        data=[],
         num_columns=2,
         num_rows_total=0,
         num_rows_chunk=0,
@@ -380,7 +376,6 @@ def test_execute_prepared_dml(mock_exaconnection_factory):
         prep_stmt,
         query=sql,
         result_type="rowCount",
-        data=[],
         num_columns=0,
         num_rows_total=0,
         num_rows_chunk=0,
@@ -388,7 +383,7 @@ def test_execute_prepared_dml(mock_exaconnection_factory):
     )
 
 
-def test_execute_prepared_select(mock_exaconnection_factory):
+def test_multiple_execute_prepared_select(mock_exaconnection_factory):
     connection = mock_exaconnection_factory()
     metadata_columns = [
         {"name": "ID", "dataType": ...},
@@ -422,21 +417,24 @@ def test_execute_prepared_select(mock_exaconnection_factory):
             }
         }
     )
-    prep_stmt.execute_prepared([(0, "A")])
+    # calls twice execute_prepared to test reseting of counters to fetch results
+    for i in range(2):
+        prep_stmt.execute_prepared([(0, "A")])
 
-    _assert_execute_prepared_request(
-        connection, num_columns=2, num_rows=1, data=[(0,), ("A",)]
-    )
-    _assert_prepared_statement_state(
-        prep_stmt,
-        query=sql,
-        result_type="resultSet",
-        data=expected_data,
-        num_columns=2,
-        num_rows_total=4,
-        num_rows_chunk=4,
-        row_count=0,
-    )
+        _assert_execute_prepared_request(
+            connection, num_columns=2, num_rows=1, data=[(0,), ("A",)]
+        )
+        _assert_prepared_statement_state(
+            prep_stmt,
+            query=sql,
+            result_type="resultSet",
+            num_columns=2,
+            num_rows_total=4,
+            num_rows_chunk=4,
+            row_count=0,
+        )
+
+        assert prep_stmt.fetchall() == [(0, "A"), (0, "A"), (0, "A"), (0, "A")]
 
 
 def test_prepared_statement_close(mock_exaconnection_factory):
