@@ -381,6 +381,10 @@ class ExaStatement:
         self._init_result_set(ret)
 
     def execute_prepared(self, data=None):
+        if self.connection.is_closed or not self.statement_handle:
+            raise ExaRuntimeError(
+                self.connection, "Prepared statement is already closed"
+            )
         ret = self.connection.req(
             {
                 "command": "executePreparedStatement",

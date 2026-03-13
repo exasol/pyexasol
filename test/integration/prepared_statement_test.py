@@ -2,7 +2,10 @@ from inspect import cleandoc
 
 import pytest
 
-from pyexasol.exceptions import ExaRequestError
+from pyexasol.exceptions import (
+    ExaRequestError,
+    ExaRuntimeError,
+)
 
 
 @pytest.fixture
@@ -161,8 +164,6 @@ def test_prepared_statement_close(connection, seeded_table):
     assert actual == expected
 
     prep_stmt.close()
-    # Error message could be improved to report the already closed statement
-    with pytest.raises(
-        ExaRequestError, match="JSON value '/statementHandle' is not an integer"
-    ):
+
+    with pytest.raises(ExaRuntimeError, match="Prepared statement is already closed"):
         prep_stmt.execute_prepared()
