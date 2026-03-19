@@ -103,7 +103,8 @@ def test_multiple_executes_dml(connection, seeded_table):
 
     prep_stmt.execute_prepared([(0, "A")])
     prep_stmt.execute_prepared([(1, "B"), (2, "C")])
-    assert prep_stmt.fetchall() == []
+    result = connection.execute(f"SELECT ID, NAME FROM {seeded_table}").fetchall()
+    assert result == []
 
 
 @pytest.mark.exceptions
