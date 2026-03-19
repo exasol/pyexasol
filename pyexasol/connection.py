@@ -295,7 +295,7 @@ class ExaConnection:
 
         Args:
             sql:
-                Prepared statement text, possibly with positional placeholders
+                SQL statement text, possibly with positional placeholders
         Returns:
             ExaStatement object
 

@@ -128,6 +128,13 @@ No-SQL Metadata
     :language: python
     :caption: no-SQL metadata commands introduced in Exasol v7.0+
 
+Prepared Statements
++++++++++++++++++++
+
+.. literalinclude:: ../../../examples/a14_prepared_statement.py
+    :language: python
+    :caption: creation and single / bulk execution of prepared statement
+
 Examples of HTTP transport
 --------------------------
 
