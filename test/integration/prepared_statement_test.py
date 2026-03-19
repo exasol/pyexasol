@@ -25,7 +25,6 @@ def seeded_table(connection, table_name):
         """
     )
     connection.execute(ddl)
-    connection.commit()
 
     connection.execute(f"TRUNCATE TABLE {table_name};")
     connection.execute(
@@ -36,16 +35,15 @@ def seeded_table(connection, table_name):
             (2, 'C');
         """
     )
-    connection.commit()
 
     yield table_name
 
-    connection.execute(f"DROP TABLE IF EXISTS {table_name};")
-    connection.commit()
+    if not connection.is_closed:
+        connection.execute(f"DROP TABLE IF EXISTS {table_name};")
 
 
 @pytest.mark.basic
-def test_create_prepared_statement_insert_multiple_rows(connection, seeded_table):
+def test_insert_multiple_rows(connection, seeded_table):
     prep_stmt = connection.create_prepared_statement(
         f"INSERT INTO {seeded_table} VALUES (?, ?);"
     )
@@ -68,7 +66,7 @@ def test_create_prepared_statement_insert_multiple_rows(connection, seeded_table
 
 
 @pytest.mark.basic
-def test_create_prepared_statement_select_all_without_params(connection, seeded_table):
+def test_select_all_without_params(connection, seeded_table):
     prep_stmt = connection.create_prepared_statement(
         f"SELECT ID, NAME FROM {seeded_table} ORDER BY ID, NAME;"
     )
@@ -82,49 +80,34 @@ def test_create_prepared_statement_select_all_without_params(connection, seeded_
 
 
 @pytest.mark.basic
-def test_create_prepared_statement_select_all_without_params2(connection, seeded_table):
+def test_multiple_executes_select_with_insert_in_between(connection, seeded_table):
     prep_stmt = connection.create_prepared_statement(
         f"SELECT ID, NAME FROM {seeded_table} ORDER BY ID, NAME;"
     )
 
-    prep_stmt.execute_prepared([])
-
-    expected = [(0, "A"), (1, "B"), (2, "C")]
-    actual = prep_stmt.fetchall()
-
-    assert actual == expected
-
-
-@pytest.mark.basic
-def test_multiple_executes_select_with_insert_in_between(connection, seeded_table):
-    prepared = connection.create_prepared_statement(
-        f"SELECT ID, NAME FROM {seeded_table} ORDER BY ID, NAME;"
-    )
-
-    prepared.execute_prepared()
-    assert prepared.fetchall() == [(0, "A"), (1, "B"), (2, "C")]
+    prep_stmt.execute_prepared()
+    assert prep_stmt.fetchall() == [(0, "A"), (1, "B"), (2, "C")]
 
     connection.execute(f"INSERT INTO {seeded_table} VALUES (3, 'D');")
     connection.commit()
 
-    prepared.execute_prepared()
-    assert prepared.fetchall() == [(0, "A"), (1, "B"), (2, "C"), (3, "D")]
+    prep_stmt.execute_prepared()
+    assert prep_stmt.fetchall() == [(0, "A"), (1, "B"), (2, "C"), (3, "D")]
 
 
 @pytest.mark.basic
 def test_multiple_executes_dml(connection, seeded_table):
-    prepared = connection.create_prepared_statement(
+    prep_stmt = connection.create_prepared_statement(
         f"DELETE FROM {seeded_table} WHERE ID = ? AND NAME = ?;"
     )
 
-    prepared.execute_prepared([(0, "A")])
-    prepared.execute_prepared([(1, "B"), (2, "C")])
+    prep_stmt.execute_prepared([(0, "A")])
+    prep_stmt.execute_prepared([(1, "B"), (2, "C")])
+    assert prep_stmt.fetchall() == []
 
 
 @pytest.mark.exceptions
-def test_create_prepared_statement_update_raises_for_wrong_parameter_type(
-    connection, seeded_table
-):
+def test_raises_wrong_parameter_type(connection, seeded_table):
     prep_stmt = connection.create_prepared_statement(
         f"UPDATE {seeded_table} SET NAME = ? WHERE ID = ?;"
     )
@@ -136,9 +119,7 @@ def test_create_prepared_statement_update_raises_for_wrong_parameter_type(
 
 
 @pytest.mark.exceptions
-def test_create_prepared_statement_delete_raises_for_missing_parameter(
-    connection, seeded_table
-):
+def test_raises_missing_parameter(connection, seeded_table):
     prep_stmt = connection.create_prepared_statement(
         f"DELETE FROM {seeded_table} WHERE ID = ? AND NAME = ?;"
     )
@@ -151,7 +132,7 @@ def test_create_prepared_statement_delete_raises_for_missing_parameter(
 
 
 @pytest.mark.exceptions
-def test_prepared_statement_close(connection, seeded_table):
+def test_prep_stmt_close(connection, seeded_table):
     prep_stmt = connection.create_prepared_statement(
         f"SELECT ID, NAME FROM {seeded_table} ORDER BY ID, NAME;"
     )
@@ -164,6 +145,27 @@ def test_prepared_statement_close(connection, seeded_table):
     assert actual == expected
 
     prep_stmt.close()
+
+    with pytest.raises(ExaRuntimeError, match="Prepared statement is already closed"):
+        prep_stmt.execute_prepared()
+
+
+@pytest.mark.exceptions
+def test_connection_close(connection, seeded_table):
+    prep_stmt = connection.create_prepared_statement(
+        f"SELECT ID, NAME FROM {seeded_table} ORDER BY ID, NAME;"
+    )
+
+    prep_stmt.execute_prepared()
+
+    expected = [(0, "A"), (1, "B"), (2, "C")]
+    actual = prep_stmt.fetchall()
+    assert actual == expected
+
+    # Teardown before closing the connection
+    connection.execute(f"DROP TABLE IF EXISTS {seeded_table};")
+
+    connection.close()
 
     with pytest.raises(ExaRuntimeError, match="Prepared statement is already closed"):
         prep_stmt.execute_prepared()
