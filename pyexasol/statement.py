@@ -381,6 +381,27 @@ class ExaStatement:
         self._init_result_set(ret)
 
     def execute_prepared(self, data=None):
+        """
+        Execute the prepared statement with tuples of parameters (single or bulk execution).
+
+        :param data: Tuples of values for the parameters of the prepared statement.
+
+        Note:
+          Every tuple in ``data`` must match the quantity and datatype of
+          placeholders in the prepared SQL statement.
+
+        Examples:
+
+        >>> con = ExaConnection(...)
+        >>> exa_stmt = con.create_prepared_statement(
+        ...        sql="INSERT INTO S.T VALUES (?, ?)",
+        ...)
+        >>> exa_stmt.execute_prepared( [('A', 1), ('B', 2), ('C', 3)] )
+        """
+        if self.connection.is_closed or not self.statement_handle:
+            raise ExaRuntimeError(
+                self.connection, "Prepared statement is already closed"
+            )
         ret = self.connection.req(
             {
                 "command": "executePreparedStatement",
@@ -397,6 +418,10 @@ class ExaStatement:
         )
 
         self.execution_time = self.connection.ws_req_time
+        # Reset fetch state because prepared statements are reusable and may
+        # be executed multiple times.
+        self.pos_total = 0
+        self.pos_chunk = 0
         self._init_result_set(ret)
 
     def _init_result_set(self, ret):
