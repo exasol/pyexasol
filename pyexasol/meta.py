@@ -480,14 +480,12 @@ class ExaMetaData:
                     r["KEYWORD"] for r in st.fetchall() if r["RESERVED"] is True
                 ]
             else:
-                st = self.execute_snapshot(
-                    """
+                st = self.execute_snapshot("""
                     SELECT keyword
                     FROM EXA_SQL_KEYWORDS
                     WHERE reserved IS TRUE
                     ORDER BY keyword
-                """
-                )
+                """)
 
                 self.sql_keywords = st.fetchcol()
 

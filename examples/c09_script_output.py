@@ -28,13 +28,11 @@ C = pyexasol.connect(
 )
 
 # Normal script output from multiple VM's
-stmt, log_files = C.execute_udf_output(
-    """
+stmt, log_files = C.execute_udf_output("""
     SELECT echo_java(user_id)
     FROM users
     GROUP BY CEIL(RANDOM() * 4)
-"""
-)
+""")
 
 printer.pprint(stmt.fetchall())
 printer.pprint(log_files)
@@ -43,8 +41,7 @@ print(log_files[0].read_text())
 
 # No rows selected, no VM's started by Exasol, no log files created
 # execute_udf_output should not hang in such case
-stmt, log_files = C.execute_udf_output(
-    """
+stmt, log_files = C.execute_udf_output("""
     WITH cte_users AS (
         SELECT user_id
         FROM users
@@ -54,8 +51,7 @@ stmt, log_files = C.execute_udf_output(
     SELECT echo_java(user_id)
     FROM cte_users
     GROUP BY CEIL(RANDOM() * 4)
-"""
-)
+""")
 
 printer.pprint(stmt.fetchall())
 printer.pprint(log_files)

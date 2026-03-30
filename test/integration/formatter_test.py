@@ -23,13 +23,11 @@ def test_no_conversion_specified(connection, value, expected):
 @pytest.mark.format
 def test_safe_quote_conversion(connection, schema):
     params = {"table": (schema, "USERS")}
-    query = cleandoc(
-        """
+    query = cleandoc("""
         SELECT user_name FROM {table!q}
         ORDER BY user_name DESC
         LIMIT 5;
-    """
-    )
+    """)
     expected = ["Zoe Odom", "Zoe Merritt", "Zoe Lawrence", "Zoe Fisher", "Zachary Wood"]
     actual = connection.execute(query, params).fetchcol()
 
@@ -40,14 +38,12 @@ def test_safe_quote_conversion(connection, schema):
 @pytest.mark.parametrize("value", [True, "True", "TRUE", "true"])
 def test_string_conversion(connection, value):
     params = {"is_female": value}
-    query = cleandoc(
-        """
+    query = cleandoc("""
         SELECT user_name FROM USERS
         WHERE is_female IS {is_female!r}
         ORDER BY user_name DESC
         LIMIT 5;
-    """
-    )
+    """)
     expected = [
         "Zoe Odom",
         "Zoe Merritt",
@@ -63,13 +59,11 @@ def test_string_conversion(connection, value):
 @pytest.mark.format
 def test_safe_identifier_conversion(connection):
     params = {"table": "USERS"}
-    query = cleandoc(
-        """
+    query = cleandoc("""
         SELECT user_name FROM {table!i}
         ORDER BY user_name DESC
         LIMIT 5;
-    """
-    )
+    """)
     expected = ["Zoe Odom", "Zoe Merritt", "Zoe Lawrence", "Zoe Fisher", "Zachary Wood"]
     actual = connection.execute(query, params).fetchcol()
 

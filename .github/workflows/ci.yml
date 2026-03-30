@@ -9,12 +9,14 @@ on:
 
 jobs:
   merge-gate:
+    name: Merge Gate
     uses: ./.github/workflows/merge-gate.yml
     secrets: inherit
     permissions:
       contents: read
 
   report:
+    name: Report
     needs:
       - merge-gate
     uses: ./.github/workflows/report.yml

@@ -24,8 +24,7 @@ def connection(connection_factory, logging_address):
 def echo(connection, logging_address):
     name = "ECHO"
     ip, port = logging_address
-    udf = cleandoc(
-        f"""
+    udf = cleandoc(f"""
         --/
         CREATE OR REPLACE LUA SCALAR SCRIPT {name}(text VARCHAR(2000))
             RETURNS VARCHAR(2000) AS
@@ -39,8 +38,7 @@ def echo(connection, logging_address):
             return ctx.text
         end
         /
-        """
-    )
+        """)
     connection.execute(udf)
 
     def executor(text):

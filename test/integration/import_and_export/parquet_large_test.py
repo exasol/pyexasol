@@ -36,8 +36,7 @@ ALL_COLUMNS = [
 
 @pytest.fixture
 def empty_table(connection, table_name):
-    ddl = cleandoc(
-        f"""
+    ddl = cleandoc(f"""
         CREATE OR REPLACE TABLE {table_name}
         (
             FIRST_NAME      VARCHAR(200),
@@ -54,8 +53,7 @@ def empty_table(connection, table_name):
             WITH_PIPE           VARCHAR(5000),
             {','.join(f"WITH_NEWLINE_{j + 1}       VARCHAR(5000)" for j in range(10))}
         );
-        """
-    )
+        """)
     connection.execute(ddl)
     connection.commit()
 

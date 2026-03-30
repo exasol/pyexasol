@@ -33,8 +33,7 @@ def faker_seed():
 
 @pytest.fixture
 def empty_table(connection, table_name):
-    ddl = cleandoc(
-        f"""
+    ddl = cleandoc(f"""
         CREATE OR REPLACE TABLE {table_name}
         (
             FIRST_NAME    VARCHAR(200),
@@ -45,8 +44,7 @@ def empty_table(connection, table_name):
             AGE           INTEGER,
             SCORE         DECIMAL(10,2)
         );
-        """
-    )
+        """)
     connection.execute(ddl)
     connection.commit()
 
@@ -133,14 +131,12 @@ def connection_with_quote_indent(connection_factory):
 def empty_camel_case_table(connection):
     table_name = "camelCaseTable"
     column_name = "camelCaseColumn!"
-    ddl = cleandoc(
-        f"""
+    ddl = cleandoc(f"""
         CREATE OR REPLACE TABLE "{table_name}"
         (
             "{column_name}" DECIMAL(18,0)
         )
-        """
-    )
+        """)
     connection.execute(ddl)
     connection.commit()
 
@@ -154,12 +150,10 @@ def empty_camel_case_table(connection):
 @pytest.fixture
 def filled_camel_case_table(connection, empty_camel_case_table):
     table_name, column_name = empty_camel_case_table
-    ddl = cleandoc(
-        f"""
+    ddl = cleandoc(f"""
         INSERT INTO "{table_name}" VALUES
         (1), (2), (3);
-        """
-    )
+        """)
     connection.execute(ddl)
     connection.commit()
 

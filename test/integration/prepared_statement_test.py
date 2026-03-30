@@ -15,26 +15,22 @@ def table_name():
 
 @pytest.fixture
 def seeded_table(connection, table_name):
-    ddl = cleandoc(
-        f"""
+    ddl = cleandoc(f"""
         CREATE TABLE IF NOT EXISTS {table_name}
         (
             ID      DECIMAL(18,0),
             NAME    VARCHAR(16)
         );
-        """
-    )
+        """)
     connection.execute(ddl)
 
     connection.execute(f"TRUNCATE TABLE {table_name};")
-    connection.execute(
-        f"""
+    connection.execute(f"""
         INSERT INTO {table_name} VALUES
             (0, 'A'),
             (1, 'B'),
             (2, 'C');
-        """
-    )
+        """)
 
     yield table_name
 
