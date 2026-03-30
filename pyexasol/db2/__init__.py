@@ -15,12 +15,10 @@ from ..connection import ExaConnection
 from ..warnings import PyexasolDeprecationWarning
 
 warn(
-    cleandoc(
-        """
+    cleandoc("""
         This module is deprecated and will be removed in the future.
         If you require a dbapi2 compliant driver, please use the dbapi2 compliant driver facade available in the `exasol.driver.websocket` package.
-        """
-    ),
+        """),
     PyexasolDeprecationWarning,
 )
 

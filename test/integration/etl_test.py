@@ -22,8 +22,7 @@ def table(connection):
 @pytest.fixture
 def import_table(connection, table):
     name = f"{table}_IMPORT"
-    ddl = cleandoc(
-        f"""
+    ddl = cleandoc(f"""
     CREATE TABLE IF NOT EXISTS {name}
     (
         user_id         DECIMAL(18,0),
@@ -35,8 +34,7 @@ def import_table(connection, table):
         user_score      DOUBLE,
         status          VARCHAR(50)
     );
-    """
-    )
+    """)
     connection.execute(ddl)
     connection.commit()
 
@@ -73,12 +71,10 @@ def test_export_import_round_trip_to_and_from_file(
     connection.export_to_file(export_file, table, export_params=params)
     connection.import_from_file(export_file, import_table, import_params=params)
 
-    query = cleandoc(
-        f"""
+    query = cleandoc(f"""
         SELECT * FROM {table}
         WHERE USER_ID NOT IN (SELECT USER_ID from {import_table});
-        """
-    )
+        """)
     result = connection.execute(query)
 
     expected = []

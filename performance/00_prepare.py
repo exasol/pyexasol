@@ -26,8 +26,7 @@ C = pyexasol.connect(
 C.execute("CREATE SCHEMA IF NOT EXISTS {schema!i}", {"schema": config.schema})
 C.open_schema(config.schema)
 
-C.execute(
-    """
+C.execute("""
     CREATE OR REPLACE TABLE p_high_random
     (
         user_id         DECIMAL(18,0),
@@ -39,11 +38,9 @@ C.execute(
         user_score      DOUBLE,
         status          VARCHAR(50)
     )
-"""
-)
+""")
 
-C.execute(
-    """
+C.execute("""
     CREATE OR REPLACE TABLE p_low_random
     (
         user_id         DECIMAL(18,0),
@@ -55,8 +52,7 @@ C.execute(
         user_score      DOUBLE,
         status          VARCHAR(50)
     )
-"""
-)
+""")
 
 C.execute(
     """

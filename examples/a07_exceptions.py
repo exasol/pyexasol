@@ -44,29 +44,25 @@ C = pyexasol.connect(
 
 # Invalid SQL
 try:
-    stmt = C.execute(
-        """
+    stmt = C.execute("""
         SELECT1 *
-        FROM users 
-        ORDER BY user_id 
+        FROM users
+        ORDER BY user_id
         LIMIT 5
-    """
-    )
+    """)
 except pyexasol.ExaQueryError as e:
     print(e)
 
 
 # Valid SQL, but error during execution
 try:
-    stmt = C.execute(
-        """
+    stmt = C.execute("""
         SELECT *
-        FROM users 
+        FROM users
         WHERE user_name = 10
         ORDER BY user_id
         LIMIT 5
-    """
-    )
+    """)
 except pyexasol.ExaQueryError as e:
     print(e)
 
@@ -90,12 +86,10 @@ except pyexasol.ExaRuntimeError as e:
 
 # Attempt to run SELECT with duplicate column names
 try:
-    stmt = C.execute(
-        """
+    stmt = C.execute("""
         SELECT 1, 1, 2 AS user_id, 3 AS user_id
         FROM dual
-    """
-    )
+    """)
 except pyexasol.ExaRuntimeError as e:
     print(e)
 

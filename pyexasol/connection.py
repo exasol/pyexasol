@@ -1483,8 +1483,7 @@ class ExaConnection:
                     # When not provided by the user, the default behavior is to require
                     # strict certificate verification.
                     warn(
-                        cleandoc(
-                            """
+                        cleandoc("""
                             From PyExasol version ``1.0.0``, the default behavior of
                             ExaConnection for encrypted connections without a fingerprint
                             is to require strict certificate validation with
@@ -1493,8 +1492,7 @@ class ExaConnection:
                             was to map such cases to ``{"cert_reqs": ssl.CERT_NONE}``. For
                             more information about encryption & best practices, please refer to
                             `Security <https://exasol.github.io/pyexasol/master/user_guide/configuration/security.html>`__ page.
-                            """
-                        ),
+                            """),
                         PyexasolWarning,
                     )
                     options["sslopt"] = {"cert_reqs": ssl.CERT_REQUIRED}

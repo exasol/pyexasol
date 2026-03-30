@@ -17,15 +17,13 @@ C = pyexasol.connect(
 )
 
 try:
-    C.execute(
-        f"""
+    C.execute(f"""
         CREATE OR REPLACE TABLE {table_name}
         (
             ID      DECIMAL(18,0),
             NAME    VARCHAR(16)
         )
-        """
-    )
+        """)
     # Create an insert prepared statement
     insert_stmt = C.create_prepared_statement(
         f"INSERT INTO {table_name} (ID, NAME) VALUES (?, ?)"

@@ -81,8 +81,7 @@ C.execute(f"ALTER SESSION SET NLS_TIMESTAMP_FORMAT='YYYY-MM-DD HH24:MI:SS.FF6'")
 C.execute("CREATE SCHEMA IF NOT EXISTS {schema!i}", {"schema": config.schema})
 C.open_schema(config.schema)
 
-C.execute(
-    """
+C.execute("""
     CREATE OR REPLACE TABLE users
     (
         user_id         DECIMAL(18,0),
@@ -94,11 +93,9 @@ C.execute(
         user_score      DOUBLE,
         status          VARCHAR(50)
     )
-"""
-)
+""")
 
-C.execute(
-    """
+C.execute("""
 CREATE OR REPLACE TABLE payments
 (
     user_id         DECIMAL(18,0),
@@ -107,37 +104,30 @@ CREATE OR REPLACE TABLE payments
     gross_amt       DECIMAL(15,5),
     net_amt         DECIMAL(15,5)
 )
-"""
-)
+""")
 
-C.execute(
-    """
+C.execute("""
 CREATE OR REPLACE TABLE parallel_import
 (
     user_id         DECIMAL(18,0),
     user_name       VARCHAR(255),
     shard_id        DECIMAL(18,0)
 )
-"""
-)
+""")
 
-C.execute(
-    """
+C.execute("""
 CREATE OR REPLACE TABLE tab1
 (
     id      DECIMAL(9,0)
 )
-"""
-)
+""")
 
-C.execute(
-    """
+C.execute("""
 CREATE OR REPLACE TABLE tab2
 (
     id      DECIMAL(9,0)
 )
-"""
-)
+""")
 
 C.execute("CREATE OR REPLACE TABLE users_copy LIKE users")
 C.execute("CREATE OR REPLACE TABLE payments_copy LIKE payments")
@@ -149,8 +139,7 @@ C.execute(
 C.import_from_iterable(users_generator(), "users")
 C.import_from_iterable(payments_generator(), "payments")
 
-C.execute(
-    """
+C.execute("""
 CREATE OR REPLACE TABLE edge_case
 (
     dec36_0         DECIMAL(36,0),
@@ -162,28 +151,22 @@ CREATE OR REPLACE TABLE edge_case
     var100          VARCHAR(100),
     var2000000      VARCHAR(2000000)
 )
-"""
-)
+""")
 
-C.execute(
-    """
+C.execute("""
 CREATE OR REPLACE TABLE "camelCaseTable"
 (
     "camelCaseColumn!" DECIMAL(18,0)
 )
-"""
-)
+""")
 
-C.execute(
-    """
+C.execute("""
 CREATE OR REPLACE VIEW users_view
 AS
 SELECT * FROM users
-"""
-)
+""")
 
-C.execute(
-    """
+C.execute("""
 CREATE OR REPLACE JAVA SET SCRIPT "ECHO_JAVA" ("str" VARCHAR(255) UTF8) RETURNS VARCHAR(255) UTF8 AS
 %jvmoption -Xms16m -Xmx128m -Xss512k;
 
@@ -206,11 +189,9 @@ class ECHO_JAVA {
         return ctx.getString(0);
     }
 }
-"""
-)
+""")
 
-C.execute(
-    """
+C.execute("""
 CREATE OR REPLACE JAVA SET SCRIPT "SLEEP_JAVA" ("sleep_interval" DECIMAL(18,0)) RETURNS DECIMAL(18,0) AS
 %jvmoption -Xms16m -Xmx128m -Xss512k;
 
@@ -225,11 +206,9 @@ class SLEEP_JAVA {
         return ctx.getLong(0);
     }
 }
-"""
-)
+""")
 
-C.execute(
-    """
+C.execute("""
 CREATE OR REPLACE TABLE interval_test
 (
     id INTEGER,
@@ -237,8 +216,7 @@ CREATE OR REPLACE TABLE interval_test
     to_ts TIMESTAMP,
     expected_timedelta VARCHAR(100)
 )
-"""
-)
+""")
 
 interval_timestamps = [
     {

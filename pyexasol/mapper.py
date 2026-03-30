@@ -31,7 +31,7 @@ class ExaTimeDelta(datetime.timedelta):
         if val[0] == "-":
             # normalize according to Python timedelta rules (days are negative; remaining parts apply back "up" towards 0)
             # - e.g. -6 days, 1:00:00.000000 would represent 5 days, 23 hours ago (6 days back, 1 hour forward)
-            (seconds, microseconds) = td.reverse_seconds()
+            seconds, microseconds = td.reverse_seconds()
             if seconds or microseconds:
                 td = cls(days=td.days - 1, seconds=seconds, microseconds=microseconds)
             else:
@@ -44,7 +44,7 @@ class ExaTimeDelta(datetime.timedelta):
 
     def to_interval(self):
         if self.days < 0:
-            (seconds, microseconds) = self.reverse_seconds()
+            seconds, microseconds = self.reverse_seconds()
             if seconds or microseconds:
                 s = "-%09d " % (abs(self.days) - 1,)
             else:

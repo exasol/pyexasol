@@ -15,15 +15,13 @@ class TestTransaction:
     @pytest.fixture(scope="class")
     def table(self, connection):
         table_name = "cities"
-        ddl = cleandoc(
-            f"""
+        ddl = cleandoc(f"""
         CREATE TABLE IF NOT EXISTS {table_name} (
             ID DECIMAL(18,0),
             NAME VARCHAR(255),
             POSTCODE DECIMAL(18,0)
         );
-        """
-        )
+        """)
         connection.execute(ddl)
         connection.commit()
 

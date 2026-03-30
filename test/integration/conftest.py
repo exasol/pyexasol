@@ -106,15 +106,13 @@ def view(connection, faker):
 @pytest.fixture
 def empty_table(connection):
     name = "USER_NAMES"
-    ddl = cleandoc(
-        f"""
+    ddl = cleandoc(f"""
         CREATE OR REPLACE TABLE {name}
         (
             FIRST_NAME VARCHAR(200),
             LAST_NAME VARCHAR(200)
         );
-        """
-    )
+        """)
     connection.execute(ddl)
     connection.commit()
 
@@ -164,8 +162,7 @@ def prepare_database(dsn_resolved, user, password, container_name):
 @pytest.fixture
 def edge_case_ddl():
     table_name = "edge_case"
-    ddl = cleandoc(
-        f"""CREATE OR REPLACE TABLE {table_name}
+    ddl = cleandoc(f"""CREATE OR REPLACE TABLE {table_name}
         (
             dec36_0         DECIMAL(36,0),
             dec36_36        DECIMAL(36,36),
@@ -176,8 +173,7 @@ def edge_case_ddl():
             var100          VARCHAR(100),
             var2000000      VARCHAR(2000000)
         )
-        """
-    )
+        """)
     yield table_name, ddl
 
 
