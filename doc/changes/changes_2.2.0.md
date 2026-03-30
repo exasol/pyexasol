@@ -9,3 +9,15 @@ page of the User Guide.
 ## Feature
 
 * #324: Added `ExaConnection.create_prepared_statement`
+
+## Dependency Updates
+
+### `main`
+
+* Updated dependency `cryptography:46.0.5` to `46.0.6`
+* Updated dependency `orjson:3.11.5` to `3.11.7`
+* Updated dependency `ujson:5.11.0` to `5.12.0`
+
+### `dev`
+
+* Updated dependency `exasol-toolbox:6.0.0` to `6.1.1`
