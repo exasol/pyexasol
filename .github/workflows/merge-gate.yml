@@ -5,7 +5,7 @@ on:
 
 jobs:
   run-fast-checks:
-    name: Run Fast Checks
+    name: Fast Checks
     uses: ./.github/workflows/checks.yml
     permissions:
       contents: read
@@ -24,7 +24,7 @@ jobs:
         run: echo "Slow tests approved"
 
   run-slow-checks:
-    name: Run Slow Checks
+    name: Slow Checks
     needs:
       - approve-run-slow-tests
     uses: ./.github/workflows/slow-checks.yml

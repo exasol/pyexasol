@@ -99,7 +99,7 @@ jobs:
 
       - name: Upload Artifacts
         id: upload-artifacts
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: lint-python${{ matrix.python-versions }}
           path: |
@@ -161,7 +161,7 @@ jobs:
 
       - name: Upload Artifacts
         id: upload-artifacts
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: security-python${{ matrix.python-versions }}
           path: .security.json
@@ -211,7 +211,7 @@ jobs:
         run: poetry run -- nox -s package:check
 
   run-unit-tests:
-    name: Run Unit Tests (Python-${{ matrix.python-versions }})
+    name: Unit Tests (Python-${{ matrix.python-versions }})
     runs-on: "ubuntu-24.04"
     permissions:
       contents: read
@@ -238,7 +238,7 @@ jobs:
 
       - name: Upload Artifacts
         id: upload-artifacts
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: coverage-python${{ matrix.python-versions }}-fast
           path: .coverage
