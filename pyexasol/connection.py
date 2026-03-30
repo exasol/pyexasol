@@ -289,6 +289,26 @@ class ExaConnection:
         self._login()
         self.get_attr()
 
+    def create_prepared_statement(self, sql: str) -> ExaStatement:
+        """
+        Create prepared statement
+
+        Args:
+            sql:
+                SQL statement text, possibly with positional placeholders
+        Returns:
+            ExaStatement object
+
+        Examples:
+
+            >>> con = ExaConnection(...)
+            >>> exa_stmt = con.create_prepared_statement(
+            ...        sql="SELECT * FROM ? WHERE col1=?",
+            ...)
+            >>> exa_stmt.execute_prepared( [('users', 'bar')] )
+        """
+        return self.cls_statement(self, sql, prepare=True)
+
     def execute(self, query: str, query_params: dict | None = None) -> ExaStatement:
         """
         Execute SQL query with optional query formatting parameters
