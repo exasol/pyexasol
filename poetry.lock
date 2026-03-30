@@ -3575,22 +3575,22 @@ dev = ["build", "flake8", "mypy", "pytest", "twine"]
 
 [[package]]
 name = "pysonar"
-version = "1.3.0.4086"
+version = "1.0.2.1722"
 description = "Sonar Scanner for the Python Ecosystem"
 optional = false
 python-versions = ">=3.9"
 groups = ["dev"]
 files = [
-    {file = "pysonar-1.3.0.4086-py3-none-any.whl", hash = "sha256:64428c7d534c48066fcf6a13f9076a2477e717a930325fb18ad7375e10b0adee"},
-    {file = "pysonar-1.3.0.4086.tar.gz", hash = "sha256:b05f887503de37d13bfec799a3b1d52fea084a4fd2ff06fdd2d2c8f9b73a4634"},
+    {file = "pysonar-1.0.2.1722-py3-none-any.whl", hash = "sha256:abacede0e5f8ca1468ac644889e2e87e8adeae07718906fe4ad546f5feacbc5d"},
+    {file = "pysonar-1.0.2.1722.tar.gz", hash = "sha256:fc024f5172b97faca6c280284a67be1bfaf8d76f4f04e37f93c86b70042bac15"},
 ]
 
 [package.dependencies]
-jproperties = "2.1.2"
-pyfakefs = "5.9.3"
-requests = "2.32.5"
-responses = "0.25.8"
-tomli = "2.2.1"
+jproperties = ">=2.1.2,<3.0.0"
+pyfakefs = ">=5.7.4,<6.0.0"
+requests = ">=2.32.3,<3.0.0"
+responses = ">=0.25.6,<0.26.0"
+tomli = ">=2.2.1,<3.0.0"
 
 [[package]]
 name = "pytest"
@@ -4028,25 +4028,26 @@ md = ["cmarkgfm (>=0.8.0)"]
 
 [[package]]
 name = "requests"
-version = "2.32.5"
+version = "2.33.0"
 description = "Python HTTP for Humans."
 optional = false
-python-versions = ">=3.9"
+python-versions = ">=3.10"
 groups = ["dev"]
 files = [
-    {file = "requests-2.32.5-py3-none-any.whl", hash = "sha256:2462f94637a34fd532264295e186976db0f5d453d1cdd31473c85a6a161affb6"},
-    {file = "requests-2.32.5.tar.gz", hash = "sha256:dbba0bac56e100853db0ea71b82b4dfd5fe2bf6d3754a8893c3af500cec7d7cf"},
+    {file = "requests-2.33.0-py3-none-any.whl", hash = "sha256:3324635456fa185245e24865e810cecec7b4caf933d7eb133dcde67d48cee69b"},
+    {file = "requests-2.33.0.tar.gz", hash = "sha256:c7ebc5e8b0f21837386ad0e1c8fe8b829fa5f544d8df3b2253bff14ef29d7652"},
 ]
 
 [package.dependencies]
-certifi = ">=2017.4.17"
+certifi = ">=2023.5.7"
 charset_normalizer = ">=2,<4"
 idna = ">=2.5,<4"
-urllib3 = ">=1.21.1,<3"
+urllib3 = ">=1.26,<3"
 
 [package.extras]
 socks = ["PySocks (>=1.5.6,!=1.5.7)"]
-use-chardet-on-py3 = ["chardet (>=3.0.2,<6)"]
+test = ["PySocks (>=1.5.6,!=1.5.7)", "pytest (>=3)", "pytest-cov", "pytest-httpbin (==2.1.0)", "pytest-mock", "pytest-xdist"]
+use-chardet-on-py3 = ["chardet (>=3.0.2,<8)"]
 
 [[package]]
 name = "requests-toolbelt"
