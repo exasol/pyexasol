@@ -1,4 +1,7 @@
 # 2.2.0 - 2026-03-30
+
+## Summary
+
 This update adds a method to create prepared statements. For more details,
 check out their example usage on the [Examples](https://exasol.github.io/pyexasol/master/user_guide/exploring_features/examples.html#prepared-statements)
 page of the User Guide.
