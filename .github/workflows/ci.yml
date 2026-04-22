@@ -11,11 +11,18 @@ jobs:
   merge-gate:
     name: Merge Gate
     uses: ./.github/workflows/merge-gate.yml
+    with:
+      root-event: ${{ github.event_name }}
     secrets: inherit
     permissions:
       contents: read
 
   report:
+    # Job merge-gate requires manual approval for running the slow checks.  If
+    # current workflow ci.yml is triggered by schedule, there is no manual
+    # interaction, manual approval will never be given, slow checks will not
+    # be executed, merge-gate will never terminate, and the report will never
+    # be called.
     name: Report
     needs:
       - merge-gate

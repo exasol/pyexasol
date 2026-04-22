@@ -2,6 +2,12 @@ name: Merge-Gate
 
 on:
   workflow_call:
+    inputs:
+      root-event:
+        description: GitHub event triggering the root workflow ci.yml
+        required: false
+        type: string
+        default: unknown
 
 jobs:
   run-fast-checks:
@@ -10,8 +16,18 @@ jobs:
     permissions:
       contents: read
 
+  fast-report:
+    name: Fast Report
+    needs:
+      - run-fast-checks
+    uses: ./.github/workflows/report.yml
+    secrets: inherit
+    permissions:
+      contents: read
+
   approve-run-slow-tests:
     name: Approve Running Slow Tests?
+    if: ${{ inputs.root-event != 'schedule' }}
     runs-on: "ubuntu-24.04"
     permissions:
       contents: read
