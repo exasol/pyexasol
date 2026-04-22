@@ -2,6 +2,9 @@
 
 ## Summary
 
+This release increases the allowed `pytest` range to `>=7.0.0,<10"`. This allows users
+to re-lock their dependencies to use the non-vulnerable `pytest` version 9.0.3.
+
 ## Security Issues
 
 This release fixes vulnerabilities by updating dependencies:
