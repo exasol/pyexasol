@@ -76,7 +76,7 @@ Changelog = "https://github.com/exasol/pyexasol/blob/master/CHANGELOG.md"
 [dependency-groups]
 dev = [
     "nox>=2023.4.22,<2024",
-    "pytest>=7.0.0,<9",
+    "pytest>=7.0.0,<10",
     "docutils>=0.21.2,<0.22",
     "exasol-integration-test-docker-environment>=5.0.0,<6",
     "faker>=24.14.1,<25",
