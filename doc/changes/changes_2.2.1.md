@@ -12,8 +12,6 @@ This release fixes vulnerabilities by updating dependencies:
 | pygments     | CVE-2026-4539  | 2.19.2   | 2.20.0   |
 | pytest       | CVE-2025-71176 | 8.4.2    | 9.0.3    |
 
-## Security
-
 * #329: Increased allowed `pytest` range to `>=7.0.0,<10"` and relocked cryptography,
   pygments, and pytest
 
