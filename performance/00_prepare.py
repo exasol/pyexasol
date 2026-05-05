@@ -15,7 +15,7 @@ print(f"PyExasol: {pyexasol.__version__}")
 print(f"PyODBC: {pyodbc.version}")
 print(f"TurbODBC: {turbodbc.__version__}")
 print(f"Creating random data set for tests, {config.number_of_rows} rows")
-print(f"Please wait, it may take a few minutes")
+print("Please wait, it may take a few minutes")
 
 
 C = pyexasol.connect(
