@@ -35,6 +35,7 @@ from packaging.version import Version
 
 from . import callback as cb
 from . import constant
+from ._metadata import __version__
 from .exceptions import (
     ExaAuthError,
     ExaCommunicationError,
@@ -60,7 +61,6 @@ from .logger import ExaLogger
 from .meta import ExaMetaData
 from .script_output import ExaScriptOutputProcess
 from .statement import ExaStatement
-from .version import __version__
 from .warnings import PyexasolWarning
 
 if TYPE_CHECKING:

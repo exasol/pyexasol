@@ -30,6 +30,7 @@ __all__ = [
     "PROTOCOL_V3",
 ]
 
+from ._metadata import __version__
 from .connection import ExaConnection
 from .constant import (
     PROTOCOL_V1,
@@ -61,7 +62,6 @@ from .mapper import (
 )
 from .meta import ExaMetaData
 from .statement import ExaStatement
-from .version import __version__
 
 
 def connect(**kwargs) -> ExaConnection:
