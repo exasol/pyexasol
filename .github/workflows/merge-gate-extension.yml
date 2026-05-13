@@ -1,0 +1,32 @@
+name: Merge-Gate-Extension
+on: workflow_call
+
+jobs:
+  approve-run-merge-gate-extension:
+    name: Approve Running Merge Gate Extension?
+    runs-on: "ubuntu-24.04"
+    permissions:
+      contents: read
+    environment: manual-approval
+    steps:
+      - name: Tests
+        run: echo "Merge Gate Extension approved"
+
+  examples:
+    needs: [ approve-run-merge-gate-extension ]
+    uses: ./.github/workflows/examples.yml
+    permissions:
+      contents: read
+
+  ssl_cert:
+    needs: [ approve-run-merge-gate-extension ]
+    uses: ./.github/workflows/ssl_cert.yml
+    permissions:
+      contents: read
+
+# Will re-activate in #262
+#  performance-checks:
+#    needs: [ approve-run-merge-gate-extension ]
+#    uses: ./.github/workflows/performance-checks.yml
+#    permissions:
+#      contents: read

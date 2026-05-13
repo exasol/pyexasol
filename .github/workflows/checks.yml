@@ -16,7 +16,7 @@ jobs:
 
       - name: Set up Python & Poetry Environment
         id: set-up-python-and-poetry-environment
-        uses: exasol/python-toolbox/.github/actions/python-environment@v7
+        uses: exasol/python-toolbox/.github/actions/python-environment@v8
         with:
           python-version: "3.10"
           poetry-version: "2.3.0"
@@ -42,7 +42,7 @@ jobs:
 
       - name: Set up Python & Poetry Environment
         id: set-up-python-and-poetry-environment
-        uses: exasol/python-toolbox/.github/actions/python-environment@v7
+        uses: exasol/python-toolbox/.github/actions/python-environment@v8
         with:
           python-version: "3.10"
           poetry-version: "2.3.0"
@@ -67,7 +67,7 @@ jobs:
 
       - name: Set up Python & Poetry Environment
         id: set-up-python-and-poetry-environment
-        uses: exasol/python-toolbox/.github/actions/python-environment@v7
+        uses: exasol/python-toolbox/.github/actions/python-environment@v8
         with:
           python-version: ${{ matrix.python-versions }}
           poetry-version: "2.3.0"
@@ -84,6 +84,7 @@ jobs:
           path: |
             .lint.json
           include-hidden-files: true
+          overwrite: false
 
   lint-typing:
     name: Lint Typing (Python-${{ matrix.python-versions }})
@@ -102,7 +103,7 @@ jobs:
 
       - name: Set up Python & Poetry Environment
         id: set-up-python-and-poetry-environment
-        uses: exasol/python-toolbox/.github/actions/python-environment@v6
+        uses: exasol/python-toolbox/.github/actions/python-environment@v8
         with:
           python-version: ${{ matrix.python-versions }}
           poetry-version: "2.3.0"
@@ -128,7 +129,7 @@ jobs:
 
       - name: Set up Python & Poetry Environment
         id: set-up-python-and-poetry-environment
-        uses: exasol/python-toolbox/.github/actions/python-environment@v7
+        uses: exasol/python-toolbox/.github/actions/python-environment@v8
         with:
           python-version: ${{ matrix.python-versions }}
           poetry-version: "2.3.0"
@@ -144,6 +145,7 @@ jobs:
           name: security-python${{ matrix.python-versions }}
           path: .security.json
           include-hidden-files: true
+          overwrite: false
 
   check-format:
     name: Check Format
@@ -157,7 +159,7 @@ jobs:
 
       - name: Set up Python & Poetry Environment
         id: set-up-python-and-poetry-environment
-        uses: exasol/python-toolbox/.github/actions/python-environment@v7
+        uses: exasol/python-toolbox/.github/actions/python-environment@v8
         with:
           python-version: "3.10"
           poetry-version: "2.3.0"
@@ -179,7 +181,7 @@ jobs:
 
       - name: Set up Python & Poetry Environment
         id: set-up-python-and-poetry-environment
-        uses: exasol/python-toolbox/.github/actions/python-environment@v7
+        uses: exasol/python-toolbox/.github/actions/python-environment@v8
         with:
           python-version: "3.10"
           poetry-version: "2.3.0"
@@ -187,37 +189,3 @@ jobs:
       - name: Build Package
         id: build-package
         run: poetry run -- nox -s package:check
-
-  run-unit-tests:
-    name: Unit Tests (Python-${{ matrix.python-versions }})
-    runs-on: "ubuntu-24.04"
-    permissions:
-      contents: read
-    strategy:
-      fail-fast: false
-      matrix:
-        python-versions: ["3.10", "3.11", "3.12", "3.13"]
-
-    steps:
-      - name: Check out Repository
-        id: check-out-repository
-        uses: actions/checkout@v6
-
-      - name: Set up Python & Poetry Environment
-        id: set-up-python-and-poetry-environment
-        uses: exasol/python-toolbox/.github/actions/python-environment@v6
-        with:
-          python-version: ${{ matrix.python-versions }}
-          poetry-version: "2.3.0"
-          extras: "all"
-      - name: Run Unit Tests
-        id: run-unit-tests
-        run: poetry run -- nox -s test:unit -- --coverage
-
-      - name: Upload Artifacts
-        id: upload-artifacts
-        uses: actions/upload-artifact@v7
-        with:
-          name: coverage-python${{ matrix.python-versions }}-fast
-          path: .coverage
-          include-hidden-files: true
