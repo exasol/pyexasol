@@ -2,12 +2,6 @@ name: Merge-Gate
 
 on:
   workflow_call:
-    inputs:
-      root-event:
-        description: GitHub event triggering the root workflow ci.yml
-        required: false
-        type: string
-        default: unknown
 
 jobs:
   run-fast-checks:
@@ -16,10 +10,17 @@ jobs:
     permissions:
       contents: read
 
+  run-fast-tests:
+    name: Fast Tests
+    uses: ./.github/workflows/fast-tests.yml
+    permissions:
+      contents: read
+
   fast-report:
     name: Fast Report
     needs:
       - run-fast-checks
+      - run-fast-tests
     uses: ./.github/workflows/report.yml
     secrets: inherit
     permissions:
@@ -27,7 +28,6 @@ jobs:
 
   approve-run-slow-tests:
     name: Approve Running Slow Tests?
-    if: ${{ inputs.root-event != 'schedule' }}
     runs-on: "ubuntu-24.04"
     permissions:
       contents: read
@@ -48,28 +48,16 @@ jobs:
     permissions:
       contents: read
 
-  examples:
-    needs: [ approve-run-slow-tests ]
-    uses: ./.github/workflows/examples.yml
+  merge-gate-extension:
+    uses: ./.github/workflows/merge-gate-extension.yml
+    secrets: inherit
     permissions:
       contents: read
-
-  ssl_cert:
-    needs: [ approve-run-slow-tests ]
-    uses: ./.github/workflows/ssl_cert.yml
-    permissions:
-      contents: read
-
-# Will re-activate in #262
-#  performance-checks:
-#    needs: [ approve-run-slow-tests ]
-#    uses: ./.github/workflows/performance-checks.yml
-#    permissions:
-#      contents: read
 
   # This job ensures inputs have been executed successfully.
   allow-merge:
     name: Allow Merge
+    if: ${{ !cancelled() }}
     runs-on: "ubuntu-24.04"
     permissions:
       contents: read
@@ -77,9 +65,14 @@ jobs:
     needs:
       - run-fast-checks
       - run-slow-checks
-      - examples
-      - ssl_cert
-    # Each job requires a step, so we added this dummy step.
+      - merge-gate-extension
+    # To prevent accidentally merges, this step is required. For more details
+    # see: https://github.com/exasol/python-toolbox/issues/563
     steps:
-      - name: Approve
-        run: echo "Merge Approved"
+      - name: Branch Protection - failure if any ancestor failed or was cancelled
+        if: ${{ contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled') }}
+        run: |
+          echo '${{ toJSON(needs) }}'
+          exit 1
+      - name: branch protection
+        run: echo "All required checks passed. Merge allowed."

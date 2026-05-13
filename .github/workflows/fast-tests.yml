@@ -1,0 +1,40 @@
+name: Fast-Tests
+
+on:
+  workflow_call:
+
+jobs:
+  run-unit-tests:
+    name: Unit Tests (Python-${{ matrix.python-versions }})
+    runs-on: "ubuntu-24.04"
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        python-versions: ["3.10", "3.11", "3.12", "3.13"]
+
+    steps:
+      - name: Check out Repository
+        id: check-out-repository
+        uses: actions/checkout@v6
+
+      - name: Set up Python & Poetry Environment
+        id: set-up-python-and-poetry-environment
+        uses: exasol/python-toolbox/.github/actions/python-environment@v8
+        with:
+          python-version: ${{ matrix.python-versions }}
+          poetry-version: "2.3.0"
+          extras: "all"
+      - name: Run Unit Tests
+        id: run-unit-tests
+        run: poetry run -- nox -s test:unit -- --coverage
+
+      - name: Upload Artifacts
+        id: upload-artifacts
+        uses: actions/upload-artifact@v7
+        with:
+          name: coverage-python${{ matrix.python-versions }}-fast
+          path: .coverage
+          include-hidden-files: true
+          overwrite: false
