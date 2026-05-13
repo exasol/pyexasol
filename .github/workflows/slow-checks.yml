@@ -34,9 +34,11 @@ jobs:
           python-version: ${{ matrix.python-version }}
           poetry-version: "2.3.0"
           extras: "all"
+
       - name: Set up Custom Host
         id: set-up-custom-host
         run: echo "127.0.0.1 exasol-test-database" | sudo tee -a /etc/hosts
+
       - name: Run Integration Tests
         id: run-integration-tests
         run: poetry run -- nox -s test:integration -- --coverage --db-version ${{ matrix.exasol-version }}
