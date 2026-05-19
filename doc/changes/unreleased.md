@@ -9,3 +9,4 @@
 ## Refactoring
 
 * #333: Updated to `exasol-toolbox` version 8.0.0
+* #335: Added `export` plugin to `pyproject.toml` for `exasol-toolbox` usage
