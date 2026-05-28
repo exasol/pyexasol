@@ -1,3 +1,5 @@
+# Generated and maintained by the exasol-toolbox.
+# Last generated with exasol-toolbox version 8.1.1.
 name: Checks
 
 on:
@@ -168,7 +170,6 @@ jobs:
         id: check-format
         run: poetry run -- nox -s format:check
 
-
   build-package:
     name: Build Package
     runs-on: "ubuntu-24.04"
@@ -189,3 +190,24 @@ jobs:
       - name: Build Package
         id: build-package
         run: poetry run -- nox -s package:check
+
+  check-workflows:
+    name: Check Workflows
+    runs-on: "ubuntu-24.04"
+    permissions:
+      contents: read
+    steps:
+      - name: Check out Repository
+        id: check-out-repository
+        uses: actions/checkout@v6
+
+      - name: Set up Python & Poetry Environment
+        id: set-up-python-and-poetry-environment
+        uses: exasol/python-toolbox/.github/actions/python-environment@v8
+        with:
+          python-version: "3.10"
+          poetry-version: "2.3.0"
+
+      - name: Check Workflows
+        id: check-workflows
+        run: poetry run -- nox -s workflow:check -- all

@@ -1,3 +1,5 @@
+# Generated and maintained by the exasol-toolbox.
+# Last generated with exasol-toolbox version 8.1.1.
 name: Dependency Update
 
 on:
@@ -39,7 +41,14 @@ jobs:
       - name: Audit Dependencies
         id: audit-dependencies
         run: |
-          poetry run -- nox -s dependency:audit | tee vulnerabilities.json
+          set -o pipefail
+          poetry self add poetry-plugin-export
+          # Pipeline purpose:
+          # - `2>&1`: merge stdout and stderr into one stream.
+          # - `tee /dev/stderr`: mirror the combined output back to stderr so it stays visible in the logs.
+          # - `sed -n '/^\[/,$p'`: keep only the JSON payload and write it to vulnerabilities.json.
+          # With `set -o pipefail`, any failure in the pipeline still fails this step and turns the workflow red.
+          poetry run -- nox -s dependency:audit 2>&1 | tee /dev/stderr | sed -n '/^\[/,$p' > vulnerabilities.json
           LENGTH=$(jq 'length' vulnerabilities.json)
           echo "count=$LENGTH" >> "$GITHUB_OUTPUT"
 
