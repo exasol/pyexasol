@@ -38,7 +38,7 @@ dependencies = [
     # the major version for all feature-releases independent of breaking changes.
     # We anticipate that the stable API stays stable, and if we encounter a breaking
     # change, upstream projects can narrow the range.
-    "cryptography>=45.0.7",
+    "cryptography>=48.0.1",
 ]
 
 [project.optional-dependencies]
