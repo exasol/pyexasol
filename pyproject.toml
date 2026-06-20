@@ -51,7 +51,7 @@ polars = ["polars>=1.10.0,<2.0.0"]
 # narrow the range.
 pyarrow = ["pyarrow>=21.0.0"]
 rapidjson = ["python-rapidjson>=1.21.0,<2.0.0"]
-ujson = ["ujson>=5.10.0,<6.0.0"]
+ujson = ["ujson>=5.13.0,<6.0.0"]
 all = [
     "pproxy",
     "orjson>=3.6,<4.0",
@@ -59,7 +59,7 @@ all = [
     "polars>=1.10.0,<2.0.0",
     "pyarrow>=21.0.0",
     "python-rapidjson>=1.21.0,<2.0.0",
-    "ujson>=5.10.0,<6.0.0",
+    "ujson>=5.13.0,<6.0.0",
 ]
 # pytest-benchmark is kept separate from the other dev dependencies due to
 # observed correlated issues when running other tests. For further details, see
