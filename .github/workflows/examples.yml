@@ -6,10 +6,12 @@ on:
 jobs:
   build-matrix:
     name: Generate Build Matrix
-    uses: ./.github/workflows/matrix-exasol.yml
+    uses: ./.github/workflows/matrix.yml
+    with:
+      matrix_keys_json: '["exasol_versions"]'
 
   examples:
-    name: Run Examples (Python-${{ matrix.python-version }}, Exasol-${{ matrix.exasol-version}})
+    name: Run Examples (Python-${{ matrix.python_versions }}, Exasol-${{ matrix.exasol_versions}})
     needs: [ build-matrix ]
     # For all containers with versions 7.1.x and older versions 8.y.z of docker-db,
     # there will be a crash if UDFs (User Defined Functions) are utilized.
@@ -18,8 +20,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.12"]
-        exasol-version: ${{ fromJson(needs.build-matrix.outputs.matrix).exasol-version }}
+        python_versions: ["3.12"]
+        exasol_versions: ${{ fromJson(needs.build-matrix.outputs.matrix).exasol_versions }}
     permissions:
       contents: read
     steps:
@@ -31,7 +33,7 @@ jobs:
       - name: Set up Python & Poetry Environment
         uses: exasol/python-toolbox/.github/actions/python-environment@v9
         with:
-          python-version: ${{ matrix.python-version }}
+          python-version: ${{ matrix.python_versions }}
           poetry-version: "2.3.0"
           extras: "all"
 
@@ -40,7 +42,7 @@ jobs:
         run: sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
 
       - name: Start test db
-        run: poetry run -- nox -s db:start -- --db-version ${{ matrix.exasol-version }}
+        run: poetry run -- nox -s db:start -- --db-version ${{ matrix.exasol_versions }}
 
       - name: Wait for Exasol container (UDF extraction)
         run: poetry run -- python examples/_wait_container.py
