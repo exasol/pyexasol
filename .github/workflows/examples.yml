@@ -25,6 +25,8 @@ jobs:
     steps:
       - name: Check out repo
         uses: actions/checkout@v6
+        with:
+          persist-credentials: false
 
       - name: Set up Python & Poetry Environment
         uses: exasol/python-toolbox/.github/actions/python-environment@v9
