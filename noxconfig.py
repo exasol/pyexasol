@@ -84,10 +84,9 @@ PROJECT_CONFIG = Config(
     plugins_for_nox_sessions=(StartDB, StopDB),
     # Python 3.14 is left out due to issues installing pyarrow
     # & a known issue in the ITDE & will be resolved in:
-    # https://github.com/exasol/pyexasol/issues/285
+    #   https://github.com/exasol/pyexasol/issues/285
     python_versions=("3.10", "3.11", "3.12", "3.13"),
-    # Changes for 7.x and 2025.1.x have not yet been made. 7.x works for all tests,
-    # except for the examples/UDFs. These will be resolved in:
-    # https://github.com/exasol/pyexasol/issues/273
+    # Changes for 2025.1.x have not yet been made. This will be resolved in:
+    #   https://github.com/exasol/pyexasol/issues/273
     exasol_versions=("8.29.13",),
 )

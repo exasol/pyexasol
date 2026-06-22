@@ -17,7 +17,7 @@ Why Choose PyExasol?
 Prerequisites
 -------------
 
-- Exasol >= 7.1
+- Exasol >= 8
 - Python >= 3.10
 
 .. _optional_dependencies:
