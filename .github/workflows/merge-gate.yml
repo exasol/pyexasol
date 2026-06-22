@@ -1,5 +1,5 @@
 # Generated and maintained by the exasol-toolbox.
-# Last generated with exasol-toolbox version 8.1.1.
+# Last generated with exasol-toolbox version 9.0.0.
 name: Merge-Gate
 
 on:
@@ -24,7 +24,8 @@ jobs:
       - run-fast-checks
       - run-fast-tests
     uses: ./.github/workflows/report.yml
-    secrets: inherit
+    secrets:
+      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
     permissions:
       contents: read
 
@@ -66,6 +67,7 @@ jobs:
     # If you need additional jobs to be part of the merge gate, add them below
     needs:
       - run-fast-checks
+      - run-fast-tests
       - run-slow-checks
       - merge-gate-extension
     # To prevent accidentally merges, this step is required. For more details
