@@ -1,0 +1,27 @@
+name: Test Selected Extras Via PTB Branch
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  verify-selected-extras:
+    name: Verify selected extras
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    steps:
+      - name: Check out Repository
+        uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - name: Set up Python & Poetry Environment
+        uses: exasol/python-toolbox/.github/actions/python-environment@feature/699-all-extras
+        with:
+          python-version: "3.10"
+          poetry-version: "2.3.0"
+          extras: "orjson,ujson"
+
+      - name: Validate selected extras were installed
+        run: poetry run python -c "import orjson, ujson"
