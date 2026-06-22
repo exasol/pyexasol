@@ -33,12 +33,16 @@ dependencies = [
     # websocket-client was down-pinned to <1.9.0 due to tests failures.
     # This will be resolved in https://github.com/exasol/pyexasol/issues/274.
     "websocket-client>=1.0.1,<1.9.0",
-    "packaging>=24.1.0,<26.0.0",
-    # The cryptography package follow a  Firefox-inspired version scheme which increases
+    # The cryptography package follow a Firefox-inspired version scheme which increases
     # the major version for all feature-releases independent of breaking changes.
     # We anticipate that the stable API stays stable, and if we encounter a breaking
     # change, upstream projects can narrow the range.
     "cryptography>=45.0.7",
+    # The packaging library uses CalVer, so a new year-based major release does not
+    # automatically imply a breaking API change.
+    # Releases are published as needed for ecosystem interoperability PEP changes.
+    # If we encounter a breaking change, upstream projects can narrow the range.
+    "packaging>=24.1.0",
 ]
 
 [project.optional-dependencies]
