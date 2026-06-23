@@ -1,5 +1,6 @@
 name: Merge-Gate-Extension
-on: workflow_call
+on:
+  workflow_call:
 
 jobs:
   approve-run-merge-gate-extension:

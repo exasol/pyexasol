@@ -1,5 +1,5 @@
 # Generated and maintained by the exasol-toolbox.
-# Last generated with exasol-toolbox version 9.0.0.
+# Last generated with exasol-toolbox version 10.0.0.
 name: Dependency Update
 
 on:
@@ -35,7 +35,7 @@ jobs:
 
       - name: Set up Python & Poetry Environment
         id: set-up-python-and-poetry-environment
-        uses: exasol/python-toolbox/.github/actions/python-environment@v9
+        uses: exasol/python-toolbox/.github/actions/python-environment@v10
         with:
           python-version: "3.10"
           poetry-version: "2.3.0"
@@ -112,6 +112,7 @@ jobs:
 
           PR_URL=$(gh pr create \
                       --base "$BASE_BRANCH" \
+                      --label "security" \
                       --title "Update dependencies to fix vulnerabilities ($(date '+%Y-%m-%d'))" \
                       --body "$PR_BODY")
 

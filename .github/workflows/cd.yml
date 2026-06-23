@@ -1,5 +1,5 @@
 # Generated and maintained by the exasol-toolbox.
-# Last generated with exasol-toolbox version 9.0.0.
+# Last generated with exasol-toolbox version 10.0.0.
 name: CD
 
 on:
