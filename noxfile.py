@@ -15,8 +15,9 @@ from nox import Session
 
 from noxconfig import (
     DEFAULT_DB_VERSION,
+    PROJECT_CONFIG,
     start_test_db,
-    stop_test_db, PROJECT_CONFIG,
+    stop_test_db,
 )
 from scripts.benchmark import (
     Benchmark,
