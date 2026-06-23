@@ -28,6 +28,8 @@ jobs:
       - name: Check out Repository
         id: check-out-repository
         uses: actions/checkout@v6
+        with:
+          persist-credentials: false
 
       - name: Set up Python & Poetry Environment
         id: set-up-python-and-poetry-environment
@@ -43,7 +45,9 @@ jobs:
 
       - name: Run Integration Tests
         id: run-integration-tests
-        run: poetry run -- nox -s test:integration -- --coverage --db-version ${{ matrix.exasol_versions }}
+        run: poetry run -- nox -s test:integration -- --coverage --db-version ${MATRIX_EXASOL_VERSIONS}
+        env:
+          MATRIX_EXASOL_VERSIONS: ${{ matrix.exasol_versions }}
 
       - name: Upload Artifacts
         id: upload-artifacts

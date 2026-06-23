@@ -9,6 +9,8 @@ jobs:
     uses: ./.github/workflows/matrix.yml
     with:
       matrix_keys_json: '["exasol_versions", "minimum_python_version"]'
+    permissions:
+      contents: read
 
   examples:
     name: Run Examples (Python-${{ matrix.python_versions }}, Exasol-${{ matrix.exasol_versions}})
@@ -42,7 +44,9 @@ jobs:
         run: sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
 
       - name: Start test db
-        run: poetry run -- nox -s db:start -- --db-version ${{ matrix.exasol_versions }}
+        run: poetry run -- nox -s db:start -- --db-version ${MATRIX_EXASOL_VERSIONS}
+        env:
+          MATRIX_EXASOL_VERSIONS: ${{ matrix.exasol_versions }}
 
       - name: Wait for Exasol container (UDF extraction)
         run: poetry run -- python examples/_wait_container.py

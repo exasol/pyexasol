@@ -9,6 +9,8 @@ jobs:
     uses: ./.github/workflows/matrix.yml
     with:
       matrix_keys_json: '["exasol_versions", "minimum_python_version"]'
+    permissions:
+      contents: read
 
   ssl_cert:
     name: Build SSL-Cert (Python-${{ matrix.python_versions }}, Exasol-${{ matrix.exasol_versions}})
@@ -38,7 +40,9 @@ jobs:
           extras: "all"
 
       - name: Start test db
-        run: poetry run -- nox -s db:start -- --db-version ${{ matrix.exasol_versions }} --with-certificate
+        run: poetry run -- nox -s db:start -- --db-version ${MATRIX_EXASOL_VERSIONS} --with-certificate
+        env:
+          MATRIX_EXASOL_VERSIONS: ${{ matrix.exasol_versions }}
 
       - name: Pull certificate from container
         run: docker cp db_container_test:/certificates/rootCA.crt .
