@@ -8,7 +8,7 @@ jobs:
     name: Generate Build Matrix
     uses: ./.github/workflows/matrix.yml
     with:
-      matrix_keys_json: '["exasol_versions"]'
+      matrix_keys_json: '["exasol_versions", "minimum_python_version]'
 
   examples:
     name: Run Examples (Python-${{ matrix.python_versions }}, Exasol-${{ matrix.exasol_versions}})
@@ -20,7 +20,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python_versions: ["3.12"]
+        python_versions: ${{ fromJson(needs.build-matrix.outputs.matrix).minimum_python_version }}
         exasol_versions: ${{ fromJson(needs.build-matrix.outputs.matrix).exasol_versions }}
     permissions:
       contents: read
