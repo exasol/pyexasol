@@ -1,0 +1,9 @@
+rules:
+  unpinned-uses:
+    # Official GitHub actions & ones maintained by us may use a referential pin.
+    # Third party GitHub actions must be defined with an SHA hash.
+    config:
+      policies:
+        "actions/*": ref-pin
+        exasol/python-toolbox/.github/actions/python-environment: ref-pin
+        "*": hash-pin

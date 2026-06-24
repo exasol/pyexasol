@@ -15,6 +15,7 @@ from nox import Session
 
 from noxconfig import (
     DEFAULT_DB_VERSION,
+    PROJECT_CONFIG,
     start_test_db,
     stop_test_db,
 )
@@ -157,7 +158,7 @@ def performance_json(session: Session) -> None:
 
     config = {
         "performance-tests": processed_output,
-        "python-version": ["3.12"],
+        "python-version": [PROJECT_CONFIG.minimum_python_version],
         "exasol-version": [DEFAULT_DB_VERSION],
     }
 

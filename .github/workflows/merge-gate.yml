@@ -1,9 +1,12 @@
 # Generated and maintained by the exasol-toolbox.
-# Last generated with exasol-toolbox version 8.1.1.
+# Last generated with exasol-toolbox version 10.0.0.
 name: Merge-Gate
 
 on:
   workflow_call:
+    secrets:
+      SONAR_TOKEN:
+        required: true
 
 jobs:
   run-fast-checks:
@@ -24,7 +27,8 @@ jobs:
       - run-fast-checks
       - run-fast-tests
     uses: ./.github/workflows/report.yml
-    secrets: inherit
+    secrets:
+      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
     permissions:
       contents: read
 
@@ -46,13 +50,12 @@ jobs:
     needs:
       - approve-run-slow-tests
     uses: ./.github/workflows/slow-checks.yml
-    secrets: inherit
     permissions:
       contents: read
 
   merge-gate-extension:
+    name: Extension
     uses: ./.github/workflows/merge-gate-extension.yml
-    secrets: inherit
     permissions:
       contents: read
 
@@ -66,6 +69,7 @@ jobs:
     # If you need additional jobs to be part of the merge gate, add them below
     needs:
       - run-fast-checks
+      - run-fast-tests
       - run-slow-checks
       - merge-gate-extension
     # To prevent accidentally merges, this step is required. For more details
@@ -73,8 +77,10 @@ jobs:
     steps:
       - name: Branch Protection - failure if any ancestor failed or was cancelled
         if: ${{ contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled') }}
+        env:
+          NEEDS_JSON: ${{ toJSON(needs) }}
         run: |
-          echo '${{ toJSON(needs) }}'
+          echo "$NEEDS_JSON"
           exit 1
       - name: branch protection
         run: echo "All required checks passed. Merge allowed."

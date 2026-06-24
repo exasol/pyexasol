@@ -14,9 +14,11 @@ jobs:
     steps:
       - name: Check out repo
         uses: actions/checkout@v6
+        with:
+          persist-credentials: false
 
       - name: Set up Python & Poetry Environment
-        uses: exasol/python-toolbox/.github/actions/python-environment@v8
+        uses: exasol/python-toolbox/.github/actions/python-environment@v10
         with:
           python-version: "3.10"
           poetry-version: "2.3.0"
@@ -42,9 +44,11 @@ jobs:
     steps:
       - name: Check out repo
         uses: actions/checkout@v6
+        with:
+          persist-credentials: false
 
       - name: Set up Python & Poetry Environment
-        uses: exasol/python-toolbox/.github/actions/python-environment@v8
+        uses: exasol/python-toolbox/.github/actions/python-environment@v10
         with:
           python-version: ${{ matrix.python-version }}
           poetry-version: "2.3.0"
@@ -55,13 +59,18 @@ jobs:
 
       - name: Start test db
         run: >
-          poetry run -- nox -s db:start -- --db-version ${{ matrix.exasol-version }}
+          poetry run -- nox -s db:start -- --db-version ${MATRIX_EXASOL_VERSION}
+        env:
+          MATRIX_EXASOL_VERSION: ${{ matrix.exasol-version }}
 
       - name: Run performance test
         run: |
           poetry run -- nox -s performance:test -- \
-            --test-path ${{ matrix.performance-tests.path}} \
-            --file-name ${{ matrix.performance-tests.key }}.json
+            --test-path ${MATRIX_PERFORMANCE_TESTS_PATH} \
+            --file-name ${MATRIX_PERFORMANCE_TESTS_KEY}.json
+        env:
+          MATRIX_PERFORMANCE_TESTS_PATH: ${{ matrix.performance-tests.path}}
+          MATRIX_PERFORMANCE_TESTS_KEY: ${{ matrix.performance-tests.key }}
 
       - name: Upload Artifacts
         uses: actions/upload-artifact@v6
@@ -86,9 +95,11 @@ jobs:
     steps:
       - name: Check out repo
         uses: actions/checkout@v6
+        with:
+          persist-credentials: false
 
       - name: Set up Python & Poetry Environment
-        uses: exasol/python-toolbox/.github/actions/python-environment@v8
+        uses: exasol/python-toolbox/.github/actions/python-environment@v10
         with:
           python-version: ${{ matrix.python-version }}
           poetry-version: "2.3.0"

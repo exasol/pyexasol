@@ -1,0 +1,48 @@
+# Generated and maintained by the exasol-toolbox.
+# Last generated with exasol-toolbox version 10.0.0.
+name: Build Matrix
+
+on:
+  workflow_call:
+    inputs:
+      matrix_keys_json:
+        description: "JSON array of BaseConfig keys to include in the generated matrix output."
+        required: true
+        type: string
+    outputs:
+      matrix:
+        description: "Generates the requested build matrix"
+        value: ${{ jobs.set-matrix.outputs.matrix }}
+
+jobs:
+  set-matrix:
+    runs-on: "ubuntu-24.04"
+    permissions:
+      contents: read
+    steps:
+      - name: Check out Repository
+        id: check-out-repository
+        uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - name: Set up Python & Poetry Environment
+        id: set-up-python-and-poetry-environment
+        uses: exasol/python-toolbox/.github/actions/python-environment@v10
+        with:
+          python-version: "3.10"
+          poetry-version: "2.3.0"
+
+      - name: Generate Matrix
+        id: set-matrix
+        env:
+          MATRIX_KEYS_JSON: ${{ inputs.matrix_keys_json }}
+        run: |
+          readarray -t matrix_keys < <(jq -r '.[]' <<< "$MATRIX_KEYS_JSON")
+          matrix_json="$(poetry run -- nox -s matrix:generate -- "${matrix_keys[@]}")"
+          echo "Generated matrix JSON:"
+          jq . <<< "$matrix_json"
+          echo "matrix=$matrix_json" >> "$GITHUB_OUTPUT"
+
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}

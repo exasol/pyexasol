@@ -1,29 +1,51 @@
 # Generated and maintained by the exasol-toolbox.
-# Last generated with exasol-toolbox version 8.1.1.
+# Last generated with exasol-toolbox version 10.0.0.
 name: Periodic-Validation
 
 on:
   schedule:
     # At 00:00 on Saturday. (https://crontab.guru)
     - cron: "0 0 * * 6"
+  workflow_dispatch:
 
 jobs:
+  restrict-to-default-branch:
+    name: Restrict to Default Branch
+    runs-on: "ubuntu-24.04"
+    permissions:
+      contents: read
+
+    steps:
+      - name: Fail if not running on the default branch
+        id: check-branch
+        if: github.ref != format('refs/heads/{0}', github.event.repository.default_branch)
+        env:
+          CURRENT_BRANCH: ${{ github.ref }}
+        run: |
+          echo "Not running on the default branch. Current ref is: $CURRENT_BRANCH"
+          exit 1
+
   run-fast-checks:
     name: Fast Checks
     uses: ./.github/workflows/checks.yml
+    needs:
+      - restrict-to-default-branch
     permissions:
       contents: read
 
   run-fast-tests:
     name: Fast Tests
     uses: ./.github/workflows/fast-tests.yml
+    needs:
+      - restrict-to-default-branch
     permissions:
       contents: read
 
   run-slow-checks:
     name: Slow Checks
     uses: ./.github/workflows/slow-checks.yml
-    secrets: inherit
+    needs:
+      - restrict-to-default-branch
     permissions:
       contents: read
 
@@ -34,6 +56,7 @@ jobs:
       - run-fast-tests
       - run-slow-checks
     uses: ./.github/workflows/report.yml
-    secrets: inherit
+    secrets:
+      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
     permissions:
       contents: read

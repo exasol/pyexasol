@@ -1,6 +1,6 @@
 [project]
 name = "pyexasol"
-version = "2.2.1"
+version = "2.2.2"
 description = "Exasol python driver with extra features"
 authors = [
     { name = "Vitaly Markov", email = "wild.desu@gmail.com" },
@@ -30,15 +30,17 @@ classifiers = [
     "Topic :: Database",
 ]
 dependencies = [
-    # websocket-client was down-pinned to <1.9.0 due to tests failures.
-    # This will be resolved in https://github.com/exasol/pyexasol/issues/274.
-    "websocket-client>=1.0.1,<1.9.0",
-    "packaging>=24.1.0,<26.0.0",
-    # The cryptography package follow a  Firefox-inspired version scheme which increases
+    # The cryptography package follow a Firefox-inspired version scheme which increases
     # the major version for all feature-releases independent of breaking changes.
     # We anticipate that the stable API stays stable, and if we encounter a breaking
     # change, upstream projects can narrow the range.
     "cryptography>=45.0.7",
+    # The packaging library uses CalVer, so a new year-based major release does not
+    # automatically imply a breaking API change.
+    # Releases are published as needed for ecosystem interoperability PEP changes.
+    # If we encounter a breaking change, upstream projects can narrow the range.
+    "packaging>=24.1.0",
+    "websocket-client>=1.0.1,<2",
 ]
 
 [project.optional-dependencies]
@@ -80,7 +82,7 @@ dev = [
     "docutils>=0.21.2,<0.22",
     "exasol-integration-test-docker-environment>=5.0.0,<7",
     "faker>=24.14.1,<25",
-    "exasol-toolbox>=8.1.1,<9",
+    "exasol-toolbox>=10.0.0,<11",
     "types-ujson>=5.10.0.20250326,<6",
     "pytest-repeat>=0.9.4, <1.0.0",
     "pandas-stubs>=2.3.3.251219,<3",

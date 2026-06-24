@@ -8,7 +8,7 @@ workflows:
           # Install extras so that usage of optional dependencies are also type checked
           - name: Set up Python & Poetry Environment
             id: set-up-python-and-poetry-environment
-            uses: exasol/python-toolbox/.github/actions/python-environment@v8
+            uses: exasol/python-toolbox/.github/actions/python-environment@v10
             with:
               python-version: ${{ matrix.python-versions }}
               poetry-version: "2.3.0"
@@ -22,7 +22,7 @@ workflows:
           # Install extras so that unit tests for optional dependencies can run
           - name: Set up Python & Poetry Environment
             id: set-up-python-and-poetry-environment
-            uses: exasol/python-toolbox/.github/actions/python-environment@v8
+            uses: exasol/python-toolbox/.github/actions/python-environment@v10
             with:
               python-version: ${{ matrix.python-versions }}
               poetry-version: "2.3.0"
