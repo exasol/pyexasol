@@ -121,7 +121,7 @@ class ExaConnection:
         user: str | None = None,
         password: str | None = None,
         schema: str = "",
-        autocommit=constant.DEFAULT_AUTOCOMMIT,
+        autocommit: bool = constant.DEFAULT_AUTOCOMMIT,
         snapshot_transactions=None,
         connection_timeout=constant.DEFAULT_CONNECTION_TIMEOUT,
         socket_timeout=constant.DEFAULT_SOCKET_TIMEOUT,
@@ -417,7 +417,7 @@ class ExaConnection:
         """Wrapper for query 'ROLLBACK'"""
         return self.execute("ROLLBACK")
 
-    def set_autocommit(self, val: str) -> None:
+    def set_autocommit(self, val: bool) -> None:
         """
         Set autocommit mode.
 
