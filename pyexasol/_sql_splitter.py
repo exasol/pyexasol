@@ -208,7 +208,9 @@ class _SqlScriptSplitter:
 
     def enter_two_character_state(self, state: ScanState) -> None:
         next_char = self.next_char
-        assert next_char is not None
+        if next_char is None:
+            msg = "Expected two-character token while splitting SQL script."
+            raise ValueError(msg)
         self.current.append(self.current_char)
         self.current.append(next_char)
         self.state = state
