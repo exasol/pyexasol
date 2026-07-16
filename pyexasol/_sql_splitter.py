@@ -24,6 +24,7 @@ SCRIPT_HEADER_WORDS = {
     "JAVA",
     "LUA",
     "OR",
+    "PREPROCESSOR",
     "PYTHON",
     "PYTHON3",
     "R",
@@ -100,15 +101,14 @@ def split_sql_script(sql: str) -> list[str]:
     The splitter is lexical, not a full SQL parser. It treats semicolons as
     statement terminators except inside string literals, quoted identifiers,
     line comments, block comments, and Exasol script bodies. Exasol script
-    bodies are entered after ``CREATE ... SCRIPT ... (...) ... AS`` and are
-    terminated by a standalone ``/`` line.
+    bodies are entered after ``CREATE ... SCRIPT ... AS`` and are terminated by
+    a standalone ``/`` line.
     """
     statements: list[str] = []
     current: list[str] = []
     word: list[str] = []
     state = ScanState.NORMAL
     script_header = ScriptHeaderState.NONE
-    saw_script_signature = False
     line_start = True
     i = 0
 
@@ -136,7 +136,7 @@ def split_sql_script(sql: str) -> list[str]:
             elif upper_word not in SCRIPT_HEADER_WORDS:
                 script_header = ScriptHeaderState.NONE
         else:
-            if saw_script_signature and upper_word == "AS":
+            if upper_word == "AS":
                 return True
 
         return False
@@ -170,15 +170,11 @@ def split_sql_script(sql: str) -> list[str]:
             enter_script_body = finish_word()
             if enter_script_body:
                 script_header = ScriptHeaderState.NONE
-                saw_script_signature = False
                 state = ScanState.SCRIPT_BODY
                 current.append(char)
                 line_start = char in " \t\n"
                 i += 1
                 continue
-
-            if script_header == ScriptHeaderState.SAW_SCRIPT and char == "(":
-                saw_script_signature = True
 
             if char == "'":
                 current.append(char)
@@ -200,7 +196,6 @@ def split_sql_script(sql: str) -> list[str]:
                 i += 2
             elif char == ";":
                 script_header = ScriptHeaderState.NONE
-                saw_script_signature = False
                 flush_statement()
                 i += 1
             else:
@@ -213,7 +208,6 @@ def split_sql_script(sql: str) -> list[str]:
                     current.pop()
                 flush_statement()
                 script_header = ScriptHeaderState.NONE
-                saw_script_signature = False
                 state = ScanState.NORMAL
                 i += 1
                 while i < len(sql) and sql[i] in " \t":

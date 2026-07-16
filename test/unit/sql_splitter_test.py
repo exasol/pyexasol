@@ -67,11 +67,6 @@ from pyexasol._sql_splitter import (
             ["CREATE TABLE script AS SELECT (1) AS x", "SELECT 2"],
             id="create_table_named_script_with_parenthesized_expression",
         ),
-        pytest.param(
-            "CREATE SCRIPT name AS SELECT 1; SELECT 2",
-            ["CREATE SCRIPT name AS SELECT 1", "SELECT 2"],
-            id="script_without_signature_is_regular_sql",
-        ),
     ],
 )
 def test_split_sql_script(sql, expected):
@@ -134,6 +129,30 @@ def test_split_sql_script(sql, expected):
                 "CREATE LUA SCALAR SCRIPT schema.name() RETURNS VARCHAR(10) AS\nreturn '/';",
             ],
             id="slash_not_at_line_start",
+        ),
+        pytest.param(
+            "CREATE SCRIPT function_lib AS\nx = 1;\ny = 2;\n/\nSELECT 1;",
+            [
+                "CREATE SCRIPT function_lib AS\nx = 1;\ny = 2;",
+                "SELECT 1",
+            ],
+            id="script_without_parameter_list",
+        ),
+        pytest.param(
+            "CREATE JAVA ADAPTER SCRIPT my_script AS\n%jar /buckets/jdbc.jar;\n/\nSELECT 1;",
+            [
+                "CREATE JAVA ADAPTER SCRIPT my_script AS\n%jar /buckets/jdbc.jar;",
+                "SELECT 1",
+            ],
+            id="adapter_script_without_parameter_list",
+        ),
+        pytest.param(
+            "CREATE PYTHON3 PREPROCESSOR SCRIPT my_script AS\nprint('x;')\n/\nSELECT 1;",
+            [
+                "CREATE PYTHON3 PREPROCESSOR SCRIPT my_script AS\nprint('x;')",
+                "SELECT 1",
+            ],
+            id="preprocessor_script",
         ),
     ],
 )
