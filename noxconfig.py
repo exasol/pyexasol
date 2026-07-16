@@ -10,7 +10,7 @@ from pydantic import (
 )
 
 DEFAULT_PORT = 8563
-DEFAULT_DB_VERSION = "2025.1.11"
+DEFAULT_DB_VERSION = "8.29.13"
 CONTAINER_SUFFIX = "test"
 CONTAINER_NAME = f"db_container_{CONTAINER_SUFFIX}"
 
@@ -86,5 +86,7 @@ PROJECT_CONFIG = Config(
     # & a known issue in the ITDE & will be resolved in:
     #   https://github.com/exasol/pyexasol/issues/285
     python_versions=("3.10", "3.11", "3.12", "3.13"),
-    exasol_versions=("8.29.13", "2025.1.11"),
+    # Changes for 2025.1.x have not yet been made. This will be resolved in:
+    #   https://github.com/exasol/pyexasol/issues/273
+    exasol_versions=("8.29.13",),
 )
