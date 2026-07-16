@@ -36,7 +36,7 @@ def test_execute_sql_script_executes_slash_terminated_exasol_script(connection):
     script_name = unique_name("SCRIPT_FUNC")
     script = cleandoc(f"""
         CREATE OR REPLACE LUA SCALAR SCRIPT {script_name}()
-            RETURNS INT AS
+            RETURNS DOUBLE AS
 
         function run(ctx)
             local value = 1;
@@ -56,7 +56,8 @@ def test_execute_sql_script_executes_slash_terminated_exasol_script(connection):
 
 
 @pytest.mark.exceptions
-def test_execute_sql_script_stops_after_first_failing_statement(connection):
+def test_execute_sql_script_stops_after_first_failing_statement(connection_factory):
+    connection = connection_factory(autocommit=True)
     table_name = unique_name("SCRIPT_FAILURE")
     script = cleandoc(f"""
         CREATE OR REPLACE TABLE {table_name} (value INT);
@@ -70,4 +71,7 @@ def test_execute_sql_script_stops_after_first_failing_statement(connection):
 
         assert connection.execute(f"SELECT COUNT(*) FROM {table_name}").fetchval() == 0
     finally:
-        connection.execute(f"DROP TABLE IF EXISTS {table_name}")
+        try:
+            connection.execute(f"DROP TABLE IF EXISTS {table_name}")
+        finally:
+            connection.close()
