@@ -17,9 +17,6 @@ build/
 
 .realsync*
 
-# Visual Studio Code
-.vscode
-
 .DS_Store
 
 .build_output/
