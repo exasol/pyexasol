@@ -178,4 +178,6 @@ markers = [
     "tls: tests related to tls.",
     "transaction: tests related to transaction management.",
     "udf: tests related to user defined functions.",
+    "with_cert: tests related to certificate verification.",
+    "no_cert: tests related to certificate verification disabled.",
 ]
