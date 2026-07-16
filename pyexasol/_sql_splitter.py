@@ -34,64 +34,253 @@ SCRIPT_HEADER_WORDS = {
 }
 
 
-# This explicit state machine is intentionally kept in one function so quote and
-# comment handling stays aligned with the main splitter scanner.
-def strip_comments(sql: str) -> str:  # NOSONAR
-    output: list[str] = []
-    state = ScanState.NORMAL
-    i = 0
+class _CommentStripper:
+    def __init__(self, sql: str) -> None:
+        self.sql = sql
+        self.output: list[str] = []
+        self.state = ScanState.NORMAL
+        self.position = 0
 
-    while i < len(sql):
-        char = sql[i]
-        next_char = sql[i + 1] if i + 1 < len(sql) else None
+    def run(self) -> str:
+        while self.position < len(self.sql):
+            self.consume_current_character()
 
-        if state == ScanState.SINGLE_QUOTE:
-            output.append(char)
-            if char == "'":
-                state = ScanState.NORMAL
-            i += 1
-            continue
+        return "".join(self.output)
 
-        if state == ScanState.DOUBLE_QUOTE:
-            output.append(char)
-            if char == '"':
-                state = ScanState.NORMAL
-            i += 1
-            continue
+    def consume_current_character(self) -> None:
+        if self.state == ScanState.SINGLE_QUOTE:
+            self.consume_quote("'")
+        elif self.state == ScanState.DOUBLE_QUOTE:
+            self.consume_quote('"')
+        elif self.current_char == "'":
+            self.enter_quote(ScanState.SINGLE_QUOTE)
+        elif self.current_char == '"':
+            self.enter_quote(ScanState.DOUBLE_QUOTE)
+        elif self.current_char == "-" and self.next_char == "-":
+            self.consume_line_comment()
+        elif self.current_char == "/" and self.next_char == "*":
+            self.consume_block_comment()
+        else:
+            self.append_current_char()
 
-        if char == "'":
-            output.append(char)
-            state = ScanState.SINGLE_QUOTE
-            i += 1
-            continue
+    @property
+    def current_char(self) -> str:
+        return self.sql[self.position]
 
-        if char == '"':
-            output.append(char)
-            state = ScanState.DOUBLE_QUOTE
-            i += 1
-            continue
+    @property
+    def next_char(self) -> str | None:
+        lookahead = self.position + 1
+        return self.sql[lookahead] if lookahead < len(self.sql) else None
 
-        if char == "-" and next_char == "-":
-            output.append(" ")
-            i += 2
-            while i < len(sql) and sql[i] != "\n":
-                i += 1
-            continue
+    def consume_quote(self, quote: str) -> None:
+        self.append_current_char()
+        if self.output[-1] == quote:
+            self.state = ScanState.NORMAL
 
-        if char == "/" and next_char == "*":
-            output.append(" ")
-            i += 2
-            while i < len(sql):
-                if sql[i] == "*" and i + 1 < len(sql) and sql[i + 1] == "/":
-                    i += 2
-                    break
-                i += 1
-            continue
+    def enter_quote(self, state: ScanState) -> None:
+        self.output.append(self.current_char)
+        self.state = state
+        self.position += 1
 
-        output.append(char)
-        i += 1
+    def append_current_char(self) -> None:
+        self.output.append(self.current_char)
+        self.position += 1
 
-    return "".join(output)
+    def consume_line_comment(self) -> None:
+        self.output.append(" ")
+        self.position += 2
+        while self.position < len(self.sql) and self.current_char != "\n":
+            self.position += 1
+
+    def consume_block_comment(self) -> None:
+        self.output.append(" ")
+        self.position += 2
+        while self.position < len(self.sql):
+            if self.current_char == "*" and self.next_char == "/":
+                self.position += 2
+                return
+            self.position += 1
+
+
+def strip_comments(sql: str) -> str:
+    return _CommentStripper(sql).run()
+
+
+class _SqlScriptSplitter:
+    def __init__(self, sql: str) -> None:
+        self.sql = sql
+        self.statements: list[str] = []
+        self.current: list[str] = []
+        self.word: list[str] = []
+        self.state = ScanState.NORMAL
+        self.script_header = ScriptHeaderState.NONE
+        self.line_start = True
+        self.position = 0
+
+    def run(self) -> list[str]:
+        while self.position < len(self.sql):
+            self.consume_current_character()
+
+        self.finish_word()
+        self.flush_statement()
+        return self.statements
+
+    def consume_current_character(self) -> None:
+        if self.state == ScanState.NORMAL:
+            self.consume_normal()
+        elif self.state == ScanState.SCRIPT_BODY:
+            self.consume_script_body()
+        elif self.state == ScanState.SINGLE_QUOTE:
+            self.consume_quote("'")
+        elif self.state == ScanState.DOUBLE_QUOTE:
+            self.consume_quote('"')
+        elif self.state == ScanState.LINE_COMMENT:
+            self.consume_line_comment()
+        else:
+            self.consume_block_comment()
+
+    @property
+    def current_char(self) -> str:
+        return self.sql[self.position]
+
+    @property
+    def next_char(self) -> str | None:
+        lookahead = self.position + 1
+        return self.sql[lookahead] if lookahead < len(self.sql) else None
+
+    def consume_normal(self) -> None:
+        if self.current_char.isalnum() or self.current_char == "_":
+            self.word.append(self.current_char)
+            self.append_current_char()
+        elif self.finish_word():
+            self.enter_script_body()
+        elif self.current_char == "'":
+            self.enter_state(ScanState.SINGLE_QUOTE)
+        elif self.current_char == '"':
+            self.enter_state(ScanState.DOUBLE_QUOTE)
+        elif self.current_char == "-" and self.next_char == "-":
+            self.enter_two_character_state(ScanState.LINE_COMMENT)
+        elif self.current_char == "/" and self.next_char == "*":
+            self.enter_two_character_state(ScanState.BLOCK_COMMENT)
+        elif self.current_char == ";":
+            self.script_header = ScriptHeaderState.NONE
+            self.flush_statement()
+            self.position += 1
+        else:
+            self.append_current_char()
+
+    def consume_script_body(self) -> None:
+        if self.slash_terminates_script_body():
+            self.finish_script_body()
+            return
+
+        self.current.append(self.current_char)
+        if self.current_char == "\n":
+            self.line_start = True
+        elif self.current_char not in " \t":
+            self.line_start = False
+        self.position += 1
+
+    def consume_quote(self, quote: str) -> None:
+        self.append_current_char()
+        if self.current[-1] == quote:
+            self.state = ScanState.NORMAL
+
+    def consume_line_comment(self) -> None:
+        self.append_current_char()
+        if self.current[-1] == "\n":
+            self.state = ScanState.NORMAL
+
+    def consume_block_comment(self) -> None:
+        next_char = self.next_char
+        self.current.append(self.current_char)
+        if self.current_char == "*" and next_char == "/":
+            self.current.append(next_char)
+            self.state = ScanState.NORMAL
+            self.position += 2
+        else:
+            self.position += 1
+
+    def enter_state(self, state: ScanState) -> None:
+        self.current.append(self.current_char)
+        self.state = state
+        self.position += 1
+
+    def enter_two_character_state(self, state: ScanState) -> None:
+        next_char = self.next_char
+        assert next_char is not None
+        self.current.append(self.current_char)
+        self.current.append(next_char)
+        self.state = state
+        self.position += 2
+
+    def enter_script_body(self) -> None:
+        self.script_header = ScriptHeaderState.NONE
+        self.state = ScanState.SCRIPT_BODY
+        self.current.append(self.current_char)
+        self.line_start = self.current_char in " \t\n"
+        self.position += 1
+
+    def finish_script_body(self) -> None:
+        if self.current and self.current[-1] == "\n":
+            self.current.pop()
+        self.flush_statement()
+        self.script_header = ScriptHeaderState.NONE
+        self.state = ScanState.NORMAL
+        self.position += 1
+        self.skip_script_terminator_trailing_whitespace()
+
+    def skip_script_terminator_trailing_whitespace(self) -> None:
+        while self.position < len(self.sql) and self.current_char in " \t":
+            self.position += 1
+        if self.position < len(self.sql) and self.current_char == "\r":
+            self.position += 1
+
+    def append_current_char(self) -> None:
+        self.current.append(self.current_char)
+        self.position += 1
+
+    def flush_statement(self) -> None:
+        statement = "".join(self.current).strip()
+        if statement and strip_comments(statement).strip():
+            self.statements.append(statement)
+        self.current.clear()
+
+    def finish_word(self) -> bool:
+        if not self.word:
+            return False
+
+        upper_word = "".join(self.word).upper()
+        self.word.clear()
+
+        if self.script_header == ScriptHeaderState.NONE:
+            if upper_word == "CREATE":
+                self.script_header = ScriptHeaderState.SAW_CREATE
+        elif self.script_header == ScriptHeaderState.SAW_CREATE:
+            if upper_word == "SCRIPT":
+                self.script_header = ScriptHeaderState.SAW_SCRIPT
+            elif upper_word not in SCRIPT_HEADER_WORDS:
+                self.script_header = ScriptHeaderState.NONE
+        else:
+            if upper_word == "AS":
+                return True
+
+        return False
+
+    def slash_terminates_script_body(self) -> bool:
+        if not self.line_start or self.current_char != "/":
+            return False
+
+        lookahead = self.position + 1
+        while lookahead < len(self.sql) and self.sql[lookahead] in " \t":
+            lookahead += 1
+
+        if lookahead == len(self.sql) or self.sql[lookahead] == "\n":
+            return True
+
+        return self.sql[lookahead] == "\r" and (
+            lookahead + 1 == len(self.sql) or self.sql[lookahead + 1] == "\n"
+        )
 
 
 def split_sql_script(sql: str) -> list[str]:
@@ -104,151 +293,4 @@ def split_sql_script(sql: str) -> list[str]:
     bodies are entered after ``CREATE ... SCRIPT ... AS`` and are terminated by
     a standalone ``/`` line.
     """
-    statements: list[str] = []
-    current: list[str] = []
-    word: list[str] = []
-    state = ScanState.NORMAL
-    script_header = ScriptHeaderState.NONE
-    line_start = True
-    i = 0
-
-    def flush_statement() -> None:
-        statement = "".join(current).strip()
-        if statement and strip_comments(statement).strip():
-            statements.append(statement)
-        current.clear()
-
-    def finish_word() -> bool:
-        nonlocal script_header
-
-        if not word:
-            return False
-
-        upper_word = "".join(word).upper()
-        word.clear()
-
-        if script_header == ScriptHeaderState.NONE:
-            if upper_word == "CREATE":
-                script_header = ScriptHeaderState.SAW_CREATE
-        elif script_header == ScriptHeaderState.SAW_CREATE:
-            if upper_word == "SCRIPT":
-                script_header = ScriptHeaderState.SAW_SCRIPT
-            elif upper_word not in SCRIPT_HEADER_WORDS:
-                script_header = ScriptHeaderState.NONE
-        else:
-            if upper_word == "AS":
-                return True
-
-        return False
-
-    def slash_terminates_script_body(position: int) -> bool:
-        if not line_start or sql[position] != "/":
-            return False
-
-        lookahead = position + 1
-        while lookahead < len(sql) and sql[lookahead] in " \t":
-            lookahead += 1
-
-        if lookahead == len(sql) or sql[lookahead] == "\n":
-            return True
-
-        return sql[lookahead] == "\r" and (
-            lookahead + 1 == len(sql) or sql[lookahead + 1] == "\n"
-        )
-
-    while i < len(sql):
-        char = sql[i]
-        next_char = sql[i + 1] if i + 1 < len(sql) else None
-
-        if state == ScanState.NORMAL:
-            if char.isalnum() or char == "_":
-                word.append(char)
-                current.append(char)
-                i += 1
-                continue
-
-            enter_script_body = finish_word()
-            if enter_script_body:
-                script_header = ScriptHeaderState.NONE
-                state = ScanState.SCRIPT_BODY
-                current.append(char)
-                line_start = char in " \t\n"
-                i += 1
-                continue
-
-            if char == "'":
-                current.append(char)
-                state = ScanState.SINGLE_QUOTE
-                i += 1
-            elif char == '"':
-                current.append(char)
-                state = ScanState.DOUBLE_QUOTE
-                i += 1
-            elif char == "-" and next_char == "-":
-                current.append(char)
-                current.append(next_char)
-                state = ScanState.LINE_COMMENT
-                i += 2
-            elif char == "/" and next_char == "*":
-                current.append(char)
-                current.append(next_char)
-                state = ScanState.BLOCK_COMMENT
-                i += 2
-            elif char == ";":
-                script_header = ScriptHeaderState.NONE
-                flush_statement()
-                i += 1
-            else:
-                current.append(char)
-                i += 1
-
-        elif state == ScanState.SCRIPT_BODY:
-            if slash_terminates_script_body(i):
-                if current and current[-1] == "\n":
-                    current.pop()
-                flush_statement()
-                script_header = ScriptHeaderState.NONE
-                state = ScanState.NORMAL
-                i += 1
-                while i < len(sql) and sql[i] in " \t":
-                    i += 1
-                if i < len(sql) and sql[i] == "\r":
-                    i += 1
-            else:
-                current.append(char)
-                if char == "\n":
-                    line_start = True
-                elif char not in " \t":
-                    line_start = False
-                i += 1
-
-        elif state == ScanState.SINGLE_QUOTE:
-            current.append(char)
-            if char == "'":
-                state = ScanState.NORMAL
-            i += 1
-
-        elif state == ScanState.DOUBLE_QUOTE:
-            current.append(char)
-            if char == '"':
-                state = ScanState.NORMAL
-            i += 1
-
-        elif state == ScanState.LINE_COMMENT:
-            current.append(char)
-            if char == "\n":
-                state = ScanState.NORMAL
-            i += 1
-
-        else:
-            current.append(char)
-            if char == "*" and next_char == "/":
-                current.append(next_char)
-                state = ScanState.NORMAL
-                i += 2
-            else:
-                i += 1
-
-    finish_word()
-    flush_statement()
-    return statements
+    return _SqlScriptSplitter(sql).run()
