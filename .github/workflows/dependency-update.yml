@@ -1,5 +1,5 @@
 # Generated and maintained by the exasol-toolbox.
-# Last generated with exasol-toolbox version 10.0.0.
+# Last generated with exasol-toolbox version 10.3.0.
 name: Dependency Update
 
 on:
@@ -40,74 +40,65 @@ jobs:
           python-version: "3.10"
           poetry-version: "2.3.0"
 
-      - name: Audit Dependencies
-        id: audit-dependencies
-        run: |
-          set -o pipefail
-          poetry self add poetry-plugin-export
-          # Pipeline purpose:
-          # - `2>&1`: merge stdout and stderr into one stream.
-          # - `tee /dev/stderr`: mirror the combined output back to stderr so it stays visible in the logs.
-          # - `sed -n '/^\[/,$p'`: keep only the JSON payload and write it to vulnerabilities.json.
-          # With `set -o pipefail`, any failure in the pipeline still fails this step and turns the workflow red.
-          poetry run -- nox -s dependency:audit 2>&1 | tee /dev/stderr | sed -n '/^\[/,$p' > vulnerabilities.json
-          LENGTH=$(jq 'length' vulnerabilities.json)
-          echo "count=$LENGTH" >> "$GITHUB_OUTPUT"
-
-      - name: Update Dependencies
-        id: update-dependencies
-        if: steps.audit-dependencies.outputs.count > 0
-        run: poetry update
-
-      - name: Check for poetry.lock Changes
-        id: check-for-poetry-lock-changes
-        if: steps.audit-dependencies.outputs.count > 0
-        run: |
-          if git diff --quiet -- poetry.lock; then
-            echo "changed=false" >> "$GITHUB_OUTPUT"
-          else
-            echo "changed=true" >> "$GITHUB_OUTPUT"
-          fi
-
       - name: Configure git
         id: configure-git
-        if: steps.check-for-poetry-lock-changes.outputs.changed == 'true'
         run: |
           git config --global user.email "opensource@exasol.com"
           git config --global user.name "Automatic Dependency Updater"
 
       - name: Create branch
         id: create-branch
-        if: steps.check-for-poetry-lock-changes.outputs.changed == 'true'
         run: |
           branch_name="dependency-update/$(date "+%Y-%m-%d")"
           echo "Creating branch $branch_name"
           git switch -C "$branch_name"
 
-      - name: Commit Changes & Push
+      - name: Record current commit
+        id: record-current-commit
+        run: |
+          echo "head_sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
+      - name: Update Dependencies
+        id: update-dependencies
+        run: |
+          poetry self add poetry-plugin-export
+          poetry run -- nox -s vulnerabilities:update -- vulnerabilities.json
+          cat vulnerabilities.json
+
+      - name: Check for New Commit
+        id: check-for-new-commit
+        env:
+          PRE_UPDATE_HEAD_SHA: ${{ steps.record-current-commit.outputs.head_sha }}
+        run: |
+          if [ "$(git rev-parse HEAD)" = "$PRE_UPDATE_HEAD_SHA" ]; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Push Changes
         id: publish-branch
-        if: steps.check-for-poetry-lock-changes.outputs.changed == 'true'
+        if: steps.check-for-new-commit.outputs.changed == 'true'
         run: |
           branch_name=$(git rev-parse --abbrev-ref HEAD)
-          git add poetry.lock
-          git commit --message "Updated poetry.lock"
           git push --set-upstream origin "$branch_name"
 
       - name: Create Pull Request
         id: create-pr
-        if: steps.check-for-poetry-lock-changes.outputs.changed == 'true'
+        if: steps.check-for-new-commit.outputs.changed == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           BASE_BRANCH=$(gh repo view --json defaultBranchRef -q .defaultBranchRef.name)
+          DEPENDENCY_UPDATE_REPORT="$(cat vulnerabilities.json)"
 
           PR_BODY="Automated dependency update for \`poetry.lock\`.
           This PR was created by the workflow \`dependency-update.yml\`
 
-          Please perform the following actions on a locally checked out branch:
-          - [ ] Execute \`poetry run -- nox -s workflow:generate -- all\`
-          - [ ] Use \`poetry run -- nox -s dependency:audit\` to check for vulnerabilities requiring manual action
-          - [ ] Update file \`doc/changes/unreleased.md\`
+          Remaining vulnerable dependencies after the automated update:
+          \`\`\`json
+          ${DEPENDENCY_UPDATE_REPORT}
+          \`\`\`
           "
 
           PR_URL=$(gh pr create \
