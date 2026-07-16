@@ -36,6 +36,7 @@ from packaging.version import Version
 from . import callback as cb
 from . import constant
 from ._metadata import __version__
+from ._sql_splitter import split_sql_script
 from .exceptions import (
     ExaAuthError,
     ExaCommunicationError,
@@ -331,6 +332,25 @@ class ExaConnection:
             ...)
         """
         return self.cls_statement(self, query, query_params)
+
+    def execute_sql_script(self, script: str) -> list[ExaStatement]:
+        """
+        Execute a SQL script containing one or more statements.
+
+        The script is split into statements before execution. Semicolons inside
+        string literals, quoted SQL identifiers, line comments, block comments,
+        and Exasol script bodies do not terminate statements. Exasol script
+        bodies are terminated by a standalone ``/`` line.
+
+        Statements are executed sequentially using :meth:`execute`. The method
+        returns a list with one :class:`pyexasol.ExaStatement` for each executed
+        statement, in execution order. If one statement fails, the original
+        exception is raised and following statements are not executed.
+
+        Query parameters are intentionally not supported for SQL scripts.
+        Use :meth:`execute` for parameterized single statements.
+        """
+        return [self.execute(statement) for statement in split_sql_script(script)]
 
     def execute_udf_output(self, query: str, query_params: dict | None = None):
         """
