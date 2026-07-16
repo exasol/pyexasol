@@ -63,6 +63,11 @@ from pyexasol._sql_splitter import (
             id="create_table_named_script",
         ),
         pytest.param(
+            "CREATE TABLE script AS SELECT (1) AS x; SELECT 2",
+            ["CREATE TABLE script AS SELECT (1) AS x", "SELECT 2"],
+            id="create_table_named_script_with_parenthesized_expression",
+        ),
+        pytest.param(
             "CREATE SCRIPT name AS SELECT 1; SELECT 2",
             ["CREATE SCRIPT name AS SELECT 1", "SELECT 2"],
             id="script_without_signature_is_regular_sql",
@@ -100,6 +105,14 @@ def test_split_sql_script(sql, expected):
                 "CREATE LUA SCALAR SCRIPT schema.name() RETURNS INT AS\nreturn 1;",
             ],
             id="script_terminator_with_trailing_spaces",
+        ),
+        pytest.param(
+            "CREATE LUA SCALAR SCRIPT schema.name() RETURNS INT AS\r\nreturn 1;\r\n/\r\nSELECT 1;",
+            [
+                "CREATE LUA SCALAR SCRIPT schema.name() RETURNS INT AS\r\nreturn 1;",
+                "SELECT 1",
+            ],
+            id="script_terminator_with_crlf",
         ),
         pytest.param(
             "CREATE LUA SCALAR SCRIPT schema.name() RETURNS INT AS\n   /",

@@ -19,6 +19,20 @@ class ScriptHeaderState(Enum):
     SAW_SCRIPT = auto()
 
 
+SCRIPT_HEADER_WORDS = {
+    "ADAPTER",
+    "JAVA",
+    "LUA",
+    "OR",
+    "PYTHON",
+    "PYTHON3",
+    "R",
+    "REPLACE",
+    "SCALAR",
+    "SET",
+}
+
+
 # This explicit state machine is intentionally kept in one function so quote and
 # comment handling stays aligned with the main splitter scanner.
 def strip_comments(sql: str) -> str:  # NOSONAR
@@ -119,6 +133,8 @@ def split_sql_script(sql: str) -> list[str]:
         elif script_header == ScriptHeaderState.SAW_CREATE:
             if upper_word == "SCRIPT":
                 script_header = ScriptHeaderState.SAW_SCRIPT
+            elif upper_word not in SCRIPT_HEADER_WORDS:
+                script_header = ScriptHeaderState.NONE
         else:
             if saw_script_signature and upper_word == "AS":
                 return True
@@ -133,7 +149,12 @@ def split_sql_script(sql: str) -> list[str]:
         while lookahead < len(sql) and sql[lookahead] in " \t":
             lookahead += 1
 
-        return lookahead == len(sql) or sql[lookahead] == "\n"
+        if lookahead == len(sql) or sql[lookahead] == "\n":
+            return True
+
+        return sql[lookahead] == "\r" and (
+            lookahead + 1 == len(sql) or sql[lookahead + 1] == "\n"
+        )
 
     while i < len(sql):
         char = sql[i]
@@ -196,6 +217,8 @@ def split_sql_script(sql: str) -> list[str]:
                 state = ScanState.NORMAL
                 i += 1
                 while i < len(sql) and sql[i] in " \t":
+                    i += 1
+                if i < len(sql) and sql[i] == "\r":
                     i += 1
             else:
                 current.append(char)
