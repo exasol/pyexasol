@@ -56,22 +56,20 @@ def test_execute_sql_script_executes_slash_terminated_exasol_script(connection):
 
 
 @pytest.mark.exceptions
-def test_execute_sql_script_stops_after_first_failing_statement(connection_factory):
-    connection = connection_factory(autocommit=True)
+def test_execute_sql_script_stops_after_first_failing_statement(connection):
     table_name = unique_name("SCRIPT_FAILURE")
     script = cleandoc(f"""
-        CREATE OR REPLACE TABLE {table_name} (value INT);
+        CREATE TABLE {table_name} (val INT);
         SELECT * FROM {table_name}_DOES_NOT_EXIST;
         INSERT INTO {table_name} VALUES 1;
         """)
 
     try:
-        with pytest.raises(ExaQueryError):
+        with pytest.raises(
+            ExaQueryError, match=rf"object {table_name}_DOES_NOT_EXIST not found"
+        ):
             connection.execute_sql_script(script)
 
         assert connection.execute(f"SELECT COUNT(*) FROM {table_name}").fetchval() == 0
     finally:
-        try:
-            connection.execute(f"DROP TABLE IF EXISTS {table_name}")
-        finally:
-            connection.close()
+        connection.execute(f"DROP TABLE IF EXISTS {table_name}")
