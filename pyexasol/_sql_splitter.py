@@ -256,32 +256,43 @@ class _SqlScriptSplitter:
 
         upper_word = "".join(self.word).upper()
         self.word.clear()
+        return self.update_script_header(upper_word)
 
+    def update_script_header(self, upper_word: str) -> bool:
         if self.script_header == ScriptHeaderState.NONE:
-            if upper_word == "CREATE":
-                self.script_header = ScriptHeaderState.SAW_CREATE
+            self.update_empty_script_header(upper_word)
         elif self.script_header == ScriptHeaderState.SAW_CREATE:
-            if upper_word == "SCRIPT":
-                self.script_header = ScriptHeaderState.SAW_SCRIPT
-            elif upper_word in SCRIPT_HEADER_WORDS:
-                pass
-            else:
-                self.script_header = ScriptHeaderState.SAW_POSSIBLE_SCRIPT_LANGUAGE
+            self.update_create_script_header(upper_word)
         elif self.script_header == ScriptHeaderState.SAW_POSSIBLE_SCRIPT_LANGUAGE:
-            if upper_word in SCRIPT_HEADER_WORDS:
-                self.script_header = ScriptHeaderState.SAW_SCRIPT_LANGUAGE
-            else:
-                self.script_header = ScriptHeaderState.NONE
+            self.update_possible_language_script_header(upper_word)
         elif self.script_header == ScriptHeaderState.SAW_SCRIPT_LANGUAGE:
-            if upper_word == "SCRIPT":
-                self.script_header = ScriptHeaderState.SAW_SCRIPT
-            elif upper_word not in SCRIPT_HEADER_WORDS:
-                self.script_header = ScriptHeaderState.NONE
-        else:
-            if upper_word == "AS":
-                return True
+            self.update_language_script_header(upper_word)
+        elif upper_word == "AS":
+            return True
 
         return False
+
+    def update_empty_script_header(self, upper_word: str) -> None:
+        if upper_word == "CREATE":
+            self.script_header = ScriptHeaderState.SAW_CREATE
+
+    def update_create_script_header(self, upper_word: str) -> None:
+        if upper_word == "SCRIPT":
+            self.script_header = ScriptHeaderState.SAW_SCRIPT
+        elif upper_word not in SCRIPT_HEADER_WORDS:
+            self.script_header = ScriptHeaderState.SAW_POSSIBLE_SCRIPT_LANGUAGE
+
+    def update_possible_language_script_header(self, upper_word: str) -> None:
+        if upper_word in SCRIPT_HEADER_WORDS:
+            self.script_header = ScriptHeaderState.SAW_SCRIPT_LANGUAGE
+        else:
+            self.script_header = ScriptHeaderState.NONE
+
+    def update_language_script_header(self, upper_word: str) -> None:
+        if upper_word == "SCRIPT":
+            self.script_header = ScriptHeaderState.SAW_SCRIPT
+        elif upper_word not in SCRIPT_HEADER_WORDS:
+            self.script_header = ScriptHeaderState.NONE
 
     def slash_terminates_script_body(self) -> bool:
         if not self.line_start or self.current_char != "/":
