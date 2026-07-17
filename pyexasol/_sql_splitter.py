@@ -16,6 +16,8 @@ class ScanState(Enum):
 class ScriptHeaderState(Enum):
     NONE = auto()
     SAW_CREATE = auto()
+    SAW_POSSIBLE_SCRIPT_LANGUAGE = auto()
+    SAW_SCRIPT_LANGUAGE = auto()
     SAW_SCRIPT = auto()
 
 
@@ -259,6 +261,18 @@ class _SqlScriptSplitter:
             if upper_word == "CREATE":
                 self.script_header = ScriptHeaderState.SAW_CREATE
         elif self.script_header == ScriptHeaderState.SAW_CREATE:
+            if upper_word == "SCRIPT":
+                self.script_header = ScriptHeaderState.SAW_SCRIPT
+            elif upper_word in SCRIPT_HEADER_WORDS:
+                pass
+            else:
+                self.script_header = ScriptHeaderState.SAW_POSSIBLE_SCRIPT_LANGUAGE
+        elif self.script_header == ScriptHeaderState.SAW_POSSIBLE_SCRIPT_LANGUAGE:
+            if upper_word in SCRIPT_HEADER_WORDS:
+                self.script_header = ScriptHeaderState.SAW_SCRIPT_LANGUAGE
+            else:
+                self.script_header = ScriptHeaderState.NONE
+        elif self.script_header == ScriptHeaderState.SAW_SCRIPT_LANGUAGE:
             if upper_word == "SCRIPT":
                 self.script_header = ScriptHeaderState.SAW_SCRIPT
             elif upper_word not in SCRIPT_HEADER_WORDS:

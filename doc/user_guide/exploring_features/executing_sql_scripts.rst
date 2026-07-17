@@ -57,4 +57,8 @@ for parameterized single statements.
 
 If one statement fails, the original exception is raised and the remaining statements
 are not executed. Statements executed before the failure are not rolled back
-automatically.
+automatically, and their :class:`pyexasol.ExaStatement` objects are not returned.
+
+Inside Exasol script bodies, a standalone ``/`` line terminates the body even if the
+line appears inside a language-specific string literal or expression. This matches
+the delimiter convention used by Exasol SQL clients.

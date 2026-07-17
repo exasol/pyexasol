@@ -154,6 +154,14 @@ def test_split_sql_script(sql, expected):
             ],
             id="preprocessor_script",
         ),
+        pytest.param(
+            "CREATE MY_PYTHON SCALAR SCRIPT my_script AS\nprint('x;')\n/\nSELECT 1;",
+            [
+                "CREATE MY_PYTHON SCALAR SCRIPT my_script AS\nprint('x;')",
+                "SELECT 1",
+            ],
+            id="custom_script_language_alias",
+        ),
     ],
 )
 def test_split_sql_script_with_exasol_script_bodies(sql, expected):

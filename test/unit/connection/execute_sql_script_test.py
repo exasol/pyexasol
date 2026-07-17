@@ -19,6 +19,23 @@ def test_execute_sql_script_executes_all_statements_in_order(
     ]
 
 
+def test_execute_sql_script_preserves_statement_trailing_semicolon(
+    mock_exaconnection_factory,
+):
+    connection = mock_exaconnection_factory()
+    statement = MagicMock(name="statement")
+    connection.execute = MagicMock(return_value=statement)
+
+    actual = connection.execute_sql_script(
+        "CREATE JAVA ADAPTER SCRIPT my_script AS\n%jar /buckets/adapter.jar;\n/\n"
+    )
+
+    assert actual == [statement]
+    connection.execute.assert_called_once_with(
+        "CREATE JAVA ADAPTER SCRIPT my_script AS\n%jar /buckets/adapter.jar;"
+    )
+
+
 def test_execute_sql_script_ignores_empty_and_comment_only_statements(
     mock_exaconnection_factory,
 ):
