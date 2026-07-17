@@ -17,12 +17,11 @@ build/
 
 .realsync*
 
-# Visual Studio Code
-.vscode
-
 .DS_Store
 
 .build_output/
 
 # ignore other benchmark files
 test/performance/.benchmarks/
+
+/.serena/

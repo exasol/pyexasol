@@ -10,7 +10,7 @@ from pydantic import (
 )
 
 DEFAULT_PORT = 8563
-DEFAULT_DB_VERSION = "8.29.6"
+DEFAULT_DB_VERSION = "8.29.13"
 CONTAINER_SUFFIX = "test"
 CONTAINER_NAME = f"db_container_{CONTAINER_SUFFIX}"
 

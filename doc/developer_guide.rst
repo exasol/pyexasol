@@ -8,6 +8,12 @@ This guide explains how to develop PyExasol and run tests.
 Initial Setup
 +++++++++++++
 
+Switch to a supported Python version:
+
+.. code-block:: shell
+
+    poetry env use python3.13
+
 Create a virtual environment and install dependencies:
 
 .. code-block:: shell
@@ -18,7 +24,7 @@ Run the following command to enter the virtual environment:
 
 .. code-block:: shell
 
-    poetry shell
+    eval "$(poetry env activate)"
 
 Once you have set up all dependencies and activated the poetry shell, all further tasks for development should be available via the task runner ``nox``. To see all available tasks, run the following command: ``nox --list``.
 
