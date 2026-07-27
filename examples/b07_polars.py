@@ -5,7 +5,7 @@ EXPORT and IMPORT from Exasol to Polars DataFrames
 Make sure to enable compression for Wi-Fi connections to improve performance
 """
 
-import _config as config
+import examples._config as config
 
 import pyexasol
 

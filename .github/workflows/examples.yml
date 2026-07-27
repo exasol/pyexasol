@@ -49,7 +49,7 @@ jobs:
           MATRIX_EXASOL_VERSIONS: ${{ matrix.exasol_versions }}
 
       - name: Wait for Exasol container (UDF extraction)
-        run: poetry run -- python examples/_wait_container.py
+        run: poetry run -- python -m examples._wait_container
 
       - name: Run examples
         run: poetry run -- nox -s run:examples

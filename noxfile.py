@@ -112,7 +112,7 @@ def run_examples(session: Session) -> None:
     errors = []
     for file in sorted(path.glob("[abcj]*.py")):
         try:
-            session.run("python", str(file))
+            session.run("python", "-m", f"examples.{file.stem}")
         except Exception:
             errors.append(file.name)
 
