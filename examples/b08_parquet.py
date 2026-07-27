@@ -7,9 +7,9 @@ Make sure to enable compression for Wi-Fi connections to improve performance
 
 import tempfile
 
-import _config as config
 from pyarrow import parquet as pq
 
+import examples._config as config
 import pyexasol
 
 # Connect with compression enabled

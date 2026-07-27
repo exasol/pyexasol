@@ -1,5 +1,5 @@
 # Generated and maintained by the exasol-toolbox.
-# Last generated with exasol-toolbox version 10.3.0.
+# Last generated with exasol-toolbox version 10.4.0.
 name: Publish Documentation
 
 on:
@@ -15,7 +15,7 @@ jobs:
     steps:
       - name: Check out Repository
         id: check-out-repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
           persist-credentials: false
