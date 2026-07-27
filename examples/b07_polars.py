@@ -6,7 +6,6 @@ Make sure to enable compression for Wi-Fi connections to improve performance
 """
 
 import examples._config as config
-
 import pyexasol
 
 # Connect with compression enabled
