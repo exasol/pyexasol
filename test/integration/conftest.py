@@ -304,8 +304,10 @@ def expected_reserved_words(db_major_version):
 
     if db_major_version == 7:
         return set_shared
-    elif db_major_version == 8:
+    elif db_major_version >= 8:
         set_shared.update(["CURRENT_CLUSTER", "CURRENT_CLUSTER_UID"])
+        if db_major_version >= 2025:
+            set_shared.add("PARQUET")
         return set_shared
 
 
@@ -315,7 +317,7 @@ def expected_user_table_column_last_visit_ts(db_major_version):
 
     if db_major_version == 7:
         return timestamp_type(size=8, sql_type="TIMESTAMP")
-    elif db_major_version == 8:
+    elif db_major_version >= 8:
         return timestamp_type(size=16, sql_type="TIMESTAMP(3)")
 
 
