@@ -86,5 +86,5 @@ PROJECT_CONFIG = Config(
     # & a known issue in the ITDE & will be resolved in:
     #   https://github.com/exasol/pyexasol/issues/285
     python_versions=("3.10", "3.11", "3.12", "3.13"),
-    exasol_versions=("8.29.13", "2025.1.11", "2026.1.0"),
+    exasol_versions=("8.29.13", "2025.1.11", DEFAULT_DB_VERSION),
 )

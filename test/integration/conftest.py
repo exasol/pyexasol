@@ -306,6 +306,8 @@ def expected_reserved_words(db_major_version):
         return set_shared
     elif db_major_version >= 8:
         set_shared.update(["CURRENT_CLUSTER", "CURRENT_CLUSTER_UID"])
+        if db_major_version >= 2025:
+            set_shared.add("PARQUET")
         return set_shared
 
 
