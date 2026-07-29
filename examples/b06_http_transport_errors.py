@@ -82,7 +82,7 @@ print("--- Finished Abort Query ---\n")
 ###
 
 
-def runtime_error_callback(pipe, dst, **kwargs):
+def export_runtime_error_callback(pipe, dst, **kwargs):
     pipe.read(10)
     time.sleep(1)
 
@@ -90,7 +90,9 @@ def runtime_error_callback(pipe, dst, **kwargs):
 
 
 try:
-    C.export_to_callback(runtime_error_callback, None, "SELECT * FROM users LIMIT 1000")
+    C.export_to_callback(
+        export_runtime_error_callback, None, "SELECT * FROM users LIMIT 1000"
+    )
 except ExaExportError as ex:
     print(ex)
 
@@ -102,7 +104,7 @@ print("--- Finished Runtime Error EXPORT Callback ---\n")
 ###
 
 
-def runtime_error_callback(pipe, src, **kwargs):
+def import_runtime_error_callback(pipe, src, **kwargs):
     pipe.write(b"a,b,c,d")
     time.sleep(1)
 
@@ -110,7 +112,7 @@ def runtime_error_callback(pipe, src, **kwargs):
 
 
 try:
-    C.import_from_callback(runtime_error_callback, None, "users_copy")
+    C.import_from_callback(import_runtime_error_callback, None, "users_copy")
 except ExaImportError as ex:
     print(ex)
 

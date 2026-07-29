@@ -130,7 +130,6 @@ module = [
     "pyodbc.*",
     "turbodbc.*",
     # code we are not yet type checking
-    "examples.*",
     "test.*"
 ]
 ignore_errors = true
