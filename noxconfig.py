@@ -5,6 +5,7 @@ from pathlib import Path
 from exasol.toolbox.config import BaseConfig
 from exasol.toolbox.nox.plugin import hookimpl
 from nox import Session
+from packaging.version import Version
 from pydantic import (
     computed_field,
 )
@@ -77,14 +78,28 @@ class Config(BaseConfig):
         """
         return self.root_path / self.project_name
 
+    @computed_field  # type: ignore[misc]
+    @property
+    def pivot_python_versions(self) -> list[str]:
+        """
+        Python versions used for workflows that should exercise the version range.
+
+        This keeps the workflow matrix aligned with the configured minimum Python
+        version and the maximum supported Python version.
+        """
+        maximum_python_version = max(self.python_versions, key=Version)
+        pivot_python_versions = [self.minimum_python_version]
+
+        if maximum_python_version != self.minimum_python_version:
+            pivot_python_versions.append(maximum_python_version)
+
+        return pivot_python_versions
+
 
 PROJECT_CONFIG = Config(
     root_path=Path(__file__).parent,
     project_name="pyexasol",
     plugins_for_nox_sessions=(StartDB, StopDB),
-    # Python 3.14 is left out due to issues installing pyarrow
-    # & a known issue in the ITDE & will be resolved in:
-    #   https://github.com/exasol/pyexasol/issues/285
-    python_versions=("3.10", "3.11", "3.12", "3.13"),
+    python_versions=("3.10", "3.11", "3.12", "3.13", "3.14"),
     exasol_versions=("8.29.13", "2025.1.11", DEFAULT_DB_VERSION),
 )

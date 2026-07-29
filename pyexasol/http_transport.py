@@ -380,7 +380,7 @@ class ExaSQLExportThread(ExaSQLThread):
 
 class ExaSQLImportThread(ExaSQLThread):
     """
-    Build and run EXPORT query into separate thread
+    Build and run IMPORT query into separate thread
     Main thread is busy parsing results in callbacks
     """
 
