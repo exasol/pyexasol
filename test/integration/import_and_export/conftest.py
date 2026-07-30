@@ -1,12 +1,12 @@
 import copy
 from datetime import datetime
 from inspect import cleandoc
-
-import pytest
-from integration.import_and_export.data_sample import (
+from test.integration.import_and_export.data_sample import (
     DATETIME_STR_FORMAT,
     DataSample,
 )
+
+import pytest
 
 ALL_COLUMNS = [
     "FIRST_NAME",

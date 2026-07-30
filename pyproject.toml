@@ -124,14 +124,9 @@ max-module-lines = 800
 [[tool.mypy.overrides]]
 module = [
     # no stubs available as of 2025
-    "orjson.*",
-    "rapidjson.*",
     "pyarrow.*",
     "pyodbc.*",
     "turbodbc.*",
-    # code we are not yet type checking
-    "examples.*",
-    "test.*"
 ]
 ignore_errors = true
 ignore_missing_imports = true

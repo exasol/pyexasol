@@ -1,8 +1,8 @@
 import time
+from test.integration.import_and_export.helper import select_result
 from unittest.mock import patch
 
 import pytest
-from integration.import_and_export.helper import select_result
 
 from pyexasol.exceptions import (
     ExaCommunicationError,

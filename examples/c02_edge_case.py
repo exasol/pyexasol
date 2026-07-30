@@ -4,6 +4,7 @@ Try to read and write minimum and maximum possible values, test various edge cas
 
 import decimal
 import pprint
+from typing import Any
 
 import examples._config as config
 import pyexasol
@@ -19,7 +20,7 @@ C = pyexasol.connect(
     websocket_sslopt=config.websocket_sslopt,
 )
 
-edge_cases = [
+edge_cases: list[dict[str, Any]] = [
     # Biggest values
     {
         "dec36_0": decimal.Decimal("+" + ("9" * 36)),
@@ -61,9 +62,9 @@ select_q = "SELECT dec36_0, dec36_36, dbl, bl, dt, ts, var100, LENGTH(var2000000
 C.execute("TRUNCATE TABLE edge_case")
 
 # Insert (test formatting)
-C.execute(insert_q, dict(edge_cases[0]))
-C.execute(insert_q, dict(edge_cases[1]))
-C.execute(insert_q, dict(edge_cases[2]))
+C.execute(insert_q, edge_cases[0])
+C.execute(insert_q, edge_cases[1])
+C.execute(insert_q, edge_cases[2])
 
 # Select and fetch
 stmt = C.execute(select_q)
@@ -75,9 +76,9 @@ C.options["fetch_mapper"] = pyexasol.exasol_mapper
 C.execute("TRUNCATE TABLE edge_case")
 
 # Insert (test formatting)
-C.execute(insert_q, dict(edge_cases[0]))
-C.execute(insert_q, dict(edge_cases[1]))
-C.execute(insert_q, dict(edge_cases[2]))
+C.execute(insert_q, edge_cases[0])
+C.execute(insert_q, edge_cases[1])
+C.execute(insert_q, edge_cases[2])
 
 # Select and fetch
 stmt = C.execute(select_q)

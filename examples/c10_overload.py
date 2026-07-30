@@ -52,8 +52,13 @@ class CustomExaConnection(pyexasol.ExaConnection):
 
         super().__init__(**kwargs)
 
+    def execute(
+        self, query: str, query_params: dict | None = None
+    ) -> CustomExaStatement:
+        return self.cls_statement(self, query, query_params)
 
-C = CustomExaConnection(
+
+custom_conn = CustomExaConnection(
     dsn=config.dsn,
     user=config.user,
     password=config.password,
@@ -62,16 +67,16 @@ C = CustomExaConnection(
     websocket_sslopt=config.websocket_sslopt,
 )
 
-stmt = C.execute("SELECT * FROM users ORDER BY user_id LIMIT 5")
+stmt = custom_conn.execute("SELECT * FROM users ORDER BY user_id LIMIT 5")
 
 # Access overloaded objects
 stmt.print_session_id()
-C.format.print_session_id()
-C.logger.print_session_id()
-C.ext.print_session_id()
-C.meta.print_session_id()
+custom_conn.format.print_session_id()
+custom_conn.logger.print_session_id()
+custom_conn.ext.print_session_id()
+custom_conn.meta.print_session_id()
 
-C.close()
+custom_conn.close()
 
 print("Return result rows as named tuples")
 
@@ -89,16 +94,23 @@ class NamedTupleExaStatement(pyexasol.ExaStatement):
 class NamedTupleExaConnection(pyexasol.ExaConnection):
     cls_statement = NamedTupleExaStatement
 
+    def execute(
+        self, query: str, query_params: dict | None = None
+    ) -> NamedTupleExaStatement:
+        return self.cls_statement(self, query, query_params)
 
-C = NamedTupleExaConnection(
+
+named_tuple_conn = NamedTupleExaConnection(
     dsn=config.dsn,
     user=config.user,
     password=config.password,
     schema=config.schema,
     websocket_sslopt=config.websocket_sslopt,
 )
-stmt = C.execute("SELECT * FROM users ORDER BY user_id LIMIT 5")
-print(stmt.fetchone())
-print(stmt.fetchone())
+named_tuple_stmt = named_tuple_conn.execute(
+    "SELECT * FROM users ORDER BY user_id LIMIT 5"
+)
+print(named_tuple_stmt.fetchone())
+print(named_tuple_stmt.fetchone())
 
-C.close()
+named_tuple_conn.close()

@@ -1,5 +1,6 @@
 import csv
 from pathlib import Path
+from test.performance.connection.helper import create_empty_table
 
 import pandas as pd
 import polars as pl
@@ -7,7 +8,6 @@ import pyarrow.csv as py_csv
 import pyarrow.parquet as pq
 import pytest
 
-from performance.connection.helper import create_empty_table
 from pyexasol import ExaConnection
 
 IMPORT_TABLE_NAME = "TMP_SALES_COPY"
