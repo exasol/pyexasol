@@ -1567,9 +1567,12 @@ class ExaConnection:
         result = []
 
         dsn_re = re.compile(
-            r"^(?P<hostname_prefix>.+?)"
+            # Hostname must not contain the ":" and "/" separators, otherwise a
+            # misplaced fingerprint (e.g. localhost:8563/1234) is silently parsed
+            # as part of the hostname instead of being rejected.
+            r"^(?P<hostname_prefix>[^:/]+?)"
             # Optional range (e.g. myxasol1..4.com)
-            r"(?:(?P<range_start>\d+)\.\.(?P<range_end>\d+)(?P<hostname_suffix>.*?))?"
+            r"(?:(?P<range_start>\d+)\.\.(?P<range_end>\d+)(?P<hostname_suffix>[^:/]*?))?"
             # Optional fingerprint (e.g. myexasol1..4.com/135a1d2dce102de866f58267521f4232153545a075dc85f8f7596f57e588a181)
             r"(?:/(?P<fingerprint>[0-9A-Fa-f]+|nocertcheck))?"
             # Optional port (e.g. myexasol1..4.com:8564)
