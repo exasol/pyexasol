@@ -40,10 +40,18 @@ class TestProcessDsn:
                 "127.0.0.1..2/CDE:8565",
                 [("127.0.0.1", 8565, "CDE"), ("127.0.0.2", 8565, "CDE")],
             ),
+            (
+                "127.0.0.1..2/ABC:8564",
+                [("127.0.0.1", 8564, "ABC"), ("127.0.0.2", 8564, "ABC")],
+            ),
+            ("my-host-1/ABC:8564", [("my-host-1", 8564, "ABC")]),
+            ("my-host-1.com/ABC:8564", [("my-host-1.com", 8564, "ABC")]),
         ],
     )
     def test_valid_dsn_is_still_parsed(mock_exaconnection_factory, dsn, expected):
-        connection = mock_exaconnection_factory()
+        # Hostname resolution is disabled, so that parsing can be verified in
+        # isolation, without depending on DNS being able to resolve the examples.
+        connection = mock_exaconnection_factory(resolve_hostnames=False)
 
         actual = {
             (host.hostname, host.port, host.fingerprint)
