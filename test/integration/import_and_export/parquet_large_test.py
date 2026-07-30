@@ -1,14 +1,14 @@
 import copy
 from datetime import datetime
 from inspect import cleandoc
+from test.integration.import_and_export.data_sample import (
+    DATETIME_STR_FORMAT,
+    DataSample,
+)
 from unittest import mock
 
 import pyarrow as pa
 import pytest
-from integration.import_and_export.data_sample import (
-    DATETIME_STR_FORMAT,
-    DataSample,
-)
 from pyarrow import parquet as pq
 
 from pyexasol.connection import cb

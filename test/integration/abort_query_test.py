@@ -35,9 +35,7 @@ This will be resolved in https://github.com/exasol/pyexasol/issues/300.
 
 
 @pytest.mark.exceptions
-@pytest.mark.skipif(
-    sys.version_info[:2] == (3, 13), reason=race_condition, strict=False
-)
+@pytest.mark.skipif(sys.version_info[:2] == (3, 13), reason=race_condition)
 def test_abort_query(connection):
     # Note all timeouts and sleeps in this test case have been chosen by well-educated guesses
     # TL;DR: Adjust timeouts if required/reasonable
