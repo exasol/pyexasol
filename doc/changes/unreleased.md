@@ -2,6 +2,10 @@
 
 ## Summary
 
+## Documentation
+
+* #363: Fixed link to changelog in pypi
+
 ## Refactoring
 
 * #354: Updated to `exasol-toolbox` 10.4.0
