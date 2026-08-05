@@ -74,7 +74,7 @@ Homepage = "https://www.exasol.com/"
 Documentation = "https://github.com/exasol/pyexasol/"
 Source = "https://github.com/exasol/pyexasol"
 Issues = "https://github.com/exasol/pyexasol/issues"
-Changelog = "https://github.com/exasol/pyexasol/blob/master/CHANGELOG.md"
+Changelog = "https://exasol.github.io/pyexasol/master/changes/changelog.html"
 
 [dependency-groups]
 dev = [
