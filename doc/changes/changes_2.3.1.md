@@ -2,6 +2,9 @@
 
 ## Summary
 
+This release fixes the link to Pyexasol's changelog in pypi and fixes
+vulnerabilities by updating dependencies.
+
 ## Security Issues
 
 This release fixes vulnerabilities by updating dependencies:
