@@ -35,7 +35,7 @@ dependencies = [
     # the major version for all feature-releases independent of breaking changes.
     # We anticipate that the stable API stays stable, and if we encounter a breaking
     # change, upstream projects can narrow the range.
-    "cryptography>=45.0.7",
+    "cryptography>=50.0.0",
     # The packaging library uses CalVer, so a new year-based major release does not
     # automatically imply a breaking API change.
     # Releases are published as needed for ecosystem interoperability PEP changes.
