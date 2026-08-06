@@ -75,13 +75,16 @@ Integration Tests
 
 .. important::
 
-    To (temporarily) skip integration tests that require `ssl.CERT_REQUIRED`, you can deselect those
-    tests by using:
+    By default, local integration test runs only execute the `ssl.CERT_NONE` variant, so they do
+    not require a certificate setup.
 
+    To enable the certificate-verification variant locally, pass:
 
     .. code-block:: shell
 
-        poetry run -- nox -s test:integration -- -m "not with_cert"
+        poetry run -- nox -s test:integration -- --with-cert
+
+    Continuous integration enables this automatically, so both certificate modes are covered there.
 
 
 .. code-block:: shell

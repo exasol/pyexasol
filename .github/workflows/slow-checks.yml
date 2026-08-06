@@ -47,7 +47,7 @@ jobs:
 
       - name: Run Integration Tests
         id: run-integration-tests
-        run: poetry run -- nox -s test:integration -- --coverage --db-version ${MATRIX_EXASOL_VERSIONS}
+        run: poetry run -- nox -s test:integration -- --coverage --db-version ${MATRIX_EXASOL_VERSIONS} --with-cert
         env:
           MATRIX_EXASOL_VERSIONS: ${{ matrix.exasol_versions }}
 

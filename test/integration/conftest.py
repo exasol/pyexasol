@@ -52,17 +52,37 @@ def dsn_resolved(default_ipaddr, default_port):
     return os.environ.get("EXAHOST", f"{default_ipaddr}:{default_port}")
 
 
-@pytest.fixture(
-    scope="session",
-    params=[
+def pytest_addoption(parser):
+    parser.addoption(
+        "--with-cert",
+        action="store_true",
+        default=False,
+        help="Include certificate-verification integration test cases.",
+    )
+
+
+def _certificate_tests_enabled(config) -> bool:
+    return config.getoption("--with-cert")
+
+
+def pytest_generate_tests(metafunc):
+    if "certificate_type" not in metafunc.fixturenames:
+        return
+
+    params = [
         pytest.param(ssl.CERT_NONE, id="NO_CERT", marks=pytest.mark.no_cert),
-        pytest.param(ssl.CERT_REQUIRED, id="WITH_CERT", marks=pytest.mark.with_cert),
-    ],
-)
-def certificate_type(request):
-    if request.param == ssl.CERT_NONE:
-        return ssl.CERT_NONE
-    return ssl.CERT_REQUIRED
+    ]
+
+    if _certificate_tests_enabled(metafunc.config):
+        params.append(
+            pytest.param(
+                ssl.CERT_REQUIRED,
+                id="WITH_CERT",
+                marks=pytest.mark.with_cert,
+            )
+        )
+
+    metafunc.parametrize("certificate_type", params, scope="session")
 
 
 @pytest.fixture(scope="session")
@@ -75,9 +95,10 @@ def dsn(certificate_type, default_ipaddr, default_port):
 
 
 @pytest.fixture(scope="session")
-def websocket_sslopt(certificate_type, certificate):
+def websocket_sslopt(request, certificate_type):
     websocket_dict = {"cert_reqs": certificate_type}
     if certificate_type == ssl.CERT_REQUIRED:
+        certificate = request.getfixturevalue("certificate")
         websocket_dict["ca_certs"] = certificate
     return websocket_dict
 
