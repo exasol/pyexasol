@@ -298,7 +298,12 @@ class ExaSQLThread(threading.Thread):
     Thread class which re-throws any Exception to parent thread
     """
 
-    def __init__(self, connection: ExaConnection, compression: bool):
+    def __init__(
+        self,
+        connection: ExaConnection,
+        compression: bool,
+        thread_event: threading.Event | None = None,
+    ):
         self.connection = connection
         self.compression = compression
 
@@ -306,6 +311,7 @@ class ExaSQLThread(threading.Thread):
         self.http_thread = None
         self.exa_address_list: list[str] = []
         self.exc = None
+        self.thread_event = thread_event
 
         super().__init__()
 
@@ -325,13 +331,18 @@ class ExaSQLThread(threading.Thread):
             # In case of SQL error stop HTTP server, close pipes and interrupt I/O in callback function
             if self.http_thread:
                 self.http_thread.terminate()
+        finally:
+            if self.thread_event:
+                self.thread_event.set()
 
     def run_sql(self):
         pass
 
     def join_with_exc(self, *args):
         super().join(*args)
+        self.raise_with_exception()
 
+    def raise_with_exception(self):
         if self.exc:
             raise self.exc
 
@@ -390,8 +401,9 @@ class ExaSQLImportThread(ExaSQLThread):
         compression: bool,
         table: str,
         import_params: dict,
+        thread_event: threading.Event | None = None,
     ):
-        super().__init__(connection, compression)
+        super().__init__(connection, compression, thread_event=thread_event)
 
         self.table = table
         self.params = import_params
@@ -414,7 +426,14 @@ class ExaHttpThread(threading.Thread):
     - https://pythonforthelab.com/blog/differences-between-multiprocessing-windows-and-linux/
     """
 
-    def __init__(self, ipaddr: str, port: int, compression: bool, encryption: bool):
+    def __init__(
+        self,
+        ipaddr: str,
+        port: int,
+        compression: bool,
+        encryption: bool,
+        thread_event: threading.Event | None = None,
+    ):
         self.server = ExaTCPServer(
             (ipaddr, port),
             ExaHttpRequestHandler,
@@ -424,6 +443,7 @@ class ExaHttpThread(threading.Thread):
 
         self.read_pipe = self.server.read_pipe
         self.write_pipe = self.server.write_pipe
+        self.thread_event = thread_event
 
         self.exc = None
 
@@ -446,6 +466,8 @@ class ExaHttpThread(threading.Thread):
             self.exc = e
         finally:
             self.server.server_close()
+            if self.thread_event is not None:
+                self.thread_event.set()
 
     def join(self, timeout=None):
         self.server.can_finish_get.set()
@@ -454,6 +476,10 @@ class ExaHttpThread(threading.Thread):
     def join_with_exc(self):
         self.join()
 
+        if self.exc:
+            raise self.exc
+
+    def raise_with_exception(self):
         if self.exc:
             raise self.exc
 

@@ -10,6 +10,7 @@ from pyexasol.exceptions import (
     ExaQueryError,
     ExaRuntimeError,
 )
+from pyexasol.http_transport import ExaTCPServer
 
 
 @pytest.fixture
@@ -177,9 +178,17 @@ class TestImportFromCallbackExceptions:
     def test_http_thread_has_exception(
         connection, input_filepath, empty_table, import_cb
     ):
-        with patch("pyexasol.connection.ExaHttpThread.join_with_exc") as mock:
-            mock.side_effect = BrokenPipeError("Broken pipe in http_thread")
+        error = BrokenPipeError("Broken pipe in http_thread")
 
+        def handle_request_with_exception(_server):
+            raise error
+
+        with patch.object(
+            ExaTCPServer,
+            "handle_request",
+            autospec=True,
+            side_effect=handle_request_with_exception,
+        ):
             with pytest.raises(ExaImportError, match="2 sub-exceptions") as ex:
                 connection.import_from_callback(
                     callback=import_cb,
@@ -194,6 +203,29 @@ class TestImportFromCallbackExceptions:
             "Following error occured while reading data"
             in ex.value.exceptions[1].message
         )
+
+    @staticmethod
+    def test_sql_thread_has_outdated_database_license(
+        connection, input_filepath, empty_table, import_cb
+    ):
+        license_error = ExaQueryError(
+            connection=connection,
+            query="IMPORT INTO ...",
+            code="42000",
+            message="Database license is out of date.",
+        )
+
+        with patch.object(connection, "execute", side_effect=license_error):
+            with pytest.raises(ExaImportError, match="2 sub-exceptions") as ex:
+                connection.import_from_callback(
+                    callback=import_cb,
+                    src=input_filepath,
+                    table=empty_table,
+                )
+
+        assert len(ex.value.exceptions) == 2
+        assert isinstance(ex.value.exceptions[0], ValueError)
+        assert ex.value.exceptions[1] is license_error
 
     @staticmethod
     def test_sql_thread_has_exception(connection, input_filepath, import_cb):

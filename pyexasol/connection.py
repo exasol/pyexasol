@@ -987,11 +987,13 @@ class ExaConnection:
             False if ("format" in import_params) else self.options["compression"]
         )
 
+        thread_event = threading.Event()
         http_thread = ExaHttpThread(
             self.ws_ipaddr,  # type: ignore
             self.ws_port,  # type: ignore
             compression,
             self.options["encryption"],
+            thread_event=thread_event,
         )
         sql_thread = ExaSQLImportThread(self, compression, table, import_params)
 
@@ -1004,8 +1006,13 @@ class ExaConnection:
             with http_thread.write_pipe as pipe:
                 result = callback(pipe, src, **callback_params)
 
-            http_thread.join_with_exc()
-            sql_thread.join_with_exc()
+            http_thread.join()
+            sql_thread.join()
+
+            thread_event.wait()
+
+            http_thread.raise_with_exception()
+            sql_thread.raise_with_exception()
 
             return result
 

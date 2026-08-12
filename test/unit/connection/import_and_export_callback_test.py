@@ -15,6 +15,15 @@ def mock_http_thread():
         instance = mock_cls.return_value
         instance.write_pipe = MagicMock()
         instance.write_pipe.__enter__.return_value = MagicMock(spec=["write"])
+
+        def construct_http_thread(*args, **kwargs):
+            thread_event = kwargs.get("thread_event")
+            if thread_event is not None:
+                # The real HTTP thread signals this event when it finishes.
+                thread_event.set()
+            return instance
+
+        mock_cls.side_effect = construct_http_thread
         yield mock_cls
 
 
@@ -147,8 +156,9 @@ class TestImportFromCallback:
 
         # verify compression set as expected when import_params=None, then
         # this is set to self.options["compression"]
-        http_args, _ = mock_http_thread.call_args
+        http_args, http_kwargs = mock_http_thread.call_args
         assert http_args[2] is exa_conn.options["compression"]
+        assert http_kwargs["thread_event"].is_set()
 
         # verify import_params=None maps to empty dictionary
         sql_args, _ = mock_sql_import_thread.call_args
