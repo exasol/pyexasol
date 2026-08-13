@@ -995,7 +995,13 @@ class ExaConnection:
             self.options["encryption"],
             thread_event=thread_event,
         )
-        sql_thread = ExaSQLImportThread(self, compression, table, import_params)
+        sql_thread = ExaSQLImportThread(
+            self,
+            compression,
+            table,
+            import_params,
+            thread_event=thread_event,
+        )
 
         try:
             http_thread.start()
@@ -1006,10 +1012,17 @@ class ExaConnection:
             with http_thread.write_pipe as pipe:
                 result = callback(pipe, src, **callback_params)
 
+            # The callback has finished writing. Allow the HTTP handler to send the
+            # final chunk and finish the request.
+            http_thread.server.can_finish_get.set()
+
+            # Either worker may finish first. Wake up as soon as one reports
+            # completion so errors can be observed without waiting on the
+            # other connection indefinitely.
             thread_event.wait()
 
-            http_thread.raise_with_exception()
-            sql_thread.raise_with_exception()
+            http_thread.join_with_exc()
+            sql_thread.join_with_exc()
 
             return result
 
