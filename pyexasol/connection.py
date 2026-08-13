@@ -1006,9 +1006,6 @@ class ExaConnection:
             with http_thread.write_pipe as pipe:
                 result = callback(pipe, src, **callback_params)
 
-            http_thread.join()
-            sql_thread.join()
-
             thread_event.wait()
 
             http_thread.raise_with_exception()
