@@ -1,3 +1,5 @@
+import threading
+from importlib import import_module
 from unittest.mock import (
     Mock,
     patch,
@@ -13,10 +15,13 @@ from pyexasol import (
 from pyexasol.http_transport import (
     ExaHttpThread,
     ExaHTTPTransportWrapper,
+    ExaSQLThread,
     ExportQuery,
     ImportQuery,
     SqlQuery,
 )
+
+http_transport_module = import_module("pyexasol.http_transport")
 
 
 @pytest.fixture
@@ -403,6 +408,103 @@ def export_callback(pipe, dst, **kwargs):
 
 def import_callback(pipe, src, **kwargs):
     raise Exception(ERROR_MESSAGE)
+
+
+class TestImportTransportThreadLifecycle:
+    @staticmethod
+    def test_sql_thread_signals_event_after_successful_query():
+        thread_event = threading.Event()
+
+        class SuccessfulSQLThread(ExaSQLThread):
+            def run_sql(self):
+                pass
+
+        http_thread = Mock()
+        thread = SuccessfulSQLThread(
+            connection=Mock(),
+            compression=False,
+            thread_event=thread_event,
+        )
+        thread.set_http_thread(http_thread)
+
+        thread.run()
+
+        assert thread.exc is None
+        assert thread_event.is_set()
+        http_thread.terminate.assert_not_called()
+
+    @staticmethod
+    def test_sql_thread_terminates_http_and_signals_event_on_failure():
+        thread_event = threading.Event()
+        expected_error = RuntimeError("SQL query failed")
+
+        class FailingSQLThread(ExaSQLThread):
+            def run_sql(self):
+                raise expected_error
+
+        http_thread = Mock()
+        thread = FailingSQLThread(
+            connection=Mock(),
+            compression=False,
+            thread_event=thread_event,
+        )
+        thread.set_http_thread(http_thread)
+
+        thread.run()
+
+        assert thread.exc is expected_error
+        assert thread_event.is_set()
+        http_thread.terminate.assert_called_once_with()
+
+    @staticmethod
+    def test_http_thread_closes_server_and_signals_event_after_success():
+        thread_event = threading.Event()
+        server = Mock(
+            total_clients=0,
+            is_terminated=False,
+            read_pipe=Mock(),
+            write_pipe=Mock(),
+        )
+        server.can_finish_get = Mock()
+
+        def handle_request():
+            server.total_clients = 1
+
+        server.handle_request.side_effect = handle_request
+
+        with patch.object(http_transport_module, "ExaTCPServer", return_value=server):
+            thread = ExaHttpThread(
+                "127.0.0.1", 8563, False, False, thread_event=thread_event
+            )
+            thread.run()
+
+        assert thread.exc is None
+        server.handle_request.assert_called_once_with()
+        server.server_close.assert_called_once_with()
+        assert thread_event.is_set()
+
+    @staticmethod
+    def test_http_thread_closes_server_and_signals_event_after_failure():
+        thread_event = threading.Event()
+        expected_error = BrokenPipeError("HTTP request failed")
+        server = Mock(
+            total_clients=0,
+            is_terminated=False,
+            read_pipe=Mock(),
+            write_pipe=Mock(),
+        )
+        server.can_finish_get = Mock()
+        server.handle_request.side_effect = expected_error
+
+        with patch.object(http_transport_module, "ExaTCPServer", return_value=server):
+            thread = ExaHttpThread(
+                "127.0.0.1", 8563, False, False, thread_event=thread_event
+            )
+            thread.run()
+
+        assert thread.exc is expected_error
+        server.server_close.assert_called_once_with()
+        assert thread_event.is_set()
 
 
 @pytest.fixture
