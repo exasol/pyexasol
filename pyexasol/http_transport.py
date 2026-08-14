@@ -340,9 +340,6 @@ class ExaSQLThread(threading.Thread):
 
     def join_with_exc(self, *args):
         super().join(*args)
-        self.raise_with_exception()
-
-    def raise_with_exception(self):
         if self.exc:
             raise self.exc
 
@@ -476,10 +473,6 @@ class ExaHttpThread(threading.Thread):
     def join_with_exc(self):
         self.join()
 
-        if self.exc:
-            raise self.exc
-
-    def raise_with_exception(self):
         if self.exc:
             raise self.exc
 
