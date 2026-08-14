@@ -1,4 +1,5 @@
 import time
+from contextlib import contextmanager
 from test.integration.import_and_export.helper import select_result
 from unittest.mock import patch
 
@@ -33,6 +34,42 @@ def import_cb():
         pipe.write(src.read_bytes())
 
     return _callback
+
+
+@contextmanager
+def capture_import_threads():
+    """Capture the real worker threads created by import_from_callback()."""
+    http_thread = ThreadHelper()
+    sql_thread = ThreadHelper()
+
+    def create_http_thread(*args, **kwargs):
+        http_thread.instance = ExaHttpThread(*args, **kwargs)
+        return http_thread.instance
+
+    def create_sql_thread(*args, **kwargs):
+        sql_thread.instance = ExaSQLImportThread(*args, **kwargs)
+        return sql_thread.instance
+
+    with (
+        patch("pyexasol.connection.ExaHttpThread", side_effect=create_http_thread),
+        patch(
+            "pyexasol.connection.ExaSQLImportThread",
+            side_effect=create_sql_thread,
+        ),
+    ):
+        yield http_thread, sql_thread
+
+
+class ThreadHelper:
+    """Proxy exposing a worker thread created inside the context manager."""
+
+    def __init__(self):
+        self.instance = None
+
+    def __getattr__(self, attribute):
+        if self.instance is None:
+            raise AssertionError("Thread was not created")
+        return getattr(self.instance, attribute)
 
 
 @pytest.mark.etl
@@ -148,10 +185,11 @@ class TestImportFromCallbackExceptions:
         def import_cb(pipe, src, **kwargs):
             raise error
 
-        with pytest.raises(ExaImportError, match="2 sub-exceptions") as ex:
-            connection.import_from_callback(
-                callback=import_cb, src=None, table=empty_table
-            )
+        with capture_import_threads() as (http_thread, sql_thread):
+            with pytest.raises(ExaImportError, match="2 sub-exceptions") as ex:
+                connection.import_from_callback(
+                    callback=import_cb, src=None, table=empty_table
+                )
 
         assert len(ex.value.exceptions) == 2
         assert ex.value.exceptions[0] == error
@@ -160,6 +198,8 @@ class TestImportFromCallbackExceptions:
             "Following error occured while reading data"
             in ex.value.exceptions[1].message
         )
+        assert not http_thread.is_alive()
+        assert not sql_thread.is_alive()
 
     @staticmethod
     def test_closed_ws_connection(
@@ -172,12 +212,17 @@ class TestImportFromCallbackExceptions:
             time.sleep(2)
             import_cb(pipe, src, **kwargs)
 
-        with pytest.raises(ExaImportError) as ex:
-            new_connection.import_from_callback(import_cb_with_close, None, empty_table)
+        with capture_import_threads() as (http_thread, sql_thread):
+            with pytest.raises(ExaImportError) as ex:
+                new_connection.import_from_callback(
+                    import_cb_with_close, None, empty_table
+                )
 
         assert len(ex.value.exceptions) == 2
         # race condition: the caught exception depends on how far the thread was
         assert type(ex.value.exceptions[1]) in (ExaCommunicationError, ExaRuntimeError)
+        assert not http_thread.is_alive()
+        assert not sql_thread.is_alive()
 
     @staticmethod
     def test_http_handler_failure_propagates_to_sql_thread(
@@ -185,19 +230,6 @@ class TestImportFromCallbackExceptions:
     ):
         error = BrokenPipeError("Broken pipe in http_thread")
         input_filepath.write_text(all_data.csv_str())
-
-        http_thread = None
-        sql_thread = None
-
-        def create_http_thread(*args, **kwargs):
-            nonlocal http_thread
-            http_thread = ExaHttpThread(*args, **kwargs)
-            return http_thread
-
-        def create_sql_thread(*args, **kwargs):
-            nonlocal sql_thread
-            sql_thread = ExaSQLImportThread(*args, **kwargs)
-            return sql_thread
 
         def write_chunk_with_exception(_handler, _data):
             raise error
@@ -208,16 +240,7 @@ class TestImportFromCallbackExceptions:
             autospec=True,
             side_effect=write_chunk_with_exception,
         ):
-            with (
-                patch(
-                    "pyexasol.connection.ExaHttpThread",
-                    side_effect=create_http_thread,
-                ),
-                patch(
-                    "pyexasol.connection.ExaSQLImportThread",
-                    side_effect=create_sql_thread,
-                ),
-            ):
+            with capture_import_threads() as (http_thread, sql_thread):
                 with pytest.raises(ExaImportError, match="1 sub-exception") as ex:
                     connection.import_from_callback(
                         callback=import_cb,
@@ -240,18 +263,6 @@ class TestImportFromCallbackExceptions:
         connection, input_filepath, empty_table, import_cb
     ):
         error = BrokenPipeError("Broken pipe in http_thread")
-        http_thread = None
-        sql_thread = None
-
-        def create_http_thread(*args, **kwargs):
-            nonlocal http_thread
-            http_thread = ExaHttpThread(*args, **kwargs)
-            return http_thread
-
-        def create_sql_thread(*args, **kwargs):
-            nonlocal sql_thread
-            sql_thread = ExaSQLImportThread(*args, **kwargs)
-            return sql_thread
 
         def handle_request_with_exception(_server):
             raise error
@@ -262,16 +273,7 @@ class TestImportFromCallbackExceptions:
             autospec=True,
             side_effect=handle_request_with_exception,
         ):
-            with (
-                patch(
-                    "pyexasol.connection.ExaHttpThread",
-                    side_effect=create_http_thread,
-                ),
-                patch(
-                    "pyexasol.connection.ExaSQLImportThread",
-                    side_effect=create_sql_thread,
-                ),
-            ):
+            with capture_import_threads() as (http_thread, sql_thread):
                 with pytest.raises(ExaImportError, match="2 sub-exceptions") as ex:
                     connection.import_from_callback(
                         callback=import_cb,
@@ -301,30 +303,8 @@ class TestImportFromCallbackExceptions:
             message="Database license is out of date.",
         )
 
-        http_thread = None
-        sql_thread = None
-
-        def create_http_thread(*args, **kwargs):
-            nonlocal http_thread
-            http_thread = ExaHttpThread(*args, **kwargs)
-            return http_thread
-
-        def create_sql_thread(*args, **kwargs):
-            nonlocal sql_thread
-            sql_thread = ExaSQLImportThread(*args, **kwargs)
-            return sql_thread
-
         with patch.object(connection, "execute", side_effect=license_error):
-            with (
-                patch(
-                    "pyexasol.connection.ExaHttpThread",
-                    side_effect=create_http_thread,
-                ),
-                patch(
-                    "pyexasol.connection.ExaSQLImportThread",
-                    side_effect=create_sql_thread,
-                ),
-            ):
+            with capture_import_threads() as (http_thread, sql_thread):
                 with pytest.raises(ExaImportError, match="2 sub-exceptions") as ex:
                     connection.import_from_callback(
                         callback=import_cb,
@@ -338,17 +318,21 @@ class TestImportFromCallbackExceptions:
         assert sql_thread.exc is license_error
         assert not http_thread.is_alive()
         assert not sql_thread.is_alive()
+        assert http_thread.server.socket.fileno() == -1
 
     @staticmethod
     def test_sql_thread_has_exception(connection, input_filepath, import_cb):
-        with pytest.raises(ExaImportError, match="1 sub-exception") as ex:
-            connection.import_from_callback(
-                callback=import_cb, src=input_filepath, table="DOES_NOT_EXIST"
-            )
+        with capture_import_threads() as (http_thread, sql_thread):
+            with pytest.raises(ExaImportError, match="1 sub-exception") as ex:
+                connection.import_from_callback(
+                    callback=import_cb, src=input_filepath, table="DOES_NOT_EXIST"
+                )
 
         assert len(ex.value.exceptions) == 1
         assert isinstance(ex.value.exceptions[0], ExaQueryError)
         assert "object DOES_NOT_EXIST not found" in ex.value.exceptions[0].message
+        assert not http_thread.is_alive()
+        assert not sql_thread.is_alive()
 
     @staticmethod
     def test_abort_query(connection, input_filepath, empty_table, import_cb):
@@ -366,12 +350,13 @@ class TestImportFromCallbackExceptions:
                 code="40007",
             )
 
-            with pytest.raises(ExaImportError) as ex:
-                connection.import_from_callback(
-                    callback=import_cb,
-                    src=input_filepath,
-                    table=empty_table,
-                )
+            with capture_import_threads() as (http_thread, sql_thread):
+                with pytest.raises(ExaImportError) as ex:
+                    connection.import_from_callback(
+                        callback=import_cb,
+                        src=input_filepath,
+                        table=empty_table,
+                    )
 
         query_error_loc = 0
         if len(ex.value.exceptions) == 2:
@@ -380,6 +365,8 @@ class TestImportFromCallbackExceptions:
         selected_exception = ex.value.exceptions[query_error_loc]
         assert isinstance(selected_exception, ExaQueryError)
         assert "Client requested execution abort." in selected_exception.message
+        assert not http_thread.is_alive()
+        assert not sql_thread.is_alive()
 
     @staticmethod
     def test_export_callback_and_sql_have_different_exceptions(connection):
