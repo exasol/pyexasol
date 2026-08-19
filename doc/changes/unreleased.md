@@ -4,7 +4,7 @@
 
 ## Bugfix
 
-* #349: Modified exception reporting in `import_from_*` methods by coordinating completion of the HTTP and SQL import threads with a threading event
+* #349: Modified exception reporting in `import_from_*` and `export_to_*` methods by coordinating completion of the HTTP and SQL import threads with a threading event
 
 ## Refactoring
 

@@ -356,8 +356,9 @@ class ExaSQLExportThread(ExaSQLThread):
         compression: bool,
         query_or_table,
         export_params: dict,
+        thread_event: threading.Event | None = None,
     ):
-        super().__init__(connection, compression)
+        super().__init__(connection, compression, thread_event=thread_event)
 
         self.query_or_table = query_or_table
         self.params = export_params

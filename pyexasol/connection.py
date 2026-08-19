@@ -906,14 +906,20 @@ class ExaConnection:
             False if ("format" in export_params) else self.options["compression"]
         )
 
+        thread_event = threading.Event()
         http_thread = ExaHttpThread(
-            self.ws_ipaddr,  # type: ignore
-            self.ws_port,  # type: ignore
-            compression,
-            self.options["encryption"],
+            ipaddr=self.ws_ipaddr,  # type: ignore
+            port=self.ws_port,  # type: ignore
+            compression=compression,
+            encryption=self.options["encryption"],
+            thread_event=thread_event,
         )
         sql_thread = ExaSQLExportThread(
-            self, compression, query_or_table, export_params
+            connection=self,
+            compression=compression,
+            query_or_table=query_or_table,
+            export_params=export_params,
+            thread_event=thread_event,
         )
 
         try:
@@ -924,6 +930,15 @@ class ExaConnection:
 
             with http_thread.read_pipe as pipe:
                 result = callback(pipe, dst, **callback_params)
+
+            # The callback has finished writing. Allow the HTTP handler to send the
+            # final chunk and finish the request.
+            http_thread.server.can_finish_get.set()
+
+            # Either worker may finish first. Wake up as soon as one reports
+            # completion so errors can be observed without waiting on the
+            # other connection indefinitely.
+            thread_event.wait()
 
             http_thread.join_with_exc()
             sql_thread.join_with_exc()
@@ -989,17 +1004,17 @@ class ExaConnection:
 
         thread_event = threading.Event()
         http_thread = ExaHttpThread(
-            self.ws_ipaddr,  # type: ignore
-            self.ws_port,  # type: ignore
-            compression,
-            self.options["encryption"],
+            ipaddr=self.ws_ipaddr,  # type: ignore
+            port=self.ws_port,  # type: ignore
+            compression=compression,
+            encryption=self.options["encryption"],
             thread_event=thread_event,
         )
         sql_thread = ExaSQLImportThread(
-            self,
-            compression,
-            table,
-            import_params,
+            connection=self,
+            compression=compression,
+            table=table,
+            import_params=import_params,
             thread_event=thread_event,
         )
 
