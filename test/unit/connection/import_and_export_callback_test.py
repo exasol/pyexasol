@@ -107,16 +107,17 @@ class TestExportToCallback:
         mock_sql_export_thread.return_value.start.assert_called_once()
         assert result == "success_marker"
 
-        # verify compression set as expected when import_params=None, then
+        # verify compression set as expected when export_params=None, then
         # this is set to self.options["compression"]
-        http_args, _ = mock_http_thread.call_args
-        assert http_args[2] is exa_conn.options["compression"]
+        _, http_kwargs = mock_http_thread.call_args
+        assert http_kwargs["compression"] is exa_conn.options["compression"]
 
-        sql_args, _ = mock_sql_export_thread.call_args
+        _, sql_kwargs = mock_sql_export_thread.call_args
         # verify query_params=None would format query_or_table
-        assert sql_args[2] == "dummy_table"
-        # verify import_params=None maps to empty dictionary
-        assert sql_args[3] == {}
+        assert sql_kwargs["query_or_table"] == "dummy_table"
+        # verify export_params=None maps to empty dictionary
+        assert sql_kwargs["export_params"] == {}
+        assert sql_kwargs["thread_event"].is_set()
 
         # verify callback_params=None maps to empty dictionary
         _, callback_kwargs = callback_spy.call_args
@@ -156,13 +157,14 @@ class TestImportFromCallback:
 
         # verify compression set as expected when import_params=None, then
         # this is set to self.options["compression"]
-        http_args, http_kwargs = mock_http_thread.call_args
-        assert http_args[2] is exa_conn.options["compression"]
+        _, http_kwargs = mock_http_thread.call_args
+        assert http_kwargs["compression"] is exa_conn.options["compression"]
         assert http_kwargs["thread_event"].is_set()
 
         # verify import_params=None maps to empty dictionary
-        sql_args, _ = mock_sql_import_thread.call_args
-        assert sql_args[3] == {}
+        _, sql_kwargs = mock_sql_import_thread.call_args
+        assert sql_kwargs["import_params"] == {}
+        assert sql_kwargs["thread_event"].is_set()
 
         # verify callback_params=None maps to empty dictionary
         _, callback_kwargs = callback_spy.call_args
