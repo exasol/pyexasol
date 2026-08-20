@@ -1,10 +1,18 @@
+import time
 from unittest.mock import patch
 
 import pytest
 
 from pyexasol.exceptions import (
+    ExaCommunicationError,
     ExaExportError,
     ExaQueryError,
+    ExaRuntimeError,
+)
+from pyexasol.http_transport import (
+    ExaHttpRequestHandler,
+    ExaSQLExportThread,
+    ExaTCPServer,
 )
 
 
@@ -99,18 +107,159 @@ class TestExportGeneral:
 @pytest.mark.exceptions
 class TestExportToCallbackExceptions:
     @staticmethod
-    def test_export_callback_has_exception(connection, empty_table):
+    def test_export_callback_has_exception(
+        connection, empty_table, capture_callback_threads
+    ):
         error = ValueError("Error from callback")
 
         def export_cb(pipe, dst, **kwargs):
             raise error
 
-        with pytest.raises(ExaExportError, match="1 sub-exception") as ex:
-            connection.export_to_callback(
-                callback=export_cb, dst=None, query_or_table=empty_table
-            )
+        with capture_callback_threads(ExaSQLExportThread) as (
+            http_thread,
+            sql_thread,
+        ):
+            with pytest.raises(ExaExportError, match="1 sub-exception") as ex:
+                connection.export_to_callback(
+                    callback=export_cb, dst=None, query_or_table=empty_table
+                )
 
-        assert ex.value.exceptions == [error]
+        assert len(ex.value.exceptions) == 1
+        assert ex.value.exceptions[0] == error
+        assert not http_thread.is_alive()
+        assert not sql_thread.is_alive()
+
+    @staticmethod
+    def test_closed_ws_connection(
+        connection_factory, connection, empty_table, export_cb, capture_callback_threads
+    ):
+        new_connection = connection_factory()
+
+        def export_cb_with_close(pipe, dst, **kwargs):
+            new_connection.close(disconnect=False)
+            time.sleep(2)
+            export_cb(pipe, dst, **kwargs)
+
+        with capture_callback_threads(ExaSQLExportThread) as (
+            http_thread,
+            sql_thread,
+        ):
+            with pytest.raises(ExaExportError) as ex:
+                new_connection.export_to_callback(
+                    export_cb_with_close, None, empty_table
+                )
+
+        assert len(ex.value.exceptions) == 2
+        assert type(ex.value.exceptions[1]) in (
+            ExaCommunicationError,
+            ExaRuntimeError,
+            OSError,
+        )
+        assert not http_thread.is_alive()
+        assert not sql_thread.is_alive()
+
+    @staticmethod
+    def test_http_handler_failure_propagates_to_sql_thread(
+        connection,
+        output_filepath,
+        fill_table,
+        export_cb,
+        capture_callback_threads,
+    ):
+        error = BrokenPipeError("Broken pipe in http_thread")
+
+        def write_final_chunk_with_exception(_handler):
+            raise error
+
+        with patch.object(
+            ExaHttpRequestHandler,
+            "write_final_chunk",
+            autospec=True,
+            side_effect=write_final_chunk_with_exception,
+        ):
+            with capture_callback_threads(ExaSQLExportThread) as (
+                http_thread,
+                sql_thread,
+            ):
+                with pytest.raises(ExaExportError, match="1 sub-exception") as ex:
+                    connection.export_to_callback(
+                        callback=export_cb,
+                        dst=output_filepath,
+                        query_or_table=fill_table,
+                    )
+
+        assert len(ex.value.exceptions) == 1
+        assert isinstance(ex.value.exceptions[0], ExaQueryError)
+        assert isinstance(sql_thread.exc, ExaQueryError)
+        assert not sql_thread.is_alive()
+        assert not http_thread.is_alive()
+
+    @staticmethod
+    def test_http_thread_captures_transport_exception(
+        connection, output_filepath, empty_table, export_cb, capture_callback_threads
+    ):
+        error = BrokenPipeError("Broken pipe in http_thread")
+
+        def handle_request_with_exception(_server):
+            raise error
+
+        with patch.object(
+            ExaTCPServer,
+            "handle_request",
+            autospec=True,
+            side_effect=handle_request_with_exception,
+        ):
+            with capture_callback_threads(ExaSQLExportThread) as (
+                http_thread,
+                sql_thread,
+            ):
+                with pytest.raises(ExaExportError, match="2 sub-exceptions") as ex:
+                    connection.export_to_callback(
+                        callback=export_cb,
+                        dst=output_filepath,
+                        query_or_table=empty_table,
+                    )
+
+        assert len(ex.value.exceptions) == 2
+        assert isinstance(ex.value.exceptions[0], BrokenPipeError)
+        assert isinstance(ex.value.exceptions[1], ExaQueryError)
+        assert http_thread.exc is error
+        assert not http_thread.is_alive()
+        assert not sql_thread.is_alive()
+
+    @staticmethod
+    def test_sql_thread_has_outdated_database_license(
+        connection,
+        output_filepath,
+        empty_table,
+        export_cb,
+        capture_callback_threads,
+    ):
+        license_error = ExaQueryError(
+            connection=connection,
+            query="EXPORT ...",
+            code="42000",
+            message="Database license is out of date.",
+        )
+
+        with patch.object(connection, "execute", side_effect=license_error):
+            with capture_callback_threads(ExaSQLExportThread) as (
+                http_thread,
+                sql_thread,
+            ):
+                with pytest.raises(ExaExportError, match="1 sub-exception") as ex:
+                    connection.export_to_callback(
+                        callback=export_cb,
+                        dst=output_filepath,
+                        query_or_table=empty_table,
+                    )
+
+        assert len(ex.value.exceptions) == 1
+        assert ex.value.exceptions[0] is license_error
+        assert sql_thread.exc is license_error
+        assert not http_thread.is_alive()
+        assert not sql_thread.is_alive()
+        assert http_thread.server.socket.fileno() == -1
 
     @staticmethod
     def test_http_thread_has_exception(
@@ -141,7 +290,9 @@ class TestExportToCallbackExceptions:
         assert "object DOES_NOT_EXIST not found" in ex.value.exceptions[0].message
 
     @staticmethod
-    def test_abort_query(connection, output_filepath, empty_table, export_cb):
+    def test_abort_query(
+        connection, output_filepath, empty_table, export_cb, capture_callback_threads
+    ):
         """
         Due to a race condition, it's difficult to create a test with
         connection.abort_query() that ensures that an exception would be raised.
@@ -156,12 +307,16 @@ class TestExportToCallbackExceptions:
                 code="40007",
             )
 
-            with pytest.raises(ExaExportError) as ex:
-                connection.export_to_callback(
-                    callback=export_cb,
-                    dst=output_filepath,
-                    query_or_table=empty_table,
-                )
+            with capture_callback_threads(ExaSQLExportThread) as (
+                http_thread,
+                sql_thread,
+            ):
+                with pytest.raises(ExaExportError) as ex:
+                    connection.export_to_callback(
+                        callback=export_cb,
+                        dst=output_filepath,
+                        query_or_table=empty_table,
+                    )
 
         query_error_loc = 0
         if len(ex.value.exceptions) == 2:
@@ -170,22 +325,32 @@ class TestExportToCallbackExceptions:
         selected_exception = ex.value.exceptions[query_error_loc]
         assert isinstance(selected_exception, ExaQueryError)
         assert "Client requested execution abort." in selected_exception.message
+        assert not http_thread.is_alive()
+        assert not sql_thread.is_alive()
 
     @staticmethod
-    def test_export_callback_and_sql_have_different_exceptions(connection):
+    def test_export_callback_and_sql_have_different_exceptions(
+        connection, capture_callback_threads
+    ):
         error = ValueError("Error from callback")
 
         def export_cb(pipe, dst, **kwargs):
             raise error
 
-        with pytest.raises(ExaExportError) as ex:
-            connection.export_to_callback(
-                callback=export_cb, dst=None, query_or_table="DOES_NOT_EXIST"
-            )
+        with capture_callback_threads(ExaSQLExportThread) as (
+            http_thread,
+            sql_thread,
+        ):
+            with pytest.raises(ExaExportError) as ex:
+                connection.export_to_callback(
+                    callback=export_cb, dst=None, query_or_table="DOES_NOT_EXIST"
+                )
 
         assert len(ex.value.exceptions) == 2
         assert ex.value.exceptions[0] == error
         assert isinstance(ex.value.exceptions[1], ExaQueryError)
+        assert not http_thread.is_alive()
+        assert not sql_thread.is_alive()
 
 
 @pytest.mark.configuration
