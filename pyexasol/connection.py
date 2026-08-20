@@ -31,7 +31,7 @@ from warnings import warn
 import websocket
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import padding
-from exasol.telemetry.client import (       # type: ignore[import-untyped]
+from exasol.telemetry.client import (  # type: ignore[import-untyped]
     TelemetryError,
     setup,
     track,
