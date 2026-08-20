@@ -33,6 +33,13 @@ from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import padding
 from packaging.version import Version
 
+from exasol.telemetry.client import (
+    was_setup,
+    setup,
+    track,
+    TelemetryError
+)
+
 from . import callback as cb
 from . import constant
 from ._metadata import __version__
@@ -80,6 +87,15 @@ class Host(NamedTuple):
 
 def get_exaconnection_signature() -> Signature:
     return signature(ExaConnection.__init__)
+
+
+def telemetry_setup_and_track_connection():
+    try:
+        if not was_setup():
+            setup()
+    except TelemetryError:
+        pass
+    track("pyexasol.connect")
 
 
 class ExaConnection:
@@ -252,6 +268,7 @@ class ExaConnection:
             refresh_token:
                 OpenID refresh token to use for the login process
         """
+        telemetry_setup_and_track_connection()
 
         # convert all arguments to a dict[argument_name, argument_value]
         sig = get_exaconnection_signature()
