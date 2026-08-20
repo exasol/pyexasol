@@ -2,6 +2,10 @@
 
 ## Summary
 
+This update improves error reporting for ``import_from_callback`` and
+``export_to_callback`` by coordinating the completion of the callback, HTTP, and SQL
+threads.
+
 ## Bugfix
 
 * #349: Modified exception reporting in `import_from_*` and `export_to_*` methods by coordinating completion of the HTTP and SQL import threads with a threading event
