@@ -42,6 +42,7 @@ dependencies = [
     # If we encounter a breaking change, upstream projects can narrow the range.
     "packaging>=24.1.0",
     "websocket-client>=1.0.1,<2",
+    "exasol-telemetry-client (>=0.1.6)",
 ]
 
 [project.optional-dependencies]
