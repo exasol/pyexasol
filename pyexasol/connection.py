@@ -31,14 +31,13 @@ from warnings import warn
 import websocket
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import padding
-from packaging.version import Version
-
 from exasol.telemetry.client import (
-    was_setup,
+    TelemetryError,
     setup,
     track,
-    TelemetryError
+    was_setup,
 )
+from packaging.version import Version
 
 from . import callback as cb
 from . import constant
