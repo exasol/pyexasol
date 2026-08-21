@@ -112,7 +112,7 @@ class TestExportToCallbackExceptions:
     ):
         error = ValueError("Error from callback")
 
-        def export_cb(pipe, dst, **kwargs):
+        def raise_error(pipe, dst, **kwargs):
             raise error
 
         with capture_callback_threads(ExaSQLExportThread) as (
@@ -121,7 +121,7 @@ class TestExportToCallbackExceptions:
         ):
             with pytest.raises(ExaExportError, match="1 sub-exception") as ex:
                 connection.export_to_callback(
-                    callback=export_cb, dst=None, query_or_table=empty_table
+                    callback=raise_error, dst=None, query_or_table=empty_table
                 )
 
         assert len(ex.value.exceptions) == 1
