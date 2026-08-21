@@ -302,7 +302,7 @@ class ExaSQLThread(threading.Thread):
         self,
         connection: ExaConnection,
         compression: bool,
-        thread_event: threading.Event | None = None,
+        worker_finished_event: threading.Event | None = None,
     ):
         self.connection = connection
         self.compression = compression
@@ -311,7 +311,7 @@ class ExaSQLThread(threading.Thread):
         self.http_thread = None
         self.exa_address_list: list[str] = []
         self.exc = None
-        self.thread_event = thread_event
+        self.worker_finished_event = worker_finished_event
 
         super().__init__()
 
@@ -332,8 +332,8 @@ class ExaSQLThread(threading.Thread):
             if self.http_thread:
                 self.http_thread.terminate()
         finally:
-            if self.thread_event:
-                self.thread_event.set()
+            if self.worker_finished_event:
+                self.worker_finished_event.set()
 
     def run_sql(self):
         pass
@@ -356,9 +356,11 @@ class ExaSQLExportThread(ExaSQLThread):
         compression: bool,
         query_or_table,
         export_params: dict,
-        thread_event: threading.Event | None = None,
+        worker_finished_event: threading.Event | None = None,
     ):
-        super().__init__(connection, compression, thread_event=thread_event)
+        super().__init__(
+            connection, compression, worker_finished_event=worker_finished_event
+        )
 
         self.query_or_table = query_or_table
         self.params = export_params
@@ -399,9 +401,11 @@ class ExaSQLImportThread(ExaSQLThread):
         compression: bool,
         table: str,
         import_params: dict,
-        thread_event: threading.Event | None = None,
+        worker_finished_event: threading.Event | None = None,
     ):
-        super().__init__(connection, compression, thread_event=thread_event)
+        super().__init__(
+            connection, compression, worker_finished_event=worker_finished_event
+        )
 
         self.table = table
         self.params = import_params
@@ -430,7 +434,7 @@ class ExaHttpThread(threading.Thread):
         port: int,
         compression: bool,
         encryption: bool,
-        thread_event: threading.Event | None = None,
+        worker_finished_event: threading.Event | None = None,
     ):
         self.server = ExaTCPServer(
             (ipaddr, port),
@@ -441,7 +445,7 @@ class ExaHttpThread(threading.Thread):
 
         self.read_pipe = self.server.read_pipe
         self.write_pipe = self.server.write_pipe
-        self.thread_event = thread_event
+        self.worker_finished_event = worker_finished_event
 
         self.exc = None
 
@@ -464,8 +468,8 @@ class ExaHttpThread(threading.Thread):
             self.exc = e
         finally:
             self.server.server_close()
-            if self.thread_event is not None:
-                self.thread_event.set()
+            if self.worker_finished_event is not None:
+                self.worker_finished_event.set()
 
     def join(self, timeout=None):
         self.server.can_finish_get.set()

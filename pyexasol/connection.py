@@ -906,20 +906,22 @@ class ExaConnection:
             False if ("format" in export_params) else self.options["compression"]
         )
 
-        thread_event = threading.Event()
+        # Set when either worker finishes, successfully or exceptionally. It
+        # wakes the coordinator but does not terminate the other worker.
+        worker_finished_event = threading.Event()
         http_thread = ExaHttpThread(
             ipaddr=self.ws_ipaddr,  # type: ignore
             port=self.ws_port,  # type: ignore
             compression=compression,
             encryption=self.options["encryption"],
-            thread_event=thread_event,
+            worker_finished_event=worker_finished_event,
         )
         sql_thread = ExaSQLExportThread(
             connection=self,
             compression=compression,
             query_or_table=query_or_table,
             export_params=export_params,
-            thread_event=thread_event,
+            worker_finished_event=worker_finished_event,
         )
 
         try:
@@ -938,8 +940,11 @@ class ExaConnection:
             # Either worker may finish first. Wake up as soon as one reports
             # completion so errors can be observed without waiting on the
             # other connection indefinitely.
-            thread_event.wait()
+            worker_finished_event.wait()
 
+            # Join HTTP first: an SQL failure terminates HTTP, while HTTP does
+            # not terminate SQL directly. The order prevents waiting on HTTP
+            # before the SQL worker has had a chance to stop it.
             http_thread.join_with_exc()
             sql_thread.join_with_exc()
 
@@ -1002,20 +1007,22 @@ class ExaConnection:
             False if ("format" in import_params) else self.options["compression"]
         )
 
-        thread_event = threading.Event()
+        # Set when either worker finishes, successfully or exceptionally. It
+        # wakes the coordinator but does not terminate the other worker.
+        worker_finished_event = threading.Event()
         http_thread = ExaHttpThread(
             ipaddr=self.ws_ipaddr,  # type: ignore
             port=self.ws_port,  # type: ignore
             compression=compression,
             encryption=self.options["encryption"],
-            thread_event=thread_event,
+            worker_finished_event=worker_finished_event,
         )
         sql_thread = ExaSQLImportThread(
             connection=self,
             compression=compression,
             table=table,
             import_params=import_params,
-            thread_event=thread_event,
+            worker_finished_event=worker_finished_event,
         )
 
         try:
@@ -1034,8 +1041,11 @@ class ExaConnection:
             # Either worker may finish first. Wake up as soon as one reports
             # completion so errors can be observed without waiting on the
             # other connection indefinitely.
-            thread_event.wait()
+            worker_finished_event.wait()
 
+            # Join HTTP first: an SQL failure terminates HTTP, while HTTP does
+            # not terminate SQL directly. The order prevents waiting on HTTP
+            # before the SQL worker has had a chance to stop it.
             http_thread.join_with_exc()
             sql_thread.join_with_exc()
 

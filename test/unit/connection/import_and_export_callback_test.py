@@ -17,10 +17,10 @@ def mock_http_thread():
         instance.write_pipe.__enter__.return_value = MagicMock(spec=["write"])
 
         def construct_http_thread(*args, **kwargs):
-            thread_event = kwargs.get("thread_event")
-            if thread_event is not None:
+            worker_finished_event = kwargs.get("worker_finished_event")
+            if worker_finished_event is not None:
                 # The real HTTP thread signals this event when it finishes.
-                thread_event.set()
+                worker_finished_event.set()
             return instance
 
         mock_cls.side_effect = construct_http_thread
@@ -117,7 +117,7 @@ class TestExportToCallback:
         assert sql_kwargs["query_or_table"] == "dummy_table"
         # verify export_params=None maps to empty dictionary
         assert sql_kwargs["export_params"] == {}
-        assert sql_kwargs["thread_event"].is_set()
+        assert sql_kwargs["worker_finished_event"].is_set()
 
         # verify callback_params=None maps to empty dictionary
         _, callback_kwargs = callback_spy.call_args
@@ -159,12 +159,12 @@ class TestImportFromCallback:
         # this is set to self.options["compression"]
         _, http_kwargs = mock_http_thread.call_args
         assert http_kwargs["compression"] is exa_conn.options["compression"]
-        assert http_kwargs["thread_event"].is_set()
+        assert http_kwargs["worker_finished_event"].is_set()
 
         # verify import_params=None maps to empty dictionary
         _, sql_kwargs = mock_sql_import_thread.call_args
         assert sql_kwargs["import_params"] == {}
-        assert sql_kwargs["thread_event"].is_set()
+        assert sql_kwargs["worker_finished_event"].is_set()
 
         # verify callback_params=None maps to empty dictionary
         _, callback_kwargs = callback_spy.call_args

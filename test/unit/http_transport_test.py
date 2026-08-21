@@ -412,8 +412,8 @@ def import_callback(pipe, src, **kwargs):
 
 class TestImportTransportThreadLifecycle:
     @staticmethod
-    def test_sql_thread_signals_event_after_successful_query():
-        thread_event = threading.Event()
+    def test_sql_thread_signals_worker_finished_event_after_successful_query():
+        worker_finished_event = threading.Event()
 
         class SuccessfulSQLThread(ExaSQLThread):
             def run_sql(self):
@@ -423,19 +423,19 @@ class TestImportTransportThreadLifecycle:
         thread = SuccessfulSQLThread(
             connection=Mock(),
             compression=False,
-            thread_event=thread_event,
+            worker_finished_event=worker_finished_event,
         )
         thread.set_http_thread(http_thread)
 
         thread.run()
 
         assert thread.exc is None
-        assert thread_event.is_set()
+        assert worker_finished_event.is_set()
         http_thread.terminate.assert_not_called()
 
     @staticmethod
-    def test_sql_thread_terminates_http_and_signals_event_on_failure():
-        thread_event = threading.Event()
+    def test_sql_thread_terminates_http_and_signals_worker_finished_event_on_failure():
+        worker_finished_event = threading.Event()
         expected_error = RuntimeError("SQL query failed")
 
         class FailingSQLThread(ExaSQLThread):
@@ -446,19 +446,19 @@ class TestImportTransportThreadLifecycle:
         thread = FailingSQLThread(
             connection=Mock(),
             compression=False,
-            thread_event=thread_event,
+            worker_finished_event=worker_finished_event,
         )
         thread.set_http_thread(http_thread)
 
         thread.run()
 
         assert thread.exc is expected_error
-        assert thread_event.is_set()
+        assert worker_finished_event.is_set()
         http_thread.terminate.assert_called_once_with()
 
     @staticmethod
-    def test_http_thread_closes_server_and_signals_event_after_success():
-        thread_event = threading.Event()
+    def test_http_thread_closes_server_and_signals_worker_finished_event_after_success():
+        worker_finished_event = threading.Event()
         server = Mock(
             total_clients=0,
             is_terminated=False,
@@ -474,18 +474,22 @@ class TestImportTransportThreadLifecycle:
 
         with patch.object(http_transport_module, "ExaTCPServer", return_value=server):
             thread = ExaHttpThread(
-                "127.0.0.1", 8563, False, False, thread_event=thread_event
+                "127.0.0.1",
+                8563,
+                False,
+                False,
+                worker_finished_event=worker_finished_event,
             )
             thread.run()
 
         assert thread.exc is None
         server.handle_request.assert_called_once_with()
         server.server_close.assert_called_once_with()
-        assert thread_event.is_set()
+        assert worker_finished_event.is_set()
 
     @staticmethod
-    def test_http_thread_closes_server_and_signals_event_after_failure():
-        thread_event = threading.Event()
+    def test_http_thread_closes_server_and_signals_worker_finished_event_after_failure():
+        worker_finished_event = threading.Event()
         expected_error = BrokenPipeError("HTTP request failed")
         server = Mock(
             total_clients=0,
@@ -498,13 +502,17 @@ class TestImportTransportThreadLifecycle:
 
         with patch.object(http_transport_module, "ExaTCPServer", return_value=server):
             thread = ExaHttpThread(
-                "127.0.0.1", 8563, False, False, thread_event=thread_event
+                "127.0.0.1",
+                8563,
+                False,
+                False,
+                worker_finished_event=worker_finished_event,
             )
             thread.run()
 
         assert thread.exc is expected_error
         server.server_close.assert_called_once_with()
-        assert thread_event.is_set()
+        assert worker_finished_event.is_set()
 
 
 @pytest.fixture
