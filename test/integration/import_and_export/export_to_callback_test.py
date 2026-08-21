@@ -229,10 +229,14 @@ class TestExportToCallbackExceptions:
     def test_sql_thread_has_outdated_database_license(
         connection,
         output_filepath,
-        empty_table,
-        export_cb,
+        fill_table,
         capture_callback_threads,
     ):
+        def streaming_export_cb(pipe, dst, **kwargs):
+            with dst.open("wb") as output_file:
+                while chunk := pipe.read(8192):
+                    output_file.write(chunk)
+
         license_error = ExaQueryError(
             connection=connection,
             query="EXPORT ...",
@@ -245,15 +249,16 @@ class TestExportToCallbackExceptions:
                 http_thread,
                 sql_thread,
             ):
-                with pytest.raises(ExaExportError, match="1 sub-exception") as ex:
+                with pytest.raises(ExaExportError, match="2 sub-exceptions") as ex:
                     connection.export_to_callback(
-                        callback=export_cb,
+                        callback=streaming_export_cb,
                         dst=output_filepath,
-                        query_or_table=empty_table,
+                        query_or_table=fill_table,
                     )
 
-        assert len(ex.value.exceptions) == 1
-        assert ex.value.exceptions[0] is license_error
+        assert len(ex.value.exceptions) == 2
+        assert isinstance(ex.value.exceptions[0], ValueError)
+        assert ex.value.exceptions[1] is license_error
         assert sql_thread.exc is license_error
         assert not http_thread.is_alive()
         assert not sql_thread.is_alive()
