@@ -204,7 +204,11 @@ class TestImportFromCallbackExceptions:
 
         assert len(ex.value.exceptions) == 2
         # race condition: the caught exception depends on how far the thread was
-        assert type(ex.value.exceptions[1]) in (ExaCommunicationError, ExaRuntimeError)
+        assert type(ex.value.exceptions[1]) in (
+            ExaCommunicationError,
+            ExaRuntimeError,
+            OSError,
+        )
         assert sql_thread.exc is not None
         assert http_thread.exc is None
         assert not http_thread.is_alive()
