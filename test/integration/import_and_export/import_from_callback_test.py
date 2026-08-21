@@ -170,7 +170,7 @@ class TestImportFromCallbackExceptions:
 
     @staticmethod
     def test_closed_ws_connection(
-        connection_factory, connection, empty_table, import_cb, capture_callback_threads
+        connection_factory, empty_table, import_cb, capture_callback_threads
     ):
         new_connection = connection_factory()
 
