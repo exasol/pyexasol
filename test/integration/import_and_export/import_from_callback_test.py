@@ -1,4 +1,3 @@
-import time
 from test.integration.import_and_export.helper import select_result
 from unittest.mock import patch
 
@@ -144,6 +143,14 @@ class TestImportFromCallbackExceptions:
     def test_import_callback_has_exception(
         connection, empty_table, capture_callback_threads
     ):
+        """
+        The defined callback function raises an exception:
+          - That failure closes the write pipe before the IMPORT request can finish.
+          - The SQL thread therefore receives an incomplete request from Exasol and
+            raises an ``ExaQueryError``.
+          - The HTTP thread is only stopped by cleanup; it does not perform the failed
+          SQL operation, and it,therefore, is not expected to have its own exception.
+        """
         error = ValueError("Error from callback")
 
         def import_cb(pipe, src, **kwargs):
@@ -172,11 +179,18 @@ class TestImportFromCallbackExceptions:
     def test_closed_ws_connection(
         connection_factory, empty_table, import_cb, capture_callback_threads
     ):
+        """
+        The callback closes the WebSocket while both workers are using it:
+          - Thus, the calling thread fails while using the callback pipe.
+          - The SQL thread fails because its database request loses the WebSocket
+            transport.
+        - The HTTP thread is terminated by the SQL thread, but it does not raise an
+          exception.
+        """
         new_connection = connection_factory()
 
         def import_cb_with_close(pipe, src, **kwargs):
             new_connection.close(disconnect=False)
-            time.sleep(2)
             import_cb(pipe, src, **kwargs)
 
         with capture_callback_threads(ExaSQLImportThread) as (
@@ -191,6 +205,8 @@ class TestImportFromCallbackExceptions:
         assert len(ex.value.exceptions) == 2
         # race condition: the caught exception depends on how far the thread was
         assert type(ex.value.exceptions[1]) in (ExaCommunicationError, ExaRuntimeError)
+        assert sql_thread.exc is not None
+        assert http_thread.exc is None
         assert not http_thread.is_alive()
         assert not sql_thread.is_alive()
 
@@ -203,6 +219,14 @@ class TestImportFromCallbackExceptions:
         all_data,
         capture_callback_threads,
     ):
+        """
+        The HTTP thread raises an exception while writing a chunk:
+         - The handler catches that failure and closes its transport.
+         - The SQL thread is executing the IMPORT that depends on that transport, so it
+           receives the truncated request and records an ``ExaQueryError``.
+        - The callback is not the failing component, and the HTTP exception is not
+        propagated separately. Hence, they do not raise exceptions.
+        """
         error = BrokenPipeError("Broken pipe in http_thread")
         input_filepath.write_text(all_data.csv_str())
 
@@ -240,6 +264,14 @@ class TestImportFromCallbackExceptions:
     def test_http_thread_captures_transport_exception(
         connection, input_filepath, empty_table, import_cb, capture_callback_threads
     ):
+        """
+        ``ExaTCPServer.handle_request`` raises an exception in the HTTP
+        thread:
+          - Because the HTTP server can no longer carry the data, the
+            concurrently running SQL thread's IMPORT receives a transport
+            failure and raises an ``ExaQueryError``.
+          - The callback only supplies data and completes normally.
+        """
         error = BrokenPipeError("Broken pipe in http_thread")
 
         def handle_request_with_exception(_server):
@@ -281,6 +313,13 @@ class TestImportFromCallbackExceptions:
         import_cb,
         capture_callback_threads,
     ):
+        """
+        The SQL thread raises an exception before it can consume the import data:
+          - The SQL thread terminates the HTTP thread and closes the pipe.
+          - The callback then attempts to use that pipe and raises a ``ValueError``.
+          - The HTTP thread is only being terminated by the SQL thread, so it is not
+            expected to report a separate exception.
+        """
         license_error = ExaQueryError(
             connection=connection,
             query="IMPORT INTO ...",
@@ -304,6 +343,7 @@ class TestImportFromCallbackExceptions:
         assert isinstance(ex.value.exceptions[0], ValueError)
         assert ex.value.exceptions[1] is license_error
         assert sql_thread.exc is license_error
+        assert http_thread.exc is None
         assert not http_thread.is_alive()
         assert not sql_thread.is_alive()
         assert http_thread.server.socket.fileno() == -1
@@ -312,6 +352,17 @@ class TestImportFromCallbackExceptions:
     def test_sql_thread_has_exception(
         connection, input_filepath, import_cb, capture_callback_threads
     ):
+        """
+        The SQL thread is the component executing the IMPORT query, so it detects
+        the missing table and records an ``ExaQueryError``:
+          - The SQL thread terminates the HTTP thread, which exits without an
+            independent exception.
+          - The callback supplies the input data but does not raise an exception.
+          - Cleanup joins the HTTP thread first, then joins the SQL thread and
+            propagates its ``ExaQueryError``.
+        The aggregated ``ExaImportError`` therefore contains only the SQL-thread
+        exception.
+        """
         with capture_callback_threads(ExaSQLImportThread) as (
             http_thread,
             sql_thread,
@@ -323,6 +374,8 @@ class TestImportFromCallbackExceptions:
 
         assert len(ex.value.exceptions) == 1
         assert isinstance(ex.value.exceptions[0], ExaQueryError)
+        assert isinstance(sql_thread.exc, ExaQueryError)
+        assert http_thread.exc is None
         assert "object DOES_NOT_EXIST not found" in ex.value.exceptions[0].message
         assert not http_thread.is_alive()
         assert not sql_thread.is_alive()
@@ -365,20 +418,39 @@ class TestImportFromCallbackExceptions:
         assert not sql_thread.is_alive()
 
     @staticmethod
-    def test_export_callback_and_sql_have_different_exceptions(connection):
+    def test_import_callback_and_sql_have_different_exceptions(
+        connection, capture_callback_threads
+    ):
+        """
+        The callback raises a ``ValueError`` before it can provide input:
+          - The SQL thread independently reports the missing-table
+            ``ExaQueryError`` because it is the only component executing the
+            query.
+          - The HTTP thread is terminated during cleanup and does not have an
+            independent failure.
+        """
         error = ValueError("Error from callback")
 
         def import_cb(pipe, src, **kwargs):
             raise error
 
-        with pytest.raises(ExaImportError) as ex:
-            connection.import_from_callback(
-                callback=import_cb, src=None, table="DOES_NOT_EXIST"
-            )
+        with capture_callback_threads(ExaSQLImportThread) as (
+            http_thread,
+            sql_thread,
+        ):
+            with pytest.raises(ExaImportError) as ex:
+                connection.import_from_callback(
+                    callback=import_cb, src=None, table="DOES_NOT_EXIST"
+                )
 
         assert ex.value.exceptions[0] == error
         assert isinstance(ex.value.exceptions[1], ExaQueryError)
         assert len(ex.value.exceptions) == 2
+        assert sql_thread.exc is ex.value.exceptions[1]
+        assert http_thread.exc is None
+        assert not http_thread.is_alive()
+        assert not sql_thread.is_alive()
+        assert http_thread.server.socket.fileno() == -1
 
 
 @pytest.mark.configuration
