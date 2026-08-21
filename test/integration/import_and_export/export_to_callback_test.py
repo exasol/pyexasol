@@ -166,10 +166,8 @@ class TestExportToCallbackExceptions:
         export_cb,
         capture_callback_threads,
     ):
-        error = BrokenPipeError("Broken pipe in http_thread")
-
         def write_final_chunk_with_exception(_handler):
-            raise error
+            raise BrokenPipeError("Broken pipe in http_thread")
 
         with patch.object(
             ExaHttpRequestHandler,
