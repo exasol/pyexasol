@@ -332,10 +332,11 @@ class TestImportFromCallbackExceptions:
         connection, input_filepath, empty_table, import_cb, capture_callback_threads
     ):
         """
-        Due to a race condition, it's difficult to create a test with
-        connection.abort_query() that ensures that an exception would be raised.
-        Thus, we mock that here. Still, there is a race condition whether 1 or 2
-        exceptions are raised.
+        Mock the SQL thread to deterministically record an abort
+        ``ExaQueryError``. Terminating the HTTP thread closes the callback
+        pipe while the callback is still active, so the HTTP/callback path
+        contributes a second exception. This test therefore expects two
+        exceptions.
         """
         with patch("pyexasol.connection.ExaSQLImportThread.run_sql") as mock:
             mock.side_effect = ExaQueryError(
@@ -355,11 +356,9 @@ class TestImportFromCallbackExceptions:
                         table=empty_table,
                     )
 
-        query_error_loc = 0
-        if len(ex.value.exceptions) == 2:
-            query_error_loc = 1
+        assert len(ex.value.exceptions) == 2
 
-        selected_exception = ex.value.exceptions[query_error_loc]
+        selected_exception = ex.value.exceptions[1]
         assert isinstance(selected_exception, ExaQueryError)
         assert "Client requested execution abort." in selected_exception.message
         assert not http_thread.is_alive()
