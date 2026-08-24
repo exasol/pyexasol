@@ -214,7 +214,7 @@ class TestImportFromCallbackExceptions:
         Thus, we mock that here. Still, there is a race condition whether 1 or 2
         exceptions are raised.
         """
-        with patch("pyexasol.connection.ExaSQLImportThread.run_sql") as mock:
+        with patch("pyexasol.connection.ExaSQLThread.run_sql") as mock:
             mock.side_effect = ExaQueryError(
                 message="Client requested execution abort.",
                 query="mock response",
