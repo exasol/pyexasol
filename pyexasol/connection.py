@@ -921,7 +921,7 @@ class ExaConnection:
             compression,
             self.options["encryption"],
         )
-        sql_thread = ExaSQLThread(self, compression, export_query)
+        sql_thread = ExaSQLThread(self, export_query)
 
         try:
             http_thread.start()
@@ -1006,7 +1006,7 @@ class ExaConnection:
             compression,
             self.options["encryption"],
         )
-        sql_thread = ExaSQLThread(self, compression, import_query)
+        sql_thread = ExaSQLThread(self, import_query)
 
         try:
             http_thread.start()
@@ -1076,7 +1076,7 @@ class ExaConnection:
             params=export_params,
             query_or_table=query_or_table,
         )
-        sql_thread = ExaSQLThread(self, compression, export_query)
+        sql_thread = ExaSQLThread(self, export_query)
         sql_thread.set_exa_address_list(exa_address_list)
         sql_thread.run_sql()
 
@@ -1113,7 +1113,7 @@ class ExaConnection:
             params=import_params,
             table=table,
         )
-        sql_thread = ExaSQLThread(self, compression, import_query)
+        sql_thread = ExaSQLThread(self, import_query)
         sql_thread.set_exa_address_list(exa_address_list)
         sql_thread.run_sql()
 

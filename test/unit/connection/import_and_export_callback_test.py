@@ -113,8 +113,8 @@ class TestExportToCallback:
 
         sql_args, _ = mock_sql_thread.call_args
         assert sql_args[0] is exa_conn
-        assert sql_args[1] is exa_conn.options["compression"]
-        assert sql_args[2].query_or_table == "dummy_table"
+        assert sql_args[1].query_or_table == "dummy_table"
+        assert sql_args[1].compression is exa_conn.options["compression"]
 
         # verify callback_params=None maps to empty dictionary
         _, callback_kwargs = callback_spy.call_args
@@ -175,8 +175,8 @@ class TestImportFromCallback:
         # verify import_params=None maps to empty dictionary
         sql_args, _ = mock_sql_thread.call_args
         assert sql_args[0] is exa_conn
-        assert sql_args[1] is exa_conn.options["compression"]
-        assert sql_args[2].table == "dummy_table"
+        assert sql_args[1].table == "dummy_table"
+        assert sql_args[1].compression is exa_conn.options["compression"]
 
         # verify callback_params=None maps to empty dictionary
         _, callback_kwargs = callback_spy.call_args

@@ -20,12 +20,10 @@ class ExaSQLThread(threading.Thread):
     Thread class which re-throws any Exception to parent thread
     """
 
-    def __init__(self, connection: ExaConnection, compression: bool, query_builder):
+    def __init__(self, connection: ExaConnection, query_builder):
         self.connection = connection
-        self.compression = compression
         self.query_builder = query_builder
 
-        self.params: dict = {}
         self.http_thread = None
         self.exa_address_list: list[str] = []
         self.exc = None
