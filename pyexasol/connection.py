@@ -909,17 +909,17 @@ class ExaConnection:
             False if ("format" in export_params) else self.options["compression"]
         )
 
-        http_thread = ExaHttpThread(
-            self.ws_ipaddr,  # type: ignore
-            self.ws_port,  # type: ignore
-            compression,
-            self.options["encryption"],
-        )
         export_query = ExportQuery.load_from_dict(
             connection=self,
             compression=compression,
             params=export_params,
             query_or_table=query_or_table,
+        )
+        http_thread = ExaHttpThread(
+            self.ws_ipaddr,  # type: ignore
+            self.ws_port,  # type: ignore
+            compression,
+            self.options["encryption"],
         )
         sql_thread = ExaSQLThread(self, compression, export_query)
 
@@ -994,17 +994,17 @@ class ExaConnection:
             False if ("format" in import_params) else self.options["compression"]
         )
 
-        http_thread = ExaHttpThread(
-            self.ws_ipaddr,  # type: ignore
-            self.ws_port,  # type: ignore
-            compression,
-            self.options["encryption"],
-        )
         import_query = ImportQuery.load_from_dict(
             connection=self,
             compression=compression,
             params=import_params,
             table=table,
+        )
+        http_thread = ExaHttpThread(
+            self.ws_ipaddr,  # type: ignore
+            self.ws_port,  # type: ignore
+            compression,
+            self.options["encryption"],
         )
         sql_thread = ExaSQLThread(self, compression, import_query)
 

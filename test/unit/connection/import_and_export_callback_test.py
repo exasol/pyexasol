@@ -61,6 +61,21 @@ def callback_spy():
 
 class TestExportToCallback:
     @staticmethod
+    def test_unsupported_export_parameter_raises_before_threads_are_created(
+        exa_conn, mock_http_thread, mock_sql_thread, callback_spy
+    ):
+        with pytest.raises(TypeError, match="unsupported_parameter"):
+            exa_conn.export_to_callback(
+                callback=callback_spy,
+                dst=None,
+                query_or_table="dummy_table",
+                export_params={"unsupported_parameter": True},
+            )
+
+        mock_http_thread.assert_not_called()
+        mock_sql_thread.assert_not_called()
+
+    @staticmethod
     def test_not_a_callable_raises_an_exception(
         exa_conn, mock_http_thread, mock_sql_thread
     ):
@@ -107,6 +122,21 @@ class TestExportToCallback:
 
 
 class TestImportFromCallback:
+    @staticmethod
+    def test_unsupported_import_parameter_raises_before_threads_are_created(
+        exa_conn, mock_http_thread, mock_sql_thread, callback_spy
+    ):
+        with pytest.raises(TypeError, match="unsupported_parameter"):
+            exa_conn.import_from_callback(
+                callback=callback_spy,
+                src="src_data",
+                table="dummy_table",
+                import_params={"unsupported_parameter": True},
+            )
+
+        mock_http_thread.assert_not_called()
+        mock_sql_thread.assert_not_called()
+
     @staticmethod
     def test_not_a_callable_raises_an_exception(
         exa_conn, mock_http_thread, mock_sql_thread
