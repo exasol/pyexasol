@@ -30,12 +30,14 @@ def sql_query(mock_connection):
 
 @pytest.fixture
 def import_sql_query(mock_connection):
-    return ImportQuery(connection=mock_connection, compression=True)
+    return ImportQuery(connection=mock_connection, compression=True, table="TABLE")
 
 
 @pytest.fixture
 def export_sql_query(mock_connection):
-    return ExportQuery(connection=mock_connection, compression=True)
+    return ExportQuery(
+        connection=mock_connection, compression=True, query_or_table="TABLE"
+    )
 
 
 class TestSqlQuery:
@@ -247,20 +249,22 @@ class TestImportQuery:
     @staticmethod
     def test_build_query(import_sql_query):
         result = import_sql_query.build_query(
-            table="TABLE",
             exa_address_list=[
                 "127.18.0.2:8364/YHistZoLhU9+FKoSEHHbNGtC/Ee4KT75DDBO+s5OG8o="
             ],
         )
         assert (
             result
-            == "IMPORT INTO TABLE FROM CSV\nAT 'https://127.18.0.2:8364' PUBLIC KEY 'sha256//YHistZoLhU9+FKoSEHHbNGtC/Ee4KT75DDBO+s5OG8o=' FILE '000.gz'"
+            == "IMPORT INTO \"TABLE\" FROM CSV\nAT 'https://127.18.0.2:8364' PUBLIC KEY 'sha256//YHistZoLhU9+FKoSEHHbNGtC/Ee4KT75DDBO+s5OG8o=' FILE '000.gz'"
         )
 
     @staticmethod
     def test_load_from_dict(mock_connection):
         ImportQuery.load_from_dict(
-            connection=mock_connection, compression=False, params={"skip": 2}
+            connection=mock_connection,
+            compression=False,
+            params={"skip": 2},
+            table="TABLE",
         )
 
     @staticmethod
@@ -306,20 +310,38 @@ class TestExportQuery:
     @staticmethod
     def test_build_query(export_sql_query):
         result = export_sql_query.build_query(
-            table="TABLE",
             exa_address_list=[
                 "127.18.0.2:8364/YHistZoLhU9+FKoSEHHbNGtC/Ee4KT75DDBO+s5OG8o="
             ],
         )
         assert (
             result
-            == "EXPORT TABLE INTO CSV\nAT 'https://127.18.0.2:8364' PUBLIC KEY 'sha256//YHistZoLhU9+FKoSEHHbNGtC/Ee4KT75DDBO+s5OG8o=' FILE '000.gz'"
+            == "EXPORT \"TABLE\" INTO CSV\nAT 'https://127.18.0.2:8364' PUBLIC KEY 'sha256//YHistZoLhU9+FKoSEHHbNGtC/Ee4KT75DDBO+s5OG8o=' FILE '000.gz'"
         )
+
+    @staticmethod
+    def test_build_query_formats_query_source(export_sql_query):
+        export_sql_query.query_or_table = "  SELECT * FROM TABLE;  "
+
+        result = export_sql_query.build_query(exa_address_list=[])
+
+        assert result == "EXPORT (\nSELECT * FROM TABLE\n) INTO CSV"
+
+    @staticmethod
+    def test_build_query_rejects_columns_for_query_source(export_sql_query):
+        export_sql_query.query_or_table = "SELECT * FROM TABLE"
+        export_sql_query.columns = ["COLUMN"]
+
+        with pytest.raises(ValueError, match="not compatible with SQL query"):
+            export_sql_query.build_query(exa_address_list=[])
 
     @staticmethod
     def test_load_from_dict(mock_connection):
         ExportQuery.load_from_dict(
-            connection=mock_connection, compression=False, params={"delimit": "auto"}
+            connection=mock_connection,
+            compression=False,
+            params={"delimit": "auto"},
+            query_or_table="TABLE",
         )
 
     @staticmethod
@@ -335,7 +357,7 @@ class TestExportQuery:
     )
     def test_get_export(export_sql_query, columns, expected):
         export_sql_query.columns = columns
-        assert export_sql_query._get_export(table="TABLE") == expected
+        assert export_sql_query._get_export(query_or_table="TABLE") == expected
 
     @staticmethod
     @pytest.mark.parametrize(
