@@ -2,7 +2,10 @@ from __future__ import annotations
 
 import re
 from collections.abc import Iterable
-from dataclasses import dataclass
+from dataclasses import (
+    dataclass,
+    field,
+)
 from typing import TYPE_CHECKING
 
 from packaging.version import Version
@@ -179,8 +182,10 @@ class ImportQuery(SqlQuery):
     # set these values in param dictionary to ExaConnection
     skip: str | int | None = None
     trim: str | None = None
+    table: str = field(kw_only=True)
 
-    def build_query(self, table: str, exa_address_list: list[str]) -> str:
+    def build_query(self, exa_address_list: list[str]) -> str:
+        table = self.connection.format.default_format_ident(self.table)
         query_lines = [
             self._comment,
             self._get_import(table=table),
@@ -197,10 +202,18 @@ class ImportQuery(SqlQuery):
 
     @staticmethod
     def load_from_dict(
-        connection: ExaConnection, compression: bool, params: dict
+        connection: ExaConnection,
+        compression: bool,
+        params: dict,
+        table: str,
     ) -> ImportQuery:
         """Load the params dictionary into the ImportQuery class."""
-        return ImportQuery(connection=connection, compression=compression, **params)
+        return ImportQuery(
+            connection=connection,
+            compression=compression,
+            table=table,
+            **params,
+        )
 
     def _get_import(self, table: str) -> str:
         return f"IMPORT INTO {table}{self._column_spec} FROM CSV"
@@ -227,11 +240,13 @@ class ExportQuery(SqlQuery):
     # set these values in param dictionary to ExaConnection
     delimit: str | None = None
     with_column_names: bool = False
+    query_or_table: object = field(kw_only=True)
 
-    def build_query(self, table: str, exa_address_list: list[str]) -> str:
+    def build_query(self, exa_address_list: list[str]) -> str:
+        query_or_table = self._format_query_or_table()
         query_lines = [
             self._comment,
-            self._get_export(table=table),
+            self._get_export(query_or_table=query_or_table),
             *self._get_file_list(exa_address_list=exa_address_list),
             self._delimit,
             self._encoding,
@@ -245,13 +260,36 @@ class ExportQuery(SqlQuery):
 
     @staticmethod
     def load_from_dict(
-        connection: ExaConnection, compression: bool, params: dict
+        connection: ExaConnection,
+        compression: bool,
+        params: dict,
+        query_or_table: object,
     ) -> ExportQuery:
         """Load the params dictionary into the ExportQuery class."""
-        return ExportQuery(connection=connection, compression=compression, **params)
+        return ExportQuery(
+            connection=connection,
+            compression=compression,
+            query_or_table=query_or_table,
+            **params,
+        )
 
-    def _get_export(self, table: str) -> str:
-        return f"EXPORT {table}{self._column_spec} INTO CSV"
+    def _format_query_or_table(self) -> str:
+        if (
+            isinstance(self.query_or_table, tuple)
+            or str(self.query_or_table).strip().find(" ") == -1
+        ):
+            return self.connection.format.default_format_ident(self.query_or_table)
+
+        if self.columns:
+            raise ValueError(
+                "Export option 'columns' is not compatible with SQL query export source"
+            )
+        # New lines are mandatory to handle queries with single-line comments '--'.
+        export_query = str(self.query_or_table).lstrip(" \n").rstrip(" \n;")
+        return f"(\n{export_query}\n)"
+
+    def _get_export(self, query_or_table: str) -> str:
+        return f"EXPORT {query_or_table}{self._column_spec} INTO CSV"
 
     @property
     def _delimit(self) -> str | None:

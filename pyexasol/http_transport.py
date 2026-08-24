@@ -11,11 +11,6 @@ import zlib
 from ssl import SSLContext
 from typing import TYPE_CHECKING
 
-from pyexasol.query_builders.csv_builders import (
-    ExportQuery,
-    ImportQuery,
-)
-
 if TYPE_CHECKING:
     from pyexasol import ExaConnection
 
@@ -25,9 +20,10 @@ class ExaSQLThread(threading.Thread):
     Thread class which re-throws any Exception to parent thread
     """
 
-    def __init__(self, connection: ExaConnection, compression: bool):
+    def __init__(self, connection: ExaConnection, compression: bool, query_builder):
         self.connection = connection
         self.compression = compression
+        self.query_builder = query_builder
 
         self.params: dict = {}
         self.http_thread = None
@@ -54,82 +50,14 @@ class ExaSQLThread(threading.Thread):
                 self.http_thread.terminate()
 
     def run_sql(self):
-        pass
+        query = self.query_builder.build_query(exa_address_list=self.exa_address_list)
+        self.connection.execute(query)
 
     def join_with_exc(self, *args):
         super().join(*args)
 
         if self.exc:
             raise self.exc
-
-
-class ExaSQLExportThread(ExaSQLThread):
-    """
-    Build and run EXPORT query into separate thread
-    Main thread is busy outputting data in callbacks
-    """
-
-    def __init__(
-        self,
-        connection: ExaConnection,
-        compression: bool,
-        query_or_table,
-        export_params: dict,
-    ):
-        super().__init__(connection, compression)
-
-        self.query_or_table = query_or_table
-        self.params = export_params
-
-    def run_sql(self):
-        if (
-            isinstance(self.query_or_table, tuple)
-            or str(self.query_or_table).strip().find(" ") == -1
-        ):
-            export_table = self.connection.format.default_format_ident(
-                self.query_or_table
-            )
-        else:
-            # New lines are mandatory to handle queries with single-line comments '--'
-            export_query = self.query_or_table.lstrip(" \n").rstrip(" \n;")
-            export_table = f"(\n{export_query}\n)"
-
-            if self.params.get("columns"):
-                raise ValueError(
-                    "Export option 'columns' is not compatible with SQL query export source"
-                )
-
-        export_query = ExportQuery.load_from_dict(
-            connection=self.connection, compression=self.compression, params=self.params
-        ).build_query(table=export_table, exa_address_list=self.exa_address_list)
-        self.connection.execute(export_query)
-
-
-class ExaSQLImportThread(ExaSQLThread):
-    """
-    Build and run IMPORT query into separate thread
-    Main thread is busy parsing results in callbacks
-    """
-
-    def __init__(
-        self,
-        connection: ExaConnection,
-        compression: bool,
-        table: str,
-        import_params: dict,
-    ):
-        super().__init__(connection, compression)
-
-        self.table = table
-        self.params = import_params
-
-    def run_sql(self):
-        table = self.connection.format.default_format_ident(self.table)
-
-        import_query = ImportQuery.load_from_dict(
-            connection=self.connection, compression=self.compression, params=self.params
-        ).build_query(table=table, exa_address_list=self.exa_address_list)
-        self.connection.execute(import_query)
 
 
 class ExaHttpThread(threading.Thread):

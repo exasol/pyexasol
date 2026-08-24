@@ -55,11 +55,14 @@ from .ext import ExaExtension
 from .formatter import ExaFormatter
 from .http_transport import (
     ExaHttpThread,
-    ExaSQLExportThread,
-    ExaSQLImportThread,
+    ExaSQLThread,
 )
 from .logger import ExaLogger
 from .meta import ExaMetaData
+from .query_builders.csv_builders import (
+    ExportQuery,
+    ImportQuery,
+)
 from .script_output import ExaScriptOutputProcess
 from .statement import ExaStatement
 from .warnings import PyexasolWarning
@@ -912,9 +915,13 @@ class ExaConnection:
             compression,
             self.options["encryption"],
         )
-        sql_thread = ExaSQLExportThread(
-            self, compression, query_or_table, export_params
+        export_query = ExportQuery.load_from_dict(
+            connection=self,
+            compression=compression,
+            params=export_params,
+            query_or_table=query_or_table,
         )
+        sql_thread = ExaSQLThread(self, compression, export_query)
 
         try:
             http_thread.start()
@@ -993,7 +1000,13 @@ class ExaConnection:
             compression,
             self.options["encryption"],
         )
-        sql_thread = ExaSQLImportThread(self, compression, table, import_params)
+        import_query = ImportQuery.load_from_dict(
+            connection=self,
+            compression=compression,
+            params=import_params,
+            table=table,
+        )
+        sql_thread = ExaSQLThread(self, compression, import_query)
 
         try:
             http_thread.start()
@@ -1057,9 +1070,13 @@ class ExaConnection:
 
         # There is no need to actually run a separate thread here, all work is performed in separate processes
         # We simply reuse thread class to keep logic in one place
-        sql_thread = ExaSQLExportThread(
-            self, compression, query_or_table, export_params
+        export_query = ExportQuery.load_from_dict(
+            connection=self,
+            compression=compression,
+            params=export_params,
+            query_or_table=query_or_table,
         )
+        sql_thread = ExaSQLThread(self, compression, export_query)
         sql_thread.set_exa_address_list(exa_address_list)
         sql_thread.run_sql()
 
@@ -1090,7 +1107,13 @@ class ExaConnection:
 
         # There is no need to actually run a separate thread here, all work is performed in separate processes
         # We simply reuse thread class to keep logic in one place
-        sql_thread = ExaSQLImportThread(self, compression, table, import_params)
+        import_query = ImportQuery.load_from_dict(
+            connection=self,
+            compression=compression,
+            params=import_params,
+            table=table,
+        )
+        sql_thread = ExaSQLThread(self, compression, import_query)
         sql_thread.set_exa_address_list(exa_address_list)
         sql_thread.run_sql()
 
