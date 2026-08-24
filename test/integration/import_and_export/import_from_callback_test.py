@@ -269,11 +269,12 @@ class TestImportFromCallbackExceptions:
         connection, input_filepath, empty_table, import_cb, capture_callback_threads
     ):
         """
-        ``ExaTCPServer.handle_request`` raises an exception in the HTTP
-        thread:
-          - Because the HTTP server can no longer carry the data, the
-            concurrently running SQL thread's IMPORT receives a transport
-            failure and raises an ``ExaQueryError``.
+        The HTTP thread runs an ``ExaTCPServer``. Its
+        ``ExaTCPServer.handle_request`` method raises a transport exception:
+          - The HTTP thread captures the exception raised by the TCP server.
+          - Because the TCP server can no longer carry the data, the concurrently
+            running SQL thread's IMPORT receives a transport failure and raises an
+            ``ExaQueryError``.
           - The callback only supplies data and completes normally.
         """
         error = BrokenPipeError("Broken pipe in http_thread")
