@@ -933,10 +933,6 @@ class ExaConnection:
             with http_thread.read_pipe as pipe:
                 result = callback(pipe, dst, **callback_params)
 
-            # The callback has finished. Allow the HTTP handler to send the
-            # final chunk and finish the request.
-            http_thread.server.can_finish_get.set()
-
             # Either worker may finish first. Wake up as soon as one reports
             # completion so errors can be observed without waiting on the
             # other connection indefinitely.
