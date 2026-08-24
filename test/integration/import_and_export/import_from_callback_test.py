@@ -180,12 +180,13 @@ class TestImportFromCallbackExceptions:
         connection_factory, empty_table, import_cb, capture_callback_threads
     ):
         """
-        The callback closes the WebSocket while both workers are using it:
+        The callback closes the WebSocket while the SQL thread and the HTTP thread
+        are using it:
           - Thus, the calling thread fails while using the callback pipe.
           - The SQL thread fails because its database request loses the WebSocket
             transport.
-        - The HTTP thread is terminated by the SQL thread, but it does not raise an
-          exception.
+          - The SQL thread terminates the HTTP thread and its TCP server, but the
+            HTTP thread does not raise an exception of its own.
         """
         new_connection = connection_factory()
 
@@ -224,12 +225,13 @@ class TestImportFromCallbackExceptions:
         capture_callback_threads,
     ):
         """
-        The HTTP thread raises an exception while writing a chunk:
-         - The handler catches that failure and closes its transport.
-         - The SQL thread is executing the IMPORT that depends on that transport, so it
-           receives the truncated request and records an ``ExaQueryError``.
-        - The callback is not the failing component, and the HTTP exception is not
-        propagated separately. Hence, they do not raise exceptions.
+        The TCP server (``ExaTCPServer``) owned by the HTTP thread raises an exception
+        while writing a chunk of data:
+          - The HTTP thread captures the handler exception and closes its transport.
+          - The SQL thread is executing the IMPORT that depends on that transport,
+            so it receives the truncated request and records an ``ExaQueryError``.
+          - The callback is not the failing component and does not raise an
+            exception.
         """
         error = BrokenPipeError("Broken pipe in http_thread")
         input_filepath.write_text(all_data.csv_str())
@@ -269,9 +271,9 @@ class TestImportFromCallbackExceptions:
         connection, input_filepath, empty_table, import_cb, capture_callback_threads
     ):
         """
-        The HTTP thread runs an ``ExaTCPServer``. Its
-        ``ExaTCPServer.handle_request`` method raises a transport exception:
-          - The HTTP thread captures the exception raised by the TCP server.
+        The TCP server (``ExaTCPServer'', owned by the HTTP thread) raises a transport
+        exception:
+          - The HTTP thread captures the exception raised by its TCP server.
           - Because the TCP server can no longer carry the data, the concurrently
             running SQL thread's IMPORT receives a transport failure and raises an
             ``ExaQueryError``.
@@ -322,8 +324,8 @@ class TestImportFromCallbackExceptions:
         The SQL thread raises an exception before it can consume the import data:
           - The SQL thread terminates the HTTP thread and closes the pipe.
           - The callback then attempts to use that pipe and raises a ``ValueError``.
-          - The HTTP thread is only being terminated by the SQL thread, so it is not
-            expected to report a separate exception.
+          - The HTTP thread is only being terminated by the SQL thread, so it does not
+            report a separate exception.
         """
         license_error = ExaQueryError(
             connection=connection,
@@ -358,10 +360,9 @@ class TestImportFromCallbackExceptions:
         connection, input_filepath, import_cb, capture_callback_threads
     ):
         """
-        The SQL thread is the component executing the IMPORT query, so it detects
-        the missing table and records an ``ExaQueryError``:
-          - The SQL thread terminates the HTTP thread, which exits without an
-            independent exception.
+        The SQL thread executes the IMPORT query, so it detects the missing table
+        and records an ``ExaQueryError``:
+          - The SQL thread terminates the HTTP thread, which exits without an exception.
           - The callback supplies the input data but does not raise an exception.
           - Cleanup joins the HTTP thread first, then joins the SQL thread and
             propagates its ``ExaQueryError``.
@@ -390,11 +391,10 @@ class TestImportFromCallbackExceptions:
         connection, input_filepath, empty_table, import_cb, capture_callback_threads
     ):
         """
-        Mock the SQL thread to deterministically record an abort
-        ``ExaQueryError``. Terminating the HTTP thread closes the callback
-        pipe while the callback is still active, so the HTTP/callback path
-        contributes a second exception. This test therefore expects two
-        exceptions.
+        The SQL thread raises an ``ExaQueryError`` because the query is aborted:
+          - The SQL thread terminates the HTTP thread.
+          - The callback pipe is closed while the callback is still active, so the
+            HTTP/callback path contributes a second exception.
         """
         with patch("pyexasol.connection.ExaSQLImportThread.run_sql") as mock:
             mock.side_effect = ExaQueryError(
@@ -427,12 +427,12 @@ class TestImportFromCallbackExceptions:
         connection, capture_callback_threads
     ):
         """
-        The callback raises a ``ValueError`` before it can provide input:
+        The callback in the calling thread raises a ``ValueError`` before it can
+        provide input. The SQL thread independently executes the IMPORT:
           - The SQL thread independently reports the missing-table
             ``ExaQueryError`` because it is the only component executing the
             query.
-          - The HTTP thread is terminated during cleanup and does not have an
-            independent failure.
+          - The HTTP thread is terminated during cleanup and does not raise an exception.
         """
         error = ValueError("Error from callback")
 
