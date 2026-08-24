@@ -43,7 +43,7 @@ are workers created by :meth:`ExaConnection.import_from_callback` or
 HTTP thread internals
 ---------------------
 
-The HTTP thread owns and runs the a TCP Server (``ExaTCPServer``). The server uses an
+The HTTP thread owns and runs a TCP Server (``ExaTCPServer``). The server uses an
 HTTP request handler ('`ExaHttpRequestHandler``) to move data between Exasol and the pipe.
 
 .. mermaid::

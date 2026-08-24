@@ -149,7 +149,7 @@ class TestImportFromCallbackExceptions:
           - The SQL thread therefore receives an incomplete request from Exasol and
             raises an ``ExaQueryError``.
           - The HTTP thread is only stopped by cleanup; it does not perform the failed
-          SQL operation, and it,therefore, is not expected to have its own exception.
+          SQL operation, and therefore, it is not expected to have its own exception.
         """
         error = ValueError("Error from callback")
 
@@ -271,7 +271,7 @@ class TestImportFromCallbackExceptions:
         connection, input_filepath, empty_table, import_cb, capture_callback_threads
     ):
         """
-        The TCP server (``ExaTCPServer'', owned by the HTTP thread) raises a transport
+        The TCP server (``ExaTCPServer``, owned by the HTTP thread) raises a transport
         exception:
           - The HTTP thread captures the exception raised by its TCP server.
           - Because the TCP server can no longer carry the data, the concurrently

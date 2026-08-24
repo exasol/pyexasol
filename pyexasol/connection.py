@@ -933,7 +933,7 @@ class ExaConnection:
             with http_thread.read_pipe as pipe:
                 result = callback(pipe, dst, **callback_params)
 
-            # The callback has finished writing. Allow the HTTP handler to send the
+            # The callback has finished. Allow the HTTP handler to send the
             # final chunk and finish the request.
             http_thread.server.can_finish_get.set()
 
