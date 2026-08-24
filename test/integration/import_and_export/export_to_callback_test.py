@@ -110,6 +110,12 @@ class TestExportToCallbackExceptions:
     def test_export_callback_has_exception(
         connection, empty_table, capture_callback_threads
     ):
+        """
+        The export callback running in the calling thread raises a ``ValueError``:
+          - The callback fails before it can consume any exported data.
+          - The HTTP thread is stopped during cleanup and does not raise an exception.
+          - The SQL thread does not observe a separate failure.
+        """
         error = ValueError("Error from callback")
 
         def raise_error(pipe, dst, **kwargs):
@@ -133,6 +139,15 @@ class TestExportToCallbackExceptions:
     def test_closed_ws_connection(
         connection_factory, empty_table, export_cb, capture_callback_threads
     ):
+        """
+        The callback closes the WebSocket while the SQL thread and the HTTP thread
+        are using it:
+          - The calling thread fails while reading from the callback pipe.
+          - The SQL thread fails because its database request loses the WebSocket
+            transport.
+          - The SQL thread terminates the HTTP thread, and the HTTP thread does not
+            raise an exception.
+        """
         new_connection = connection_factory()
 
         def export_cb_with_close(pipe, dst, **kwargs):
@@ -166,6 +181,17 @@ class TestExportToCallbackExceptions:
         export_cb,
         capture_callback_threads,
     ):
+        """
+        The ``ExaHttpRequestHandler`` running through the ``ExaTCPServer`` (owned by
+        the HTTP thread) raises ``BrokenPipeError`` while writing the final chunk:
+          - The HTTP thread (``ExaHttpThread``) handles the failed transport and
+            closes the HTTP response.
+          - The SQL thread is executing the EXPORT that depends on that response,
+            so it records an ``ExaQueryError``.
+          - The callback is not the failing component and does not raise an
+            exception. Only the SQL-thread exception is expected.
+        """
+
         def write_final_chunk_with_exception(_handler):
             raise BrokenPipeError("Broken pipe in http_thread")
 
@@ -196,6 +222,14 @@ class TestExportToCallbackExceptions:
     def test_http_thread_captures_transport_exception(
         connection, output_filepath, empty_table, export_cb, capture_callback_threads
     ):
+        """
+        The TCP server (owned by the HTTP thread) raises a ``BrokenPipeError``:
+          - The HTTP thread captures the exception raised by its TCP server.
+          - Because the TCP server can no longer carry the exported data, the
+            concurrently running SQL thread's EXPORT receives a transport failure
+            and raises an ``ExaQueryError``.
+          - The callback only consumes data and does not raise an exception.
+        """
         error = BrokenPipeError("Broken pipe in http_thread")
 
         def handle_request_with_exception(_server):
@@ -232,6 +266,14 @@ class TestExportToCallbackExceptions:
         fill_table,
         capture_callback_threads,
     ):
+        """
+        The SQL thread raises a database-license ``ExaQueryError`` before EXPORT
+        can deliver rows:
+          - The SQL thread terminates the HTTP thread and closes the callback pipe.
+          - The callback then attempts to read from that pipe and raises a
+            ``ValueError``.
+        """
+
         def streaming_export_cb(pipe, dst, **kwargs):
             with dst.open("wb") as output_file:
                 while chunk := pipe.read(8192):
@@ -268,6 +310,13 @@ class TestExportToCallbackExceptions:
     def test_http_thread_has_exception(
         connection, output_filepath, empty_table, export_cb
     ):
+        """
+        The HTTP thread raises a ``BrokenPipeError`` when the coordinator:
+          - The calling thread receives the HTTP-thread exception after the
+            callback has finished.
+          - The SQL thread is not executing a failing query and does not raise an
+            exception.
+        """
         with patch("pyexasol.connection.ExaHttpThread.join_with_exc") as mock:
             mock.side_effect = BrokenPipeError("Broken pipe in http_thread")
 
@@ -283,6 +332,12 @@ class TestExportToCallbackExceptions:
 
     @staticmethod
     def test_sql_thread_has_exception(connection, output_filepath, export_cb):
+        """
+        The SQL thread executes the EXPORT query, so it detects the missing table
+        and raises an ``ExaQueryError``:
+          - The callback only consumes output and does not raise an exception.
+          - The HTTP thread only transports the output and does not report an exception.
+        """
         with pytest.raises(ExaExportError, match="1 sub-exception") as ex:
             connection.export_to_callback(
                 callback=export_cb, dst=output_filepath, query_or_table="DOES_NOT_EXIST"
@@ -294,13 +349,14 @@ class TestExportToCallbackExceptions:
 
     @staticmethod
     def test_abort_query(
-        connection, output_filepath, empty_table, export_cb, capture_callback_threads
+        connection, output_filepath, fill_table, export_cb, capture_callback_threads
     ):
         """
-        Due to a race condition, it's difficult to create a test with
-        connection.abort_query() that ensures that an exception would be raised.
-        Thus, we mock that here. Still, there is a race condition whether 1 or 2
-        exceptions are raised.
+        The SQL thread raises an ``ExaQueryError`` because the EXPORT query is
+        aborted:
+          - The SQL thread terminates the HTTP thread.
+          - The callback pipe is closed while the callback is still active, so the
+            HTTP/callback path contributes a second exception.
         """
         with patch("pyexasol.connection.ExaSQLExportThread.run_sql") as mock:
             mock.side_effect = ExaQueryError(
@@ -318,14 +374,12 @@ class TestExportToCallbackExceptions:
                     connection.export_to_callback(
                         callback=export_cb,
                         dst=output_filepath,
-                        query_or_table=empty_table,
+                        query_or_table=fill_table,
                     )
 
-        query_error_loc = 0
-        if len(ex.value.exceptions) == 2:
-            query_error_loc = 1
+        assert len(ex.value.exceptions) == 2
 
-        selected_exception = ex.value.exceptions[query_error_loc]
+        selected_exception = ex.value.exceptions[1]
         assert isinstance(selected_exception, ExaQueryError)
         assert "Client requested execution abort." in selected_exception.message
         assert not http_thread.is_alive()
@@ -335,6 +389,14 @@ class TestExportToCallbackExceptions:
     def test_export_callback_and_sql_have_different_exceptions(
         connection, capture_callback_threads
     ):
+        """
+        The callback in the calling thread raises a ``ValueError`` before it can
+        consume the export stream. The SQL thread independently executes the
+        EXPORT:
+          - The SQL thread reports the missing-table ``ExaQueryError`` because it
+            is the only component executing the query.
+          - The HTTP thread is terminated during cleanup and does not raise an exception.
+        """
         error = ValueError("Error from callback")
 
         def export_cb(pipe, dst, **kwargs):
