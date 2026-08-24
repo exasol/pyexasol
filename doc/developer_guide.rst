@@ -3,6 +3,11 @@
 :octicon:`tools` Developer Guide
 ================================
 
+.. toctree::
+    :maxdepth: 2
+
+    developer_guide/import_export_threading
+
 This guide explains how to develop PyExasol and run tests.
 
 Initial Setup

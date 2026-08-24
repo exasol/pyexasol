@@ -34,6 +34,7 @@ extensions = [
     "sphinx.ext.intersphinx",
     "sphinx.ext.autosummary",
     "sphinx_copybutton",
+    "sphinxcontrib.mermaid",
     "myst_parser",
     "sphinx_design",
     "exasol.toolbox.sphinx.multiversion",
