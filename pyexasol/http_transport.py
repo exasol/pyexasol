@@ -14,7 +14,7 @@ from dataclasses import dataclass
 from ssl import SSLContext
 from typing import TYPE_CHECKING
 
-from packaging.version import Version
+from .query_builders.common_formattings import ExasolEndpoint
 
 if TYPE_CHECKING:
     from pyexasol import ExaConnection
@@ -52,24 +52,7 @@ class SqlQuery:
 
     @staticmethod
     def _split_exa_address_into_components(exa_address: str) -> tuple[str, str | None]:
-        """
-        Split ip_address:port and public key from exa address, where the expected
-        patterns are:
-            ip_address:port
-            ip_address:port/public_key
-        The value for public key is expected to be a SHA-256 hash of the public key,
-        which is then base64-encoded.
-        """
-        pattern = r"^([\d\.]+:\d+)(?:\/([a-zA-Z0-9_\-+\/]+=))?$"
-        match = re.match(pattern, exa_address)
-        if match is None:
-            raise ValueError(
-                f"Could not split exa_address {exa_address} into known components"
-            )
-        ip_address, public_key = match.groups()
-        if not public_key:
-            return ip_address, None
-        return ip_address, public_key
+        return ExasolEndpoint._parse_exa_address(exa_address=exa_address)
 
     def _get_file_list(self, exa_address_list: list[str]) -> list[str]:
         file_ext = self._file_ext
@@ -98,11 +81,9 @@ class SqlQuery:
         return "\n".join(filtered_query_lines)
 
     def _requires_tls_public_key(self) -> bool:
-        version = self.connection.exasol_db_version
-        return (
-            version is not None
-            and version >= Version("8.32.0")
-            and self.connection.options["encryption"]
+        return ExasolEndpoint._is_tls_public_key_required(
+            exasol_db_version=self.connection.exasol_db_version,
+            encryption=self.connection.options["encryption"],
         )
 
     @property
@@ -171,9 +152,9 @@ class SqlQuery:
 
     @property
     def _url_prefix(self) -> str:
-        if self.connection.options["encryption"]:
-            return "https://"
-        return "http://"
+        return ExasolEndpoint._get_url_prefix(
+            encryption=self.connection.options["encryption"]
+        )
 
     @property
     def _row_separator(self) -> str | None:
