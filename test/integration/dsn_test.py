@@ -123,16 +123,13 @@ def test_hostname_range_with_zero_padding(connection):
 @pytest.mark.configuration
 def test_invalid_fingerprint(connection):
     """
-    This test only validates the wrong behavior of the DSN parser of pyexasol.
+    A fingerprint must be placed before the port, so this DSN is invalid.
     See https://github.com/exasol/pyexasol/issues/237
     """
     dsn = "localhost:8563/1234"
     with pytest.raises(ExaConnectionError) as excinfo:
         connection._process_dsn(dsn)
 
-    expected = (
-        "Could not resolve IP address of hostname [localhost:8563]"
-        " derived from connection string"
-    )
+    expected = "Could not parse connection string part [localhost:8563/1234]"
     actual = excinfo.value.message
     assert actual == expected
