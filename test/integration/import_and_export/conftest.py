@@ -1,12 +1,16 @@
 import copy
+from contextlib import contextmanager
 from datetime import datetime
 from inspect import cleandoc
 from test.integration.import_and_export.data_sample import (
     DATETIME_STR_FORMAT,
     DataSample,
 )
+from unittest.mock import patch
 
 import pytest
+
+from pyexasol.http_transport import ExaHttpThread
 
 ALL_COLUMNS = [
     "FIRST_NAME",
@@ -29,6 +33,50 @@ def table_name():
 @pytest.fixture(scope="session", autouse=True)
 def faker_seed():
     return 12345
+
+
+class ThreadHelper:
+    """Proxy exposing a worker thread created inside the context manager."""
+
+    def __init__(self):
+        self.instance = None
+
+    def __getattr__(self, attribute):
+        if self.instance is None:
+            raise AssertionError("Thread was not created")
+        return getattr(self.instance, attribute)
+
+
+@pytest.fixture
+def capture_callback_threads():
+    """Return a context manager for capturing callback worker threads."""
+
+    @contextmanager
+    def capture_threads(sql_thread_class):
+        http_thread = ThreadHelper()
+        sql_thread = ThreadHelper()
+
+        def create_http_thread(*args, **kwargs):
+            http_thread.instance = ExaHttpThread(*args, **kwargs)
+            return http_thread.instance
+
+        def create_sql_thread(*args, **kwargs):
+            sql_thread.instance = sql_thread_class(*args, **kwargs)
+            return sql_thread.instance
+
+        with (
+            patch(
+                "pyexasol.connection.ExaHttpThread",
+                side_effect=create_http_thread,
+            ),
+            patch(
+                "pyexasol.connection." + sql_thread_class.__name__,
+                side_effect=create_sql_thread,
+            ),
+        ):
+            yield http_thread, sql_thread
+
+    return capture_threads
 
 
 @pytest.fixture
