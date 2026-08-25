@@ -40,11 +40,11 @@ are workers created by :meth:`ExaConnection.import_from_callback` or
         sql --> |"executes IMPORT or EXPORT"| db
         sql -.-> |"uses address and terminates on failure"| http
 
-HTTP thread internals
+HTTP Thread Internals
 ---------------------
 
 The HTTP thread owns and runs a TCP Server (``ExaTCPServer``). The server uses an
-HTTP request handler ('`ExaHttpRequestHandler``) to move data between Exasol and the pipe.
+HTTP request handler (``ExaHttpRequestHandler``) to move data between Exasol and the pipe.
 
 .. mermaid::
 
@@ -75,7 +75,7 @@ The pipe separates the callback from the network transport. This lets the
 callback work with a file-like binary stream without needing to know about the
 socket or the HTTP request.
 
-Data flow
+Data Flow
 ---------
 
 The direction through the HTTP thread depends on the operation:
@@ -92,7 +92,7 @@ thread. The coordinator waits for the workers, joins the HTTP thread first, and
 then joins the SQL thread so that a SQL failure can stop the HTTP worker before
 cleanup waits for it.
 
-Understanding failures
+Understanding Failures
 ----------------------
 
 An exception can originate in the callback, the HTTP transport, or the SQL
