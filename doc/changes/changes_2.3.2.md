@@ -2,14 +2,14 @@
 
 ## Summary
 
-This update improves error reporting for ``import_from_callback`` and
-``export_to_callback`` by coordinating the completion of the callback, HTTP, and SQL
-threads.
+In this patch release, error reporting for ``import_from_callback`` and
+``export_to_callback`` is improved by coordinating the completion of the callback,
+HTTP, and SQL threads.
 
-## Bugfix
+## Bugfixes
 
 * #349: Modified exception reporting in `import_from_*` and `export_to_*` methods by coordinating completion of the HTTP and SQL import threads with a threading event
 
-## Refactoring
+## Refactorings
 
 * #251: Simplified local runs of the integration tests to only run tests for a certificate when `--with-cert` is specified
