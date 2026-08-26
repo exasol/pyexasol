@@ -4,7 +4,7 @@ from packaging.version import Version
 from pyexasol.query_builders.common_formattings import TransportEndpoint
 
 
-class TestExasolEndpoint:
+class TestTransportEndpoint:
     @staticmethod
     @pytest.mark.parametrize(
         "encryption,expected",
@@ -60,17 +60,17 @@ class TestExasolEndpoint:
             ),
         ],
     )
-    def test_parse_exa_address(ip_address: str, public_key: str):
-        exa_address = f"{ip_address}"
+    def test_parse_endpoint_address(ip_address: str, public_key: str):
+        endpoint_address = f"{ip_address}"
         if public_key:
-            exa_address = f"{ip_address}/{public_key}"
-        result = TransportEndpoint._parse_exa_address(exa_address)
+            endpoint_address = f"{ip_address}/{public_key}"
+        result = TransportEndpoint._parse_endpoint_address(endpoint_address)
         assert result[0] == ip_address
         assert result[1] == public_key
 
     @staticmethod
     @pytest.mark.parametrize(
-        "exa_address",
+        "endpoint_address",
         [
             pytest.param(
                 "127.18.0.2:8364/YHistZoLhU9+FKoSEH", id="incomplete_public_key"
@@ -79,6 +79,6 @@ class TestExasolEndpoint:
             pytest.param("localhost:1729", id="localhost"),
         ],
     )
-    def test_parse_exa_address_raises_exception(exa_address: str):
-        with pytest.raises(ValueError, match="Could not split exa_address"):
-            TransportEndpoint._parse_exa_address(exa_address)
+    def test__parse_endpoint_address_raises_exception(endpoint_address: str):
+        with pytest.raises(ValueError, match="Could not split endpoint_address"):
+            TransportEndpoint._parse_endpoint_address(endpoint_address)

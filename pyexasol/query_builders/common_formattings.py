@@ -8,15 +8,15 @@ class TransportEndpoint:
 
     @staticmethod
     def build_endpoint_clause(
-        exa_address: str,
+        endpoint_address: str,
         exasol_db_version: Version | None,
         encryption: bool,
     ) -> str:
         """
-        Build an Exasol ``AT`` endpoint clause.
+        Build an ``AT`` endpoint clause.
 
         Args:
-            exa_address: An Exasol endpoint address.
+            endpoint_address: A transport endpoint address.
             exasol_db_version: The Exasol database version, if available.
             encryption: ``True`` if the connection uses TLS encryption; otherwise,
                 ``False``.
@@ -26,10 +26,12 @@ class TransportEndpoint:
             TLS public key.
 
         Raises:
-            ValueError: If ``exa_address`` is invalid or a required public key is
+            ValueError: If ``endpoint_address`` is invalid or a required public key is
                 missing.
         """
-        ip_address_port, public_key = TransportEndpoint._parse_exa_address(exa_address)
+        ip_address_port, public_key = TransportEndpoint._parse_endpoint_address(
+            endpoint_address
+        )
         url_prefix = TransportEndpoint._get_url_prefix(encryption)
         endpoint_clause = f"AT '{url_prefix}{ip_address_port}'"
 
@@ -38,8 +40,8 @@ class TransportEndpoint:
         ):
             if not public_key:
                 raise ValueError(
-                    "Public key is required to be in the 'exa_address' for encrypted "
-                    "connections with Exasol DB >= 8.32.0"
+                    "Public key is required to be in the 'endpoint_address' for "
+                    "encrypted connections with Exasol DB >= 8.32.0"
                 )
             endpoint_clause += f" PUBLIC KEY 'sha256//{public_key}'"
 
@@ -89,9 +91,9 @@ class TransportEndpoint:
         )
 
     @staticmethod
-    def _parse_exa_address(exa_address: str) -> tuple[str, str | None]:
+    def _parse_endpoint_address(endpoint_address: str) -> tuple[str, str | None]:
         """
-        Parse an Exasol endpoint address into its address and optional public key.
+        Parse a database endpoint address into its address and optional public key.
 
         Supported formats are:
 
@@ -101,19 +103,19 @@ class TransportEndpoint:
         The public key must be a base64-encoded SHA-256 hash.
 
         Args:
-            exa_address: An Exasol endpoint address.
+            endpoint_address: A transport endpoint address.
 
         Returns:
             A tuple containing the ``ip_address:port`` and the optional public key.
 
         Raises:
-            ValueError: If ``exa_address`` does not match a supported format.
+            ValueError: If ``endpoint_address`` does not match a supported format.
         """
         pattern = r"^([\d\.]+:\d+)(?:\/([a-zA-Z0-9_\-+\/]+=))?$"
-        address_match = match(pattern, exa_address)
+        address_match = match(pattern, endpoint_address)
         if address_match is None:
             raise ValueError(
-                f"Could not split exa_address {exa_address} into known components"
+                f"Could not split endpoint_address {endpoint_address} into known components"
             )
 
         ip_address, public_key = address_match.groups()
