@@ -50,10 +50,6 @@ class SqlQuery:
 
         return ""
 
-    @staticmethod
-    def _split_exa_address_into_components(exa_address: str) -> tuple[str, str | None]:
-        return TransportEndpoint._parse_endpoint_address(endpoint_address=exa_address)
-
     def _get_file_list(self, exa_address_list: list[str]) -> list[str]:
         files = []
         csv_cols = self._build_csv_cols()

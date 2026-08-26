@@ -88,45 +88,6 @@ class TestSqlQuery:
 
     @staticmethod
     @pytest.mark.parametrize(
-        "ip_address, public_key",
-        [
-            pytest.param(
-                "127.18.0.2:8156",
-                "tfdCUbrFQxEBTtrD9yet67fwCQMlxNVGqIdagPXvnlM=",
-                id="ip",
-            ),
-            pytest.param(
-                "127.18.0.2:8364",
-                None,
-                id="url_without_public_key",
-            ),
-        ],
-    )
-    def test_split_exa_address_into_known_components(ip_address: str, public_key: str):
-        exa_address = f"{ip_address}"
-        if public_key:
-            exa_address = f"{ip_address}/{public_key}"
-        result = SqlQuery._split_exa_address_into_components(exa_address)
-        assert result[0] == ip_address
-        assert result[1] == public_key
-
-    @staticmethod
-    @pytest.mark.parametrize(
-        "exa_address",
-        [
-            pytest.param(
-                "127.18.0.2:8364/YHistZoLhU9+FKoSEH", id="incomplete_public_key"
-            ),
-            pytest.param("127.18.0.2/64:8364", id="cidr_notation"),
-            pytest.param("localhost:1729", id="localhost"),
-        ],
-    )
-    def test_split_exa_address_into_known_components_raises_exception(exa_address: str):
-        with pytest.raises(ValueError, match="Could not parse 'endpoint_address'"):
-            SqlQuery._split_exa_address_into_components(exa_address)
-
-    @staticmethod
-    @pytest.mark.parametrize(
         "db_version,expected_end",
         [
             pytest.param(Version("7.1.19"), "FILE '000.gz'", id="lower_version"),
