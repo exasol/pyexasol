@@ -154,41 +154,6 @@ class TestSqlQuery:
 
     @staticmethod
     @pytest.mark.parametrize(
-        "db_version,encryption,expected",
-        [
-            pytest.param(
-                Version("7.1.19"), False, False, id="lower_version_without_encryption"
-            ),
-            pytest.param(
-                Version("7.1.19"), True, False, id="lower_version_with_encryption"
-            ),
-            pytest.param(
-                MIN_DATABASE_VERSION_FOR_TLS_PUBLIC_KEY,
-                True,
-                True,
-                id="equal_version_with_encryption",
-            ),
-            pytest.param(
-                MIN_DATABASE_VERSION_FOR_TLS_PUBLIC_KEY,
-                False,
-                False,
-                id="equal_version_without_encryption",
-            ),
-            pytest.param(None, False, False, id="no_db_version_without_encryption"),
-            pytest.param(None, True, False, id="no_db_version_with_encryption"),
-        ],
-    )
-    def test_requires_tls_public_key(
-        sql_query, mock_connection, db_version, encryption, expected
-    ):
-        mock_connection.options["encryption"] = encryption
-        mock_connection.exasol_db_version = db_version
-
-        result = sql_query._requires_tls_public_key()
-        assert result == expected
-
-    @staticmethod
-    @pytest.mark.parametrize(
         "column_delimiter,expected", [(";", "COLUMN DELIMITER = ';'"), (None, None)]
     )
     def test_column_delimiter(sql_query, column_delimiter, expected):

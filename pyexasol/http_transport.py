@@ -72,12 +72,6 @@ class SqlQuery:
         filtered_query_lines = [q for q in query_lines if q is not None]
         return "\n".join(filtered_query_lines)
 
-    def _requires_tls_public_key(self) -> bool:
-        return TransportEndpoint._is_tls_public_key_required(
-            database_version=self.connection.exasol_db_version,
-            encryption=self.connection.options["encryption"],
-        )
-
     @property
     def _column_spec(self) -> str:
         """
