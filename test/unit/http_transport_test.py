@@ -165,6 +165,8 @@ class TestSqlQuery:
             pytest.param(
                 Version("8.32.0"), False, False, id="equal_version_without_encryption"
             ),
+            pytest.param(None, False, False, id="no_db_version_without_encryption"),
+            pytest.param(None, True, False, id="no_db_version_with_encryption"),
         ],
     )
     def test_requires_tls_public_key(
