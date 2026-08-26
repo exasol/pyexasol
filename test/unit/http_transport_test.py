@@ -171,9 +171,7 @@ class TestSqlQuery:
     @staticmethod
     def test_file_ext_raises_exception(sql_query):
         sql_query.format = "not_a_valid_format"
-        with pytest.raises(
-            ValueError, match="Unsupported compression format: not_a_valid_format"
-        ):
+        with pytest.raises(ValueError, match=f"'format' {sql_query.format} not in"):
             sql_query._file_ext
 
     @staticmethod

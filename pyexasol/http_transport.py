@@ -15,6 +15,10 @@ from ssl import SSLContext
 from typing import TYPE_CHECKING
 
 from .query_builders.common_formattings import TransportEndpoint
+from .query_builders.csv_builders import (
+    resolve_format,
+    validate_format,
+)
 
 if TYPE_CHECKING:
     from pyexasol import ExaConnection
@@ -120,13 +124,8 @@ class SqlQuery:
 
     @property
     def _file_ext(self) -> str:
-        if self.format is None:
-            if self.compression:
-                return "gz"
-            return "csv"
-        if self.format not in ("gz", "bz2", "zip"):
-            raise ValueError(f"Unsupported compression format: {self.format}")
-        return self.format
+        validate_format(file_format=self.format)
+        return resolve_format(self.format, self.compression)
 
     @property
     def _null(self) -> str | None:
