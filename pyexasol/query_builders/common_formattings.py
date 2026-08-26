@@ -117,9 +117,7 @@ class TransportEndpoint:
         pattern = r"^([\d\.]+:\d+)(?:\/([a-zA-Z0-9_\-+\/]+=))?$"
         address_match = match(pattern, endpoint_address)
         if address_match is None:
-            raise ValueError(
-                f"Could not split endpoint_address {endpoint_address} into known components"
-            )
+            raise ValueError(f"Could not parse 'endpoint_address' {endpoint_address}")
 
         ip_address, public_key = address_match.groups()
         if not public_key:

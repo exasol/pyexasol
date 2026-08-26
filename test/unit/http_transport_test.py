@@ -122,7 +122,7 @@ class TestSqlQuery:
         ],
     )
     def test_split_exa_address_into_known_components_raises_exception(exa_address: str):
-        with pytest.raises(ValueError, match="Could not split endpoint_address"):
+        with pytest.raises(ValueError, match="Could not parse 'endpoint_address'"):
             SqlQuery._split_exa_address_into_components(exa_address)
 
     @staticmethod

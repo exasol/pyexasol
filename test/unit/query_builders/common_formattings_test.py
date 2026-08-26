@@ -10,6 +10,57 @@ from pyexasol.query_builders.common_formattings import (
 class TestTransportEndpoint:
     @staticmethod
     @pytest.mark.parametrize(
+        "database_version",
+        (Version("7.1.19"), MIN_DATABASE_VERSION_FOR_TLS_PUBLIC_KEY, None),
+    )
+    def test_build_endpoint_clause_without_encryption(database_version):
+        endpoint_clause = TransportEndpoint.build_endpoint_clause(
+            endpoint_address="127.18.0.2:8156",
+            database_version=MIN_DATABASE_VERSION_FOR_TLS_PUBLIC_KEY,
+            encryption=False,
+        )
+        assert endpoint_clause == "AT 'http://127.18.0.2:8156'"
+
+    @staticmethod
+    @pytest.mark.parametrize("database_version", (Version("7.1.19"), None))
+    def test_build_endpoint_clause_with_encryption_below_min_database_version(
+        database_version,
+    ):
+        endpoint_clause = TransportEndpoint.build_endpoint_clause(
+            endpoint_address="127.18.0.2:8156/tfdCUbrFQxEBTtrD9yet67fwCQMlxNVGqIdagPXvnlM=",
+            database_version=database_version,
+            encryption=True,
+        )
+        assert endpoint_clause == "AT 'https://127.18.0.2:8156'"
+
+    @staticmethod
+    @pytest.mark.parametrize(
+        "database_version", (MIN_DATABASE_VERSION_FOR_TLS_PUBLIC_KEY,)
+    )
+    def test_build_endpoint_clause_with_encryption_at_min_database_version(
+        database_version,
+    ):
+        endpoint_clause = TransportEndpoint.build_endpoint_clause(
+            endpoint_address="127.18.0.2:8156/tfdCUbrFQxEBTtrD9yet67fwCQMlxNVGqIdagPXvnlM=",
+            database_version=database_version,
+            encryption=True,
+        )
+        assert endpoint_clause == (
+            "AT 'https://127.18.0.2:8156' PUBLIC KEY "
+            "'sha256//tfdCUbrFQxEBTtrD9yet67fwCQMlxNVGqIdagPXvnlM='"
+        )
+
+    @staticmethod
+    def test_build_endpoint_clause_raises_exception():
+        with pytest.raises(ValueError, match="Public key is required to be in"):
+            TransportEndpoint.build_endpoint_clause(
+                endpoint_address="127.18.0.2:8156",
+                database_version=MIN_DATABASE_VERSION_FOR_TLS_PUBLIC_KEY,
+                encryption=True,
+            )
+
+    @staticmethod
+    @pytest.mark.parametrize(
         "encryption,expected",
         [
             (False, "http://"),
@@ -89,5 +140,5 @@ class TestTransportEndpoint:
         ],
     )
     def test__parse_endpoint_address_raises_exception(endpoint_address: str):
-        with pytest.raises(ValueError, match="Could not split endpoint_address"):
+        with pytest.raises(ValueError, match="Could not parse 'endpoint_address'"):
             TransportEndpoint._parse_endpoint_address(endpoint_address)
