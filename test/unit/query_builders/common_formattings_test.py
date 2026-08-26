@@ -139,6 +139,6 @@ class TestTransportEndpoint:
             pytest.param("localhost:1729", id="localhost"),
         ],
     )
-    def test__parse_endpoint_address_raises_exception(endpoint_address: str):
+    def test_parse_endpoint_address_raises_exception(endpoint_address: str):
         with pytest.raises(ValueError, match="Could not parse 'endpoint_address'"):
             TransportEndpoint._parse_endpoint_address(endpoint_address)
