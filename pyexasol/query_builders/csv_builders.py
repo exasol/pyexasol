@@ -9,6 +9,7 @@ from pydantic import (
 )
 
 ALLOWED_FORMAT = ("bz2", "csv", "gz", "zip")
+ALLOWED_TRIM = ("TRIM", "LTRIM", "RTRIM")
 
 
 def validate_format(file_format: str | None) -> str | None:
@@ -35,8 +36,20 @@ def validate_comment(comment: str | None) -> str | None:
     return f"/*{comment}*/"
 
 
+def validate_trim(trim: str | None) -> str | None:
+    """Validate and normalize the import trim option."""
+    if trim is None:
+        return None
+
+    normalized_trim = trim.upper()
+    if normalized_trim not in ALLOWED_TRIM:
+        raise ValueError(f"'trim' {trim} not in {ALLOWED_TRIM}")
+    return normalized_trim
+
+
 Format = Annotated[str | None, AfterValidator(validate_format)]
 Comment = Annotated[str | None, AfterValidator(validate_comment)]
+Trim = Annotated[str | None, AfterValidator(validate_trim)]
 
 
 class ImportBuilder(BaseModel):
@@ -54,7 +67,7 @@ class ImportBuilder(BaseModel):
     null: str | None = None
     row_separator: str | None = None
     skip: str | int | None = None
-    trim: str | None = None
+    trim: Trim = None
 
     @computed_field  # type: ignore[misc]
     @property

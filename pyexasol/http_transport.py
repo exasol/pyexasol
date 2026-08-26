@@ -19,6 +19,7 @@ from .query_builders.csv_builders import (
     resolve_format,
     validate_comment,
     validate_format,
+    validate_trim,
 )
 
 if TYPE_CHECKING:
@@ -178,13 +179,7 @@ class ImportQuery(SqlQuery):
 
     @property
     def _trim(self) -> str | None:
-        if self.trim is None:
-            return None
-
-        trim = str(self.trim).upper()
-        if trim not in ("TRIM", "LTRIM", "RTRIM"):
-            raise ValueError(f"Invalid value for import parameter TRIM: {trim}")
-        return trim
+        return validate_trim(self.trim)
 
 
 @dataclass

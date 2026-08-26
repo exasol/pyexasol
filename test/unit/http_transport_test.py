@@ -245,7 +245,7 @@ class TestImportQuery:
     @staticmethod
     def test_trim_raises_exception(import_sql_query):
         import_sql_query.trim = "not_a_valid_trim"
-        with pytest.raises(ValueError, match="Invalid value for import parameter TRIM"):
+        with pytest.raises(ValueError, match="'trim' not_a_valid_trim not in"):
             assert import_sql_query._trim
 
 

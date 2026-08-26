@@ -3,6 +3,7 @@ from pydantic import ValidationError
 
 from pyexasol.query_builders.csv_builders import (
     ALLOWED_FORMAT,
+    ALLOWED_TRIM,
     ImportBuilder,
 )
 
@@ -57,3 +58,23 @@ class TestImportBuilderComment:
 
         with pytest.raises(ValidationError, match=r"must not contain '/\*' or '\*/'"):
             ImportBuilder(compression=False, comment=comment)
+
+
+class TestImportBuilderTrim:
+    @staticmethod
+    @pytest.mark.parametrize(
+        "trim,expected_trim",
+        [(trim.lower(), trim) for trim in ALLOWED_TRIM]
+        + [(trim.title(), trim) for trim in ALLOWED_TRIM]
+        + [(None, None)],
+    )
+    def test_accepts_and_normalizes_trim(trim, expected_trim):
+        builder = ImportBuilder(compression=False, trim=trim)
+
+        assert builder.trim == expected_trim
+
+    @staticmethod
+    def test_rejects_unsupported_trim():
+        trim = "invalid"
+        with pytest.raises(ValidationError, match=f"'trim' {trim} not in"):
+            ImportBuilder(compression=False, trim=trim)
