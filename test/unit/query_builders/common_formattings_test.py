@@ -43,3 +43,42 @@ class TestExasolEndpoint:
             exasol_db_version=db_version, encryption=encryption
         )
         assert result == expected
+
+    @staticmethod
+    @pytest.mark.parametrize(
+        "ip_address, public_key",
+        [
+            pytest.param(
+                "127.18.0.2:8156",
+                "tfdCUbrFQxEBTtrD9yet67fwCQMlxNVGqIdagPXvnlM=",
+                id="ip",
+            ),
+            pytest.param(
+                "127.18.0.2:8364",
+                None,
+                id="url_without_public_key",
+            ),
+        ],
+    )
+    def test_parse_exa_address(ip_address: str, public_key: str):
+        exa_address = f"{ip_address}"
+        if public_key:
+            exa_address = f"{ip_address}/{public_key}"
+        result = ExasolEndpoint._parse_exa_address(exa_address)
+        assert result[0] == ip_address
+        assert result[1] == public_key
+
+    @staticmethod
+    @pytest.mark.parametrize(
+        "exa_address",
+        [
+            pytest.param(
+                "127.18.0.2:8364/YHistZoLhU9+FKoSEH", id="incomplete_public_key"
+            ),
+            pytest.param("127.18.0.2/64:8364", id="cidr_notation"),
+            pytest.param("localhost:1729", id="localhost"),
+        ],
+    )
+    def test_parse_exa_address_raises_exception(exa_address: str):
+        with pytest.raises(ValueError, match="Could not split exa_address"):
+            ExasolEndpoint._parse_exa_address(exa_address)
