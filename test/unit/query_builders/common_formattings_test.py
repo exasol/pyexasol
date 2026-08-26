@@ -1,7 +1,7 @@
 import pytest
 from packaging.version import Version
 
-from pyexasol.query_builders.common_formattings import ExasolEndpoint
+from pyexasol.query_builders.common_formattings import TransportEndpoint
 
 
 class TestExasolEndpoint:
@@ -14,7 +14,7 @@ class TestExasolEndpoint:
         ],
     )
     def test_get_url_prefix(encryption, expected):
-        url_prefix = ExasolEndpoint._get_url_prefix(encryption=encryption)
+        url_prefix = TransportEndpoint._get_url_prefix(encryption=encryption)
         assert url_prefix == expected
 
     @staticmethod
@@ -39,7 +39,7 @@ class TestExasolEndpoint:
     )
     def test_is_tls_public_key_required(db_version, encryption, expected):
 
-        result = ExasolEndpoint._is_tls_public_key_required(
+        result = TransportEndpoint._is_tls_public_key_required(
             exasol_db_version=db_version, encryption=encryption
         )
         assert result == expected
@@ -64,7 +64,7 @@ class TestExasolEndpoint:
         exa_address = f"{ip_address}"
         if public_key:
             exa_address = f"{ip_address}/{public_key}"
-        result = ExasolEndpoint._parse_exa_address(exa_address)
+        result = TransportEndpoint._parse_exa_address(exa_address)
         assert result[0] == ip_address
         assert result[1] == public_key
 
@@ -81,4 +81,4 @@ class TestExasolEndpoint:
     )
     def test_parse_exa_address_raises_exception(exa_address: str):
         with pytest.raises(ValueError, match="Could not split exa_address"):
-            ExasolEndpoint._parse_exa_address(exa_address)
+            TransportEndpoint._parse_exa_address(exa_address)

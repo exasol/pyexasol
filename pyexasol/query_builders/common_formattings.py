@@ -3,8 +3,8 @@ from re import match
 from packaging.version import Version
 
 
-class ExasolEndpoint:
-    """Build SQL for an Exasol transport endpoint."""
+class TransportEndpoint:
+    """Build SQL for a transport endpoint."""
 
     @staticmethod
     def build_endpoint_clause(
@@ -29,11 +29,11 @@ class ExasolEndpoint:
             ValueError: If ``exa_address`` is invalid or a required public key is
                 missing.
         """
-        ip_address_port, public_key = ExasolEndpoint._parse_exa_address(exa_address)
-        url_prefix = ExasolEndpoint._get_url_prefix(encryption)
+        ip_address_port, public_key = TransportEndpoint._parse_exa_address(exa_address)
+        url_prefix = TransportEndpoint._get_url_prefix(encryption)
         endpoint_clause = f"AT '{url_prefix}{ip_address_port}'"
 
-        if ExasolEndpoint._is_tls_public_key_required(
+        if TransportEndpoint._is_tls_public_key_required(
             exasol_db_version=exasol_db_version, encryption=encryption
         ):
             if not public_key:

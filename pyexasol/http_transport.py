@@ -14,7 +14,7 @@ from dataclasses import dataclass
 from ssl import SSLContext
 from typing import TYPE_CHECKING
 
-from .query_builders.common_formattings import ExasolEndpoint
+from .query_builders.common_formattings import TransportEndpoint
 
 if TYPE_CHECKING:
     from pyexasol import ExaConnection
@@ -52,13 +52,13 @@ class SqlQuery:
 
     @staticmethod
     def _split_exa_address_into_components(exa_address: str) -> tuple[str, str | None]:
-        return ExasolEndpoint._parse_exa_address(exa_address=exa_address)
+        return TransportEndpoint._parse_exa_address(exa_address=exa_address)
 
     def _get_file_list(self, exa_address_list: list[str]) -> list[str]:
         files = []
         csv_cols = self._build_csv_cols()
         for i, exa_address in enumerate(exa_address_list):
-            statement = ExasolEndpoint.build_endpoint_clause(
+            statement = TransportEndpoint.build_endpoint_clause(
                 exa_address=exa_address,
                 exasol_db_version=self.connection.exasol_db_version,
                 encryption=self.connection.options["encryption"],
@@ -73,7 +73,7 @@ class SqlQuery:
         return "\n".join(filtered_query_lines)
 
     def _requires_tls_public_key(self) -> bool:
-        return ExasolEndpoint._is_tls_public_key_required(
+        return TransportEndpoint._is_tls_public_key_required(
             exasol_db_version=self.connection.exasol_db_version,
             encryption=self.connection.options["encryption"],
         )
@@ -144,7 +144,7 @@ class SqlQuery:
 
     @property
     def _url_prefix(self) -> str:
-        return ExasolEndpoint._get_url_prefix(
+        return TransportEndpoint._get_url_prefix(
             encryption=self.connection.options["encryption"]
         )
 
