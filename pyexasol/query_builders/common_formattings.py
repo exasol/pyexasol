@@ -9,7 +9,7 @@ class TransportEndpoint:
     @staticmethod
     def build_endpoint_clause(
         endpoint_address: str,
-        exasol_db_version: Version | None,
+        database_version: Version | None,
         encryption: bool,
     ) -> str:
         """
@@ -17,7 +17,7 @@ class TransportEndpoint:
 
         Args:
             endpoint_address: A transport endpoint address.
-            exasol_db_version: The Exasol database version, if available.
+            database_version: The database version, if available.
             encryption: ``True`` if the connection uses TLS encryption; otherwise,
                 ``False``.
 
@@ -36,12 +36,12 @@ class TransportEndpoint:
         endpoint_clause = f"AT '{url_prefix}{ip_address_port}'"
 
         if TransportEndpoint._is_tls_public_key_required(
-            exasol_db_version=exasol_db_version, encryption=encryption
+            database_version=database_version, encryption=encryption
         ):
             if not public_key:
                 raise ValueError(
                     "Public key is required to be in the 'endpoint_address' for "
-                    "encrypted connections with Exasol DB >= 8.32.0"
+                    "encrypted connections with Exasol database version >= 8.32.0"
                 )
             endpoint_clause += f" PUBLIC KEY 'sha256//{public_key}'"
 
@@ -50,7 +50,7 @@ class TransportEndpoint:
     @staticmethod
     def _get_url_prefix(encryption: bool) -> str:
         """
-        Return the URL scheme needed for an Exasol connection.
+        Return the URL scheme needed for a connection.
 
         Args:
             encryption: ``True`` if the connection uses TLS encryption; otherwise,
@@ -65,7 +65,7 @@ class TransportEndpoint:
 
     @staticmethod
     def _is_tls_public_key_required(
-        exasol_db_version: Version | None, encryption: bool
+        database_version: Version | None, encryption: bool
     ) -> bool:
         """
         Determine whether an encrypted connection requires a TLS public key.
@@ -77,7 +77,7 @@ class TransportEndpoint:
         changelog: https://docs.exasol.com/db/latest/changelogs/21747.htm
 
         Args:
-            exasol_db_version: The Exasol database version, if available.
+            database_version: The database version, if available.
             encryption: ``True`` if the connection uses TLS encryption; otherwise,
                 ``False``.
 
@@ -85,8 +85,8 @@ class TransportEndpoint:
             ``True`` if the connection requires a TLS public key; otherwise, ``False``.
         """
         return (
-            exasol_db_version is not None
-            and exasol_db_version >= Version("8.32.0")
+            database_version is not None
+            and database_version >= Version("8.32.0")
             and encryption
         )
 

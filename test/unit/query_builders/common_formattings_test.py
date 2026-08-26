@@ -40,7 +40,7 @@ class TestTransportEndpoint:
     def test_is_tls_public_key_required(db_version, encryption, expected):
 
         result = TransportEndpoint._is_tls_public_key_required(
-            exasol_db_version=db_version, encryption=encryption
+            database_version=db_version, encryption=encryption
         )
         assert result == expected
 

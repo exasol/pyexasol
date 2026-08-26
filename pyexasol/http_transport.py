@@ -60,7 +60,7 @@ class SqlQuery:
         for i, exa_address in enumerate(exa_address_list):
             statement = TransportEndpoint.build_endpoint_clause(
                 endpoint_address=exa_address,
-                exasol_db_version=self.connection.exasol_db_version,
+                database_version=self.connection.exasol_db_version,
                 encryption=self.connection.options["encryption"],
             )
             statement += f" FILE '{str(i).rjust(3, '0')}.{self._file_ext}'{csv_cols}"
@@ -74,7 +74,7 @@ class SqlQuery:
 
     def _requires_tls_public_key(self) -> bool:
         return TransportEndpoint._is_tls_public_key_required(
-            exasol_db_version=self.connection.exasol_db_version,
+            database_version=self.connection.exasol_db_version,
             encryption=self.connection.options["encryption"],
         )
 
