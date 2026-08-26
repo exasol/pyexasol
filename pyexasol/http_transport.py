@@ -14,7 +14,7 @@ from dataclasses import dataclass
 from ssl import SSLContext
 from typing import TYPE_CHECKING
 
-from packaging.version import Version
+from .query_builders.common_formattings import TransportEndpoint
 
 if TYPE_CHECKING:
     from pyexasol import ExaConnection
@@ -50,45 +50,18 @@ class SqlQuery:
 
         return ""
 
-    @staticmethod
-    def _split_exa_address_into_components(exa_address: str) -> tuple[str, str | None]:
-        """
-        Split ip_address:port and public key from exa address, where the expected
-        patterns are:
-            ip_address:port
-            ip_address:port/public_key
-        The value for public key is expected to be a SHA-256 hash of the public key,
-        which is then base64-encoded.
-        """
-        pattern = r"^([\d\.]+:\d+)(?:\/([a-zA-Z0-9_\-+\/]+=))?$"
-        match = re.match(pattern, exa_address)
-        if match is None:
-            raise ValueError(
-                f"Could not split exa_address {exa_address} into known components"
-            )
-        ip_address, public_key = match.groups()
-        if not public_key:
-            return ip_address, None
-        return ip_address, public_key
-
     def _get_file_list(self, exa_address_list: list[str]) -> list[str]:
-        file_ext = self._file_ext
-        prefix = self._url_prefix
-
-        csv_cols = self._build_csv_cols()
         files = []
+        csv_cols = self._build_csv_cols()
+        transport_endpoint = TransportEndpoint(
+            database_version=self.connection.exasol_db_version,
+            encryption=self.connection.options["encryption"],
+        )
         for i, exa_address in enumerate(exa_address_list):
-            ip_address_port, public_key = self._split_exa_address_into_components(
-                exa_address
+            statement = transport_endpoint.build_endpoint_clause(
+                endpoint_address=exa_address,
             )
-            statement = f"AT '{prefix}{ip_address_port}'"
-            if self._requires_tls_public_key():
-                if not public_key:
-                    raise ValueError(
-                        "Public key is required to be in the 'exa_address' for encrypted connections with Exasol DB >= 8.32.0"
-                    )
-                statement += f" PUBLIC KEY 'sha256//{public_key}'"
-            statement += f" FILE '{str(i).rjust(3, '0')}.{file_ext}'{csv_cols}"
+            statement += f" FILE '{str(i).rjust(3, '0')}.{self._file_ext}'{csv_cols}"
             files.append(statement)
         return files
 
@@ -96,14 +69,6 @@ class SqlQuery:
     def _get_query_str(query_lines: list[str | None]) -> str:
         filtered_query_lines = [q for q in query_lines if q is not None]
         return "\n".join(filtered_query_lines)
-
-    def _requires_tls_public_key(self) -> bool:
-        version = self.connection.exasol_db_version
-        return (
-            version is not None
-            and version >= Version("8.32.0")
-            and self.connection.options["encryption"]
-        )
 
     @property
     def _column_spec(self) -> str:
@@ -168,12 +133,6 @@ class SqlQuery:
         if self.null is None:
             return None
         return f"NULL = {self.connection.format.quote(self.null)}"
-
-    @property
-    def _url_prefix(self) -> str:
-        if self.connection.options["encryption"]:
-            return "https://"
-        return "http://"
 
     @property
     def _row_separator(self) -> str | None:

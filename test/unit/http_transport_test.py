@@ -20,6 +20,9 @@ from pyexasol.http_transport import (
     ImportQuery,
     SqlQuery,
 )
+from pyexasol.query_builders.common_formattings import (
+    MIN_DATABASE_VERSION_FOR_TLS_PUBLIC_KEY,
+)
 
 http_transport_module = import_module("pyexasol.http_transport")
 
@@ -28,7 +31,7 @@ http_transport_module = import_module("pyexasol.http_transport")
 def mock_connection():
     mock = Mock(ExaConnection)
     mock.options = {"encryption": True, "quote_ident": "'"}
-    mock.exasol_db_version = Version("8.32.0")
+    mock.exasol_db_version = MIN_DATABASE_VERSION_FOR_TLS_PUBLIC_KEY
     mock.format = ExaFormatter(connection=mock)
     return mock
 
@@ -85,50 +88,11 @@ class TestSqlQuery:
 
     @staticmethod
     @pytest.mark.parametrize(
-        "ip_address, public_key",
-        [
-            pytest.param(
-                "127.18.0.2:8156",
-                "tfdCUbrFQxEBTtrD9yet67fwCQMlxNVGqIdagPXvnlM=",
-                id="ip",
-            ),
-            pytest.param(
-                "127.18.0.2:8364",
-                None,
-                id="url_without_public_key",
-            ),
-        ],
-    )
-    def test_split_exa_address_into_known_components(ip_address: str, public_key: str):
-        exa_address = f"{ip_address}"
-        if public_key:
-            exa_address = f"{ip_address}/{public_key}"
-        result = SqlQuery._split_exa_address_into_components(exa_address)
-        assert result[0] == ip_address
-        assert result[1] == public_key
-
-    @staticmethod
-    @pytest.mark.parametrize(
-        "exa_address",
-        [
-            pytest.param(
-                "127.18.0.2:8364/YHistZoLhU9+FKoSEH", id="incomplete_public_key"
-            ),
-            pytest.param("127.18.0.2/64:8364", id="cidr_notation"),
-            pytest.param("localhost:1729", id="localhost"),
-        ],
-    )
-    def test_split_exa_address_into_known_components_raises_exception(exa_address: str):
-        with pytest.raises(ValueError, match="Could not split exa_address"):
-            SqlQuery._split_exa_address_into_components(exa_address)
-
-    @staticmethod
-    @pytest.mark.parametrize(
         "db_version,expected_end",
         [
             pytest.param(Version("7.1.19"), "FILE '000.gz'", id="lower_version"),
             pytest.param(
-                Version("8.32.0"),
+                MIN_DATABASE_VERSION_FOR_TLS_PUBLIC_KEY,
                 "PUBLIC KEY 'sha256//YHistZoLhU9+FKoSEHHbNGtC/Ee4KT75DDBO+s5OG8o=' FILE '000.gz'",
                 id="greater_than_or_equal_version",
             ),
@@ -148,33 +112,6 @@ class TestSqlQuery:
     def test_get_query_str():
         query_lines = [None, "test", None, "this"]
         assert SqlQuery._get_query_str(query_lines) == "test\nthis"
-
-    @staticmethod
-    @pytest.mark.parametrize(
-        "db_version,encryption,expected",
-        [
-            pytest.param(
-                Version("7.1.19"), False, False, id="lower_version_without_encryption"
-            ),
-            pytest.param(
-                Version("7.1.19"), True, False, id="lower_version_with_encryption"
-            ),
-            pytest.param(
-                Version("8.32.0"), True, True, id="equal_version_with_encryption"
-            ),
-            pytest.param(
-                Version("8.32.0"), False, False, id="equal_version_without_encryption"
-            ),
-        ],
-    )
-    def test_requires_tls_public_key(
-        sql_query, mock_connection, db_version, encryption, expected
-    ):
-        mock_connection.options["encryption"] = encryption
-        mock_connection.exasol_db_version = db_version
-
-        result = sql_query._requires_tls_public_key()
-        assert result == expected
 
     @staticmethod
     @pytest.mark.parametrize(
@@ -244,18 +181,6 @@ class TestSqlQuery:
     def test_null(sql_query, null, expected):
         sql_query.null = null
         assert sql_query._null == expected
-
-    @staticmethod
-    @pytest.mark.parametrize(
-        "encryption,expected",
-        [
-            (False, "http://"),
-            (True, "https://"),
-        ],
-    )
-    def test_url_prefix(sql_query, mock_connection, encryption, expected):
-        mock_connection.options["encryption"] = encryption
-        assert sql_query._url_prefix == expected
 
     @staticmethod
     @pytest.mark.parametrize(
