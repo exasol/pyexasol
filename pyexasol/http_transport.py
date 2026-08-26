@@ -55,23 +55,15 @@ class SqlQuery:
         return ExasolEndpoint._parse_exa_address(exa_address=exa_address)
 
     def _get_file_list(self, exa_address_list: list[str]) -> list[str]:
-        file_ext = self._file_ext
-        prefix = self._url_prefix
-
-        csv_cols = self._build_csv_cols()
         files = []
+        csv_cols = self._build_csv_cols()
         for i, exa_address in enumerate(exa_address_list):
-            ip_address_port, public_key = self._split_exa_address_into_components(
-                exa_address
+            statement = ExasolEndpoint.build_endpoint_clause(
+                exa_address=exa_address,
+                exasol_db_version=self.connection.exasol_db_version,
+                encryption=self.connection.options["encryption"],
             )
-            statement = f"AT '{prefix}{ip_address_port}'"
-            if self._requires_tls_public_key():
-                if not public_key:
-                    raise ValueError(
-                        "Public key is required to be in the 'exa_address' for encrypted connections with Exasol DB >= 8.32.0"
-                    )
-                statement += f" PUBLIC KEY 'sha256//{public_key}'"
-            statement += f" FILE '{str(i).rjust(3, '0')}.{file_ext}'{csv_cols}"
+            statement += f" FILE '{str(i).rjust(3, '0')}.{self._file_ext}'{csv_cols}"
             files.append(statement)
         return files
 

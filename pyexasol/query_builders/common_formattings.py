@@ -7,6 +7,45 @@ class ExasolEndpoint:
     """Build SQL for an Exasol transport endpoint."""
 
     @staticmethod
+    def build_endpoint_clause(
+        exa_address: str,
+        exasol_db_version: Version | None,
+        encryption: bool,
+    ) -> str:
+        """
+        Build an Exasol ``AT`` endpoint clause.
+
+        Args:
+            exa_address: An Exasol endpoint address.
+            exasol_db_version: The Exasol database version, if available.
+            encryption: ``True`` if the connection uses TLS encryption; otherwise,
+                ``False``.
+
+        Returns:
+            An ``AT`` clause containing the endpoint URL and, when required, its
+            TLS public key.
+
+        Raises:
+            ValueError: If ``exa_address`` is invalid or a required public key is
+                missing.
+        """
+        ip_address_port, public_key = ExasolEndpoint._parse_exa_address(exa_address)
+        url_prefix = ExasolEndpoint._get_url_prefix(encryption)
+        endpoint_clause = f"AT '{url_prefix}{ip_address_port}'"
+
+        if ExasolEndpoint._is_tls_public_key_required(
+            exasol_db_version=exasol_db_version, encryption=encryption
+        ):
+            if not public_key:
+                raise ValueError(
+                    "Public key is required to be in the 'exa_address' for encrypted "
+                    "connections with Exasol DB >= 8.32.0"
+                )
+            endpoint_clause += f" PUBLIC KEY 'sha256//{public_key}'"
+
+        return endpoint_clause
+
+    @staticmethod
     def _get_url_prefix(encryption: bool) -> str:
         """
         Return the URL scheme needed for an Exasol connection.
