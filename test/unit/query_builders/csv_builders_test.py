@@ -38,3 +38,22 @@ class TestImportBuilderFileExt:
         builder = ImportBuilder(compression=compression, format=None)
 
         assert builder.file_ext == expected_file_ext
+
+
+class TestImportBuilderComment:
+    @staticmethod
+    @pytest.mark.parametrize(
+        "comment,expected_comment",
+        [(None, None), ("", "/**/"), ("valid comment", "/*valid comment*/")],
+    )
+    def test_accepts_and_formats_valid_comment(comment, expected_comment):
+        builder = ImportBuilder(compression=False, comment=comment)
+
+        assert builder.comment == expected_comment
+
+    @staticmethod
+    @pytest.mark.parametrize("comment", ("invalid /* comment", "invalid */ comment"))
+    def test_rejects_comment_delimiters(comment):
+
+        with pytest.raises(ValidationError, match=r"must not contain '/\*' or '\*/'"):
+            ImportBuilder(compression=False, comment=comment)

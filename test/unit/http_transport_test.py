@@ -141,7 +141,7 @@ class TestSqlQuery:
     @staticmethod
     def test_comment_raises_exception(sql_query):
         sql_query.comment = "*/This is a comment"
-        with pytest.raises(ValueError, match="Comment must not contain"):
+        with pytest.raises(ValueError, match=r"must not contain '/\*' or '\*/'"):
             sql_query._comment
 
     @staticmethod

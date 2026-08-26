@@ -17,6 +17,7 @@ from typing import TYPE_CHECKING
 from .query_builders.common_formattings import TransportEndpoint
 from .query_builders.csv_builders import (
     resolve_format,
+    validate_comment,
     validate_format,
 )
 
@@ -107,14 +108,7 @@ class SqlQuery:
 
     @property
     def _comment(self) -> str | None:
-        if self.comment is None:
-            return None
-
-        if "*/" in self.comment:
-            raise ValueError(
-                f'Invalid comment "{self.comment}". Comment must not contain "*/".'
-            )
-        return f"/*{self.comment}*/"
+        return validate_comment(comment=self.comment)
 
     @property
     def _encoding(self) -> str | None:
