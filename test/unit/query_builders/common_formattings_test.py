@@ -52,11 +52,12 @@ class TestTransportEndpoint:
 
     @staticmethod
     def test_build_endpoint_clause_raises_exception():
+        transport_endpoint = TransportEndpoint(
+            database_version=MIN_DATABASE_VERSION_FOR_TLS_PUBLIC_KEY,
+            encryption=True,
+        )
         with pytest.raises(ValueError, match="Public key is required to be in"):
-            TransportEndpoint(
-                database_version=MIN_DATABASE_VERSION_FOR_TLS_PUBLIC_KEY,
-                encryption=True,
-            ).build_endpoint_clause(
+            transport_endpoint.build_endpoint_clause(
                 endpoint_address="127.18.0.2:8156",
             )
 
@@ -144,7 +145,6 @@ class TestTransportEndpoint:
         ],
     )
     def test_parse_endpoint_address_raises_exception(endpoint_address: str):
+        transport_endpoint = TransportEndpoint(database_version=None, encryption=False)
         with pytest.raises(ValueError, match="Could not parse 'endpoint_address'"):
-            TransportEndpoint(
-                database_version=None, encryption=False
-            )._parse_endpoint_address(endpoint_address)
+            transport_endpoint._parse_endpoint_address(endpoint_address)
