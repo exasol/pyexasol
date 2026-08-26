@@ -1,7 +1,5 @@
 # Unreleased
 
-## Summary
-
 ## Refactorings
 
-* #380: Extracted code to generate the common endpoint clause from `SqlQuery` to `TransportEndpoint`
+* #380: Extracted four private methods from `SqlQuery` to `TransportEndpoint` for generating a common endpoint clause
