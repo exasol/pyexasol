@@ -223,18 +223,6 @@ class TestSqlQuery:
 
     @staticmethod
     @pytest.mark.parametrize(
-        "encryption,expected",
-        [
-            (False, "http://"),
-            (True, "https://"),
-        ],
-    )
-    def test_url_prefix(sql_query, mock_connection, encryption, expected):
-        mock_connection.options["encryption"] = encryption
-        assert sql_query._url_prefix == expected
-
-    @staticmethod
-    @pytest.mark.parametrize(
         "row_separator,expected", [("LF", "ROW SEPARATOR = 'LF'"), (None, None)]
     )
     def test_row_separator(sql_query, row_separator, expected):

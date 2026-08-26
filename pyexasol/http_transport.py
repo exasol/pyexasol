@@ -137,12 +137,6 @@ class SqlQuery:
         return f"NULL = {self.connection.format.quote(self.null)}"
 
     @property
-    def _url_prefix(self) -> str:
-        return TransportEndpoint._get_url_prefix(
-            encryption=self.connection.options["encryption"]
-        )
-
-    @property
     def _row_separator(self) -> str | None:
         if self.row_separator is None:
             return None
