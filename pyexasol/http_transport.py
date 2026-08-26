@@ -53,11 +53,13 @@ class SqlQuery:
     def _get_file_list(self, exa_address_list: list[str]) -> list[str]:
         files = []
         csv_cols = self._build_csv_cols()
+        transport_endpoint = TransportEndpoint(
+            database_version=self.connection.exasol_db_version,
+            encryption=self.connection.options["encryption"],
+        )
         for i, exa_address in enumerate(exa_address_list):
-            statement = TransportEndpoint.build_endpoint_clause(
+            statement = transport_endpoint.build_endpoint_clause(
                 endpoint_address=exa_address,
-                database_version=self.connection.exasol_db_version,
-                encryption=self.connection.options["encryption"],
             )
             statement += f" FILE '{str(i).rjust(3, '0')}.{self._file_ext}'{csv_cols}"
             files.append(statement)

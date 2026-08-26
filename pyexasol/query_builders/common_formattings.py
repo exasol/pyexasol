@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 from re import match
 
 from packaging.version import Version
@@ -5,23 +6,19 @@ from packaging.version import Version
 MIN_DATABASE_VERSION_FOR_TLS_PUBLIC_KEY = Version("8.32.0")
 
 
+@dataclass(frozen=True)
 class TransportEndpoint:
     """Build SQL for a transport endpoint."""
 
-    @staticmethod
-    def build_endpoint_clause(
-        endpoint_address: str,
-        database_version: Version | None,
-        encryption: bool,
-    ) -> str:
+    database_version: Version | None
+    encryption: bool
+
+    def build_endpoint_clause(self, endpoint_address: str) -> str:
         """
         Build an ``AT`` endpoint clause.
 
         Args:
             endpoint_address: A transport endpoint address.
-            database_version: The database version, if available.
-            encryption: ``True`` if the connection uses TLS encryption; otherwise,
-                ``False``.
 
         Returns:
             An ``AT`` clause containing the endpoint URL and, when required, its
@@ -31,15 +28,10 @@ class TransportEndpoint:
             ValueError: If ``endpoint_address`` is invalid or a required public key is
                 missing.
         """
-        ip_address_port, public_key = TransportEndpoint._parse_endpoint_address(
-            endpoint_address
-        )
-        url_prefix = TransportEndpoint._get_url_prefix(encryption)
-        endpoint_clause = f"AT '{url_prefix}{ip_address_port}'"
+        ip_address_port, public_key = self._parse_endpoint_address(endpoint_address)
+        endpoint_clause = f"AT '{self.url_prefix}{ip_address_port}'"
 
-        if TransportEndpoint._is_tls_public_key_required(
-            database_version=database_version, encryption=encryption
-        ):
+        if self.is_tls_public_key_required:
             if not public_key:
                 raise ValueError(
                     "Public key is required to be in the 'endpoint_address' for "
@@ -50,26 +42,20 @@ class TransportEndpoint:
 
         return endpoint_clause
 
-    @staticmethod
-    def _get_url_prefix(encryption: bool) -> str:
+    @property
+    def url_prefix(self) -> str:
         """
         Return the URL scheme needed for a connection.
-
-        Args:
-            encryption: ``True`` if the connection uses TLS encryption; otherwise,
-                ``False``.
 
         Returns:
             ``https://`` for encrypted connections; otherwise, ``http://``.
         """
-        if encryption:
+        if self.encryption:
             return "https://"
         return "http://"
 
-    @staticmethod
-    def _is_tls_public_key_required(
-        database_version: Version | None, encryption: bool
-    ) -> bool:
+    @property
+    def is_tls_public_key_required(self) -> bool:
         """
         Determine whether an encrypted connection requires a TLS public key.
 
@@ -79,18 +65,13 @@ class TransportEndpoint:
         certificate's public key when encryption is enabled. See the Exasol database
         changelog: https://docs.exasol.com/db/latest/changelogs/21747.htm
 
-        Args:
-            database_version: The database version, if available.
-            encryption: ``True`` if the connection uses TLS encryption; otherwise,
-                ``False``.
-
         Returns:
             ``True`` if the connection requires a TLS public key; otherwise, ``False``.
         """
         return (
-            database_version is not None
-            and database_version >= MIN_DATABASE_VERSION_FOR_TLS_PUBLIC_KEY
-            and encryption
+            self.database_version is not None
+            and self.database_version >= MIN_DATABASE_VERSION_FOR_TLS_PUBLIC_KEY
+            and self.encryption
         )
 
     @staticmethod
