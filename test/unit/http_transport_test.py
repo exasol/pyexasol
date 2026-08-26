@@ -20,6 +20,9 @@ from pyexasol.http_transport import (
     ImportQuery,
     SqlQuery,
 )
+from pyexasol.query_builders.common_formattings import (
+    MIN_DATABASE_VERSION_FOR_TLS_PUBLIC_KEY,
+)
 
 http_transport_module = import_module("pyexasol.http_transport")
 
@@ -28,7 +31,7 @@ http_transport_module = import_module("pyexasol.http_transport")
 def mock_connection():
     mock = Mock(ExaConnection)
     mock.options = {"encryption": True, "quote_ident": "'"}
-    mock.exasol_db_version = Version("8.32.0")
+    mock.exasol_db_version = MIN_DATABASE_VERSION_FOR_TLS_PUBLIC_KEY
     mock.format = ExaFormatter(connection=mock)
     return mock
 
@@ -128,7 +131,7 @@ class TestSqlQuery:
         [
             pytest.param(Version("7.1.19"), "FILE '000.gz'", id="lower_version"),
             pytest.param(
-                Version("8.32.0"),
+                MIN_DATABASE_VERSION_FOR_TLS_PUBLIC_KEY,
                 "PUBLIC KEY 'sha256//YHistZoLhU9+FKoSEHHbNGtC/Ee4KT75DDBO+s5OG8o=' FILE '000.gz'",
                 id="greater_than_or_equal_version",
             ),
@@ -160,10 +163,16 @@ class TestSqlQuery:
                 Version("7.1.19"), True, False, id="lower_version_with_encryption"
             ),
             pytest.param(
-                Version("8.32.0"), True, True, id="equal_version_with_encryption"
+                MIN_DATABASE_VERSION_FOR_TLS_PUBLIC_KEY,
+                True,
+                True,
+                id="equal_version_with_encryption",
             ),
             pytest.param(
-                Version("8.32.0"), False, False, id="equal_version_without_encryption"
+                MIN_DATABASE_VERSION_FOR_TLS_PUBLIC_KEY,
+                False,
+                False,
+                id="equal_version_without_encryption",
             ),
             pytest.param(None, False, False, id="no_db_version_without_encryption"),
             pytest.param(None, True, False, id="no_db_version_with_encryption"),

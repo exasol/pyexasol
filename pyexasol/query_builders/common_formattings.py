@@ -2,6 +2,8 @@ from re import match
 
 from packaging.version import Version
 
+MIN_DATABASE_VERSION_FOR_TLS_PUBLIC_KEY = Version("8.32.0")
+
 
 class TransportEndpoint:
     """Build SQL for a transport endpoint."""
@@ -41,7 +43,8 @@ class TransportEndpoint:
             if not public_key:
                 raise ValueError(
                     "Public key is required to be in the 'endpoint_address' for "
-                    "encrypted connections with Exasol database version >= 8.32.0"
+                    "encrypted connections with Exasol database version >= "
+                    f"{MIN_DATABASE_VERSION_FOR_TLS_PUBLIC_KEY}"
                 )
             endpoint_clause += f" PUBLIC KEY 'sha256//{public_key}'"
 
@@ -86,7 +89,7 @@ class TransportEndpoint:
         """
         return (
             database_version is not None
-            and database_version >= Version("8.32.0")
+            and database_version >= MIN_DATABASE_VERSION_FOR_TLS_PUBLIC_KEY
             and encryption
         )
 
