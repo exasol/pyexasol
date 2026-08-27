@@ -14,7 +14,7 @@ if TYPE_CHECKING:
 class ClauseFormatter:
     formatter: ExaFormatter
 
-    def _column_specification(self, columns: Iterable[str] | None) -> str:
+    def _column_specification(self, columns: list[str] | None) -> str:
         if columns is None:
             return ""
 
@@ -57,7 +57,7 @@ class ClauseFormatter:
             return None
         return f"ENCODING = {self.formatter.quote(encoding)}"
 
-    def export_statement(self, table: str, columns: Iterable[str] | None) -> str:
+    def export_statement(self, table: str, columns: list[str] | None) -> str:
         return f"EXPORT {table}{self._column_specification(columns)} INTO CSV"
 
     def file_clauses(
@@ -81,7 +81,7 @@ class ClauseFormatter:
             )
         return file_clauses
 
-    def import_statement(self, table: str, columns: Iterable[str] | None) -> str:
+    def import_statement(self, table: str, columns: list[str] | None) -> str:
         return f"IMPORT INTO {table}{self._column_specification(columns)} FROM CSV"
 
     def null(self, null: str | None) -> str | None:

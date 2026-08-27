@@ -30,6 +30,15 @@ class TestCsvBuilderFormat:
             csv_builder(compression=False, format=file_format)
 
 
+class TestCsvBuilderColumns:
+    @staticmethod
+    @pytest.mark.parametrize("columns", [["FIRST", "SECOND"], ("FIRST", "SECOND")])
+    def test_stores_columns_as_reusable_list(csv_builder, columns):
+        builder = csv_builder(compression=False, columns=columns)
+        assert builder.columns == ["FIRST", "SECOND"]
+        assert isinstance(builder.columns, list)
+
+
 class TestCsvBuilderCsvCols:
     @staticmethod
     @pytest.mark.parametrize("csv_cols", (["1"], ["1..3", "4 FORMAT='YYYY'"]))

@@ -74,6 +74,13 @@ def validate_csv_cols(csv_cols: Iterable[str] | None) -> Iterable[str] | None:
     return validated_csv_cols
 
 
+def validate_columns(columns: Iterable[str] | None) -> list[str] | None:
+    """Materialize columns so the validated value can be reused."""
+    if columns is None:
+        return None
+    return list(columns)
+
+
 def validate_trim(trim: str | None) -> str | None:
     """Validate and normalize the import trim option."""
     if trim is None:
@@ -98,6 +105,7 @@ def validate_delimit(delimit: str | None) -> str | None:
 
 Comment = Annotated[str | None, AfterValidator(validate_comment)]
 CsvCols = Annotated[Iterable[str] | None, AfterValidator(validate_csv_cols)]
+Columns = Annotated[Iterable[str] | None, AfterValidator(validate_columns)]
 Delimit = Annotated[str | None, AfterValidator(validate_delimit)]
 Format = Annotated[str | None, AfterValidator(validate_format)]
 Trim = Annotated[str | None, AfterValidator(validate_trim)]
@@ -110,7 +118,7 @@ class ImportBuilder(BaseModel):
     # set these values in the param dictionary to `ExaConnection`
     column_delimiter: str | None = None
     column_separator: str | None = None
-    columns: Iterable[str] | None = None
+    columns: Columns = None
     comment: Comment = None
     csv_cols: CsvCols = None
     encoding: str | None = None
@@ -168,7 +176,7 @@ class ExportBuilder(BaseModel):
     # set these values in the param dictionary to `ExaConnection`
     column_delimiter: str | None = None
     column_separator: str | None = None
-    columns: Iterable[str] | None = None
+    columns: Columns = None
     comment: Comment = None
     csv_cols: CsvCols = None
     delimit: Delimit = None

@@ -107,6 +107,22 @@ class TestImportQuery:
             connection=mock_connection, compression=False, params={"skip": 2}
         )
 
+    @staticmethod
+    def test_build_query_can_be_called_repeatedly_with_columns(mock_connection):
+        mock_connection.options["encryption"] = False
+        import_query = ImportQuery.load_from_dict(
+            connection=mock_connection,
+            compression=False,
+            params={"columns": ["FIRST", "SECOND"]},
+        )
+        exa_address_list = ["127.18.0.2:8364"]
+
+        first_query = import_query.build_query("TABLE", exa_address_list)
+        second_query = import_query.build_query("TABLE", exa_address_list)
+
+        assert 'IMPORT INTO TABLE("FIRST","SECOND") FROM CSV' in first_query
+        assert second_query == first_query
+
 
 class TestExportQuery:
     @staticmethod
@@ -139,6 +155,22 @@ class TestExportQuery:
                 compression=False,
                 params={"unsupported": True},
             )
+
+    @staticmethod
+    def test_build_query_can_be_called_repeatedly_with_columns(mock_connection):
+        mock_connection.options["encryption"] = False
+        export_query = ExportQuery.load_from_dict(
+            connection=mock_connection,
+            compression=False,
+            params={"columns": ("FIRST", "SECOND")},
+        )
+        exa_address_list = ["127.18.0.2:8364"]
+
+        first_query = export_query.build_query("TABLE", exa_address_list)
+        second_query = export_query.build_query("TABLE", exa_address_list)
+
+        assert 'EXPORT TABLE("FIRST","SECOND") INTO CSV' in first_query
+        assert second_query == first_query
 
 
 ERROR_MESSAGE = "Error from callback"
