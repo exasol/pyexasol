@@ -46,6 +46,11 @@ class ClauseFormatter:
             return None
         return f"ENCODING = {self.formatter.quote(encoding)}"
 
+    def null(self, null: str | None) -> str | None:
+        if null is None:
+            return None
+        return f"NULL = {self.formatter.quote(null)}"
+
 
 def validate_format(file_format: str | None) -> str | None:
     """Validate a CSV transport format"""

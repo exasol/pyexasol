@@ -49,6 +49,14 @@ class TestClauseFormatter:
     def test_encoding(clause_formatter, encoding, expected):
         assert clause_formatter.encoding(encoding) == expected
 
+    @staticmethod
+    @pytest.mark.parametrize(
+        "null,expected",
+        [("NONE", "NULL = 'NONE'"), (None, None)],
+    )
+    def test_null(clause_formatter, null, expected):
+        assert clause_formatter.null(null) == expected
+
 
 class TestCsvBuilderFormat:
     @staticmethod

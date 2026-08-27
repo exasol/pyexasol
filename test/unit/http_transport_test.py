@@ -136,12 +136,6 @@ class TestSqlQuery:
             sql_query._file_ext
 
     @staticmethod
-    @pytest.mark.parametrize("null,expected", [("NONE", "NULL = 'NONE'"), (None, None)])
-    def test_null(sql_query, null, expected):
-        sql_query.null = null
-        assert sql_query._null == expected
-
-    @staticmethod
     @pytest.mark.parametrize(
         "row_separator,expected", [("LF", "ROW SEPARATOR = 'LF'"), (None, None)]
     )
