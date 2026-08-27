@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections.abc import Iterable
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
@@ -10,6 +11,17 @@ if TYPE_CHECKING:
 @dataclass(frozen=True)
 class ClauseFormatter:
     formatter: ExaFormatter
+
+    def _column_specification(self, columns: Iterable[str] | None) -> str:
+        if columns is None:
+            return ""
+
+        formatted_columns = [
+            self.formatter.default_format_ident(column) for column in columns
+        ]
+        if formatted_columns:
+            return f"({','.join(formatted_columns)})"
+        return ""
 
     def column_delimiter(self, column_delimiter: str | None) -> str | None:
         if column_delimiter is None:
@@ -32,6 +44,12 @@ class ClauseFormatter:
         if encoding is None:
             return None
         return f"ENCODING = {self.formatter.quote(encoding)}"
+
+    def export_statement(self, table: str, columns: Iterable[str] | None) -> str:
+        return f"EXPORT {table}{self._column_specification(columns)} INTO CSV"
+
+    def import_statement(self, table: str, columns: Iterable[str] | None) -> str:
+        return f"IMPORT INTO {table}{self._column_specification(columns)} FROM CSV"
 
     def null(self, null: str | None) -> str | None:
         if null is None:

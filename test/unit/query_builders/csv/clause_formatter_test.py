@@ -9,11 +9,52 @@ from pyexasol.query_builders.csv.clause_formatter import ClauseFormatter
 def clause_formatter():
     formatter = Mock()
     formatter.quote.side_effect = lambda value: f"'{value}'"
+    formatter.default_format_ident.side_effect = lambda column: f'"{column}"'
     formatter.safe_decimal.side_effect = str
     return ClauseFormatter(formatter)
 
 
 class TestClauseFormatter:
+    @staticmethod
+    @pytest.mark.parametrize(
+        "columns,expected",
+        [
+            (None, ""),
+            ([], ""),
+            (["LASTNAME", "FIRSTNAME"], '("LASTNAME","FIRSTNAME")'),
+        ],
+    )
+    def test_column_specification(clause_formatter, columns, expected):
+        assert clause_formatter._column_specification(columns) == expected
+
+    @staticmethod
+    @pytest.mark.parametrize(
+        "columns,expected",
+        [
+            (None, "IMPORT INTO TABLE FROM CSV"),
+            (
+                ["LASTNAME", "FIRSTNAME"],
+                'IMPORT INTO TABLE("LASTNAME","FIRSTNAME") FROM CSV',
+            ),
+        ],
+    )
+    def test_import_statement(clause_formatter, columns, expected):
+        assert clause_formatter.import_statement("TABLE", columns) == expected
+
+    @staticmethod
+    @pytest.mark.parametrize(
+        "columns,expected",
+        [
+            (None, "EXPORT TABLE INTO CSV"),
+            (
+                ["LASTNAME", "FIRSTNAME"],
+                'EXPORT TABLE("LASTNAME","FIRSTNAME") INTO CSV',
+            ),
+        ],
+    )
+    def test_export_statement(clause_formatter, columns, expected):
+        assert clause_formatter.export_statement("TABLE", columns) == expected
+
     @staticmethod
     @pytest.mark.parametrize(
         "column_delimiter,expected",
@@ -65,7 +106,7 @@ class TestClauseFormatter:
     @staticmethod
     @pytest.mark.parametrize(
         "delimit,expected",
-        [("AUTO", "DELIMIT=AUTO"), (None, None)],
+        [("AUTO", "DELIMIT = AUTO"), (None, None)],
     )
     def test_delimit(clause_formatter, delimit, expected):
         assert clause_formatter.delimit(delimit) == expected

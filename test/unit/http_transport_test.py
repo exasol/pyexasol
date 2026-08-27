@@ -54,15 +54,6 @@ def export_sql_query(mock_connection):
 class TestSqlQuery:
     @staticmethod
     @pytest.mark.parametrize(
-        "columns,expected",
-        [(None, ""), ([], ""), (["LASTNAME", "FIRSTNAME"], '("LASTNAME","FIRSTNAME")')],
-    )
-    def test_column_spec(sql_query, columns, expected):
-        sql_query.columns = columns
-        assert sql_query._column_spec == expected
-
-    @staticmethod
-    @pytest.mark.parametrize(
         "csv_cols,expected",
         [
             pytest.param(None, "", id="none_specified"),
@@ -156,22 +147,6 @@ class TestImportQuery:
             connection=mock_connection, compression=False, params={"skip": 2}
         )
 
-    @staticmethod
-    @pytest.mark.parametrize(
-        "columns,expected",
-        [
-            (
-                ["LASTNAME", "FIRSTNAME"],
-                'IMPORT INTO TABLE("LASTNAME","FIRSTNAME") FROM CSV',
-            ),
-            (None, "IMPORT INTO TABLE FROM CSV"),
-        ],
-    )
-    def test_get_import(import_sql_query, columns, expected):
-        import_sql_query.columns = columns
-        result = import_sql_query._get_import(table="TABLE")
-        assert result == expected
-
 
 class TestExportQuery:
     @staticmethod
@@ -204,22 +179,6 @@ class TestExportQuery:
                 compression=False,
                 params={"unsupported": True},
             )
-
-    @staticmethod
-    @pytest.mark.parametrize(
-        "columns,expected",
-        [
-            (
-                ["LASTNAME", "FIRSTNAME"],
-                'EXPORT TABLE("LASTNAME","FIRSTNAME") INTO CSV',
-            ),
-            (None, "EXPORT TABLE INTO CSV"),
-        ],
-    )
-    def test_get_export(export_sql_query, columns, expected):
-        export_sql_query.columns = columns
-        result = export_sql_query._get_export(table="TABLE")
-        assert result == expected
 
 
 ERROR_MESSAGE = "Error from callback"

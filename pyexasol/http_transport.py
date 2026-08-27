@@ -78,21 +78,6 @@ class SqlQuery:
         return "\n".join(filtered_query_lines)
 
     @property
-    def _column_spec(self) -> str:
-        """
-        Return either empty string or comma-separated list of columns in parentheses,
-        e.g. '("A", "B")'
-        """
-        if self.columns is not None:
-            formatted = [
-                self.connection.format.default_format_ident(c) for c in self.columns
-            ]
-            comma_sep = ",".join(formatted)
-            if comma_sep != "":
-                return f"({comma_sep})"
-        return ""
-
-    @property
     def _file_ext(self) -> str:
         validate_format(file_format=self.format)
         return resolve_format(self.format, self.compression)
@@ -126,7 +111,7 @@ class ImportQuery(SqlQuery):
         clause_formatter = ClauseFormatter(self.connection.format)
         query_lines = [
             import_builder.comment,
-            self._get_import(table=table),
+            clause_formatter.import_statement(table=table, columns=self.columns),
             *self._get_file_list(exa_address_list=exa_address_list),
             clause_formatter.encoding(self.encoding),
             clause_formatter.null(self.null),
@@ -155,9 +140,6 @@ class ImportQuery(SqlQuery):
             _import_builder=builder,
             **params,
         )
-
-    def _get_import(self, table: str) -> str:
-        return f"IMPORT INTO {table}{self._column_spec} FROM CSV"
 
 
 @dataclass
@@ -188,7 +170,7 @@ class ExportQuery(SqlQuery):
         clause_formatter = ClauseFormatter(self.connection.format)
         query_lines = [
             export_builder.comment,
-            self._get_export(table=table),
+            clause_formatter.export_statement(table=table, columns=self.columns),
             *self._get_file_list(exa_address_list=exa_address_list),
             clause_formatter.delimit(export_builder.delimit),
             clause_formatter.encoding(self.encoding),
@@ -217,9 +199,6 @@ class ExportQuery(SqlQuery):
             _export_builder=builder,
             **params,
         )
-
-    def _get_export(self, table: str) -> str:
-        return f"EXPORT {table}{self._column_spec} INTO CSV"
 
 
 class ExaSQLThread(threading.Thread):
