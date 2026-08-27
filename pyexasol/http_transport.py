@@ -15,13 +15,13 @@ from ssl import SSLContext
 from typing import TYPE_CHECKING
 
 from .query_builders.common_formattings import TransportEndpoint
-from .query_builders.csv_builders import (
-    ClauseFormatter,
+from .query_builders.csv.builders import (
     ExportBuilder,
     ImportBuilder,
     resolve_format,
     validate_format,
 )
+from .query_builders.csv.clause_formatter import ClauseFormatter
 
 if TYPE_CHECKING:
     from pyexasol import ExaConnection
