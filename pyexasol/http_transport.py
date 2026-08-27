@@ -17,9 +17,6 @@ from .query_builders.common_formattings import TransportEndpoint
 from .query_builders.csv.builders import (
     ExportBuilder,
     ImportBuilder,
-    resolve_format,
-    validate_csv_cols,
-    validate_format,
 )
 from .query_builders.csv.clause_formatter import ClauseFormatter
 
@@ -41,39 +38,6 @@ class SqlQuery:
     format: str | None = None
     null: str | None = None
     row_separator: str | None = None
-
-    def _build_csv_cols(self) -> str:
-        validated_csv_cols = validate_csv_cols(self.csv_cols)
-        if validated_csv_cols is not None:
-            csv_cols = ",".join(validated_csv_cols)
-            if csv_cols != "":
-                return f"({csv_cols})"
-        return ""
-
-    def _get_file_list(self, exa_address_list: list[str]) -> list[str]:
-        files = []
-        csv_cols = self._build_csv_cols()
-        transport_endpoint = TransportEndpoint(
-            database_version=self.connection.exasol_db_version,
-            encryption=self.connection.options["encryption"],
-        )
-        for i, exa_address in enumerate(exa_address_list):
-            statement = transport_endpoint.build_endpoint_clause(
-                endpoint_address=exa_address,
-            )
-            statement += f" FILE '{str(i).rjust(3, '0')}.{self._file_ext}'{csv_cols}"
-            files.append(statement)
-        return files
-
-    @staticmethod
-    def _get_query_str(query_lines: list[str | None]) -> str:
-        filtered_query_lines = [q for q in query_lines if q is not None]
-        return "\n".join(filtered_query_lines)
-
-    @property
-    def _file_ext(self) -> str:
-        validate_format(file_format=self.format)
-        return resolve_format(self.format, self.compression)
 
 
 @dataclass
@@ -102,10 +66,19 @@ class ImportQuery(SqlQuery):
             )
 
         clause_formatter = ClauseFormatter(self.connection.format)
+        transport_endpoint = TransportEndpoint(
+            database_version=self.connection.exasol_db_version,
+            encryption=self.connection.options["encryption"],
+        )
         query_lines = [
             import_builder.comment,
             clause_formatter.import_statement(table=table, columns=self.columns),
-            *self._get_file_list(exa_address_list=exa_address_list),
+            *clause_formatter.file_clauses(
+                transport_endpoint=transport_endpoint,
+                exa_address_list=exa_address_list,
+                file_ext=import_builder.file_ext,
+                csv_cols=import_builder.csv_cols,
+            ),
             clause_formatter.encoding(self.encoding),
             clause_formatter.null(self.null),
             clause_formatter.skip(self.skip),
@@ -114,7 +87,9 @@ class ImportQuery(SqlQuery):
             clause_formatter.column_separator(self.column_separator),
             clause_formatter.column_delimiter(self.column_delimiter),
         ]
-        return self._get_query_str(query_lines)
+        return "\n".join(
+            query_line for query_line in query_lines if query_line is not None
+        )
 
     @staticmethod
     def load_from_dict(
@@ -161,10 +136,19 @@ class ExportQuery(SqlQuery):
             )
 
         clause_formatter = ClauseFormatter(self.connection.format)
+        transport_endpoint = TransportEndpoint(
+            database_version=self.connection.exasol_db_version,
+            encryption=self.connection.options["encryption"],
+        )
         query_lines = [
             export_builder.comment,
             clause_formatter.export_statement(table=table, columns=self.columns),
-            *self._get_file_list(exa_address_list=exa_address_list),
+            *clause_formatter.file_clauses(
+                transport_endpoint=transport_endpoint,
+                exa_address_list=exa_address_list,
+                file_ext=export_builder.file_ext,
+                csv_cols=export_builder.csv_cols,
+            ),
             clause_formatter.delimit(export_builder.delimit),
             clause_formatter.encoding(self.encoding),
             clause_formatter.null(self.null),
@@ -173,7 +157,9 @@ class ExportQuery(SqlQuery):
             clause_formatter.column_delimiter(self.column_delimiter),
             clause_formatter.with_column_names(export_builder.with_column_names),
         ]
-        return self._get_query_str(query_lines)
+        return "\n".join(
+            query_line for query_line in query_lines if query_line is not None
+        )
 
     @staticmethod
     def load_from_dict(

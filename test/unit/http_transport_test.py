@@ -22,7 +22,9 @@ from pyexasol.http_transport import (
 )
 from pyexasol.query_builders.common_formattings import (
     MIN_DATABASE_VERSION_FOR_TLS_PUBLIC_KEY,
+    TransportEndpoint,
 )
+from pyexasol.query_builders.csv.clause_formatter import ClauseFormatter
 
 http_transport_module = import_module("pyexasol.http_transport")
 
@@ -54,31 +56,6 @@ def export_sql_query(mock_connection):
 class TestSqlQuery:
     @staticmethod
     @pytest.mark.parametrize(
-        "csv_cols,expected",
-        [
-            pytest.param(None, "", id="none_specified"),
-            pytest.param([], "", id="empty_iterable_specified"),
-            pytest.param(["1..3"], "(1..3)", id="col_gap_specified"),
-            pytest.param(["123"], "(123)", id="col_without_spaces"),
-            pytest.param(
-                ["1..3", "4 FORMAT='DD-MM-YYYY'"],
-                "(1..3,4 FORMAT='DD-MM-YYYY')",
-                id="multi_specifier_with_format",
-            ),
-        ],
-    )
-    def test_build_csv_cols(sql_query, csv_cols: list[str] | None, expected: str):
-        sql_query.csv_cols = csv_cols
-        assert sql_query._build_csv_cols() == expected
-
-    @staticmethod
-    def test_build_csv_cols_raises_exception(sql_query):
-        sql_query.csv_cols = ["1.2"]
-        with pytest.raises(ValueError, match=r"'csv_cols' had unsafe parts: \[1\.2\]"):
-            sql_query._build_csv_cols()
-
-    @staticmethod
-    @pytest.mark.parametrize(
         "db_version,expected_end",
         [
             pytest.param(Version("7.1.19"), "FILE '000.gz'", id="lower_version"),
@@ -95,36 +72,19 @@ class TestSqlQuery:
             "127.18.0.2:8364/YHistZoLhU9+FKoSEHHbNGtC/Ee4KT75DDBO+s5OG8o="
         ]
 
-        result = sql_query._get_file_list(exa_address_list)
+        clause_formatter = ClauseFormatter(mock_connection.format)
+        transport_endpoint = TransportEndpoint(
+            database_version=mock_connection.exasol_db_version,
+            encryption=mock_connection.options["encryption"],
+        )
+        result = clause_formatter.file_clauses(
+            transport_endpoint=transport_endpoint,
+            exa_address_list=exa_address_list,
+            file_ext="gz",
+            csv_cols=None,
+        )
 
         assert result == [f"AT 'https://127.18.0.2:8364' {expected_end}"]
-
-    @staticmethod
-    def test_get_query_str():
-        query_lines = [None, "test", None, "this"]
-        assert SqlQuery._get_query_str(query_lines) == "test\nthis"
-
-    @staticmethod
-    @pytest.mark.parametrize(
-        "compression,file_ext,expected",
-        [
-            pytest.param(True, None, "gz", id="compressed_defaults_to_format_gz"),
-            pytest.param(False, None, "csv", id="uncompressed_defaults_to_format_csv"),
-            pytest.param(True, "gz", "gz", id="format_gz_accepted"),
-        ],
-    )
-    def test_file_ext(
-        sql_query, compression: bool, file_ext: str | None, expected: str
-    ):
-        sql_query.compression = compression
-        sql_query.format = file_ext
-        assert sql_query._file_ext == expected
-
-    @staticmethod
-    def test_file_ext_raises_exception(sql_query):
-        sql_query.format = "not_a_valid_format"
-        with pytest.raises(ValueError, match=f"'format' {sql_query.format} not in"):
-            sql_query._file_ext
 
 
 class TestImportQuery:

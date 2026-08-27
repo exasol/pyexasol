@@ -4,6 +4,8 @@ from collections.abc import Iterable
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
+from ..common_formattings import TransportEndpoint
+
 if TYPE_CHECKING:
     from pyexasol import ExaFormatter
 
@@ -22,6 +24,16 @@ class ClauseFormatter:
         if formatted_columns:
             return f"({','.join(formatted_columns)})"
         return ""
+
+    @staticmethod
+    def _csv_cols(csv_cols: Iterable[str] | None) -> str:
+        if csv_cols is None:
+            return ""
+
+        formatted_csv_cols = ",".join(csv_cols)
+        if formatted_csv_cols == "":
+            return ""
+        return f"({formatted_csv_cols})"
 
     def column_delimiter(self, column_delimiter: str | None) -> str | None:
         if column_delimiter is None:
@@ -47,6 +59,27 @@ class ClauseFormatter:
 
     def export_statement(self, table: str, columns: Iterable[str] | None) -> str:
         return f"EXPORT {table}{self._column_specification(columns)} INTO CSV"
+
+    def file_clauses(
+        self,
+        transport_endpoint: TransportEndpoint,
+        exa_address_list: list[str],
+        file_ext: str,
+        csv_cols: Iterable[str] | None,
+    ) -> list[str]:
+        """Build the transport endpoint and FILE clauses for a CSV query."""
+        csv_cols_clause = self._csv_cols(csv_cols)
+
+        file_clauses = []
+        for index, exa_address in enumerate(exa_address_list):
+            endpoint_clause = transport_endpoint.build_endpoint_clause(
+                endpoint_address=exa_address
+            )
+            file_name = f"{str(index).rjust(3, '0')}.{file_ext}"
+            file_clauses.append(
+                f"{endpoint_clause} FILE '{file_name}'{csv_cols_clause}"
+            )
+        return file_clauses
 
     def import_statement(self, table: str, columns: Iterable[str] | None) -> str:
         return f"IMPORT INTO {table}{self._column_specification(columns)} FROM CSV"

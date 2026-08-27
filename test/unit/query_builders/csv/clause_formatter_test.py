@@ -17,6 +17,33 @@ def clause_formatter():
 class TestClauseFormatter:
     @staticmethod
     @pytest.mark.parametrize(
+        "csv_cols,expected",
+        [(None, ""), ([], ""), (["1..3", "4"], "(1..3,4)")],
+    )
+    def test_csv_cols(clause_formatter, csv_cols, expected):
+        assert clause_formatter._csv_cols(csv_cols) == expected
+
+    @staticmethod
+    def test_file_clauses(clause_formatter):
+        transport_endpoint = Mock()
+        transport_endpoint.build_endpoint_clause.side_effect = (
+            lambda endpoint_address: f"AT '{endpoint_address}'"
+        )
+
+        result = clause_formatter.file_clauses(
+            transport_endpoint=transport_endpoint,
+            exa_address_list=["127.0.0.1:8563", "127.0.0.2:8563"],
+            file_ext="gz",
+            csv_cols=["1..3"],
+        )
+
+        assert result == [
+            "AT '127.0.0.1:8563' FILE '000.gz'(1..3)",
+            "AT '127.0.0.2:8563' FILE '001.gz'(1..3)",
+        ]
+
+    @staticmethod
+    @pytest.mark.parametrize(
         "columns,expected",
         [
             (None, ""),

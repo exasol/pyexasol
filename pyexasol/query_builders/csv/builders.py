@@ -133,3 +133,8 @@ class ExportBuilder(BaseModel):
     null: str | None = None
     row_separator: str | None = None
     with_column_names: StrictBool = False
+
+    @computed_field  # type: ignore[misc]
+    @property
+    def file_ext(self) -> str:
+        return resolve_format(self.format, self.compression)
