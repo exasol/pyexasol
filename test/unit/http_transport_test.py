@@ -115,14 +115,6 @@ class TestSqlQuery:
 
     @staticmethod
     @pytest.mark.parametrize(
-        "encoding,expected", [("UTF-8", "ENCODING = 'UTF-8'"), (None, None)]
-    )
-    def test_encoding(sql_query, encoding, expected):
-        sql_query.encoding = encoding
-        assert sql_query._encoding == expected
-
-    @staticmethod
-    @pytest.mark.parametrize(
         "compression,file_ext,expected",
         [
             pytest.param(True, None, "gz", id="compressed_defaults_to_format_gz"),

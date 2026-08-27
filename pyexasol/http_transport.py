@@ -93,12 +93,6 @@ class SqlQuery:
         return ""
 
     @property
-    def _encoding(self) -> str | None:
-        if self.encoding is None:
-            return None
-        return f"ENCODING = {self.connection.format.quote(self.encoding)}"
-
-    @property
     def _file_ext(self) -> str:
         validate_format(file_format=self.format)
         return resolve_format(self.format, self.compression)
@@ -146,7 +140,7 @@ class ImportQuery(SqlQuery):
             import_builder.comment,
             self._get_import(table=table),
             *self._get_file_list(exa_address_list=exa_address_list),
-            self._encoding,
+            clause_formatter.encoding(self.encoding),
             self._null,
             self._skip,
             import_builder.trim,
@@ -215,7 +209,7 @@ class ExportQuery(SqlQuery):
             self._get_export(table=table),
             *self._get_file_list(exa_address_list=exa_address_list),
             self._delimit,
-            self._encoding,
+            clause_formatter.encoding(self.encoding),
             self._null,
             self._row_separator,
             clause_formatter.column_separator(self.column_separator),

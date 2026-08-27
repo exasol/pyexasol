@@ -41,6 +41,11 @@ class ClauseFormatter:
             return None
         return f"COLUMN SEPARATOR = {self.formatter.quote(column_separator)}"
 
+    def encoding(self, encoding: str | None) -> str | None:
+        if encoding is None:
+            return None
+        return f"ENCODING = {self.formatter.quote(encoding)}"
+
 
 def validate_format(file_format: str | None) -> str | None:
     """Validate a CSV transport format"""

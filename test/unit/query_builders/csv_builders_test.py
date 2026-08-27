@@ -41,6 +41,14 @@ class TestClauseFormatter:
     def test_column_separator(clause_formatter, column_separator, expected):
         assert clause_formatter.column_separator(column_separator) == expected
 
+    @staticmethod
+    @pytest.mark.parametrize(
+        "encoding,expected",
+        [("UTF-8", "ENCODING = 'UTF-8'"), (None, None)],
+    )
+    def test_encoding(clause_formatter, encoding, expected):
+        assert clause_formatter.encoding(encoding) == expected
+
 
 class TestCsvBuilderFormat:
     @staticmethod
