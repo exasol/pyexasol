@@ -2,6 +2,7 @@ import pytest
 from pydantic import ValidationError
 
 from pyexasol.query_builders.csv.builders import (
+    ALLOWED_DELIMIT,
     ALLOWED_FORMAT,
     ALLOWED_TRIM,
     ExportBuilder,
@@ -27,6 +28,26 @@ class TestCsvBuilderFormat:
     def test_rejects_unsupported_file_format(csv_builder, file_format):
         with pytest.raises(ValidationError, match=f"format' {file_format} not in"):
             csv_builder(compression=False, format=file_format)
+
+
+class TestExportBuilderDelimit:
+    @staticmethod
+    @pytest.mark.parametrize(
+        "delimit,expected",
+        [(value.lower(), value) for value in ALLOWED_DELIMIT]
+        + [(value.title(), value) for value in ALLOWED_DELIMIT]
+        + [(None, None)],
+    )
+    def test_accepts_and_normalizes_delimit(delimit, expected):
+        builder = ExportBuilder(compression=False, delimit=delimit)
+
+        assert builder.delimit == expected
+
+    @staticmethod
+    def test_rejects_unsupported_delimit():
+        delimit = "invalid"
+        with pytest.raises(ValidationError, match=f"'delimit' {delimit} not in"):
+            ExportBuilder(compression=False, delimit=delimit)
 
 
 class TestImportBuilderFileExt:

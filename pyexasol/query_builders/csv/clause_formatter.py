@@ -21,6 +21,13 @@ class ClauseFormatter:
             return None
         return f"COLUMN SEPARATOR = {self.formatter.quote(column_separator)}"
 
+    @staticmethod
+    def delimit(delimit: str | None) -> str | None:
+        """Format the EXPORT-only ``DELIMIT`` clause."""
+        if delimit is None:
+            return None
+        return f"DELIMIT={delimit}"
+
     def encoding(self, encoding: str | None) -> str | None:
         if encoding is None:
             return None

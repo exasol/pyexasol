@@ -194,7 +194,7 @@ class TestExportQuery:
             connection=mock_connection, compression=False, params={"delimit": "auto"}
         )
         assert export_query._export_builder is not None
-        assert export_query._export_builder.delimit == "auto"
+        assert export_query._export_builder.delimit == "AUTO"
 
     @staticmethod
     def test_load_from_dict_rejects_unsupported_parameter(mock_connection):
@@ -220,23 +220,6 @@ class TestExportQuery:
         export_sql_query.columns = columns
         result = export_sql_query._get_export(table="TABLE")
         assert result == expected
-
-    @staticmethod
-    @pytest.mark.parametrize(
-        "delimit,expected",
-        [("auto", "DELIMIT=AUTO"), ("AutO", "DELIMIT=AUTO"), (None, None)],
-    )
-    def test_delimit(export_sql_query, delimit, expected):
-        export_sql_query.delimit = delimit
-        assert export_sql_query._delimit == expected
-
-    @staticmethod
-    def test_delimit_raises_exception(export_sql_query):
-        export_sql_query.delimit = "not_a_valid_delimit"
-        with pytest.raises(
-            ValueError, match="Invalid value for export parameter DELIMIT"
-        ):
-            assert export_sql_query._delimit
 
     @staticmethod
     @pytest.mark.parametrize(

@@ -190,7 +190,7 @@ class ExportQuery(SqlQuery):
             export_builder.comment,
             self._get_export(table=table),
             *self._get_file_list(exa_address_list=exa_address_list),
-            self._delimit,
+            clause_formatter.delimit(export_builder.delimit),
             clause_formatter.encoding(self.encoding),
             clause_formatter.null(self.null),
             clause_formatter.row_separator(self.row_separator),
@@ -220,16 +220,6 @@ class ExportQuery(SqlQuery):
 
     def _get_export(self, table: str) -> str:
         return f"EXPORT {table}{self._column_spec} INTO CSV"
-
-    @property
-    def _delimit(self) -> str | None:
-        if self.delimit is None:
-            return None
-
-        delimit = str(self.delimit).upper()
-        if delimit not in ("AUTO", "ALWAYS", "NEVER"):
-            raise ValueError(f"Invalid value for export parameter DELIMIT: {delimit}")
-        return f"DELIMIT={delimit}"
 
     @property
     def _with_column_names(self) -> str | None:

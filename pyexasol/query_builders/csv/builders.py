@@ -12,6 +12,7 @@ from pydantic import (
     computed_field,
 )
 
+ALLOWED_DELIMIT = ("AUTO", "ALWAYS", "NEVER")
 ALLOWED_FORMAT = ("bz2", "csv", "gz", "zip")
 ALLOWED_TRIM = ("TRIM", "LTRIM", "RTRIM")
 
@@ -51,8 +52,20 @@ def validate_trim(trim: str | None) -> str | None:
     return normalized_trim
 
 
-Format = Annotated[str | None, AfterValidator(validate_format)]
+def validate_delimit(delimit: str | None) -> str | None:
+    """Validate and normalize the export delimit option."""
+    if delimit is None:
+        return None
+
+    normalized_delimit = delimit.upper()
+    if normalized_delimit not in ALLOWED_DELIMIT:
+        raise ValueError(f"'delimit' {delimit} not in {ALLOWED_DELIMIT}")
+    return normalized_delimit
+
+
 Comment = Annotated[str | None, AfterValidator(validate_comment)]
+Delimit = Annotated[str | None, AfterValidator(validate_delimit)]
+Format = Annotated[str | None, AfterValidator(validate_format)]
 Trim = Annotated[str | None, AfterValidator(validate_trim)]
 
 
@@ -89,7 +102,7 @@ class ExportBuilder(BaseModel):
     columns: Iterable[str] | None = None
     comment: Comment = None
     csv_cols: Iterable[str] | None = None
-    delimit: str | None = None
+    delimit: Delimit = None
     encoding: str | None = None
     format: Format = None
     null: str | None = None

@@ -61,3 +61,11 @@ class TestClauseFormatter:
     )
     def test_skip(clause_formatter, skip, expected):
         assert clause_formatter.skip(skip) == expected
+
+    @staticmethod
+    @pytest.mark.parametrize(
+        "delimit,expected",
+        [("AUTO", "DELIMIT=AUTO"), (None, None)],
+    )
+    def test_delimit(clause_formatter, delimit, expected):
+        assert clause_formatter.delimit(delimit) == expected
