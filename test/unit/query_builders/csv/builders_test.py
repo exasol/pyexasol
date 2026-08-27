@@ -30,6 +30,22 @@ class TestCsvBuilderFormat:
             csv_builder(compression=False, format=file_format)
 
 
+class TestCsvBuilderCsvCols:
+    @staticmethod
+    @pytest.mark.parametrize("csv_cols", (["1"], ["1..3", "4 FORMAT='YYYY'"]))
+    def test_accepts_csv_column_specifications(csv_builder, csv_cols):
+        builder = csv_builder(compression=False, csv_cols=csv_cols)
+        assert tuple(builder.csv_cols) == tuple(csv_cols)
+
+    @staticmethod
+    def test_rejects_all_unsafe_csv_column_specifications(csv_builder):
+        with pytest.raises(
+            ValidationError,
+            match=r"'csv_cols' had unsafe parts: \[1\.2, 3\.4\]",
+        ):
+            csv_builder(compression=False, csv_cols=["1.2", "3.4"])
+
+
 class TestExportBuilderDelimit:
     @staticmethod
     @pytest.mark.parametrize(

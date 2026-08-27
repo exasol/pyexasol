@@ -74,7 +74,7 @@ class TestSqlQuery:
     @staticmethod
     def test_build_csv_cols_raises_exception(sql_query):
         sql_query.csv_cols = ["1.2"]
-        with pytest.raises(ValueError, match="is not a safe csv_cols part"):
+        with pytest.raises(ValueError, match=r"'csv_cols' had unsafe parts: \[1\.2\]"):
             sql_query._build_csv_cols()
 
     @staticmethod

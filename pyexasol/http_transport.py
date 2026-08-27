@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import hashlib
 import os
-import re
 import socket
 import socketserver
 import struct
@@ -19,6 +18,7 @@ from .query_builders.csv.builders import (
     ExportBuilder,
     ImportBuilder,
     resolve_format,
+    validate_csv_cols,
     validate_format,
 )
 from .query_builders.csv.clause_formatter import ClauseFormatter
@@ -43,18 +43,11 @@ class SqlQuery:
     row_separator: str | None = None
 
     def _build_csv_cols(self) -> str:
-        if self.csv_cols is not None:
-            safe_csv_cols_regexp = re.compile(
-                r"^(\d+|\d+\.\.\d+)(\sFORMAT='[^'\n]+')?$", re.IGNORECASE
-            )
-            for c in self.csv_cols:
-                if not safe_csv_cols_regexp.match(c):
-                    raise ValueError(f"Value [{c}] is not a safe csv_cols part")
-
-            csv_cols = ",".join(self.csv_cols)
+        validated_csv_cols = validate_csv_cols(self.csv_cols)
+        if validated_csv_cols is not None:
+            csv_cols = ",".join(validated_csv_cols)
             if csv_cols != "":
                 return f"({csv_cols})"
-
         return ""
 
     def _get_file_list(self, exa_address_list: list[str]) -> list[str]:
