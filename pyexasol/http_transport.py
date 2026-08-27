@@ -130,7 +130,7 @@ class ImportQuery(SqlQuery):
             *self._get_file_list(exa_address_list=exa_address_list),
             clause_formatter.encoding(self.encoding),
             clause_formatter.null(self.null),
-            self._skip,
+            clause_formatter.skip(self.skip),
             import_builder.trim,
             clause_formatter.row_separator(self.row_separator),
             clause_formatter.column_separator(self.column_separator),
@@ -158,12 +158,6 @@ class ImportQuery(SqlQuery):
 
     def _get_import(self, table: str) -> str:
         return f"IMPORT INTO {table}{self._column_spec} FROM CSV"
-
-    @property
-    def _skip(self) -> str | None:
-        if self.skip is None:
-            return None
-        return f"SKIP = {self.connection.format.safe_decimal(self.skip)}"
 
 
 @dataclass

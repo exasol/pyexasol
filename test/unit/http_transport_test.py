@@ -172,15 +172,6 @@ class TestImportQuery:
         result = import_sql_query._get_import(table="TABLE")
         assert result == expected
 
-    @staticmethod
-    @pytest.mark.parametrize(
-        "skip,expected",
-        [("1", "SKIP = 1"), (1, "SKIP = 1"), ("2", "SKIP = 2"), (None, None)],
-    )
-    def test_skip(import_sql_query, skip, expected):
-        import_sql_query.skip = skip
-        assert import_sql_query._skip == expected
-
 
 class TestExportQuery:
     @staticmethod

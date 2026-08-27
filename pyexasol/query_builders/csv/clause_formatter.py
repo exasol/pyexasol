@@ -35,3 +35,9 @@ class ClauseFormatter:
         if row_separator is None:
             return None
         return f"ROW SEPARATOR = {self.formatter.quote(row_separator)}"
+
+    def skip(self, skip: str | int | None) -> str | None:
+        """Format the IMPORT-only ``SKIP`` clause."""
+        if skip is None:
+            return None
+        return f"SKIP = {self.formatter.safe_decimal(skip)}"

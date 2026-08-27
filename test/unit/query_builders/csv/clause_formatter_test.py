@@ -9,6 +9,7 @@ from pyexasol.query_builders.csv.clause_formatter import ClauseFormatter
 def clause_formatter():
     formatter = Mock()
     formatter.quote.side_effect = lambda value: f"'{value}'"
+    formatter.safe_decimal.side_effect = str
     return ClauseFormatter(formatter)
 
 
@@ -52,3 +53,11 @@ class TestClauseFormatter:
     )
     def test_row_separator(clause_formatter, row_separator, expected):
         assert clause_formatter.row_separator(row_separator) == expected
+
+    @staticmethod
+    @pytest.mark.parametrize(
+        "skip,expected",
+        [("1", "SKIP = 1"), (1, "SKIP = 1"), (None, None)],
+    )
+    def test_skip(clause_formatter, skip, expected):
+        assert clause_formatter.skip(skip) == expected
