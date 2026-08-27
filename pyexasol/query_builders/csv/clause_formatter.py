@@ -26,7 +26,7 @@ class ClauseFormatter:
         """Format the EXPORT-only ``DELIMIT`` clause."""
         if delimit is None:
             return None
-        return f"DELIMIT={delimit}"
+        return f"DELIMIT = {delimit}"
 
     def encoding(self, encoding: str | None) -> str | None:
         if encoding is None:
