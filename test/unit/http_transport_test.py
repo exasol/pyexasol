@@ -103,9 +103,29 @@ class TestImportQuery:
 
     @staticmethod
     def test_load_from_dict(mock_connection):
-        ImportQuery.load_from_dict(
+        import_query = ImportQuery.load_from_dict(
             connection=mock_connection, compression=False, params={"skip": 2}
         )
+        import_query.skip = 3
+        mock_connection.options["encryption"] = False
+
+        query = import_query.build_query("TABLE", ["127.18.0.2:8364"])
+
+        assert "SKIP = 3" in query
+
+    @staticmethod
+    def test_load_from_dict_uses_mutated_columns(mock_connection):
+        mock_connection.options["encryption"] = False
+        import_query = ImportQuery.load_from_dict(
+            connection=mock_connection,
+            compression=False,
+            params={"columns": ["FIRST"]},
+        )
+        import_query.columns = ["SECOND"]
+
+        query = import_query.build_query("TABLE", ["127.18.0.2:8364"])
+
+        assert 'IMPORT INTO TABLE("SECOND") FROM CSV' in query
 
     @staticmethod
     def test_build_query_can_be_called_repeatedly_with_columns(mock_connection):
@@ -144,12 +164,27 @@ class TestExportQuery:
         export_query = ExportQuery.load_from_dict(
             connection=mock_connection, compression=False, params={"delimit": "auto"}
         )
-        assert export_query._export_builder is not None
-        assert export_query._export_builder.delimit == "AUTO"
+        assert export_query.delimit == "auto"
+
+    @staticmethod
+    def test_load_from_dict_uses_mutated_columns(mock_connection):
+        mock_connection.options["encryption"] = False
+        export_query = ExportQuery.load_from_dict(
+            connection=mock_connection,
+            compression=False,
+            params={"columns": ["FIRST"]},
+        )
+        export_query.columns = ["SECOND"]
+
+        query = export_query.build_query("TABLE", ["127.18.0.2:8364"])
+
+        assert 'EXPORT TABLE("SECOND") INTO CSV' in query
 
     @staticmethod
     def test_load_from_dict_rejects_unsupported_parameter(mock_connection):
-        with pytest.raises(ValueError, match="Extra inputs are not permitted"):
+        with pytest.raises(
+            TypeError, match="unexpected keyword argument 'unsupported'"
+        ):
             ExportQuery.load_from_dict(
                 connection=mock_connection,
                 compression=False,

@@ -43,7 +43,6 @@ class ImportQuery(SqlQuery):
     # set these values in param dictionary to ExaConnection
     skip: str | int | None = None
     trim: str | None = None
-    _import_builder: ImportBuilder | None = None
 
     def build_query(self, table: str, exa_address_list: list[str]) -> str:
         import_builder = self._get_import_builder()
@@ -65,31 +64,23 @@ class ImportQuery(SqlQuery):
         Keys in `params` that are not present in as attributes of the `ImportQuery`
         class will raise an Exception.
         """
-        builder = ImportBuilder(compression=compression, **params)
-        return ImportQuery(
-            connection=connection,
-            compression=compression,
-            _import_builder=builder,
-            **params,
-        )
+        return ImportQuery(connection=connection, compression=compression, **params)
 
     def _get_import_builder(self) -> ImportBuilder:
-        if self._import_builder is None:
-            return ImportBuilder(
-                compression=self.compression,
-                column_delimiter=self.column_delimiter,
-                column_separator=self.column_separator,
-                columns=self.columns,
-                comment=self.comment,
-                csv_cols=self.csv_cols,
-                encoding=self.encoding,
-                format=self.format,
-                null=self.null,
-                row_separator=self.row_separator,
-                skip=self.skip,
-                trim=self.trim,
-            )
-        return self._import_builder
+        return ImportBuilder(
+            compression=self.compression,
+            column_delimiter=self.column_delimiter,
+            column_separator=self.column_separator,
+            columns=self.columns,
+            comment=self.comment,
+            csv_cols=self.csv_cols,
+            encoding=self.encoding,
+            format=self.format,
+            null=self.null,
+            row_separator=self.row_separator,
+            skip=self.skip,
+            trim=self.trim,
+        )
 
 
 @dataclass
@@ -97,7 +88,6 @@ class ExportQuery(SqlQuery):
     # set these values in param dictionary to ExaConnection
     delimit: str | None = None
     with_column_names: bool = False
-    _export_builder: ExportBuilder | None = None
 
     def build_query(self, table: str, exa_address_list: list[str]) -> str:
         export_builder = self._get_export_builder()
@@ -119,31 +109,23 @@ class ExportQuery(SqlQuery):
         Keys in `params` that are not present in as attributes of the `ExportQuery`
         class will raise an Exception.
         """
-        builder = ExportBuilder(compression=compression, **params)
-        return ExportQuery(
-            connection=connection,
-            compression=compression,
-            _export_builder=builder,
-            **params,
-        )
+        return ExportQuery(connection=connection, compression=compression, **params)
 
     def _get_export_builder(self) -> ExportBuilder:
-        if self._export_builder is None:
-            return ExportBuilder(
-                compression=self.compression,
-                column_delimiter=self.column_delimiter,
-                column_separator=self.column_separator,
-                columns=self.columns,
-                comment=self.comment,
-                csv_cols=self.csv_cols,
-                delimit=self.delimit,
-                encoding=self.encoding,
-                format=self.format,
-                null=self.null,
-                row_separator=self.row_separator,
-                with_column_names=self.with_column_names,
-            )
-        return self._export_builder
+        return ExportBuilder(
+            compression=self.compression,
+            column_delimiter=self.column_delimiter,
+            column_separator=self.column_separator,
+            columns=self.columns,
+            comment=self.comment,
+            csv_cols=self.csv_cols,
+            delimit=self.delimit,
+            encoding=self.encoding,
+            format=self.format,
+            null=self.null,
+            row_separator=self.row_separator,
+            with_column_names=self.with_column_names,
+        )
 
 
 class ExaSQLThread(threading.Thread):
