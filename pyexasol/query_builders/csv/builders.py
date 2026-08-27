@@ -111,6 +111,10 @@ Format = Annotated[str | None, AfterValidator(validate_format)]
 Trim = Annotated[str | None, AfterValidator(validate_trim)]
 
 
+def _join_query_lines(*query_lines: str | None) -> str:
+    return "\n".join(filter(None, query_lines))
+
+
 class ImportBuilder(BaseModel):
     model_config = ConfigDict(frozen=True, arbitrary_types_allowed=True, extra="forbid")
 
@@ -164,9 +168,7 @@ class ImportBuilder(BaseModel):
             clause_formatter.column_separator(self.column_separator),
             clause_formatter.column_delimiter(self.column_delimiter),
         ]
-        return "\n".join(
-            query_line for query_line in query_lines if query_line is not None
-        )
+        return _join_query_lines(*query_lines)
 
 
 class ExportBuilder(BaseModel):
@@ -222,6 +224,4 @@ class ExportBuilder(BaseModel):
             clause_formatter.column_delimiter(self.column_delimiter),
             clause_formatter.with_column_names(self.with_column_names),
         ]
-        return "\n".join(
-            query_line for query_line in query_lines if query_line is not None
-        )
+        return _join_query_lines(*query_lines)
