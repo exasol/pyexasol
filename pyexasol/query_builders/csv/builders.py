@@ -9,6 +9,7 @@ from pydantic import (
     AfterValidator,
     BaseModel,
     ConfigDict,
+    StrictBool,
     computed_field,
 )
 
@@ -107,4 +108,4 @@ class ExportBuilder(BaseModel):
     format: Format = None
     null: str | None = None
     row_separator: str | None = None
-    with_column_names: bool = False
+    with_column_names: StrictBool = False

@@ -50,6 +50,21 @@ class TestExportBuilderDelimit:
             ExportBuilder(compression=False, delimit=delimit)
 
 
+class TestExportBuilderWithColumnNames:
+    @staticmethod
+    @pytest.mark.parametrize("value", [True, False])
+    def test_accepts_boolean(value):
+        builder = ExportBuilder(compression=False, with_column_names=value)
+
+        assert builder.with_column_names is value
+
+    @staticmethod
+    @pytest.mark.parametrize("value", ["False", "true", "abc", 1, 0])
+    def test_rejects_non_boolean(value):
+        with pytest.raises(ValidationError, match="Input should be a valid boolean"):
+            ExportBuilder(compression=False, with_column_names=value)
+
+
 class TestImportBuilderFileExt:
     @staticmethod
     @pytest.mark.parametrize("file_format", ALLOWED_FORMAT)

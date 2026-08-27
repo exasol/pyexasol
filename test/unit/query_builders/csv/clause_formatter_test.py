@@ -69,3 +69,11 @@ class TestClauseFormatter:
     )
     def test_delimit(clause_formatter, delimit, expected):
         assert clause_formatter.delimit(delimit) == expected
+
+    @staticmethod
+    @pytest.mark.parametrize(
+        "with_column_names,expected",
+        [(True, "WITH COLUMN NAMES"), (False, None)],
+    )
+    def test_with_column_names(clause_formatter, with_column_names, expected):
+        assert clause_formatter.with_column_names(with_column_names) == expected

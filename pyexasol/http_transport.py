@@ -196,7 +196,7 @@ class ExportQuery(SqlQuery):
             clause_formatter.row_separator(self.row_separator),
             clause_formatter.column_separator(self.column_separator),
             clause_formatter.column_delimiter(self.column_delimiter),
-            self._with_column_names,
+            clause_formatter.with_column_names(export_builder.with_column_names),
         ]
         return self._get_query_str(query_lines)
 
@@ -220,17 +220,6 @@ class ExportQuery(SqlQuery):
 
     def _get_export(self, table: str) -> str:
         return f"EXPORT {table}{self._column_spec} INTO CSV"
-
-    @property
-    def _with_column_names(self) -> str | None:
-        if not isinstance(self.with_column_names, bool):
-            raise ValueError(
-                "Invalid value for export parameter WITH_COLUMNS: "
-                f"{self.with_column_names}. Only a boolean is allowed."
-            )
-        if self.with_column_names is False:
-            return None
-        return "WITH COLUMN NAMES"
 
 
 class ExaSQLThread(threading.Thread):

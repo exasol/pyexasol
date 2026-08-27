@@ -48,3 +48,10 @@ class ClauseFormatter:
         if skip is None:
             return None
         return f"SKIP = {self.formatter.safe_decimal(skip)}"
+
+    @staticmethod
+    def with_column_names(with_column_names: bool) -> str | None:
+        """Format the EXPORT-only ``WITH COLUMN NAMES`` clause."""
+        if not with_column_names:
+            return None
+        return "WITH COLUMN NAMES"
