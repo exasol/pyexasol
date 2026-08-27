@@ -16,8 +16,9 @@ from typing import TYPE_CHECKING
 
 from .query_builders.common_formattings import TransportEndpoint
 from .query_builders.csv_builders import (
+    ExportBuilder,
+    ImportBuilder,
     resolve_format,
-    validate_comment,
     validate_format,
     validate_trim,
 )
@@ -108,10 +109,6 @@ class SqlQuery:
         )
 
     @property
-    def _comment(self) -> str | None:
-        return validate_comment(comment=self.comment)
-
-    @property
     def _encoding(self) -> str | None:
         if self.encoding is None:
             return None
@@ -140,10 +137,28 @@ class ImportQuery(SqlQuery):
     # set these values in param dictionary to ExaConnection
     skip: str | int | None = None
     trim: str | None = None
+    _import_builder: ImportBuilder | None = None
 
     def build_query(self, table: str, exa_address_list: list[str]) -> str:
+        import_builder = self._import_builder
+        if import_builder is None:
+            import_builder = ImportBuilder(
+                compression=self.compression,
+                column_delimiter=self.column_delimiter,
+                column_separator=self.column_separator,
+                columns=self.columns,
+                comment=self.comment,
+                csv_cols=self.csv_cols,
+                encoding=self.encoding,
+                format=self.format,
+                null=self.null,
+                row_separator=self.row_separator,
+                skip=self.skip,
+                trim=self.trim,
+            )
+
         query_lines = [
-            self._comment,
+            import_builder.comment,
             self._get_import(table=table),
             *self._get_file_list(exa_address_list=exa_address_list),
             self._encoding,
@@ -166,7 +181,13 @@ class ImportQuery(SqlQuery):
         Keys in `params` that are not present in as attributes of the `ImportQuery`
         class will raise an Exception.
         """
-        return ImportQuery(connection=connection, compression=compression, **params)
+        builder = ImportBuilder(compression=compression, **params)
+        return ImportQuery(
+            connection=connection,
+            compression=compression,
+            _import_builder=builder,
+            **params,
+        )
 
     def _get_import(self, table: str) -> str:
         return f"IMPORT INTO {table}{self._column_spec} FROM CSV"
@@ -187,10 +208,28 @@ class ExportQuery(SqlQuery):
     # set these values in param dictionary to ExaConnection
     delimit: str | None = None
     with_column_names: bool = False
+    _export_builder: ExportBuilder | None = None
 
     def build_query(self, table: str, exa_address_list: list[str]) -> str:
+        export_builder = self._export_builder
+        if export_builder is None:
+            export_builder = ExportBuilder(
+                compression=self.compression,
+                column_delimiter=self.column_delimiter,
+                column_separator=self.column_separator,
+                columns=self.columns,
+                comment=self.comment,
+                csv_cols=self.csv_cols,
+                delimit=self.delimit,
+                encoding=self.encoding,
+                format=self.format,
+                null=self.null,
+                row_separator=self.row_separator,
+                with_column_names=self.with_column_names,
+            )
+
         query_lines = [
-            self._comment,
+            export_builder.comment,
             self._get_export(table=table),
             *self._get_file_list(exa_address_list=exa_address_list),
             self._delimit,
@@ -213,7 +252,13 @@ class ExportQuery(SqlQuery):
         Keys in `params` that are not present in as attributes of the `ExportQuery`
         class will raise an Exception.
         """
-        return ExportQuery(connection=connection, compression=compression, **params)
+        builder = ExportBuilder(compression=compression, **params)
+        return ExportQuery(
+            connection=connection,
+            compression=compression,
+            _export_builder=builder,
+            **params,
+        )
 
     def _get_export(self, table: str) -> str:
         return f"EXPORT {table}{self._column_spec} INTO CSV"

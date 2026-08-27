@@ -131,21 +131,6 @@ class TestSqlQuery:
 
     @staticmethod
     @pytest.mark.parametrize(
-        "comment,expected",
-        [("This is a comment", "/*This is a comment*/"), (None, None)],
-    )
-    def test_comment(sql_query, comment, expected):
-        sql_query.comment = comment
-        assert sql_query._comment == expected
-
-    @staticmethod
-    def test_comment_raises_exception(sql_query):
-        sql_query.comment = "*/This is a comment"
-        with pytest.raises(ValueError, match=r"must not contain '/\*' or '\*/'"):
-            sql_query._comment
-
-    @staticmethod
-    @pytest.mark.parametrize(
         "encoding,expected", [("UTF-8", "ENCODING = 'UTF-8'"), (None, None)]
     )
     def test_encoding(sql_query, encoding, expected):
@@ -266,9 +251,20 @@ class TestExportQuery:
     #
     @staticmethod
     def test_load_from_dict(mock_connection):
-        ExportQuery.load_from_dict(
+        export_query = ExportQuery.load_from_dict(
             connection=mock_connection, compression=False, params={"delimit": "auto"}
         )
+        assert export_query._export_builder is not None
+        assert export_query._export_builder.delimit == "auto"
+
+    @staticmethod
+    def test_load_from_dict_rejects_unsupported_parameter(mock_connection):
+        with pytest.raises(ValueError, match="Extra inputs are not permitted"):
+            ExportQuery.load_from_dict(
+                connection=mock_connection,
+                compression=False,
+                params={"unsupported": True},
+            )
 
     @staticmethod
     @pytest.mark.parametrize(
