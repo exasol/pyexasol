@@ -73,3 +73,21 @@ class ImportBuilder(BaseModel):
     @property
     def file_ext(self) -> str:
         return resolve_format(self.format, self.compression)
+
+
+class ExportBuilder(BaseModel):
+    model_config = ConfigDict(frozen=True, arbitrary_types_allowed=True, extra="forbid")
+
+    compression: bool
+    # set these values in the param dictionary to `ExaConnection`
+    column_delimiter: str | None = None
+    column_separator: str | None = None
+    columns: Iterable[str] | None = None
+    comment: Comment = None
+    csv_cols: Iterable[str] | None = None
+    delimit: str | None = None
+    encoding: str | None = None
+    format: Format = None
+    null: str | None = None
+    row_separator: str | None = None
+    with_column_names: bool = False
