@@ -20,7 +20,6 @@ from .query_builders.csv_builders import (
     ImportBuilder,
     resolve_format,
     validate_format,
-    validate_trim,
 )
 
 if TYPE_CHECKING:
@@ -164,7 +163,7 @@ class ImportQuery(SqlQuery):
             self._encoding,
             self._null,
             self._skip,
-            self._trim,
+            import_builder.trim,
             self._row_separator,
             self._column_separator,
             self._column_delimiter,
@@ -197,10 +196,6 @@ class ImportQuery(SqlQuery):
         if self.skip is None:
             return None
         return f"SKIP = {self.connection.format.safe_decimal(self.skip)}"
-
-    @property
-    def _trim(self) -> str | None:
-        return validate_trim(self.trim)
 
 
 @dataclass

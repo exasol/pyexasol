@@ -219,20 +219,6 @@ class TestImportQuery:
         import_sql_query.skip = skip
         assert import_sql_query._skip == expected
 
-    @staticmethod
-    @pytest.mark.parametrize(
-        "trim,expected", [("trim", "TRIM"), ("TriM", "TRIM"), (None, None)]
-    )
-    def test_trim(import_sql_query, trim, expected):
-        import_sql_query.trim = trim
-        assert import_sql_query._trim == expected
-
-    @staticmethod
-    def test_trim_raises_exception(import_sql_query):
-        import_sql_query.trim = "not_a_valid_trim"
-        with pytest.raises(ValueError, match="'trim' not_a_valid_trim not in"):
-            assert import_sql_query._trim
-
 
 class TestExportQuery:
     @staticmethod
