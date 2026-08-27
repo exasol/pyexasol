@@ -1,5 +1,10 @@
+from __future__ import annotations
+
 from collections.abc import Iterable
-from typing import Annotated
+from typing import (
+    TYPE_CHECKING,
+    Annotated,
+)
 
 from pydantic import (
     AfterValidator,
@@ -8,8 +13,19 @@ from pydantic import (
     computed_field,
 )
 
+if TYPE_CHECKING:
+    from pyexasol import ExaFormatter
+
 ALLOWED_FORMAT = ("bz2", "csv", "gz", "zip")
 ALLOWED_TRIM = ("TRIM", "LTRIM", "RTRIM")
+
+
+def format_column_delimiter(
+    column_delimiter: str | None, formatter: ExaFormatter
+) -> str | None:
+    if column_delimiter is None:
+        return None
+    return f"COLUMN DELIMITER = {formatter.quote(column_delimiter)}"
 
 
 def validate_format(file_format: str | None) -> str | None:

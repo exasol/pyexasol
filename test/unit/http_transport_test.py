@@ -115,14 +115,6 @@ class TestSqlQuery:
 
     @staticmethod
     @pytest.mark.parametrize(
-        "column_delimiter,expected", [(";", "COLUMN DELIMITER = ';'"), (None, None)]
-    )
-    def test_column_delimiter(sql_query, column_delimiter, expected):
-        sql_query.column_delimiter = column_delimiter
-        assert sql_query._column_delimiter == expected
-
-    @staticmethod
-    @pytest.mark.parametrize(
         "column_separator,expected", [("TAB", "COLUMN SEPARATOR = 'TAB'"), (None, None)]
     )
     def test_column_separator(sql_query, column_separator, expected):

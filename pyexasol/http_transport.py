@@ -18,6 +18,7 @@ from .query_builders.common_formattings import TransportEndpoint
 from .query_builders.csv_builders import (
     ExportBuilder,
     ImportBuilder,
+    format_column_delimiter,
     resolve_format,
     validate_format,
 )
@@ -92,14 +93,6 @@ class SqlQuery:
         return ""
 
     @property
-    def _column_delimiter(self) -> str | None:
-        if self.column_delimiter is None:
-            return None
-        return (
-            f"COLUMN DELIMITER = {self.connection.format.quote(self.column_delimiter)}"
-        )
-
-    @property
     def _column_separator(self) -> str | None:
         if self.column_separator is None:
             return None
@@ -166,7 +159,7 @@ class ImportQuery(SqlQuery):
             import_builder.trim,
             self._row_separator,
             self._column_separator,
-            self._column_delimiter,
+            format_column_delimiter(self.column_delimiter, self.connection.format),
         ]
         return self._get_query_str(query_lines)
 
@@ -232,7 +225,7 @@ class ExportQuery(SqlQuery):
             self._null,
             self._row_separator,
             self._column_separator,
-            self._column_delimiter,
+            format_column_delimiter(self.column_delimiter, self.connection.format),
             self._with_column_names,
         ]
         return self._get_query_str(query_lines)

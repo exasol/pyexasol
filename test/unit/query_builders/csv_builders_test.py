@@ -1,3 +1,5 @@
+from unittest.mock import Mock
+
 import pytest
 from pydantic import ValidationError
 
@@ -6,12 +8,26 @@ from pyexasol.query_builders.csv_builders import (
     ALLOWED_TRIM,
     ExportBuilder,
     ImportBuilder,
+    format_column_delimiter,
 )
 
 
 @pytest.fixture(params=(ImportBuilder, ExportBuilder))
 def csv_builder(request):
     return request.param
+
+
+class TestFormatColumnDelimiter:
+    @staticmethod
+    @pytest.mark.parametrize(
+        "column_delimiter,expected",
+        [(";", "COLUMN DELIMITER = ';'"), (None, None)],
+    )
+    def test_format_column_delimiter(column_delimiter, expected):
+        formatter = Mock()
+        formatter.quote.return_value = "';'"
+
+        assert format_column_delimiter(column_delimiter, formatter) == expected
 
 
 class TestCsvBuilderFormat:
