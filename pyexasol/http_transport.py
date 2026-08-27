@@ -13,12 +13,10 @@ from dataclasses import dataclass
 from ssl import SSLContext
 from typing import TYPE_CHECKING
 
-from .query_builders.common_formattings import TransportEndpoint
 from .query_builders.csv.builders import (
     ExportBuilder,
     ImportBuilder,
 )
-from .query_builders.csv.clause_formatter import ClauseFormatter
 
 if TYPE_CHECKING:
     from pyexasol import ExaConnection
@@ -65,30 +63,12 @@ class ImportQuery(SqlQuery):
                 trim=self.trim,
             )
 
-        clause_formatter = ClauseFormatter(self.connection.format)
-        transport_endpoint = TransportEndpoint(
+        return import_builder.build_query(
             database_version=self.connection.exasol_db_version,
             encryption=self.connection.options["encryption"],
-        )
-        query_lines = [
-            import_builder.comment,
-            clause_formatter.import_statement(table=table, columns=self.columns),
-            *clause_formatter.file_clauses(
-                transport_endpoint=transport_endpoint,
-                exa_address_list=exa_address_list,
-                file_ext=import_builder.file_ext,
-                csv_cols=import_builder.csv_cols,
-            ),
-            clause_formatter.encoding(self.encoding),
-            clause_formatter.null(self.null),
-            clause_formatter.skip(self.skip),
-            import_builder.trim,
-            clause_formatter.row_separator(self.row_separator),
-            clause_formatter.column_separator(self.column_separator),
-            clause_formatter.column_delimiter(self.column_delimiter),
-        ]
-        return "\n".join(
-            query_line for query_line in query_lines if query_line is not None
+            exa_address_list=exa_address_list,
+            formatter=self.connection.format,
+            table=table,
         )
 
     @staticmethod
@@ -135,30 +115,12 @@ class ExportQuery(SqlQuery):
                 with_column_names=self.with_column_names,
             )
 
-        clause_formatter = ClauseFormatter(self.connection.format)
-        transport_endpoint = TransportEndpoint(
+        return export_builder.build_query(
             database_version=self.connection.exasol_db_version,
             encryption=self.connection.options["encryption"],
-        )
-        query_lines = [
-            export_builder.comment,
-            clause_formatter.export_statement(table=table, columns=self.columns),
-            *clause_formatter.file_clauses(
-                transport_endpoint=transport_endpoint,
-                exa_address_list=exa_address_list,
-                file_ext=export_builder.file_ext,
-                csv_cols=export_builder.csv_cols,
-            ),
-            clause_formatter.delimit(export_builder.delimit),
-            clause_formatter.encoding(self.encoding),
-            clause_formatter.null(self.null),
-            clause_formatter.row_separator(self.row_separator),
-            clause_formatter.column_separator(self.column_separator),
-            clause_formatter.column_delimiter(self.column_delimiter),
-            clause_formatter.with_column_names(export_builder.with_column_names),
-        ]
-        return "\n".join(
-            query_line for query_line in query_lines if query_line is not None
+            exa_address_list=exa_address_list,
+            formatter=self.connection.format,
+            table=table,
         )
 
     @staticmethod

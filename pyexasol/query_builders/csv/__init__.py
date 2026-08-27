@@ -1,4 +1,4 @@
-"""Build and validate CSV import and export SQL options.
+"""Build CSV import and export queries.
 
 See the Exasol documentation for the
 `IMPORT <https://docs.exasol.com/db/latest/sql/import.htm>`_ and
@@ -9,10 +9,8 @@ from .builders import (
     ExportBuilder,
     ImportBuilder,
 )
-from .clause_formatter import ClauseFormatter
 
 __all__ = [
-    "ClauseFormatter",
     "ExportBuilder",
     "ImportBuilder",
 ]
