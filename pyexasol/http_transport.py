@@ -16,9 +16,9 @@ from typing import TYPE_CHECKING
 
 from .query_builders.common_formattings import TransportEndpoint
 from .query_builders.csv_builders import (
+    ClauseFormatter,
     ExportBuilder,
     ImportBuilder,
-    format_column_delimiter,
     resolve_format,
     validate_format,
 )
@@ -93,14 +93,6 @@ class SqlQuery:
         return ""
 
     @property
-    def _column_separator(self) -> str | None:
-        if self.column_separator is None:
-            return None
-        return (
-            f"COLUMN SEPARATOR = {self.connection.format.quote(self.column_separator)}"
-        )
-
-    @property
     def _encoding(self) -> str | None:
         if self.encoding is None:
             return None
@@ -149,6 +141,7 @@ class ImportQuery(SqlQuery):
                 trim=self.trim,
             )
 
+        clause_formatter = ClauseFormatter(self.connection.format)
         query_lines = [
             import_builder.comment,
             self._get_import(table=table),
@@ -158,8 +151,8 @@ class ImportQuery(SqlQuery):
             self._skip,
             import_builder.trim,
             self._row_separator,
-            self._column_separator,
-            format_column_delimiter(self.column_delimiter, self.connection.format),
+            clause_formatter.column_separator(self.column_separator),
+            clause_formatter.column_delimiter(self.column_delimiter),
         ]
         return self._get_query_str(query_lines)
 
@@ -216,6 +209,7 @@ class ExportQuery(SqlQuery):
                 with_column_names=self.with_column_names,
             )
 
+        clause_formatter = ClauseFormatter(self.connection.format)
         query_lines = [
             export_builder.comment,
             self._get_export(table=table),
@@ -224,8 +218,8 @@ class ExportQuery(SqlQuery):
             self._encoding,
             self._null,
             self._row_separator,
-            self._column_separator,
-            format_column_delimiter(self.column_delimiter, self.connection.format),
+            clause_formatter.column_separator(self.column_separator),
+            clause_formatter.column_delimiter(self.column_delimiter),
             self._with_column_names,
         ]
         return self._get_query_str(query_lines)

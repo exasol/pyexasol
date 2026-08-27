@@ -1,6 +1,13 @@
+"""Build and validate CSV import and export SQL options.
+
+See the Exasol documentation for the `IMPORT <https://docs.exasol.com/db/latest/sql/import.htm>`_
+and `EXPORT <https://docs.exasol.com/db/latest/sql/export.htm>`_ statements.
+"""
+
 from __future__ import annotations
 
 from collections.abc import Iterable
+from dataclasses import dataclass
 from typing import (
     TYPE_CHECKING,
     Annotated,
@@ -20,12 +27,19 @@ ALLOWED_FORMAT = ("bz2", "csv", "gz", "zip")
 ALLOWED_TRIM = ("TRIM", "LTRIM", "RTRIM")
 
 
-def format_column_delimiter(
-    column_delimiter: str | None, formatter: ExaFormatter
-) -> str | None:
-    if column_delimiter is None:
-        return None
-    return f"COLUMN DELIMITER = {formatter.quote(column_delimiter)}"
+@dataclass(frozen=True)
+class ClauseFormatter:
+    formatter: ExaFormatter
+
+    def column_delimiter(self, column_delimiter: str | None) -> str | None:
+        if column_delimiter is None:
+            return None
+        return f"COLUMN DELIMITER = {self.formatter.quote(column_delimiter)}"
+
+    def column_separator(self, column_separator: str | None) -> str | None:
+        if column_separator is None:
+            return None
+        return f"COLUMN SEPARATOR = {self.formatter.quote(column_separator)}"
 
 
 def validate_format(file_format: str | None) -> str | None:

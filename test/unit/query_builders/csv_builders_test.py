@@ -6,9 +6,9 @@ from pydantic import ValidationError
 from pyexasol.query_builders.csv_builders import (
     ALLOWED_FORMAT,
     ALLOWED_TRIM,
+    ClauseFormatter,
     ExportBuilder,
     ImportBuilder,
-    format_column_delimiter,
 )
 
 
@@ -17,17 +17,29 @@ def csv_builder(request):
     return request.param
 
 
-class TestFormatColumnDelimiter:
+@pytest.fixture
+def clause_formatter():
+    formatter = Mock()
+    formatter.quote.side_effect = lambda value: f"'{value}'"
+    return ClauseFormatter(formatter)
+
+
+class TestClauseFormatter:
     @staticmethod
     @pytest.mark.parametrize(
         "column_delimiter,expected",
         [(";", "COLUMN DELIMITER = ';'"), (None, None)],
     )
-    def test_format_column_delimiter(column_delimiter, expected):
-        formatter = Mock()
-        formatter.quote.return_value = "';'"
+    def test_column_delimiter(clause_formatter, column_delimiter, expected):
+        assert clause_formatter.column_delimiter(column_delimiter) == expected
 
-        assert format_column_delimiter(column_delimiter, formatter) == expected
+    @staticmethod
+    @pytest.mark.parametrize(
+        "column_separator,expected",
+        [("TAB", "COLUMN SEPARATOR = 'TAB'"), (None, None)],
+    )
+    def test_column_separator(clause_formatter, column_separator, expected):
+        assert clause_formatter.column_separator(column_separator) == expected
 
 
 class TestCsvBuilderFormat:

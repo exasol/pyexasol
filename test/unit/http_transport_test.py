@@ -115,14 +115,6 @@ class TestSqlQuery:
 
     @staticmethod
     @pytest.mark.parametrize(
-        "column_separator,expected", [("TAB", "COLUMN SEPARATOR = 'TAB'"), (None, None)]
-    )
-    def test_column_separator(sql_query, column_separator, expected):
-        sql_query.column_separator = column_separator
-        assert sql_query._column_separator == expected
-
-    @staticmethod
-    @pytest.mark.parametrize(
         "encoding,expected", [("UTF-8", "ENCODING = 'UTF-8'"), (None, None)]
     )
     def test_encoding(sql_query, encoding, expected):
