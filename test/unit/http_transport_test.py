@@ -135,14 +135,6 @@ class TestSqlQuery:
         with pytest.raises(ValueError, match=f"'format' {sql_query.format} not in"):
             sql_query._file_ext
 
-    @staticmethod
-    @pytest.mark.parametrize(
-        "row_separator,expected", [("LF", "ROW SEPARATOR = 'LF'"), (None, None)]
-    )
-    def test_row_separator(sql_query, row_separator, expected):
-        sql_query.row_separator = row_separator
-        assert sql_query._row_separator == expected
-
 
 class TestImportQuery:
     @staticmethod

@@ -57,6 +57,14 @@ class TestClauseFormatter:
     def test_null(clause_formatter, null, expected):
         assert clause_formatter.null(null) == expected
 
+    @staticmethod
+    @pytest.mark.parametrize(
+        "row_separator,expected",
+        [("LF", "ROW SEPARATOR = 'LF'"), (None, None)],
+    )
+    def test_row_separator(clause_formatter, row_separator, expected):
+        assert clause_formatter.row_separator(row_separator) == expected
+
 
 class TestCsvBuilderFormat:
     @staticmethod

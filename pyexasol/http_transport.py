@@ -97,12 +97,6 @@ class SqlQuery:
         validate_format(file_format=self.format)
         return resolve_format(self.format, self.compression)
 
-    @property
-    def _row_separator(self) -> str | None:
-        if self.row_separator is None:
-            return None
-        return f"ROW SEPARATOR = {self.connection.format.quote(self.row_separator)}"
-
 
 @dataclass
 class ImportQuery(SqlQuery):
@@ -138,7 +132,7 @@ class ImportQuery(SqlQuery):
             clause_formatter.null(self.null),
             self._skip,
             import_builder.trim,
-            self._row_separator,
+            clause_formatter.row_separator(self.row_separator),
             clause_formatter.column_separator(self.column_separator),
             clause_formatter.column_delimiter(self.column_delimiter),
         ]
@@ -205,7 +199,7 @@ class ExportQuery(SqlQuery):
             self._delimit,
             clause_formatter.encoding(self.encoding),
             clause_formatter.null(self.null),
-            self._row_separator,
+            clause_formatter.row_separator(self.row_separator),
             clause_formatter.column_separator(self.column_separator),
             clause_formatter.column_delimiter(self.column_delimiter),
             self._with_column_names,
