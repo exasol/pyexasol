@@ -46,23 +46,7 @@ class ImportQuery(SqlQuery):
     _import_builder: ImportBuilder | None = None
 
     def build_query(self, table: str, exa_address_list: list[str]) -> str:
-        import_builder = self._import_builder
-        if import_builder is None:
-            import_builder = ImportBuilder(
-                compression=self.compression,
-                column_delimiter=self.column_delimiter,
-                column_separator=self.column_separator,
-                columns=self.columns,
-                comment=self.comment,
-                csv_cols=self.csv_cols,
-                encoding=self.encoding,
-                format=self.format,
-                null=self.null,
-                row_separator=self.row_separator,
-                skip=self.skip,
-                trim=self.trim,
-            )
-
+        import_builder = self._get_import_builder()
         return import_builder.build_query(
             database_version=self.connection.exasol_db_version,
             encryption=self.connection.options["encryption"],
@@ -89,6 +73,24 @@ class ImportQuery(SqlQuery):
             **params,
         )
 
+    def _get_import_builder(self) -> ImportBuilder:
+        if self._import_builder is None:
+            return ImportBuilder(
+                compression=self.compression,
+                column_delimiter=self.column_delimiter,
+                column_separator=self.column_separator,
+                columns=self.columns,
+                comment=self.comment,
+                csv_cols=self.csv_cols,
+                encoding=self.encoding,
+                format=self.format,
+                null=self.null,
+                row_separator=self.row_separator,
+                skip=self.skip,
+                trim=self.trim,
+            )
+        return self._import_builder
+
 
 @dataclass
 class ExportQuery(SqlQuery):
@@ -98,23 +100,7 @@ class ExportQuery(SqlQuery):
     _export_builder: ExportBuilder | None = None
 
     def build_query(self, table: str, exa_address_list: list[str]) -> str:
-        export_builder = self._export_builder
-        if export_builder is None:
-            export_builder = ExportBuilder(
-                compression=self.compression,
-                column_delimiter=self.column_delimiter,
-                column_separator=self.column_separator,
-                columns=self.columns,
-                comment=self.comment,
-                csv_cols=self.csv_cols,
-                delimit=self.delimit,
-                encoding=self.encoding,
-                format=self.format,
-                null=self.null,
-                row_separator=self.row_separator,
-                with_column_names=self.with_column_names,
-            )
-
+        export_builder = self._get_export_builder()
         return export_builder.build_query(
             database_version=self.connection.exasol_db_version,
             encryption=self.connection.options["encryption"],
@@ -140,6 +126,24 @@ class ExportQuery(SqlQuery):
             _export_builder=builder,
             **params,
         )
+
+    def _get_export_builder(self) -> ExportBuilder:
+        if self._export_builder is None:
+            return ExportBuilder(
+                compression=self.compression,
+                column_delimiter=self.column_delimiter,
+                column_separator=self.column_separator,
+                columns=self.columns,
+                comment=self.comment,
+                csv_cols=self.csv_cols,
+                delimit=self.delimit,
+                encoding=self.encoding,
+                format=self.format,
+                null=self.null,
+                row_separator=self.row_separator,
+                with_column_names=self.with_column_names,
+            )
+        return self._export_builder
 
 
 class ExaSQLThread(threading.Thread):
