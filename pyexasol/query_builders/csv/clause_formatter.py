@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from collections.abc import Iterable
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
@@ -26,7 +25,7 @@ class ClauseFormatter:
         return ""
 
     @staticmethod
-    def _csv_cols(csv_cols: Iterable[str] | None) -> str:
+    def _csv_cols(csv_cols: list[str] | None) -> str:
         if csv_cols is None:
             return ""
 
@@ -65,7 +64,7 @@ class ClauseFormatter:
         transport_endpoint: TransportEndpoint,
         exa_address_list: list[str],
         file_ext: str,
-        csv_cols: Iterable[str] | None,
+        csv_cols: list[str] | None,
     ) -> list[str]:
         """Build the transport endpoint and FILE clauses for a CSV query."""
         csv_cols_clause = self._csv_cols(csv_cols)

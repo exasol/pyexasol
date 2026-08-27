@@ -45,6 +45,7 @@ class TestCsvBuilderCsvCols:
     def test_accepts_csv_column_specifications(csv_builder, csv_cols):
         builder = csv_builder(compression=False, csv_cols=csv_cols)
         assert tuple(builder.csv_cols) == tuple(csv_cols)
+        assert isinstance(builder.csv_cols, list)
 
     @staticmethod
     def test_rejects_all_unsafe_csv_column_specifications(csv_builder):

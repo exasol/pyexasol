@@ -53,12 +53,12 @@ def validate_comment(comment: str | None) -> str | None:
     return f"/*{comment}*/"
 
 
-def validate_csv_cols(csv_cols: Iterable[str] | None) -> Iterable[str] | None:
+def validate_csv_cols(csv_cols: Iterable[str] | None) -> list[str] | None:
     """Validate that CSV column specifications are safe for SQL embedding."""
     if csv_cols is None:
         return None
 
-    validated_csv_cols = tuple(csv_cols)
+    validated_csv_cols = list(csv_cols)
     invalid_csv_cols = [
         column_specification
         for column_specification in validated_csv_cols
@@ -104,7 +104,7 @@ def validate_delimit(delimit: str | None) -> str | None:
 
 
 Comment = Annotated[str | None, AfterValidator(validate_comment)]
-CsvCols = Annotated[Iterable[str] | None, AfterValidator(validate_csv_cols)]
+CsvCols = Annotated[list[str] | None, AfterValidator(validate_csv_cols)]
 Columns = Annotated[Iterable[str] | None, AfterValidator(validate_columns)]
 Delimit = Annotated[str | None, AfterValidator(validate_delimit)]
 Format = Annotated[str | None, AfterValidator(validate_format)]
