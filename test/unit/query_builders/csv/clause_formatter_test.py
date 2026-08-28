@@ -2,7 +2,10 @@ from unittest.mock import Mock
 
 import pytest
 
-from pyexasol.query_builders.csv.clause_formatter import ClauseFormatter
+from pyexasol.query_builders.csv.clause_formatter import (
+    ClauseFormatter,
+    ExportSourceType,
+)
 
 
 @pytest.fixture
@@ -145,3 +148,18 @@ class TestClauseFormatter:
     )
     def test_with_column_names(clause_formatter, with_column_names, expected):
         assert clause_formatter.with_column_names(with_column_names) == expected
+
+
+class TestExportSourceType:
+    @staticmethod
+    @pytest.mark.parametrize(
+        "query_or_table,expected",
+        [
+            ("SCHEMA.TABLE", ExportSourceType.TABLE),
+            (("SCHEMA", "TABLE"), ExportSourceType.TABLE),
+            ("  TABLE  ", ExportSourceType.TABLE),
+            ("SELECT * FROM TABLE", ExportSourceType.QUERY),
+        ],
+    )
+    def test_from_query_or_table(query_or_table, expected):
+        assert ExportSourceType.from_query_or_table(query_or_table) == expected
