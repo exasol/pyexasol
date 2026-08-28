@@ -8,13 +8,14 @@ from pyexasol.query_builders.csv.builders import (
     ExportBuilder,
     ImportBuilder,
 )
+from pyexasol.query_builders.csv.clause_formatter import ExportSourceType
 
 
 @pytest.fixture(params=(ImportBuilder, ExportBuilder))
 def csv_builder(request):
     if request.param is ImportBuilder:
         return lambda **kwargs: ImportBuilder(table="TABLE", **kwargs)
-    return request.param
+    return lambda **kwargs: ExportBuilder(query_or_table="TABLE", **kwargs)
 
 
 class TestCsvBuilderFormat:
@@ -67,7 +68,9 @@ class TestExportBuilderDelimit:
         + [(None, None)],
     )
     def test_accepts_and_normalizes_delimit(delimit, expected):
-        builder = ExportBuilder(compression=False, delimit=delimit)
+        builder = ExportBuilder(
+            compression=False, query_or_table="TABLE", delimit=delimit
+        )
 
         assert builder.delimit == expected
 
@@ -75,14 +78,16 @@ class TestExportBuilderDelimit:
     def test_rejects_unsupported_delimit():
         delimit = "invalid"
         with pytest.raises(ValidationError, match=f"'delimit' {delimit} not in"):
-            ExportBuilder(compression=False, delimit=delimit)
+            ExportBuilder(compression=False, query_or_table="TABLE", delimit=delimit)
 
 
 class TestExportBuilderWithColumnNames:
     @staticmethod
     @pytest.mark.parametrize("value", [True, False])
     def test_accepts_boolean(value):
-        builder = ExportBuilder(compression=False, with_column_names=value)
+        builder = ExportBuilder(
+            compression=False, query_or_table="TABLE", with_column_names=value
+        )
 
         assert builder.with_column_names is value
 
@@ -90,7 +95,42 @@ class TestExportBuilderWithColumnNames:
     @pytest.mark.parametrize("value", ["False", "true", "abc", 1, 0])
     def test_rejects_non_boolean(value):
         with pytest.raises(ValidationError, match="Input should be a valid boolean"):
-            ExportBuilder(compression=False, with_column_names=value)
+            ExportBuilder(
+                compression=False, query_or_table="TABLE", with_column_names=value
+            )
+
+
+class TestExportBuilderSourceType:
+    @staticmethod
+    @pytest.mark.parametrize(
+        "query_or_table,expected",
+        [
+            ("TABLE", ExportSourceType.TABLE),
+            (("SCHEMA", "TABLE"), ExportSourceType.TABLE),
+            ("SELECT * FROM TABLE", ExportSourceType.QUERY),
+        ],
+    )
+    def test_identifies_export_source_type(query_or_table, expected):
+        builder = ExportBuilder(compression=False, query_or_table=query_or_table)
+
+        assert builder.source_type is expected
+        assert "source_type" not in ExportBuilder.model_fields
+
+    @staticmethod
+    @pytest.mark.parametrize("columns", [[], ["COLUMN"]])
+    def test_rejects_columns_for_query_source(columns):
+        with pytest.raises(
+            ValidationError,
+            match=(
+                r"'query_or_table' was identified as a query, and 'columns' is not "
+                r"compatible with a query export source"
+            ),
+        ):
+            ExportBuilder(
+                compression=False,
+                query_or_table="SELECT * FROM TABLE",
+                columns=columns,
+            )
 
 
 class TestImportBuilderFileExt:

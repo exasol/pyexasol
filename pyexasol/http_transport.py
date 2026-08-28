@@ -17,7 +17,6 @@ from .query_builders.csv.builders import (
     ExportBuilder,
     ImportBuilder,
 )
-from .query_builders.csv.clause_formatter import ExportSourceType
 
 if TYPE_CHECKING:
     from pyexasol import ExaConnection
@@ -208,27 +207,10 @@ class ExaSQLExportThread(ExaSQLThread):
         self.params = export_params
 
     def run_sql(self):
-        if (
-            ExportSourceType.from_query_or_table(self.query_or_table)
-            is ExportSourceType.TABLE
-        ):
-            export_source = self.connection.format.default_format_ident(
-                self.query_or_table
-            )
-        else:
-            # New lines are mandatory to handle queries with single-line comments '--'
-            export_query = self.query_or_table.lstrip(" \n").rstrip(" \n;")
-            export_source = f"(\n{export_query}\n)"
-
-            if self.params.get("columns"):
-                raise ValueError(
-                    "Export option 'columns' is not compatible with SQL query export source"
-                )
-
         export_query = ExportQuery.load_from_dict(
             connection=self.connection, compression=self.compression, params=self.params
         ).build_query(
-            query_or_table=export_source,
+            query_or_table=self.query_or_table,
             exa_address_list=self.exa_address_list,
         )
         self.connection.execute(export_query)

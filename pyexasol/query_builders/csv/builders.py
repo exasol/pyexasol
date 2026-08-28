@@ -12,10 +12,14 @@ from pydantic import (
     ConfigDict,
     StrictBool,
     computed_field,
+    model_validator,
 )
 
 from ..common_formattings import TransportEndpoint
-from .clause_formatter import ClauseFormatter
+from .clause_formatter import (
+    ClauseFormatter,
+    ExportSourceType,
+)
 
 ALLOWED_DELIMIT = ("AUTO", "ALWAYS", "NEVER")
 ALLOWED_FORMAT = ("bz2", "csv", "gz", "zip")
@@ -190,6 +194,22 @@ class ExportBuilder(BaseModel):
 
     @computed_field  # type: ignore[misc]
     @property
+    def source_type(self) -> ExportSourceType:
+        """Identify whether the export source is a table or a query."""
+        return ExportSourceType.from_query_or_table(self.query_or_table)
+
+    @model_validator(mode="after")
+    def validate_query_columns(self) -> ExportBuilder:
+        """Reject columns when the export source is a SQL query."""
+        if self.source_type is ExportSourceType.QUERY and self.columns is not None:
+            raise ValueError(
+                "'query_or_table' was identified as a query, and 'columns' is not "
+                "compatible with a query export source. 'columns' may only be None."
+            )
+        return self
+
+    @computed_field  # type: ignore[misc]
+    @property
     def file_ext(self) -> str:
         return resolve_format(self.format, self.compression)
 
@@ -209,7 +229,9 @@ class ExportBuilder(BaseModel):
         query_lines = [
             self.comment,
             clause_formatter.export_statement(
-                query_or_table=self.query_or_table, columns=self.columns
+                query_or_table=self.query_or_table,
+                source_type=self.source_type,
+                columns=self.columns,
             ),
             *clause_formatter.file_clauses(
                 transport_endpoint=transport_endpoint,

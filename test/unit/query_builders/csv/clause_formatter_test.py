@@ -75,15 +75,27 @@ class TestClauseFormatter:
     @pytest.mark.parametrize(
         "columns,expected",
         [
-            (None, "EXPORT TABLE INTO CSV"),
+            (None, 'EXPORT "TABLE" INTO CSV'),
             (
                 ["LASTNAME", "FIRSTNAME"],
-                'EXPORT TABLE("LASTNAME","FIRSTNAME") INTO CSV',
+                'EXPORT "TABLE"("LASTNAME","FIRSTNAME") INTO CSV',
             ),
         ],
     )
     def test_export_statement(clause_formatter, columns, expected):
-        assert clause_formatter.export_statement("TABLE", columns) == expected
+        export_statement = clause_formatter.export_statement(
+            "TABLE", ExportSourceType.TABLE, columns
+        )
+
+        assert export_statement == expected
+
+    @staticmethod
+    def test_export_statement_wraps_query(clause_formatter):
+        result = clause_formatter.export_statement(
+            "  SELECT * FROM TABLE;  ", ExportSourceType.QUERY, None
+        )
+
+        assert result == "EXPORT (\nSELECT * FROM TABLE\n) INTO CSV"
 
     @staticmethod
     @pytest.mark.parametrize(
