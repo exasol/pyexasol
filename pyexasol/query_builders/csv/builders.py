@@ -124,7 +124,7 @@ class ImportBuilder(BaseModel):
     model_config = ConfigDict(frozen=True, arbitrary_types_allowed=True, extra="forbid")
 
     compression: bool
-    table: str
+    table: str | tuple[str, ...]
     # set these values in the param dictionary to `ExaConnection`
     column_delimiter: str | None = None
     column_separator: str | None = None

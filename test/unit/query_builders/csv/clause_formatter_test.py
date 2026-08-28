@@ -72,6 +72,20 @@ class TestClauseFormatter:
         assert clause_formatter.import_statement("TABLE", columns) == expected
 
     @staticmethod
+    def test_import_statement_with_schema_qualified_table(clause_formatter):
+        clause_formatter.formatter.default_format_ident.side_effect = (
+            lambda identifier: (
+                ".".join(f'"{part}"' for part in identifier)
+                if isinstance(identifier, tuple)
+                else f'"{identifier}"'
+            )
+        )
+
+        result = clause_formatter.import_statement(("SCHEMA", "TABLE"), None)
+
+        assert result == 'IMPORT INTO "SCHEMA"."TABLE" FROM CSV'
+
+    @staticmethod
     @pytest.mark.parametrize(
         "columns,expected",
         [

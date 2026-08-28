@@ -186,3 +186,19 @@ class TestImportFromCallback:
         # verify callback_params=None maps to empty dictionary
         _, callback_kwargs = callback_spy.call_args
         assert callback_kwargs == {}
+
+    @staticmethod
+    def test_passes_schema_qualified_table_to_import_thread(
+        exa_conn,
+        mock_http_thread,
+        mock_sql_import_thread,
+        callback_spy,
+    ):
+        table = ("SCHEMA", "TABLE")
+
+        exa_conn.import_from_callback(
+            callback=callback_spy, src="src_data", table=table
+        )
+
+        _, sql_kwargs = mock_sql_import_thread.call_args
+        assert sql_kwargs["table"] == table

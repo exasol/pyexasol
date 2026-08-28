@@ -494,7 +494,7 @@ class ExaConnection:
     def export_to_file(
         self,
         dst,
-        query_or_table: str,
+        query_or_table: str | tuple[str, ...],
         query_params: dict | None = None,
         export_params: dict | None = None,
     ):
@@ -528,7 +528,7 @@ class ExaConnection:
 
     def export_to_list(
         self,
-        query_or_table: str,
+        query_or_table: str | tuple[str, ...],
         query_params: dict | None = None,
         export_params: dict | None = None,
     ) -> list:
@@ -561,7 +561,7 @@ class ExaConnection:
 
     def export_to_pandas(
         self,
-        query_or_table: str,
+        query_or_table: str | tuple[str, ...],
         query_params: dict | None = None,
         callback_params: dict | None = None,
         export_params: dict | None = None,
@@ -609,7 +609,7 @@ class ExaConnection:
     def export_to_parquet(
         self,
         dst: Path | str,
-        query_or_table: str,
+        query_or_table: str | tuple[str, ...],
         query_params: dict | None = None,
         callback_params: dict | None = None,
         export_params: dict | None = None,
@@ -683,7 +683,7 @@ class ExaConnection:
 
     def export_to_polars(
         self,
-        query_or_table: str,
+        query_or_table: str | tuple[str, ...],
         query_params: dict | None = None,
         callback_params: dict | None = None,
         export_params: dict | None = None,
@@ -728,7 +728,12 @@ class ExaConnection:
             export_params,
         )
 
-    def import_from_file(self, src, table: str, import_params: dict | None = None):
+    def import_from_file(
+        self,
+        src,
+        table: str | tuple[str, ...],
+        import_params: dict | None = None,
+    ):
         """
         Import a large amount of data from a file or file-like object.
 
@@ -748,7 +753,10 @@ class ExaConnection:
         )
 
     def import_from_iterable(
-        self, src: Iterable, table: str, import_params: dict | None = None
+        self,
+        src: Iterable,
+        table: str | tuple[str, ...],
+        import_params: dict | None = None,
     ):
         """
         Import a large amount of data from an ``iterable`` Python object.
@@ -769,7 +777,7 @@ class ExaConnection:
     def import_from_pandas(
         self,
         src: "pandas.DataFrame",
-        table: str,
+        table: str | tuple[str, ...],
         callback_params: dict | None = None,
         import_params: dict | None = None,
     ):
@@ -794,7 +802,7 @@ class ExaConnection:
     def import_from_polars(
         self,
         src: Union["polars.LazyFrame", "polars.DataFrame"],
-        table: str,
+        table: str | tuple[str, ...],
         callback_params: dict | None = None,
         import_params: dict | None = None,
     ):
@@ -819,7 +827,7 @@ class ExaConnection:
     def import_from_parquet(
         self,
         source: list[Path] | Path | str,
-        table: str,
+        table: str | tuple[str, ...],
         callback_params: dict | None = None,
         import_params: dict | None = None,
     ):
@@ -865,8 +873,9 @@ class ExaConnection:
             query_or_table:
                 Source from which to export data. A string containing a non-trailing
                 space is interpreted as a SQL query; other strings are interpreted as
-                table identifiers. A tuple of strings can be used for a
-                schema-qualified table identifier.
+                table identifiers. A tuple of strings, such as
+                ``("SCHEMA", "TABLE")``, can be used for a schema-qualified table
+                identifier.
             query_params:
                 Values for SQL query placeholders.
             callback_params:
@@ -976,7 +985,7 @@ class ExaConnection:
         self,
         callback: Callable,
         src,
-        table: str,
+        table: str | tuple[str, ...],
         callback_params: dict | None = None,
         import_params: dict | None = None,
     ):
@@ -989,7 +998,9 @@ class ExaConnection:
             src:
                 Source for the callback function.
             table:
-                Destination table for IMPORT.
+                Destination table for IMPORT. A string specifies the table name;
+                a tuple of strings, such as ``("SCHEMA", "TABLE")``, specifies a
+                schema-qualified table identifier.
             callback_params:
                 Dictionary with additional parameters for callback function.
             import_params:
