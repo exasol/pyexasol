@@ -3,10 +3,38 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
+if TYPE_CHECKING:
+    from pyexasol import ExaFormatter
+
+from enum import Enum
+from typing import TYPE_CHECKING
+
 from ..common_formattings import TransportEndpoint
 
 if TYPE_CHECKING:
     from pyexasol import ExaFormatter
+
+
+class ExportSourceType(str, Enum):
+    TABLE = "table"
+    QUERY = "query"
+
+    @classmethod
+    def from_query_or_table(
+        cls, query_or_table: str | tuple[str, ...]
+    ) -> ExportSourceType:
+        """Classify an export source as a table identifier or SQL query.
+
+        Tuples are table identifiers, including schema-qualified identifiers.
+        Strings containing a space are treated as SQL queries for compatibility
+        with the existing ``query_or_table`` API; other strings are table names.
+        """
+        if (
+            isinstance(query_or_table, tuple)
+            or str(query_or_table).strip().find(" ") == -1
+        ):
+            return cls.TABLE
+        return cls.QUERY
 
 
 @dataclass(frozen=True)
