@@ -87,10 +87,20 @@ class ClauseFormatter:
     def export_statement(
         self,
         query_or_table: str | tuple[str, ...],
+        source_type: ExportSourceType,
         columns: list[str] | None,
     ) -> str:
-        column_specification = self._column_specification(columns)
-        return f"EXPORT {query_or_table}{column_specification} INTO CSV"
+        if source_type is ExportSourceType.TABLE:
+            export_source = self.formatter.default_format_ident(query_or_table)
+            column_specification = self._column_specification(columns)
+            return f"EXPORT {export_source}{column_specification} INTO CSV"
+
+        if not isinstance(query_or_table, str):
+            raise TypeError("A SQL query export source must be a string")
+        # New lines are mandatory to handle queries with single-line comments '--'
+        export_query = query_or_table.lstrip(" \n").rstrip(" \n;")
+        export_source = f"(\n{export_query}\n)"
+        return f"EXPORT {export_source} INTO CSV"
 
     def file_clauses(
         self,

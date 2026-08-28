@@ -13,13 +13,17 @@ from pydantic import (
     ConfigDict,
     StrictBool,
     computed_field,
+    model_validator,
 )
 
 from ..common_formattings import (
     StringEnum,
     TransportEndpoint,
 )
-from .clause_formatter import ClauseFormatter
+from .clause_formatter import (
+    ClauseFormatter,
+    ExportSourceType,
+)
 
 
 class Delimit(StringEnum):
@@ -195,6 +199,22 @@ class ExportBuilder(BaseModel):
 
     @computed_field  # type: ignore[misc]
     @property
+    def source_type(self) -> ExportSourceType:
+        """Identify whether the export source is a table or a query."""
+        return ExportSourceType.from_query_or_table(self.query_or_table)
+
+    @model_validator(mode="after")
+    def validate_query_columns(self) -> ExportBuilder:
+        """Reject columns when the export source is a SQL query."""
+        if self.source_type is ExportSourceType.QUERY and self.columns is not None:
+            raise ValueError(
+                "'query_or_table' was identified as a query, and 'columns' is not "
+                "compatible with a query export source. 'columns' may only be None."
+            )
+        return self
+
+    @computed_field  # type: ignore[misc]
+    @property
     def file_ext(self) -> str:
         return resolve_format(self.format, self.compression)
 
@@ -214,8 +234,9 @@ class ExportBuilder(BaseModel):
         query_lines = [
             self.comment,
             clause_formatter.export_statement(
-                # AfterValidator output not inferred by mypy
                 query_or_table=self.query_or_table,
+                source_type=self.source_type,
+                # AfterValidator output not inferred by mypy
                 columns=self.columns,  # type: ignore[arg-type]
             ),
             *clause_formatter.file_clauses(
