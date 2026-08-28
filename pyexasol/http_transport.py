@@ -48,7 +48,9 @@ class ImportQuery(SqlQuery):
     skip: str | int | None = None
     trim: Trim | None = None
 
-    def build_query(self, table: str, exa_address_list: list[str]) -> str:
+    def build_query(
+        self, table: str | tuple[str, ...], exa_address_list: list[str]
+    ) -> str:
         import_builder = self._get_import_builder(table)
         return import_builder.build_query(
             database_version=self.connection.exasol_db_version,
@@ -69,7 +71,7 @@ class ImportQuery(SqlQuery):
         """
         return ImportQuery(connection=connection, compression=compression, **params)
 
-    def _get_import_builder(self, table: str) -> ImportBuilder:
+    def _get_import_builder(self, table: str | tuple[str, ...]) -> ImportBuilder:
         return ImportBuilder(
             compression=self.compression,
             table=table,
@@ -239,7 +241,7 @@ class ExaSQLImportThread(ExaSQLThread):
         self,
         connection: ExaConnection,
         compression: bool,
-        table: str,
+        table: str | tuple[str, ...],
         import_params: dict,
         worker_finished_event: threading.Event | None = None,
     ):

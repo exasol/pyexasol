@@ -120,7 +120,7 @@ class ImportBuilder(BaseModel):
     )
 
     compression: bool
-    table: str
+    table: str | tuple[str, ...]
     # set these values in the param dictionary to `ExaConnection`
     column_delimiter: str | None = None
     column_separator: str | None = None

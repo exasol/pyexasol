@@ -63,6 +63,13 @@ class TestCsvBuilderColumns:
         assert isinstance(builder.columns, list)
 
 
+class TestImportBuilderTable:
+    @staticmethod
+    def test_accepts_schema_qualified_table():
+        builder = ImportBuilder(compression=False, table=("SCHEMA", "TABLE"))
+        assert builder.table == ("SCHEMA", "TABLE")
+
+
 class TestCsvBuilderCsvCols:
     @staticmethod
     @pytest.mark.parametrize("csv_cols", (["1"], ["1..3", "4 FORMAT='YYYY'"]))

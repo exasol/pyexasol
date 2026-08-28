@@ -7,4 +7,4 @@
 
 ## Bugfixes
 
-* #353: Fixed EXPORT `query_or_table` type annotations to include tuple table identifiers (`tuple[str, ...]`) alongside strings, matching the existing runtime handling and forwarding the source through `ExportBuilder`.
+* #353: Fixed EXPORT `query_or_table` and IMPORT `table` type annotations to include tuple table identifiers (`tuple[str, ...]`)
