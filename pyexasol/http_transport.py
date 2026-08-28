@@ -20,6 +20,7 @@ from .query_builders.csv.builders import (
     ImportBuilder,
     Trim,
 )
+from .query_builders.csv.clause_formatter import ExportSourceType
 
 if TYPE_CHECKING:
     from pyexasol import ExaConnection
@@ -92,14 +93,17 @@ class ExportQuery(SqlQuery):
     delimit: Delimit | None = None
     with_column_names: bool = False
 
-    def build_query(self, table: str, exa_address_list: list[str]) -> str:
-        export_builder = self._get_export_builder()
+    def build_query(
+        self,
+        query_or_table: str | tuple[str, ...],
+        exa_address_list: list[str],
+    ) -> str:
+        export_builder = self._get_export_builder(query_or_table)
         return export_builder.build_query(
             database_version=self.connection.exasol_db_version,
             encryption=self.connection.options["encryption"],
             exa_address_list=exa_address_list,
             formatter=self.connection.format,
-            table=table,
         )
 
     @staticmethod
@@ -114,9 +118,12 @@ class ExportQuery(SqlQuery):
         """
         return ExportQuery(connection=connection, compression=compression, **params)
 
-    def _get_export_builder(self) -> ExportBuilder:
+    def _get_export_builder(
+        self, query_or_table: str | tuple[str, ...]
+    ) -> ExportBuilder:
         return ExportBuilder(
             compression=self.compression,
+            query_or_table=query_or_table,
             column_delimiter=self.column_delimiter,
             column_separator=self.column_separator,
             columns=list(self.columns) if self.columns is not None else None,
@@ -205,16 +212,16 @@ class ExaSQLExportThread(ExaSQLThread):
 
     def run_sql(self):
         if (
-            isinstance(self.query_or_table, tuple)
-            or str(self.query_or_table).strip().find(" ") == -1
+            ExportSourceType.from_query_or_table(self.query_or_table)
+            is ExportSourceType.TABLE
         ):
-            export_table = self.connection.format.default_format_ident(
+            export_source = self.connection.format.default_format_ident(
                 self.query_or_table
             )
         else:
             # New lines are mandatory to handle queries with single-line comments '--'
             export_query = self.query_or_table.lstrip(" \n").rstrip(" \n;")
-            export_table = f"(\n{export_query}\n)"
+            export_source = f"(\n{export_query}\n)"
 
             if self.params.get("columns"):
                 raise ValueError(
@@ -223,7 +230,10 @@ class ExaSQLExportThread(ExaSQLThread):
 
         export_query = ExportQuery.load_from_dict(
             connection=self.connection, compression=self.compression, params=self.params
-        ).build_query(table=export_table, exa_address_list=self.exa_address_list)
+        ).build_query(
+            query_or_table=export_source,
+            exa_address_list=self.exa_address_list,
+        )
         self.connection.execute(export_query)
 
 

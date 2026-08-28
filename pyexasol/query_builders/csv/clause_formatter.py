@@ -84,8 +84,13 @@ class ClauseFormatter:
             return None
         return f"ENCODING = {self.formatter.quote(encoding)}"
 
-    def export_statement(self, table: str, columns: list[str] | None) -> str:
-        return f"EXPORT {table}{self._column_specification(columns)} INTO CSV"
+    def export_statement(
+        self,
+        query_or_table: str | tuple[str, ...],
+        columns: list[str] | None,
+    ) -> str:
+        column_specification = self._column_specification(columns)
+        return f"EXPORT {query_or_table}{column_specification} INTO CSV"
 
     def file_clauses(
         self,

@@ -179,6 +179,7 @@ class ExportBuilder(BaseModel):
     )
 
     compression: bool
+    query_or_table: str | tuple[str, ...]
     # set these values in the param dictionary to `ExaConnection`
     column_delimiter: str | None = None
     column_separator: str | None = None
@@ -203,7 +204,6 @@ class ExportBuilder(BaseModel):
         encryption: bool,
         exa_address_list: list[str],
         formatter: ExaFormatter,
-        table: str,
     ) -> str:
         """Build an EXPORT query using this builder's options."""
         clause_formatter = ClauseFormatter(formatter)
@@ -214,13 +214,16 @@ class ExportBuilder(BaseModel):
         query_lines = [
             self.comment,
             clause_formatter.export_statement(
-                table=table, columns=self.columns  # type: ignore[arg-type]  # AfterValidator output not inferred by mypy
+                # AfterValidator output not inferred by mypy
+                query_or_table=self.query_or_table,
+                columns=self.columns,  # type: ignore[arg-type]
             ),
             *clause_formatter.file_clauses(
                 transport_endpoint=transport_endpoint,
                 exa_address_list=exa_address_list,
                 file_ext=self.file_ext,
-                csv_cols=self.csv_cols,  # type: ignore[arg-type]  # AfterValidator output not inferred by mypy
+                # AfterValidator output not inferred by mypy
+                csv_cols=self.csv_cols,  # type: ignore[arg-type]
             ),
             clause_formatter.delimit(self.delimit),
             clause_formatter.encoding(self.encoding),

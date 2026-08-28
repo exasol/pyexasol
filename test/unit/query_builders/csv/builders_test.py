@@ -14,7 +14,7 @@ from pyexasol.query_builders.csv.builders import (
 def csv_builder(request):
     if request.param is ImportBuilder:
         return lambda **kwargs: ImportBuilder(table="TABLE", **kwargs)
-    return request.param
+    return lambda **kwargs: ExportBuilder(query_or_table="TABLE", **kwargs)
 
 
 class TestCsvBuilderFormat:
@@ -89,7 +89,9 @@ class TestExportBuilderDelimit:
         + [(None, None)],
     )
     def test_accepts_and_normalizes_delimit(delimit, expected):
-        builder = ExportBuilder(compression=False, delimit=delimit)
+        builder = ExportBuilder(
+            query_or_table="TABLE", compression=False, delimit=delimit
+        )
 
         assert builder.delimit == expected
 
@@ -100,14 +102,16 @@ class TestExportBuilderDelimit:
             ValidationError,
             match=r"Input should be 'AUTO', 'ALWAYS' or 'NEVER'",
         ):
-            ExportBuilder(compression=False, delimit=delimit)
+            ExportBuilder(query_or_table="TABLE", compression=False, delimit=delimit)
 
 
 class TestExportBuilderWithColumnNames:
     @staticmethod
     @pytest.mark.parametrize("value", [True, False])
     def test_accepts_boolean(value):
-        builder = ExportBuilder(compression=False, with_column_names=value)
+        builder = ExportBuilder(
+            query_or_table="TABLE", compression=False, with_column_names=value
+        )
 
         assert builder.with_column_names is value
 
@@ -115,7 +119,9 @@ class TestExportBuilderWithColumnNames:
     @pytest.mark.parametrize("value", ["False", "true", "abc", 1, 0])
     def test_rejects_non_boolean(value):
         with pytest.raises(ValidationError, match="Input should be a valid boolean"):
-            ExportBuilder(compression=False, with_column_names=value)
+            ExportBuilder(
+                query_or_table="TABLE", compression=False, with_column_names=value
+            )
 
 
 class TestImportBuilderFileExt:
