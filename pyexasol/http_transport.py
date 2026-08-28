@@ -13,6 +13,7 @@ from dataclasses import dataclass
 from ssl import SSLContext
 from typing import TYPE_CHECKING
 
+from .query_builders.base_builder import QueryBuilder
 from .query_builders.csv.builders import (
     ExportBuilder,
     ImportBuilder,
@@ -144,6 +145,7 @@ class ExaSQLThread(threading.Thread):
         connection: ExaConnection,
         compression: bool,
         worker_finished_event: threading.Event | None = None,
+        query_builder: QueryBuilder | None = None,
     ):
         self.connection = connection
         self.compression = compression
@@ -153,6 +155,7 @@ class ExaSQLThread(threading.Thread):
         self.exa_address_list: list[str] = []
         self.exc = None
         self.worker_finished_event = worker_finished_event
+        self.query_builder = query_builder
 
         super().__init__()
 
@@ -177,7 +180,14 @@ class ExaSQLThread(threading.Thread):
                 self.worker_finished_event.set()
 
     def run_sql(self):
-        pass
+        if self.query_builder is not None:
+            query = self.query_builder.build_query(
+                database_version=self.connection.exasol_db_version,
+                encryption=self.connection.options["encryption"],
+                exa_address_list=self.exa_address_list,
+                formatter=self.connection.format,
+            )
+            self.connection.execute(query)
 
     def join_with_exc(self, *args):
         super().join(*args)

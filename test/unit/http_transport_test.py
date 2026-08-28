@@ -235,6 +235,69 @@ class TestExaSQLExportThread:
         executed_query = mock_connection.execute.call_args.args[0]
         assert f"EXPORT {expected_source} INTO CSV" in executed_query
 
+    @staticmethod
+    def test_run_sql_forwards_export_parameters(mock_connection):
+        mock_connection.options["encryption"] = False
+        thread = ExaSQLExportThread(
+            connection=mock_connection,
+            compression=False,
+            query_or_table="TABLE",
+            export_params={"delimit": "AUTO", "with_column_names": True},
+        )
+        thread.set_exa_address_list(["127.0.0.1:8563"])
+
+        thread.run_sql()
+
+        executed_query = mock_connection.execute.call_args.args[0]
+        assert "DELIMIT = AUTO" in executed_query
+        assert "WITH COLUMN NAMES" in executed_query
+
+    @staticmethod
+    def test_run_terminates_http_thread_when_export_fails(mock_connection):
+        expected_error = RuntimeError("EXPORT failed")
+        mock_connection.options["encryption"] = False
+        mock_connection.execute.side_effect = expected_error
+        http_thread = Mock()
+        worker_finished_event = threading.Event()
+        thread = ExaSQLExportThread(
+            connection=mock_connection,
+            compression=False,
+            query_or_table="TABLE",
+            export_params={},
+            worker_finished_event=worker_finished_event,
+        )
+        thread.http_thread = http_thread
+        thread.exa_address_list = ["127.0.0.1:8563"]
+
+        thread.run()
+
+        assert thread.exc is expected_error
+        assert worker_finished_event.is_set()
+        http_thread.terminate.assert_called_once_with()
+
+
+class TestExaSQLThread:
+    @staticmethod
+    def test_run_sql_executes_query_from_builder(mock_connection):
+        query_builder = Mock()
+        query_builder.build_query.return_value = "EXPORT ..."
+        thread = ExaSQLThread(
+            connection=mock_connection,
+            compression=False,
+            query_builder=query_builder,
+        )
+        thread.set_exa_address_list(["127.0.0.1:8563"])
+
+        thread.run_sql()
+
+        query_builder.build_query.assert_called_once_with(
+            database_version=mock_connection.exasol_db_version,
+            encryption=mock_connection.options["encryption"],
+            exa_address_list=["127.0.0.1:8563"],
+            formatter=mock_connection.format,
+        )
+        mock_connection.execute.assert_called_once_with("EXPORT ...")
+
 
 ERROR_MESSAGE = "Error from callback"
 
