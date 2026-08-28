@@ -16,6 +16,7 @@ from pydantic import (
     model_validator,
 )
 
+from ..base_builder import validate_build_query
 from ..common_formattings import (
     StringEnum,
     TransportEndpoint,
@@ -110,6 +111,7 @@ def _join_query_lines(*query_lines: str | None) -> str:
     return "\n".join(filter(None, query_lines))
 
 
+@validate_build_query
 class ImportBuilder(BaseModel):
     model_config = ConfigDict(
         frozen=True,
@@ -175,6 +177,7 @@ class ImportBuilder(BaseModel):
         return _join_query_lines(*query_lines)
 
 
+@validate_build_query
 class ExportBuilder(BaseModel):
     model_config = ConfigDict(
         frozen=True,

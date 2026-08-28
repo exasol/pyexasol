@@ -11,7 +11,7 @@ from pyexasol.exceptions import (
 )
 from pyexasol.http_transport import (
     ExaHttpRequestHandler,
-    ExaSQLExportThread,
+    ExaSQLThread,
     ExaTCPServer,
 )
 
@@ -149,7 +149,7 @@ class TestExportToCallbackExceptions:
         def raise_error(pipe, dst, **kwargs):
             raise error
 
-        with capture_callback_threads(ExaSQLExportThread) as (
+        with capture_callback_threads(ExaSQLThread) as (
             http_thread,
             sql_thread,
         ):
@@ -183,7 +183,7 @@ class TestExportToCallbackExceptions:
             time.sleep(2)
             export_cb(pipe, dst, **kwargs)
 
-        with capture_callback_threads(ExaSQLExportThread) as (
+        with capture_callback_threads(ExaSQLThread) as (
             http_thread,
             sql_thread,
         ):
@@ -229,7 +229,7 @@ class TestExportToCallbackExceptions:
             autospec=True,
             side_effect=write_final_chunk_with_exception,
         ):
-            with capture_callback_threads(ExaSQLExportThread) as (
+            with capture_callback_threads(ExaSQLThread) as (
                 http_thread,
                 sql_thread,
             ):
@@ -269,7 +269,7 @@ class TestExportToCallbackExceptions:
             autospec=True,
             side_effect=handle_request_with_exception,
         ):
-            with capture_callback_threads(ExaSQLExportThread) as (
+            with capture_callback_threads(ExaSQLThread) as (
                 http_thread,
                 sql_thread,
             ):
@@ -315,7 +315,7 @@ class TestExportToCallbackExceptions:
         )
 
         with patch.object(connection, "execute", side_effect=license_error):
-            with capture_callback_threads(ExaSQLExportThread) as (
+            with capture_callback_threads(ExaSQLThread) as (
                 http_thread,
                 sql_thread,
             ):
@@ -386,7 +386,7 @@ class TestExportToCallbackExceptions:
           - The callback pipe is closed while the callback is still active, so the
             HTTP/callback path contributes a second exception.
         """
-        with patch("pyexasol.connection.ExaSQLExportThread.run_sql") as mock:
+        with patch("pyexasol.connection.ExaSQLThread.run_sql") as mock:
             mock.side_effect = ExaQueryError(
                 message="Client requested execution abort.",
                 query="mock response",
@@ -394,7 +394,7 @@ class TestExportToCallbackExceptions:
                 code="40007",
             )
 
-            with capture_callback_threads(ExaSQLExportThread) as (
+            with capture_callback_threads(ExaSQLThread) as (
                 http_thread,
                 sql_thread,
             ):
