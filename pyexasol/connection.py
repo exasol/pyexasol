@@ -847,7 +847,7 @@ class ExaConnection:
         self,
         callback: Callable,
         dst,
-        query_or_table: str,
+        query_or_table: str | tuple[str, ...],
         query_params: dict | None = None,
         callback_params: dict | None = None,
         export_params: dict | None = None,
@@ -861,7 +861,10 @@ class ExaConnection:
             dst:
                 (optional) Path to file or file-like object where data will be exported to.
             query_or_table:
-                SQL query or table from which to export data.
+                Source from which to export data. A string containing a non-trailing
+                space is interpreted as a SQL query; other strings are interpreted as
+                table identifiers. A tuple of strings can be used for a
+                schema-qualified table identifier.
             query_params:
                 Values for SQL query placeholders.
             callback_params:
@@ -899,7 +902,7 @@ class ExaConnection:
         if export_params is None:
             export_params = {}
 
-        if query_params is not None:
+        if query_params is not None and isinstance(query_or_table, str):
             query_or_table = self.format.format(query_or_table, **query_params)
 
         compression = (
