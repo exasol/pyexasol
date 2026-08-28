@@ -98,7 +98,7 @@ class TestImportQuery:
         )
         assert (
             result
-            == "IMPORT INTO TABLE FROM CSV\nAT 'https://127.18.0.2:8364' PUBLIC KEY 'sha256//YHistZoLhU9+FKoSEHHbNGtC/Ee4KT75DDBO+s5OG8o=' FILE '000.gz'"
+            == "IMPORT INTO \"TABLE\" FROM CSV\nAT 'https://127.18.0.2:8364' PUBLIC KEY 'sha256//YHistZoLhU9+FKoSEHHbNGtC/Ee4KT75DDBO+s5OG8o=' FILE '000.gz'"
         )
 
     @staticmethod
@@ -125,7 +125,7 @@ class TestImportQuery:
 
         query = import_query.build_query("TABLE", ["127.18.0.2:8364"])
 
-        assert 'IMPORT INTO TABLE("SECOND") FROM CSV' in query
+        assert 'IMPORT INTO "TABLE"("SECOND") FROM CSV' in query
 
     @staticmethod
     def test_build_query_can_be_called_repeatedly_with_columns(mock_connection):
@@ -140,7 +140,7 @@ class TestImportQuery:
         first_query = import_query.build_query("TABLE", exa_address_list)
         second_query = import_query.build_query("TABLE", exa_address_list)
 
-        assert 'IMPORT INTO TABLE("FIRST","SECOND") FROM CSV' in first_query
+        assert 'IMPORT INTO "TABLE"("FIRST","SECOND") FROM CSV' in first_query
         assert second_query == first_query
 
 
