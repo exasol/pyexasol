@@ -12,6 +12,8 @@ from pyexasol.query_builders.csv.builders import (
 
 @pytest.fixture(params=(ImportBuilder, ExportBuilder))
 def csv_builder(request):
+    if request.param is ImportBuilder:
+        return lambda **kwargs: ImportBuilder(table="TABLE", **kwargs)
     return request.param
 
 
@@ -120,7 +122,7 @@ class TestImportBuilderFileExt:
     @staticmethod
     @pytest.mark.parametrize("file_format", tuple(FileFormat))
     def test_keeps_explicit_file_format(file_format):
-        builder = ImportBuilder(compression=False, format=file_format)
+        builder = ImportBuilder(table="TABLE", compression=False, format=file_format)
         assert builder.file_ext == file_format
 
     @staticmethod
@@ -129,7 +131,7 @@ class TestImportBuilderFileExt:
         [(True, "gz"), (False, "csv")],
     )
     def test_resolves_file_ext_from_compression(compression, expected_file_ext):
-        builder = ImportBuilder(compression=compression, format=None)
+        builder = ImportBuilder(table="TABLE", compression=compression, format=None)
 
         assert builder.file_ext == expected_file_ext
 
@@ -162,7 +164,7 @@ class TestImportBuilderTrim:
         + [(None, None)],
     )
     def test_accepts_and_normalizes_trim(trim, expected_trim):
-        builder = ImportBuilder(compression=False, trim=trim)
+        builder = ImportBuilder(table="TABLE", compression=False, trim=trim)
 
         assert builder.trim == expected_trim
 
@@ -173,4 +175,4 @@ class TestImportBuilderTrim:
             ValidationError,
             match=r"Input should be 'TRIM', 'LTRIM' or 'RTRIM'",
         ):
-            ImportBuilder(compression=False, trim=trim)
+            ImportBuilder(table="TABLE", compression=False, trim=trim)

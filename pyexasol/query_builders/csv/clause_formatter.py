@@ -81,7 +81,9 @@ class ClauseFormatter:
         return file_clauses
 
     def import_statement(self, table: str, columns: list[str] | None) -> str:
-        return f"IMPORT INTO {table}{self._column_specification(columns)} FROM CSV"
+        formatted_table = self.formatter.default_format_ident(table)
+        column_specification = self._column_specification(columns)
+        return f"IMPORT INTO {formatted_table}{column_specification} FROM CSV"
 
     def null(self, null: str | None) -> str | None:
         if null is None:

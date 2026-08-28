@@ -58,10 +58,10 @@ class TestClauseFormatter:
     @pytest.mark.parametrize(
         "columns,expected",
         [
-            (None, "IMPORT INTO TABLE FROM CSV"),
+            (None, 'IMPORT INTO "TABLE" FROM CSV'),
             (
                 ["LASTNAME", "FIRSTNAME"],
-                'IMPORT INTO TABLE("LASTNAME","FIRSTNAME") FROM CSV',
+                'IMPORT INTO "TABLE"("LASTNAME","FIRSTNAME") FROM CSV',
             ),
         ],
     )

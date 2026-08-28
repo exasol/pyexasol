@@ -48,13 +48,12 @@ class ImportQuery(SqlQuery):
     trim: Trim | None = None
 
     def build_query(self, table: str, exa_address_list: list[str]) -> str:
-        import_builder = self._get_import_builder()
+        import_builder = self._get_import_builder(table)
         return import_builder.build_query(
             database_version=self.connection.exasol_db_version,
             encryption=self.connection.options["encryption"],
             exa_address_list=exa_address_list,
             formatter=self.connection.format,
-            table=table,
         )
 
     @staticmethod
@@ -69,9 +68,10 @@ class ImportQuery(SqlQuery):
         """
         return ImportQuery(connection=connection, compression=compression, **params)
 
-    def _get_import_builder(self) -> ImportBuilder:
+    def _get_import_builder(self, table: str) -> ImportBuilder:
         return ImportBuilder(
             compression=self.compression,
+            table=table,
             column_delimiter=self.column_delimiter,
             column_separator=self.column_separator,
             columns=self.columns,
@@ -249,11 +249,9 @@ class ExaSQLImportThread(ExaSQLThread):
         self.params = import_params
 
     def run_sql(self):
-        table = self.connection.format.default_format_ident(self.table)
-
         import_query = ImportQuery.load_from_dict(
             connection=self.connection, compression=self.compression, params=self.params
-        ).build_query(table=table, exa_address_list=self.exa_address_list)
+        ).build_query(table=self.table, exa_address_list=self.exa_address_list)
         self.connection.execute(import_query)
 
 
