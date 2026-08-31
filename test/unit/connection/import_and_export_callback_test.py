@@ -30,8 +30,8 @@ def mock_http_thread():
 
 @pytest.fixture
 def mock_sql_import_thread():
-    """Mock ExaSQLImportThread instances"""
-    with patch("pyexasol.connection.ExaSQLImportThread") as mock_cls:
+    """Mock ExaSQLThread instances used by import callbacks."""
+    with patch("pyexasol.connection.ExaSQLThread") as mock_cls:
         yield mock_cls
 
 
@@ -178,9 +178,9 @@ class TestImportFromCallback:
         assert http_kwargs["compression"] is exa_conn.options["compression"]
         assert http_kwargs["worker_finished_event"].is_set()
 
-        # verify import_params=None maps to empty dictionary
+        # verify the import builder receives default parameters
         _, sql_kwargs = mock_sql_import_thread.call_args
-        assert sql_kwargs["import_params"] == {}
+        assert sql_kwargs["query_builder"].table == "dummy_table"
         assert sql_kwargs["worker_finished_event"].is_set()
 
         # verify callback_params=None maps to empty dictionary
@@ -201,4 +201,4 @@ class TestImportFromCallback:
         )
 
         _, sql_kwargs = mock_sql_import_thread.call_args
-        assert sql_kwargs["table"] == table
+        assert sql_kwargs["query_builder"].table == table

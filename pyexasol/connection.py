@@ -61,7 +61,10 @@ from .http_transport import (
 )
 from .logger import ExaLogger
 from .meta import ExaMetaData
-from .query_builders.csv.builders import ExportBuilder
+from .query_builders.csv.builders import (
+    ExportBuilder,
+    ImportBuilder,
+)
 from .script_output import ExaScriptOutputProcess
 from .statement import ExaStatement
 from .warnings import PyexasolWarning
@@ -1024,6 +1027,12 @@ class ExaConnection:
             False if ("format" in import_params) else self.options["compression"]
         )
 
+        import_builder = ImportBuilder(
+            compression=compression,
+            table=table,
+            **import_params,
+        )
+
         # Set when either worker finishes, successfully or exceptionally. It
         # wakes the coordinator but does not terminate the other worker.
         worker_finished_event = threading.Event()
@@ -1034,12 +1043,11 @@ class ExaConnection:
             encryption=self.options["encryption"],
             worker_finished_event=worker_finished_event,
         )
-        sql_thread = ExaSQLImportThread(
+        sql_thread = ExaSQLThread(
             connection=self,
             compression=compression,
-            table=table,
-            import_params=import_params,
             worker_finished_event=worker_finished_event,
+            query_builder=import_builder,
         )
 
         try:
