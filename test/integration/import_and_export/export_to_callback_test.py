@@ -430,7 +430,7 @@ class TestExportToCallbackExceptions:
         def export_cb(pipe, dst, **kwargs):
             raise error
 
-        with capture_callback_threads(ExaSQLExportThread) as (
+        with capture_callback_threads(ExaSQLThread) as (
             http_thread,
             sql_thread,
         ):
