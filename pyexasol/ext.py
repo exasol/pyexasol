@@ -398,13 +398,19 @@ class ExaExtension:
 
         return row
 
-    def export_to_pandas_with_dtype(self, query_or_table, query_params=None):
+    def export_to_pandas_with_dtype(
+        self, query_or_table: str | tuple[str, ...], query_params=None
+    ):
         """
         Export to pandas and attempt to guess correct dtypes based on Exasol columns.
 
         Args:
             query_or_table:
-                Query or table to export.
+                Source from which to export data. Can be one of:
+                - tuple[str, ...]: schema-qualified table identifier, such as
+                  ``("SCHEMA", "TABLE")``.
+                - str containing a non-trailing space: SQL query.
+                - other str: table identifier.
             query_params:
                 Additional query parameters.
 

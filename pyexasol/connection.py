@@ -511,7 +511,11 @@ class ExaConnection:
             dst:
                 Path to file or file-like object where data will be exported to.
             query_or_table:
-                SQL query or table from which to export data.
+                Source from which to export data. Can be one of:
+                - tuple[str, ...]: schema-qualified table identifier, such as
+                  ``("SCHEMA", "TABLE")``.
+                - str containing a non-trailing space: SQL query.
+                - other str: table identifier.
             query_params:
                 Values for SQL query placeholders.
             export_params:
@@ -540,7 +544,11 @@ class ExaConnection:
 
         Args:
             query_or_table:
-                SQL query or table from which to export data.
+                Source from which to export data. Can be one of:
+                - tuple[str, ...]: schema-qualified table identifier, such as
+                  ``("SCHEMA", "TABLE")``.
+                - str containing a non-trailing space: SQL query.
+                - other str: table identifier.
             query_params:
                 Values for SQL query placeholders.
             export_params:
@@ -574,7 +582,11 @@ class ExaConnection:
 
         Args:
             query_or_table:
-                SQL query or table from which to export data.
+                Source from which to export data. Can be one of:
+                - tuple[str, ...]: schema-qualified table identifier, such as
+                  ``("SCHEMA", "TABLE")``.
+                - str containing a non-trailing space: SQL query.
+                - other str: table identifier.
             query_params:
                 Values for SQL query placeholders.
             callback_params:
@@ -644,7 +656,11 @@ class ExaConnection:
                 discussed on `Importing and Exporting Data <https://exasol.github.io/pyexasol/master/user_guide/exploring_features/import_and_export/index.html>`__.
 
             query_or_table:
-                SQL query or table from which to export data.
+                Source from which to export data. Can be one of:
+                - tuple[str, ...]: schema-qualified table identifier, such as
+                  ``("SCHEMA", "TABLE")``.
+                - str containing a non-trailing space: SQL query.
+                - other str: table identifier.
             query_params:
                 Values for SQL query placeholders.
             callback_params:
@@ -696,7 +712,11 @@ class ExaConnection:
 
         Args:
             query_or_table:
-                SQL query or table from which to export data.
+                Source from which to export data. Can be one of:
+                - tuple[str, ...]: schema-qualified table identifier, such as
+                  ``("SCHEMA", "TABLE")``.
+                - str containing a non-trailing space: SQL query.
+                - other str: table identifier.
             query_params:
                 Values for SQL query placeholders.
             callback_params:
@@ -744,7 +764,10 @@ class ExaConnection:
             src:
                 Source file or file-like object.
             table:
-                Destination table for IMPORT.
+                Destination table for IMPORT. Can be one of:
+                - str: table identifier.
+                - tuple[str, ...]: schema-qualified table identifier, such as
+                  ``("SCHEMA", "TABLE")``.
             import_params:
                 Custom parameters for IMPORT query.
 
@@ -769,7 +792,10 @@ class ExaConnection:
                 Source object implementing ``__iter__``.
                 Iterator must return tuples of values.
             table:
-                Destination table for IMPORT.
+                Destination table for IMPORT. Can be one of:
+                - str: table identifier.
+                - tuple[str, ...]: schema-qualified table identifier, such as
+                  ``("SCHEMA", "TABLE")``.
             import_params:
                 Custom parameters for IMPORT query.
         """
@@ -791,7 +817,10 @@ class ExaConnection:
             src:
                 Source :class:`pandas.DataFrame` instance.
             table:
-                Destination table for IMPORT.
+                Destination table for IMPORT. Can be one of:
+                - str: table identifier.
+                - tuple[str, ...]: schema-qualified table identifier, such as
+                  ``("SCHEMA", "TABLE")``.
             callback_params:
                 Dictionary with additional parameters for callback function
                 `pandas.DataFrame.to_csv <https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.to_csv.html>`__.
@@ -816,7 +845,10 @@ class ExaConnection:
             src:
                 Source :class:`polars.DataFrame` or :class:`polars.LazyFrame` instance.
             table:
-                Destination table for IMPORT.
+                Destination table for IMPORT. Can be one of:
+                - str: table identifier.
+                - tuple[str, ...]: schema-qualified table identifier, such as
+                  ``("SCHEMA", "TABLE")``.
             callback_params:
                 Dictionary with additional parameters for callback function
                 `polars.DataFrame.write_csv <https://docs.pola.rs/api/python/stable/reference/api/polars.DataFrame.write_csv.html>`__.
@@ -845,7 +877,10 @@ class ExaConnection:
                 - str: representing a filepath which already contains a glob pattern
                 (e.g., "/local_dir/*.parquet")
             table:
-                Destination table for IMPORT.
+                Destination table for IMPORT. Can be one of:
+                - str: table identifier.
+                - tuple[str, ...]: schema-qualified table identifier, such as
+                  ``("SCHEMA", "TABLE")``.
             callback_params:
                 Dict with additional parameters for callback function
                 `parquet.ParquetFile.iter_batches <https://arrow.apache.org/docs/python/generated/pyarrow.parquet.ParquetFile.html#pyarrow.parquet.ParquetFile.iter_batches>`__.
@@ -874,11 +909,11 @@ class ExaConnection:
             dst:
                 (optional) Path to file or file-like object where data will be exported to.
             query_or_table:
-                Source from which to export data. A string containing a non-trailing
-                space is interpreted as a SQL query; other strings are interpreted as
-                table identifiers. A tuple of strings, such as
-                ``("SCHEMA", "TABLE")``, can be used for a schema-qualified table
-                identifier.
+                Source from which to export data. Can be one of:
+                - tuple[str, ...]: schema-qualified table identifier, such as
+                  ``("SCHEMA", "TABLE")``.
+                - str containing a non-trailing space: SQL query.
+                - other str: table identifier.
             query_params:
                 Values for SQL query placeholders.
             callback_params:
@@ -1001,9 +1036,10 @@ class ExaConnection:
             src:
                 Source for the callback function.
             table:
-                Destination table for IMPORT. A string specifies the table name;
-                a tuple of strings, such as ``("SCHEMA", "TABLE")``, specifies a
-                schema-qualified table identifier.
+                Destination table for IMPORT. Can be one of:
+                - str: table identifier.
+                - tuple[str, ...]: schema-qualified table identifier, such as
+                  ``("SCHEMA", "TABLE")``.
             callback_params:
                 Dictionary with additional parameters for callback function.
             import_params:
