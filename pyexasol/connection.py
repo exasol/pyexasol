@@ -513,10 +513,10 @@ class ExaConnection:
             query_or_table:
                 Source from which to export data. Can be one of:
 
-                - tuple[str, ...]: schema-qualified table identifier, such as
+                - ``tuple[str, ...]``: schema-qualified table identifier, such as
                   ``("SCHEMA", "TABLE")``.
-                - str containing a non-trailing space: SQL query.
-                - other str: table identifier.
+                - ``str``: if it contains a non-trailing space, it is treated like
+                  an SQL query. Otherwise, it is treated like a table identifier.
             query_params:
                 Values for SQL query placeholders.
             export_params:
@@ -547,10 +547,10 @@ class ExaConnection:
             query_or_table:
                 Source from which to export data. Can be one of:
 
-                - tuple[str, ...]: schema-qualified table identifier, such as
+                - ``tuple[str, ...]``: schema-qualified table identifier, such as
                   ``("SCHEMA", "TABLE")``.
-                - str containing a non-trailing space: SQL query.
-                - other str: table identifier.
+                - ``str``: if it contains a non-trailing space, it is treated like
+                  an SQL query. Otherwise, it is treated like a table identifier.
             query_params:
                 Values for SQL query placeholders.
             export_params:
@@ -586,10 +586,10 @@ class ExaConnection:
             query_or_table:
                 Source from which to export data. Can be one of:
 
-                - tuple[str, ...]: schema-qualified table identifier, such as
+                - ``tuple[str, ...]``: schema-qualified table identifier, such as
                   ``("SCHEMA", "TABLE")``.
-                - str containing a non-trailing space: SQL query.
-                - other str: table identifier.
+                - ``str``: if it contains a non-trailing space, it is treated like
+                  an SQL query. Otherwise, it is treated like a table identifier.
             query_params:
                 Values for SQL query placeholders.
             callback_params:
@@ -661,10 +661,10 @@ class ExaConnection:
             query_or_table:
                 Source from which to export data. Can be one of:
 
-                - tuple[str, ...]: schema-qualified table identifier, such as
+                - ``tuple[str, ...]``: schema-qualified table identifier, such as
                   ``("SCHEMA", "TABLE")``.
-                - str containing a non-trailing space: SQL query.
-                - other str: table identifier.
+                - ``str``: if it contains a non-trailing space, it is treated like
+                  an SQL query. Otherwise, it is treated like a table identifier.
             query_params:
                 Values for SQL query placeholders.
             callback_params:
@@ -718,10 +718,10 @@ class ExaConnection:
             query_or_table:
                 Source from which to export data. Can be one of:
 
-                - tuple[str, ...]: schema-qualified table identifier, such as
+                - ``tuple[str, ...]``: schema-qualified table identifier, such as
                   ``("SCHEMA", "TABLE")``.
-                - str containing a non-trailing space: SQL query.
-                - other str: table identifier.
+                - ``str``: if it contains a non-trailing space, it is treated like
+                  an SQL query. Otherwise, it is treated like a table identifier.
             query_params:
                 Values for SQL query placeholders.
             callback_params:
@@ -771,8 +771,8 @@ class ExaConnection:
             table:
                 Destination table for IMPORT. Can be one of:
 
-                - str: table identifier.
-                - tuple[str, ...]: schema-qualified table identifier, such as
+                - ``str``: table identifier.
+                - ``tuple[str, ...]``: schema-qualified table identifier, such as
                   ``("SCHEMA", "TABLE")``.
             import_params:
                 Custom parameters for IMPORT query.
@@ -800,8 +800,8 @@ class ExaConnection:
             table:
                 Destination table for IMPORT. Can be one of:
 
-                - str: table identifier.
-                - tuple[str, ...]: schema-qualified table identifier, such as
+                - ``str``: table identifier.
+                - ``tuple[str, ...]``: schema-qualified table identifier, such as
                   ``("SCHEMA", "TABLE")``.
             import_params:
                 Custom parameters for IMPORT query.
@@ -826,8 +826,8 @@ class ExaConnection:
             table:
                 Destination table for IMPORT. Can be one of:
 
-                - str: table identifier.
-                - tuple[str, ...]: schema-qualified table identifier, such as
+                - ``str``: table identifier.
+                - ``tuple[str, ...]``: schema-qualified table identifier, such as
                   ``("SCHEMA", "TABLE")``.
             callback_params:
                 Dictionary with additional parameters for callback function
@@ -855,8 +855,8 @@ class ExaConnection:
             table:
                 Destination table for IMPORT. Can be one of:
 
-                - str: table identifier.
-                - tuple[str, ...]: schema-qualified table identifier, such as
+                - ``str``: table identifier.
+                - ``tuple[str, ...]``: schema-qualified table identifier, such as
                   ``("SCHEMA", "TABLE")``.
             callback_params:
                 Dictionary with additional parameters for callback function
@@ -880,16 +880,17 @@ class ExaConnection:
 
         Args:
             source: Local filepath specification(s) to process. Can be one of:
-                - list[pathlib.Path]: list of specific files
-                - pathlib.Path: can be either a file or directory. If it's a directory,
-                all files matching this pattern *.parquet will be processed.
-                - str: representing a filepath which already contains a glob pattern
-                (e.g., "/local_dir/*.parquet")
+
+                - ``list[pathlib.Path]``: list of specific files
+                - ``pathlib.Path``: can be either a file or directory. If it's a directory,
+                  all files matching this pattern ``*.parquet`` will be processed.
+                - ``str``: representing a filepath which already contains a glob pattern
+                  (e.g., ``/local_dir/*.parquet``)
             table:
                 Destination table for IMPORT. Can be one of:
 
-                - str: table identifier.
-                - tuple[str, ...]: schema-qualified table identifier, such as
+                - ``str``: table identifier.
+                - ``tuple[str, ...]``: schema-qualified table identifier, such as
                   ``("SCHEMA", "TABLE")``.
             callback_params:
                 Dict with additional parameters for callback function
@@ -921,10 +922,10 @@ class ExaConnection:
             query_or_table:
                 Source from which to export data. Can be one of:
 
-                - tuple[str, ...]: schema-qualified table identifier, such as
+                - ``tuple[str, ...]``: schema-qualified table identifier, such as
                   ``("SCHEMA", "TABLE")``.
-                - str containing a non-trailing space: SQL query.
-                - other str: table identifier.
+                - ``str``: if it contains a non-trailing space, it is treated like
+                  an SQL query. Otherwise, it is treated like a table identifier.
             query_params:
                 Values for SQL query placeholders.
             callback_params:
@@ -1049,8 +1050,8 @@ class ExaConnection:
             table:
                 Destination table for IMPORT. Can be one of:
 
-                - str: table identifier.
-                - tuple[str, ...]: schema-qualified table identifier, such as
+                - ``str``: table identifier.
+                - ``tuple[str, ...]``: schema-qualified table identifier, such as
                   ``("SCHEMA", "TABLE")``.
             callback_params:
                 Dictionary with additional parameters for callback function.

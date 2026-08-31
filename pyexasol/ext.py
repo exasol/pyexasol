@@ -406,10 +406,10 @@ class ExaExtension:
             query_or_table:
                 Source from which to export data. Can be one of:
 
-                - tuple[str, ...]: schema-qualified table identifier, such as
+                - ``tuple[str, ...]``: schema-qualified table identifier, such as
                   ``("SCHEMA", "TABLE")``.
-                - str containing a non-trailing space: SQL query.
-                - other str: table identifier.
+                - ``str``: if it contains a non-trailing space, it is treated like
+                  an SQL query. Otherwise, it is treated like a table identifier.
             query_params:
                 Additional query parameters.
 
