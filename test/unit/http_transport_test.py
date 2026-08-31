@@ -148,7 +148,7 @@ class TestExportQuery:
     @staticmethod
     def test_build_query(export_sql_query, mock_connection):
         result = export_sql_query.build_query(
-            query_or_table="TABLE",
+            table="TABLE",
             exa_address_list=[
                 "127.18.0.2:8364/YHistZoLhU9+FKoSEHHbNGtC/Ee4KT75DDBO+s5OG8o="
             ],

@@ -97,10 +97,10 @@ class ExportQuery(SqlQuery):
 
     def build_query(
         self,
-        query_or_table: str | tuple[str, ...],
+        table: str | tuple[str, ...],
         exa_address_list: list[str],
     ) -> str:
-        export_builder = self._get_export_builder(query_or_table)
+        export_builder = self._get_export_builder(table)
         return export_builder.build_query(
             database_version=self.connection.exasol_db_version,
             encryption=self.connection.options["encryption"],
@@ -225,7 +225,7 @@ class ExaSQLExportThread(ExaSQLThread):
         export_query = ExportQuery.load_from_dict(
             connection=self.connection, compression=self.compression, params=self.params
         ).build_query(
-            query_or_table=self.query_or_table,
+            table=self.query_or_table,
             exa_address_list=self.exa_address_list,
         )
         self.connection.execute(export_query)
