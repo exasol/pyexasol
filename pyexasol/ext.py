@@ -405,6 +405,7 @@ class ExaExtension:
         Args:
             query_or_table:
                 Source from which to export data. Can be one of:
+
                 - tuple[str, ...]: schema-qualified table identifier, such as
                   ``("SCHEMA", "TABLE")``.
                 - str containing a non-trailing space: SQL query.
