@@ -136,4 +136,6 @@ This can be used for profiling and auditing. Example:
     This query is importing user from CSV.
     '''})
 
-The comment is inserted as a block comment (``/* <comment> */``). The block comment closing sequence (``*/``) is forbidden in the comment.
+When supplying a comment, do not include the SQL block-comment delimiters (``/*`` or
+``*/``); PyExasol adds them automatically. The supplied text is inserted before the
+query as a SQL block comment (``/* <comment> */``).
