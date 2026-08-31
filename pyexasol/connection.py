@@ -938,6 +938,7 @@ class ExaConnection:
 
         Raises:
             TypeError: callback argument is not Callable.
+            pydantic.ValidationError: Invalid values from ``export_params``.
             ExaExportError: one or more exceptions occurred when executing the
                callback function.
 
@@ -1060,6 +1061,7 @@ class ExaConnection:
 
         Raises:
             TypeError: callback argument is not Callable.
+            pydantic.ValidationError: Invalid values from ``import_params``.
         """
         if not callable(callback):
             raise TypeError(
