@@ -1,8 +1,8 @@
 import pytest
 from packaging.version import Version
 
+from pyexasol.database_versions import MIN_VERSION_FOR_TLS_PUBLIC_KEY
 from pyexasol.query_builders.common_formattings import (
-    MIN_DATABASE_VERSION_FOR_TLS_PUBLIC_KEY,
     StringEnum,
     TransportEndpoint,
 )
@@ -49,7 +49,7 @@ class TestTransportEndpoint:
     @staticmethod
     @pytest.mark.parametrize(
         "database_version",
-        (Version("7.1.19"), MIN_DATABASE_VERSION_FOR_TLS_PUBLIC_KEY, None),
+        (Version("7.1.19"), MIN_VERSION_FOR_TLS_PUBLIC_KEY.version, None),
     )
     def test_build_endpoint_clause_without_encryption(database_version):
         endpoint_clause = TransportEndpoint(
@@ -73,7 +73,7 @@ class TestTransportEndpoint:
 
     @staticmethod
     @pytest.mark.parametrize(
-        "database_version", (MIN_DATABASE_VERSION_FOR_TLS_PUBLIC_KEY,)
+        "database_version", (MIN_VERSION_FOR_TLS_PUBLIC_KEY.version,)
     )
     def test_build_endpoint_clause_with_encryption_at_min_database_version(
         database_version,
@@ -91,7 +91,7 @@ class TestTransportEndpoint:
     @staticmethod
     def test_build_endpoint_clause_raises_exception():
         transport_endpoint = TransportEndpoint(
-            database_version=MIN_DATABASE_VERSION_FOR_TLS_PUBLIC_KEY,
+            database_version=MIN_VERSION_FOR_TLS_PUBLIC_KEY.version,
             encryption=True,
         )
         with pytest.raises(ValueError, match="Public key is required to be in"):
@@ -124,13 +124,13 @@ class TestTransportEndpoint:
                 Version("7.1.19"), True, False, id="lower_version_with_encryption"
             ),
             pytest.param(
-                MIN_DATABASE_VERSION_FOR_TLS_PUBLIC_KEY,
+                MIN_VERSION_FOR_TLS_PUBLIC_KEY.version,
                 True,
                 True,
                 id="equal_version_with_encryption",
             ),
             pytest.param(
-                MIN_DATABASE_VERSION_FOR_TLS_PUBLIC_KEY,
+                MIN_VERSION_FOR_TLS_PUBLIC_KEY.version,
                 False,
                 False,
                 id="equal_version_without_encryption",

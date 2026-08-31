@@ -4,7 +4,7 @@ from re import match
 
 from packaging.version import Version
 
-MIN_DATABASE_VERSION_FOR_TLS_PUBLIC_KEY = Version("8.32.0")
+from pyexasol.database_versions import MIN_VERSION_FOR_TLS_PUBLIC_KEY
 
 
 class StringEnum(str, Enum):
@@ -56,7 +56,7 @@ class TransportEndpoint:
                 raise ValueError(
                     "Public key is required to be in the 'endpoint_address' for "
                     "encrypted connections with Exasol database version >= "
-                    f"{MIN_DATABASE_VERSION_FOR_TLS_PUBLIC_KEY}"
+                    f"{MIN_VERSION_FOR_TLS_PUBLIC_KEY.version}"
                 )
             endpoint_clause += f" PUBLIC KEY 'sha256//{public_key}'"
 
@@ -79,18 +79,11 @@ class TransportEndpoint:
         """
         Determine whether an encrypted connection requires a TLS public key.
 
-        TLS (Transport Layer Security) encrypts network traffic and authenticates
-        the server. Exasol 8.32.0 introduced certificate verification for import and
-        export connections, requiring the SHA-256 fingerprint of the server
-        certificate's public key when encryption is enabled. See the Exasol database
-        changelog: https://docs.exasol.com/db/latest/changelogs/21747.htm
-
         Returns:
             ``True`` if the connection requires a TLS public key; otherwise, ``False``.
         """
         return (
-            self.database_version is not None
-            and self.database_version >= MIN_DATABASE_VERSION_FOR_TLS_PUBLIC_KEY
+            MIN_VERSION_FOR_TLS_PUBLIC_KEY.is_supported_by(self.database_version)
             and self.encryption
         )
 
