@@ -512,6 +512,7 @@ class ExaConnection:
                 Path to file or file-like object where data will be exported to.
             query_or_table:
                 Source from which to export data. Can be one of:
+
                 - tuple[str, ...]: schema-qualified table identifier, such as
                   ``("SCHEMA", "TABLE")``.
                 - str containing a non-trailing space: SQL query.
@@ -545,6 +546,7 @@ class ExaConnection:
         Args:
             query_or_table:
                 Source from which to export data. Can be one of:
+
                 - tuple[str, ...]: schema-qualified table identifier, such as
                   ``("SCHEMA", "TABLE")``.
                 - str containing a non-trailing space: SQL query.
@@ -583,6 +585,7 @@ class ExaConnection:
         Args:
             query_or_table:
                 Source from which to export data. Can be one of:
+
                 - tuple[str, ...]: schema-qualified table identifier, such as
                   ``("SCHEMA", "TABLE")``.
                 - str containing a non-trailing space: SQL query.
@@ -657,6 +660,7 @@ class ExaConnection:
 
             query_or_table:
                 Source from which to export data. Can be one of:
+
                 - tuple[str, ...]: schema-qualified table identifier, such as
                   ``("SCHEMA", "TABLE")``.
                 - str containing a non-trailing space: SQL query.
@@ -713,6 +717,7 @@ class ExaConnection:
         Args:
             query_or_table:
                 Source from which to export data. Can be one of:
+
                 - tuple[str, ...]: schema-qualified table identifier, such as
                   ``("SCHEMA", "TABLE")``.
                 - str containing a non-trailing space: SQL query.
@@ -765,6 +770,7 @@ class ExaConnection:
                 Source file or file-like object.
             table:
                 Destination table for IMPORT. Can be one of:
+
                 - str: table identifier.
                 - tuple[str, ...]: schema-qualified table identifier, such as
                   ``("SCHEMA", "TABLE")``.
@@ -793,6 +799,7 @@ class ExaConnection:
                 Iterator must return tuples of values.
             table:
                 Destination table for IMPORT. Can be one of:
+
                 - str: table identifier.
                 - tuple[str, ...]: schema-qualified table identifier, such as
                   ``("SCHEMA", "TABLE")``.
@@ -818,6 +825,7 @@ class ExaConnection:
                 Source :class:`pandas.DataFrame` instance.
             table:
                 Destination table for IMPORT. Can be one of:
+
                 - str: table identifier.
                 - tuple[str, ...]: schema-qualified table identifier, such as
                   ``("SCHEMA", "TABLE")``.
@@ -846,6 +854,7 @@ class ExaConnection:
                 Source :class:`polars.DataFrame` or :class:`polars.LazyFrame` instance.
             table:
                 Destination table for IMPORT. Can be one of:
+
                 - str: table identifier.
                 - tuple[str, ...]: schema-qualified table identifier, such as
                   ``("SCHEMA", "TABLE")``.
@@ -878,6 +887,7 @@ class ExaConnection:
                 (e.g., "/local_dir/*.parquet")
             table:
                 Destination table for IMPORT. Can be one of:
+
                 - str: table identifier.
                 - tuple[str, ...]: schema-qualified table identifier, such as
                   ``("SCHEMA", "TABLE")``.
@@ -910,6 +920,7 @@ class ExaConnection:
                 (optional) Path to file or file-like object where data will be exported to.
             query_or_table:
                 Source from which to export data. Can be one of:
+
                 - tuple[str, ...]: schema-qualified table identifier, such as
                   ``("SCHEMA", "TABLE")``.
                 - str containing a non-trailing space: SQL query.
@@ -1037,6 +1048,7 @@ class ExaConnection:
                 Source for the callback function.
             table:
                 Destination table for IMPORT. Can be one of:
+
                 - str: table identifier.
                 - tuple[str, ...]: schema-qualified table identifier, such as
                   ``("SCHEMA", "TABLE")``.
