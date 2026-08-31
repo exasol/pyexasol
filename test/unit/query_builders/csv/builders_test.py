@@ -124,7 +124,17 @@ class TestExportBuilderSourceType:
         assert "source_type" not in ExportBuilder.model_fields
 
     @staticmethod
-    @pytest.mark.parametrize("columns", [[], ["COLUMN"]])
+    def test_accepts_empty_columns_for_query_source():
+        builder = ExportBuilder(
+            compression=False,
+            query_or_table="SELECT * FROM TABLE",
+            columns=[],
+        )
+
+        assert builder.columns == []
+
+    @staticmethod
+    @pytest.mark.parametrize("columns", [["COLUMN"]])
     def test_rejects_columns_for_query_source(columns):
         with pytest.raises(
             ValidationError,

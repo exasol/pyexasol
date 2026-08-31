@@ -135,6 +135,20 @@ class TestImportGeneral:
 
         assert select_result(connection) == all_data.list_tuple()
 
+    @staticmethod
+    def test_custom_import_callback_with_schema_qualified_table(
+        connection, schema, empty_table, tmp_path, all_data, import_cb
+    ):
+        filepath = all_data.write_csv(directory=tmp_path)
+
+        connection.import_from_callback(
+            callback=import_cb,
+            src=filepath,
+            table=(schema, empty_table),
+        )
+
+        assert select_result(connection) == all_data.list_tuple()
+
 
 @pytest.mark.etl
 @pytest.mark.exceptions
