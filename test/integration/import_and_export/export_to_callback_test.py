@@ -130,6 +130,18 @@ class TestExportGeneral:
 
         assert output_filepath.read_text() == all_data.csv_str()
 
+    @staticmethod
+    def test_custom_export_callback_with_schema_qualified_table(
+        connection, schema, fill_table, output_filepath, export_cb, all_data
+    ):
+        connection.export_to_callback(
+            callback=export_cb,
+            dst=output_filepath,
+            query_or_table=(schema, fill_table),
+        )
+
+        assert output_filepath.read_text() == all_data.csv_str()
+
 
 @pytest.mark.etl
 @pytest.mark.exceptions

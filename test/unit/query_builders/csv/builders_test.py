@@ -8,6 +8,7 @@ from pyexasol.query_builders.csv.builders import (
     ImportBuilder,
     Trim,
 )
+from pyexasol.query_builders.csv.clause_formatter import ExportSourceType
 
 
 @pytest.fixture(params=(ImportBuilder, ExportBuilder))
@@ -128,6 +129,49 @@ class TestExportBuilderWithColumnNames:
         with pytest.raises(ValidationError, match="Input should be a valid boolean"):
             ExportBuilder(
                 query_or_table="TABLE", compression=False, with_column_names=value
+            )
+
+
+class TestExportBuilderSourceType:
+    @staticmethod
+    @pytest.mark.parametrize(
+        "query_or_table,expected",
+        [
+            ("TABLE", ExportSourceType.TABLE),
+            (("SCHEMA", "TABLE"), ExportSourceType.TABLE),
+            ("SELECT * FROM TABLE", ExportSourceType.QUERY),
+        ],
+    )
+    def test_identifies_export_source_type(query_or_table, expected):
+        builder = ExportBuilder(compression=False, query_or_table=query_or_table)
+
+        assert builder.source_type is expected
+        assert "source_type" not in ExportBuilder.model_fields
+
+    @staticmethod
+    def test_accepts_empty_columns_for_query_source():
+        builder = ExportBuilder(
+            compression=False,
+            query_or_table="SELECT * FROM TABLE",
+            columns=[],
+        )
+
+        assert builder.columns == []
+
+    @staticmethod
+    @pytest.mark.parametrize("columns", [["COLUMN"]])
+    def test_rejects_columns_for_query_source(columns):
+        with pytest.raises(
+            ValidationError,
+            match=(
+                r"'query_or_table' was identified as a query, and 'columns' is not "
+                r"compatible with a query export source"
+            ),
+        ):
+            ExportBuilder(
+                compression=False,
+                query_or_table="SELECT * FROM TABLE",
+                columns=columns,
             )
 
 

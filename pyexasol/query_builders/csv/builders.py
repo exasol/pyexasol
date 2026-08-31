@@ -209,7 +209,7 @@ class ExportBuilder(BaseModel):
     @model_validator(mode="after")
     def validate_query_columns(self) -> ExportBuilder:
         """Reject columns when the export source is a SQL query."""
-        if self.source_type is ExportSourceType.QUERY and self.columns is not None:
+        if self.source_type is ExportSourceType.QUERY and self.columns:
             raise ValueError(
                 "'query_or_table' was identified as a query, and 'columns' is not "
                 "compatible with a query export source. 'columns' may only be None."
