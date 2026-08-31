@@ -398,9 +398,7 @@ class ExaExtension:
 
         return row
 
-    def export_to_pandas_with_dtype(
-        self, query_or_table: str | tuple[str, ...], query_params=None
-    ):
+    def export_to_pandas_with_dtype(self, query_or_table, query_params=None):
         """
         Export to pandas and attempt to guess correct dtypes based on Exasol columns.
 
