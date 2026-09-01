@@ -14,6 +14,21 @@ if TYPE_CHECKING:
 
 class TestValidateBuildQuery:
     @staticmethod
+    def test_accepts_compatible_builder_signature():
+        @validate_build_query
+        class CompatibleBuilder:
+            def build_query(
+                self,
+                database_version: Version | None,
+                encryption: bool,
+                exa_address_list: list[str],
+                formatter: ExaFormatter,
+            ) -> str:
+                return ""
+
+        assert validate_build_query(CompatibleBuilder) is CompatibleBuilder
+
+    @staticmethod
     def test_rejects_incompatible_builder_signature():
         with pytest.raises(TypeError, match="does not implement"):
 
