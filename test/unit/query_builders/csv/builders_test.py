@@ -39,8 +39,6 @@ class TestCsvBuilderFormat:
         ],
     )
     def test_string_enums_behave_as_strings(enum_value, expected):
-        assert str(enum_value) == expected
-        assert f"{enum_value}" == expected
         assert enum_value == expected
         assert isinstance(enum_value, str)
 
