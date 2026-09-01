@@ -33,22 +33,29 @@ class TransportEndpoint:
     database_version: Version | None
     encryption: bool
 
-    def build_endpoint_clause(self, endpoint_address: str) -> str:
+    def build_endpoint_clause(
+        self, endpoint_address: str, connection_parameters: dict | None = None
+    ) -> str:
         """
         Build an ``AT`` endpoint clause.
 
         Args:
             endpoint_address: A transport endpoint address.
+            connection_parameters: Optional connection parameters appended to the
+                endpoint URL, such as Parquet import options.
 
         Returns:
-            An ``AT`` clause containing the endpoint URL and, when required, its
-            TLS public key.
+            An ``AT`` clause containing the endpoint URL, optional connection
+            parameters, and, when required, its TLS public key.
 
         Raises:
             ValueError: If ``endpoint_address`` is invalid or a required public key is
                 missing.
         """
         ip_address_port, public_key = self._parse_endpoint_address(endpoint_address)
+        connection_parameters_clause = self._build_connection_parameters(
+            connection_parameters
+        )
 
         public_key_clause = ""
         if self.is_tls_public_key_required:
@@ -60,7 +67,21 @@ class TransportEndpoint:
                 )
             public_key_clause = f" PUBLIC KEY 'sha256//{public_key}'"
 
-        return f"AT '{self.url_prefix}{ip_address_port}'{public_key_clause}"
+        return (
+            f"AT '{self.url_prefix}{ip_address_port}{connection_parameters_clause}'"
+            f"{public_key_clause}"
+        )
+
+    @staticmethod
+    def _build_connection_parameters(connection_parameters: dict | None) -> str:
+        """Build the connection-string suffix for optional connection parameters."""
+        if connection_parameters is None:
+            return ""
+
+        return "".join(
+            f";{parameter_name}={parameter_value}"
+            for parameter_name, parameter_value in connection_parameters.items()
+        )
 
     @property
     def url_prefix(self) -> str:

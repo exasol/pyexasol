@@ -100,6 +100,26 @@ class TestTransportEndpoint:
             )
 
     @staticmethod
+    def test_build_endpoint_clause_with_connection_parameters():
+        endpoint_clause = TransportEndpoint(
+            database_version=None, encryption=False
+        ).build_endpoint_clause(
+            endpoint_address="127.18.0.2:8156",
+            connection_parameters={"MaxConnections": 1, "MaxConcurrentReads": 1},
+        )
+        assert endpoint_clause == (
+            "AT 'http://127.18.0.2:8156;MaxConnections=1;MaxConcurrentReads=1'"
+        )
+
+    @staticmethod
+    def test_build_connection_parameters_with_empty_dict_returns_empty_string():
+        assert TransportEndpoint._build_connection_parameters({}) == ""
+
+    @staticmethod
+    def test_build_connection_parameters_with_none_returns_empty_string():
+        assert TransportEndpoint._build_connection_parameters(None) == ""
+
+    @staticmethod
     @pytest.mark.parametrize(
         "encryption,expected",
         [
