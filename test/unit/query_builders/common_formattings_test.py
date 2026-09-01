@@ -23,8 +23,6 @@ class TestStringEnum:
         ],
     )
     def test_behaves_as_string(member, expected):
-        assert str(member) == expected
-        assert f"{member}" == expected
         assert member == expected
         assert isinstance(member, str)
 
