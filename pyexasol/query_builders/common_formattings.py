@@ -49,8 +49,8 @@ class TransportEndpoint:
                 missing.
         """
         ip_address_port, public_key = self._parse_endpoint_address(endpoint_address)
-        endpoint_clause = f"AT '{self.url_prefix}{ip_address_port}'"
 
+        public_key_clause = ""
         if self.is_tls_public_key_required:
             if not public_key:
                 raise ValueError(
@@ -58,9 +58,9 @@ class TransportEndpoint:
                     "encrypted connections with Exasol database version >= "
                     f"{MIN_VERSION_FOR_TLS_PUBLIC_KEY.version}"
                 )
-            endpoint_clause += f" PUBLIC KEY 'sha256//{public_key}'"
+            public_key_clause = f" PUBLIC KEY 'sha256//{public_key}'"
 
-        return endpoint_clause
+        return f"AT '{self.url_prefix}{ip_address_port}'{public_key_clause}"
 
     @property
     def url_prefix(self) -> str:
