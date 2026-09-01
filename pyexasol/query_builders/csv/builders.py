@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import re
+from collections.abc import Iterable
 from typing import (
     TYPE_CHECKING,
     Annotated,
@@ -52,7 +53,7 @@ def validate_comment(comment: str | None) -> str | None:
     return f"/*{comment}*/"
 
 
-def validate_csv_cols(csv_cols: list[str] | None) -> list[str] | None:
+def validate_csv_cols(csv_cols: Iterable[str] | None) -> list[str] | None:
     """Validate that CSV column specifications are safe for SQL embedding."""
     if csv_cols is None:
         return None
@@ -73,7 +74,7 @@ def validate_csv_cols(csv_cols: list[str] | None) -> list[str] | None:
     return validated_csv_cols
 
 
-def validate_columns(columns: list[str] | None) -> list[str] | None:
+def validate_columns(columns: Iterable[str] | None) -> list[str] | None:
     """Materialize columns so the validated value can be reused."""
     if columns is None:
         return None
@@ -103,8 +104,8 @@ def validate_delimit(delimit: str | None) -> str | None:
 
 
 Comment = Annotated[str | None, AfterValidator(validate_comment)]
-CsvCols = Annotated[list[str] | None, AfterValidator(validate_csv_cols)]
-Columns = Annotated[list[str] | None, AfterValidator(validate_columns)]
+CsvCols = Annotated[Iterable[str] | None, AfterValidator(validate_csv_cols)]
+Columns = Annotated[Iterable[str] | None, AfterValidator(validate_columns)]
 Delimit = Annotated[str | None, AfterValidator(validate_delimit)]
 Format = Annotated[str | None, AfterValidator(validate_format)]
 Trim = Annotated[str | None, AfterValidator(validate_trim)]
