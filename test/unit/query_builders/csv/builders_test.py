@@ -26,7 +26,8 @@ class TestCsvBuilderFormat:
     @staticmethod
     @pytest.mark.parametrize("file_format", ["CSV", FileFormat.CSV])
     def test_accepts_case_insensitive_enum_values(csv_builder, file_format):
-        assert csv_builder(compression=False, format=file_format).format == "csv"
+        builder = csv_builder(compression=False, format=file_format)
+        assert builder.format == "csv"
 
     @staticmethod
     @pytest.mark.parametrize(
