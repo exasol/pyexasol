@@ -6,11 +6,17 @@ See the Exasol documentation for the
 """
 
 from .builders import (
+    Delimit,
     ExportBuilder,
+    FileFormat,
     ImportBuilder,
+    Trim,
 )
 
 __all__ = [
+    "Delimit",
     "ExportBuilder",
+    "FileFormat",
     "ImportBuilder",
+    "Trim",
 ]

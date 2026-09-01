@@ -15,8 +15,11 @@ from typing import TYPE_CHECKING
 
 from .query_builders.base_builder import QueryBuilder
 from .query_builders.csv.builders import (
+    Delimit,
     ExportBuilder,
+    FileFormat,
     ImportBuilder,
+    Trim,
 )
 
 if TYPE_CHECKING:
@@ -34,7 +37,7 @@ class SqlQuery:
     comment: str | None = None
     csv_cols: Iterable[str] | None = None
     encoding: str | None = None
-    format: str | None = None
+    format: FileFormat | None = None
     null: str | None = None
     row_separator: str | None = None
 
@@ -43,7 +46,7 @@ class SqlQuery:
 class ImportQuery(SqlQuery):
     # set these values in param dictionary to ExaConnection
     skip: str | int | None = None
-    trim: str | None = None
+    trim: Trim | None = None
 
     def build_query(
         self, table: str | tuple[str, ...], exa_address_list: list[str]
@@ -74,9 +77,9 @@ class ImportQuery(SqlQuery):
             table=table,
             column_delimiter=self.column_delimiter,
             column_separator=self.column_separator,
-            columns=list(self.columns) if self.columns is not None else None,
+            columns=self.columns,
             comment=self.comment,
-            csv_cols=list(self.csv_cols) if self.csv_cols is not None else None,
+            csv_cols=self.csv_cols,
             encoding=self.encoding,
             format=self.format,
             null=self.null,
@@ -89,7 +92,7 @@ class ImportQuery(SqlQuery):
 @dataclass
 class ExportQuery(SqlQuery):
     # set these values in param dictionary to ExaConnection
-    delimit: str | None = None
+    delimit: Delimit | None = None
     with_column_names: bool = False
 
     def build_query(

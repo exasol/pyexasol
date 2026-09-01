@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import re
+from collections.abc import Iterable
 from typing import (
     TYPE_CHECKING,
     Annotated,
@@ -16,15 +17,38 @@ from pydantic import (
 )
 
 from ..base_builder import validate_build_query
-from ..common_formattings import TransportEndpoint
+from ..common_formattings import (
+    StringEnum,
+    TransportEndpoint,
+)
 from .clause_formatter import (
     ClauseFormatter,
     ExportSourceType,
 )
 
-ALLOWED_DELIMIT = ("AUTO", "ALWAYS", "NEVER")
-ALLOWED_FORMAT = ("bz2", "csv", "gz", "zip")
-ALLOWED_TRIM = ("TRIM", "LTRIM", "RTRIM")
+
+class Delimit(StringEnum):
+    AUTO = "AUTO"
+    ALWAYS = "ALWAYS"
+    NEVER = "NEVER"
+
+
+class FileFormat(StringEnum):
+    BZ2 = "bz2"
+    CSV = "csv"
+    GZ = "gz"
+    ZIP = "zip"
+
+
+class Trim(StringEnum):
+    TRIM = "TRIM"
+    LTRIM = "LTRIM"
+    RTRIM = "RTRIM"
+
+
+# Match a single column number (for example, ``1``) or a numeric range
+# (``1..3``), optionally followed by a case-insensitive FORMAT clause, such as
+# ``4 FORMAT='YYYY'`` or ``4 format='YYYY'``.
 REGEX_CSV_COLS = re.compile(r"^(\d+|\d+\.\.\d+)(\sFORMAT='[^'\n]+')?$", re.IGNORECASE)
 
 if TYPE_CHECKING:
@@ -33,19 +57,12 @@ if TYPE_CHECKING:
     from pyexasol import ExaFormatter
 
 
-def validate_format(file_format: str | None) -> str | None:
-    """Validate a CSV transport format"""
-    if file_format is not None and file_format not in ALLOWED_FORMAT:
-        raise ValueError(f"'format' {file_format} not in {ALLOWED_FORMAT}")
-    return file_format
-
-
-def resolve_format(file_format: str | None, compression: bool) -> str:
+def resolve_format(file_format: FileFormat | None, compression: bool) -> FileFormat:
     if file_format is not None:
         return file_format
     if compression:
-        return "gz"
-    return "csv"
+        return FileFormat.GZ
+    return FileFormat.CSV
 
 
 def validate_comment(comment: str | None) -> str | None:
@@ -57,7 +74,7 @@ def validate_comment(comment: str | None) -> str | None:
     return f"/*{comment}*/"
 
 
-def validate_csv_cols(csv_cols: list[str] | None) -> list[str] | None:
+def validate_csv_cols(csv_cols: Iterable[str] | None) -> list[str] | None:
     """Validate that CSV column specifications are safe for SQL embedding."""
     if csv_cols is None:
         return None
@@ -78,41 +95,16 @@ def validate_csv_cols(csv_cols: list[str] | None) -> list[str] | None:
     return validated_csv_cols
 
 
-def validate_columns(columns: list[str] | None) -> list[str] | None:
+def validate_columns(columns: Iterable[str] | None) -> list[str] | None:
     """Materialize columns so the validated value can be reused."""
     if columns is None:
         return None
     return list(columns)
 
 
-def validate_trim(trim: str | None) -> str | None:
-    """Validate and normalize the import trim option."""
-    if trim is None:
-        return None
-
-    normalized_trim = trim.upper()
-    if normalized_trim not in ALLOWED_TRIM:
-        raise ValueError(f"'trim' {trim} not in {ALLOWED_TRIM}")
-    return normalized_trim
-
-
-def validate_delimit(delimit: str | None) -> str | None:
-    """Validate and normalize the export delimit option."""
-    if delimit is None:
-        return None
-
-    normalized_delimit = delimit.upper()
-    if normalized_delimit not in ALLOWED_DELIMIT:
-        raise ValueError(f"'delimit' {delimit} not in {ALLOWED_DELIMIT}")
-    return normalized_delimit
-
-
 Comment = Annotated[str | None, AfterValidator(validate_comment)]
-CsvCols = Annotated[list[str] | None, AfterValidator(validate_csv_cols)]
-Columns = Annotated[list[str] | None, AfterValidator(validate_columns)]
-Delimit = Annotated[str | None, AfterValidator(validate_delimit)]
-Format = Annotated[str | None, AfterValidator(validate_format)]
-Trim = Annotated[str | None, AfterValidator(validate_trim)]
+CsvCols = Annotated[Iterable[str] | None, AfterValidator(validate_csv_cols)]
+Columns = Annotated[Iterable[str] | None, AfterValidator(validate_columns)]
 
 
 def _join_query_lines(*query_lines: str | None) -> str:
@@ -121,7 +113,11 @@ def _join_query_lines(*query_lines: str | None) -> str:
 
 @validate_build_query
 class ImportBuilder(BaseModel):
-    model_config = ConfigDict(frozen=True, arbitrary_types_allowed=True, extra="forbid")
+    model_config = ConfigDict(
+        frozen=True,
+        extra="forbid",
+        use_enum_values=True,
+    )
 
     compression: bool
     table: str | tuple[str, ...]
@@ -132,11 +128,11 @@ class ImportBuilder(BaseModel):
     comment: Comment = None
     csv_cols: CsvCols = None
     encoding: str | None = None
-    format: Format = None
+    format: FileFormat | None = None
     null: str | None = None
     row_separator: str | None = None
     skip: str | int | None = None
-    trim: Trim = None
+    trim: Trim | None = None
 
     @computed_field  # type: ignore[misc]
     @property
@@ -158,12 +154,17 @@ class ImportBuilder(BaseModel):
         )
         query_lines = [
             self.comment,
-            clause_formatter.import_statement(table=self.table, columns=self.columns),
+            clause_formatter.import_statement(
+                table=self.table,
+                # AfterValidator output not inferred by mypy
+                columns=self.columns,  # type: ignore[arg-type]
+            ),
             *clause_formatter.file_clauses(
                 transport_endpoint=transport_endpoint,
                 exa_address_list=exa_address_list,
                 file_ext=self.file_ext,
-                csv_cols=self.csv_cols,
+                # AfterValidator output not inferred by mypy
+                csv_cols=self.csv_cols,  # type: ignore[arg-type]
             ),
             clause_formatter.encoding(self.encoding),
             clause_formatter.null(self.null),
@@ -178,7 +179,11 @@ class ImportBuilder(BaseModel):
 
 @validate_build_query
 class ExportBuilder(BaseModel):
-    model_config = ConfigDict(frozen=True, arbitrary_types_allowed=True, extra="forbid")
+    model_config = ConfigDict(
+        frozen=True,
+        extra="forbid",
+        use_enum_values=True,
+    )
 
     compression: bool
     query_or_table: str | tuple[str, ...]
@@ -188,9 +193,9 @@ class ExportBuilder(BaseModel):
     columns: Columns = None
     comment: Comment = None
     csv_cols: CsvCols = None
-    delimit: Delimit = None
+    delimit: Delimit | None = None
     encoding: str | None = None
-    format: Format = None
+    format: FileFormat | None = None
     null: str | None = None
     row_separator: str | None = None
     with_column_names: StrictBool = False
@@ -234,13 +239,15 @@ class ExportBuilder(BaseModel):
             clause_formatter.export_statement(
                 query_or_table=self.query_or_table,
                 source_type=self.source_type,
-                columns=self.columns,
+                # AfterValidator output not inferred by mypy
+                columns=self.columns,  # type: ignore[arg-type]
             ),
             *clause_formatter.file_clauses(
                 transport_endpoint=transport_endpoint,
                 exa_address_list=exa_address_list,
                 file_ext=self.file_ext,
-                csv_cols=self.csv_cols,
+                # AfterValidator output not inferred by mypy
+                csv_cols=self.csv_cols,  # type: ignore[arg-type]
             ),
             clause_formatter.delimit(self.delimit),
             clause_formatter.encoding(self.encoding),

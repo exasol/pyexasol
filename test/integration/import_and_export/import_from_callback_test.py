@@ -105,6 +105,35 @@ class TestImportParams:
 
         assert select_result(connection) == all_data.list_tuple()
 
+    @staticmethod
+    def test_custom_import_callback_with_all_import_params(
+        connection, empty_table, tmp_path, all_data, import_cb
+    ):
+        filepath = tmp_path / "input_with_header.csv"
+        filepath.write_text(",".join(all_data.columns) + "\n" + all_data.csv_str())
+        import_params = {
+            "column_delimiter": '"',
+            "column_separator": ",",
+            "columns": all_data.columns,
+            "comment": "callback import integration test",
+            "csv_cols": ["1..7"],
+            "encoding": "UTF-8",
+            "format": "csv",
+            "null": "NULL",
+            "row_separator": "LF",
+            "skip": 1,
+            "trim": "TRIM",
+        }
+
+        connection.import_from_callback(
+            callback=import_cb,
+            src=filepath,
+            table=empty_table,
+            import_params=import_params,
+        )
+
+        assert select_result(connection) == all_data.list_tuple()
+
 
 @pytest.mark.etl
 class TestImportGeneral:

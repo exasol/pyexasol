@@ -76,6 +76,34 @@ class TestExportParams:
         expected_header = ",".join(all_data.columns) + "\n"
         assert output_filepath.read_text() == expected_header + all_data.csv_str()
 
+    @staticmethod
+    def test_custom_export_callback_with_all_export_params(
+        connection, fill_table, output_filepath, export_cb, all_data
+    ):
+        export_params = {
+            "column_delimiter": '"',
+            "column_separator": ",",
+            "columns": all_data.columns,
+            "comment": "callback export integration test",
+            "csv_cols": ["1..7"],
+            "delimit": "AUTO",
+            "encoding": "UTF-8",
+            "format": "csv",
+            "null": "NULL",
+            "row_separator": "LF",
+            "with_column_names": True,
+        }
+
+        connection.export_to_callback(
+            callback=export_cb,
+            dst=output_filepath,
+            query_or_table=fill_table,
+            export_params=export_params,
+        )
+
+        expected_header = ",".join(all_data.columns) + "\n"
+        assert output_filepath.read_text() == expected_header + all_data.csv_str()
+
 
 @pytest.mark.etl
 class TestExportGeneral:
