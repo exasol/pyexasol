@@ -189,7 +189,6 @@ class TestImportBuilderFileExt:
     )
     def test_resolves_file_ext_from_compression(compression, expected_file_ext):
         builder = ImportBuilder(table="TABLE", compression=compression, format=None)
-
         assert builder.file_ext == expected_file_ext
 
 
@@ -221,7 +220,7 @@ class TestImportBuilderTrim:
         + [(None, None)],
     )
     def test_accepts_and_normalizes_trim(trim, expected_trim):
-        builder = ImportBuilder(table="TABLE", compression=False, trim=trim)
+        builder = ImportBuilder(compression=False, table="TABLE", trim=trim)
 
         assert builder.trim == expected_trim
 
