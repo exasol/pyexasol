@@ -41,6 +41,9 @@ class Trim(StringEnum):
     RTRIM = "RTRIM"
 
 
+# Match a single column number (for example, ``1``) or a numeric range
+# (``1..3``), optionally followed by a case-insensitive FORMAT clause, such as
+# ``4 FORMAT='YYYY'`` or ``4 format='YYYY'``.
 REGEX_CSV_COLS = re.compile(r"^(\d+|\d+\.\.\d+)(\sFORMAT='[^'\n]+')?$", re.IGNORECASE)
 
 if TYPE_CHECKING:
