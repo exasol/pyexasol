@@ -115,7 +115,7 @@ def _join_query_lines(*query_lines: str | None) -> str:
 
 
 class ImportBuilder(BaseModel):
-    model_config = ConfigDict(frozen=True, arbitrary_types_allowed=True, extra="forbid")
+    model_config = ConfigDict(frozen=True, extra="forbid")
 
     compression: bool
     # set these values in the param dictionary to `ExaConnection`
@@ -171,7 +171,7 @@ class ImportBuilder(BaseModel):
 
 
 class ExportBuilder(BaseModel):
-    model_config = ConfigDict(frozen=True, arbitrary_types_allowed=True, extra="forbid")
+    model_config = ConfigDict(frozen=True, extra="forbid")
 
     compression: bool
     # set these values in the param dictionary to `ExaConnection`
