@@ -113,11 +113,11 @@ class TestTransportEndpoint:
 
     @staticmethod
     def test_build_connection_parameters_with_empty_dict_returns_empty_string():
-        assert TransportEndpoint._build_connection_parameters({}) == ""
+        assert TransportEndpoint._build_connection_clause({}) == ""
 
     @staticmethod
     def test_build_connection_parameters_with_none_returns_empty_string():
-        assert TransportEndpoint._build_connection_parameters(None) == ""
+        assert TransportEndpoint._build_connection_clause(None) == ""
 
     @staticmethod
     @pytest.mark.parametrize(

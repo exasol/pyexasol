@@ -53,9 +53,7 @@ class TransportEndpoint:
                 missing.
         """
         ip_address_port, public_key = self._parse_endpoint_address(endpoint_address)
-        connection_parameters_clause = self._build_connection_parameters(
-            connection_parameters
-        )
+        connection_clause = self._build_connection_clause(connection_parameters)
 
         public_key_clause = ""
         if self.is_tls_public_key_required:
@@ -68,13 +66,13 @@ class TransportEndpoint:
             public_key_clause = f" PUBLIC KEY 'sha256//{public_key}'"
 
         return (
-            f"AT '{self.url_prefix}{ip_address_port}{connection_parameters_clause}'"
+            f"AT '{self.url_prefix}{ip_address_port}{connection_clause}'"
             f"{public_key_clause}"
         )
 
     @staticmethod
-    def _build_connection_parameters(connection_parameters: dict | None) -> str:
-        """Build the connection-string suffix for optional connection parameters."""
+    def _build_connection_clause(connection_parameters: dict | None) -> str:
+        """Build the connection clause for optional connection parameters."""
         if connection_parameters is None:
             return ""
 
