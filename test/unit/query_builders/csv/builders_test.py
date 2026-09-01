@@ -2,11 +2,11 @@ import pytest
 from pydantic import ValidationError
 
 from pyexasol.query_builders.csv.builders import (
-    ALLOWED_DELIMIT,
-    ALLOWED_FORMAT,
-    ALLOWED_TRIM,
+    Delimit,
     ExportBuilder,
+    FileFormat,
     ImportBuilder,
+    Trim,
 )
 
 
@@ -17,15 +17,39 @@ def csv_builder(request):
 
 class TestCsvBuilderFormat:
     @staticmethod
-    @pytest.mark.parametrize("file_format", ALLOWED_FORMAT + (None,))
+    @pytest.mark.parametrize("file_format", tuple(FileFormat) + (None,))
     def test_accepts_supported_file_format(csv_builder, file_format):
         builder = csv_builder(compression=False, format=file_format)
-        assert builder.format == file_format
+        expected_format = file_format.value if file_format is not None else None
+        assert builder.format == expected_format
+
+    @staticmethod
+    @pytest.mark.parametrize("file_format", ["CSV", FileFormat.CSV])
+    def test_accepts_case_insensitive_enum_values(csv_builder, file_format):
+        assert csv_builder(compression=False, format=file_format).format == "csv"
+
+    @staticmethod
+    @pytest.mark.parametrize(
+        "enum_value,expected",
+        [
+            (Delimit.AUTO, "AUTO"),
+            (FileFormat.CSV, "csv"),
+            (Trim.TRIM, "TRIM"),
+        ],
+    )
+    def test_string_enums_behave_as_strings(enum_value, expected):
+        assert str(enum_value) == expected
+        assert f"{enum_value}" == expected
+        assert enum_value == expected
+        assert isinstance(enum_value, str)
 
     @staticmethod
     def test_rejects_unsupported_file_format(csv_builder):
         file_format = "test"
-        with pytest.raises(ValidationError, match=f"format' {file_format} not in"):
+        with pytest.raises(
+            ValidationError,
+            match=r"Input should be 'bz2', 'csv', 'gz' or 'zip'",
+        ):
             csv_builder(compression=False, format=file_format)
 
 
@@ -59,8 +83,8 @@ class TestExportBuilderDelimit:
     @staticmethod
     @pytest.mark.parametrize(
         "delimit,expected",
-        [(value.lower(), value) for value in ALLOWED_DELIMIT]
-        + [(value.title(), value) for value in ALLOWED_DELIMIT]
+        [(value.lower(), str(value)) for value in Delimit]
+        + [(value.title(), str(value)) for value in Delimit]
         + [(None, None)],
     )
     def test_accepts_and_normalizes_delimit(delimit, expected):
@@ -71,7 +95,10 @@ class TestExportBuilderDelimit:
     @staticmethod
     def test_rejects_unsupported_delimit():
         delimit = "invalid"
-        with pytest.raises(ValidationError, match=f"'delimit' {delimit} not in"):
+        with pytest.raises(
+            ValidationError,
+            match=r"Input should be 'AUTO', 'ALWAYS' or 'NEVER'",
+        ):
             ExportBuilder(compression=False, delimit=delimit)
 
 
@@ -92,7 +119,7 @@ class TestExportBuilderWithColumnNames:
 
 class TestImportBuilderFileExt:
     @staticmethod
-    @pytest.mark.parametrize("file_format", ALLOWED_FORMAT)
+    @pytest.mark.parametrize("file_format", tuple(FileFormat))
     def test_keeps_explicit_file_format(file_format):
         builder = ImportBuilder(compression=False, format=file_format)
         assert builder.file_ext == file_format
@@ -131,8 +158,8 @@ class TestImportBuilderTrim:
     @staticmethod
     @pytest.mark.parametrize(
         "trim,expected_trim",
-        [(trim.lower(), trim) for trim in ALLOWED_TRIM]
-        + [(trim.title(), trim) for trim in ALLOWED_TRIM]
+        [(trim.value.lower(), trim.value) for trim in Trim]
+        + [(trim.value.title(), trim.value) for trim in Trim]
         + [(None, None)],
     )
     def test_accepts_and_normalizes_trim(trim, expected_trim):
@@ -143,5 +170,8 @@ class TestImportBuilderTrim:
     @staticmethod
     def test_rejects_unsupported_trim():
         trim = "invalid"
-        with pytest.raises(ValidationError, match=f"'trim' {trim} not in"):
+        with pytest.raises(
+            ValidationError,
+            match=r"Input should be 'TRIM', 'LTRIM' or 'RTRIM'",
+        ):
             ImportBuilder(compression=False, trim=trim)
