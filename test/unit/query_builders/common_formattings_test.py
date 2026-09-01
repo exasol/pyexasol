@@ -45,6 +45,58 @@ class TestStringEnum:
             ExampleStringEnum("invalid")
 
 
+class TestBuildPublicKeyClause:
+    @staticmethod
+    @pytest.mark.parametrize(
+        "database_version,encryption",
+        [
+            pytest.param(
+                Version("7.1.19"),
+                False,
+                id="lower_version_without_encryption",
+            ),
+            pytest.param(
+                Version("7.1.19"),
+                True,
+                id="lower_version_with_encryption",
+            ),
+            pytest.param(
+                MIN_VERSION_FOR_TLS_PUBLIC_KEY.version,
+                False,
+                id="equal_version_without_encryption",
+            ),
+            pytest.param(None, False, id="no_db_version_without_encryption"),
+            pytest.param(None, True, id="no_db_version_with_encryption"),
+        ],
+    )
+    def test_returns_empty_string_for_non_required_key(database_version, encryption):
+        transport_endpoint = TransportEndpoint(
+            database_version=database_version, encryption=encryption
+        )
+        clause = transport_endpoint._build_public_key_clause("public-key")
+        assert clause == ""
+
+    @staticmethod
+    def test_returns_clause_for_required_key():
+        transport_endpoint = TransportEndpoint(
+            database_version=MIN_VERSION_FOR_TLS_PUBLIC_KEY.version,
+            encryption=True,
+        )
+        clause = transport_endpoint._build_public_key_clause("public-key")
+
+        assert clause == " PUBLIC KEY 'sha256//public-key'"
+
+    @staticmethod
+    def test_raises_without_required_key():
+        transport_endpoint = TransportEndpoint(
+            database_version=MIN_VERSION_FOR_TLS_PUBLIC_KEY.version,
+            encryption=True,
+        )
+
+        with pytest.raises(ValueError, match="Public key is required to be in"):
+            transport_endpoint._build_public_key_clause(None)
+
+
 class TestTransportEndpoint:
     @staticmethod
     @pytest.mark.parametrize(
@@ -132,38 +184,6 @@ class TestTransportEndpoint:
             database_version=None, encryption=encryption
         ).url_prefix
         assert url_prefix == expected
-
-    @staticmethod
-    @pytest.mark.parametrize(
-        "db_version,encryption,expected",
-        [
-            pytest.param(
-                Version("7.1.19"), False, False, id="lower_version_without_encryption"
-            ),
-            pytest.param(
-                Version("7.1.19"), True, False, id="lower_version_with_encryption"
-            ),
-            pytest.param(
-                MIN_VERSION_FOR_TLS_PUBLIC_KEY.version,
-                True,
-                True,
-                id="equal_version_with_encryption",
-            ),
-            pytest.param(
-                MIN_VERSION_FOR_TLS_PUBLIC_KEY.version,
-                False,
-                False,
-                id="equal_version_without_encryption",
-            ),
-            pytest.param(None, False, False, id="no_db_version_without_encryption"),
-            pytest.param(None, True, False, id="no_db_version_with_encryption"),
-        ],
-    )
-    def test_is_tls_public_key_required(db_version, encryption, expected):
-        result = TransportEndpoint(
-            database_version=db_version, encryption=encryption
-        ).is_tls_public_key_required
-        assert result == expected
 
     @staticmethod
     @pytest.mark.parametrize(
