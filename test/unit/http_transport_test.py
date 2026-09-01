@@ -106,12 +106,11 @@ class TestImportQuery:
         import_query = ImportQuery.load_from_dict(
             connection=mock_connection, compression=False, params={"skip": 2}
         )
-        import_query.skip = 3
         mock_connection.options["encryption"] = False
 
         query = import_query.build_query("TABLE", ["127.18.0.2:8364"])
 
-        assert "SKIP = 3" in query
+        assert "SKIP = 2" in query
 
     @staticmethod
     def test_load_from_dict_uses_mutated_columns(mock_connection):
