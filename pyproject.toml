@@ -122,6 +122,9 @@ fail-under = 6.0
 max-line-length = 88
 max-module-lines = 800
 
+[tool.mypy]
+plugins = ['pydantic.mypy']
+
 [[tool.mypy.overrides]]
 module = [
     # no stubs available as of 2025

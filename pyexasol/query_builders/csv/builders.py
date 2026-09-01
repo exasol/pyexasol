@@ -95,8 +95,8 @@ def validate_columns(columns: Iterable[str] | None) -> list[str] | None:
 
 
 Comment = Annotated[str | None, AfterValidator(validate_comment)]
-CsvCols = Annotated[list[str] | None, AfterValidator(validate_csv_cols)]
-Columns = Annotated[list[str] | None, AfterValidator(validate_columns)]
+CsvCols = Annotated[Iterable[str] | None, AfterValidator(validate_csv_cols)]
+Columns = Annotated[Iterable[str] | None, AfterValidator(validate_columns)]
 
 
 def _join_query_lines(*query_lines: str | None) -> str:
@@ -145,12 +145,14 @@ class ImportBuilder(BaseModel):
         )
         query_lines = [
             self.comment,
-            clause_formatter.import_statement(table=table, columns=self.columns),
+            clause_formatter.import_statement(
+                table=table, columns=self.columns  # type: ignore[arg-type]  # AfterValidator output not inferred by mypy
+            ),
             *clause_formatter.file_clauses(
                 transport_endpoint=transport_endpoint,
                 exa_address_list=exa_address_list,
                 file_ext=self.file_ext,
-                csv_cols=self.csv_cols,
+                csv_cols=self.csv_cols,  # type: ignore[arg-type]  # AfterValidator output not inferred by mypy
             ),
             clause_formatter.encoding(self.encoding),
             clause_formatter.null(self.null),
@@ -205,12 +207,14 @@ class ExportBuilder(BaseModel):
         )
         query_lines = [
             self.comment,
-            clause_formatter.export_statement(table=table, columns=self.columns),
+            clause_formatter.export_statement(
+                table=table, columns=self.columns  # type: ignore[arg-type]  # AfterValidator output not inferred by mypy
+            ),
             *clause_formatter.file_clauses(
                 transport_endpoint=transport_endpoint,
                 exa_address_list=exa_address_list,
                 file_ext=self.file_ext,
-                csv_cols=self.csv_cols,
+                csv_cols=self.csv_cols,  # type: ignore[arg-type]  # AfterValidator output not inferred by mypy
             ),
             clause_formatter.delimit(self.delimit),
             clause_formatter.encoding(self.encoding),
