@@ -20,12 +20,11 @@ class TestCsvBuilderFormat:
     @pytest.mark.parametrize("file_format", ALLOWED_FORMAT + (None,))
     def test_accepts_supported_file_format(csv_builder, file_format):
         builder = csv_builder(compression=False, format=file_format)
-
         assert builder.format == file_format
 
     @staticmethod
-    @pytest.mark.parametrize("file_format", ("test",))
-    def test_rejects_unsupported_file_format(csv_builder, file_format):
+    def test_rejects_unsupported_file_format(csv_builder):
+        file_format = "test"
         with pytest.raises(ValidationError, match=f"format' {file_format} not in"):
             csv_builder(compression=False, format=file_format)
 
