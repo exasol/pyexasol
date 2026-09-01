@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import hashlib
 import os
-import re
 import socket
 import socketserver
 import struct
@@ -14,7 +13,13 @@ from dataclasses import dataclass
 from ssl import SSLContext
 from typing import TYPE_CHECKING
 
-from .query_builders.common_formattings import TransportEndpoint
+from .query_builders.csv.builders import (
+    Delimit,
+    ExportBuilder,
+    FileFormat,
+    ImportBuilder,
+    Trim,
+)
 
 if TYPE_CHECKING:
     from pyexasol import ExaConnection
@@ -31,136 +36,26 @@ class SqlQuery:
     comment: str | None = None
     csv_cols: Iterable[str] | None = None
     encoding: str | None = None
-    format: str | None = None
+    format: FileFormat | None = None
     null: str | None = None
     row_separator: str | None = None
-
-    def _build_csv_cols(self) -> str:
-        if self.csv_cols is not None:
-            safe_csv_cols_regexp = re.compile(
-                r"^(\d+|\d+\.\.\d+)(\sFORMAT='[^'\n]+')?$", re.IGNORECASE
-            )
-            for c in self.csv_cols:
-                if not safe_csv_cols_regexp.match(c):
-                    raise ValueError(f"Value [{c}] is not a safe csv_cols part")
-
-            csv_cols = ",".join(self.csv_cols)
-            if csv_cols != "":
-                return f"({csv_cols})"
-
-        return ""
-
-    def _get_file_list(self, exa_address_list: list[str]) -> list[str]:
-        files = []
-        csv_cols = self._build_csv_cols()
-        transport_endpoint = TransportEndpoint(
-            database_version=self.connection.exasol_db_version,
-            encryption=self.connection.options["encryption"],
-        )
-        for i, exa_address in enumerate(exa_address_list):
-            statement = transport_endpoint.build_endpoint_clause(
-                endpoint_address=exa_address,
-            )
-            statement += f" FILE '{str(i).rjust(3, '0')}.{self._file_ext}'{csv_cols}"
-            files.append(statement)
-        return files
-
-    @staticmethod
-    def _get_query_str(query_lines: list[str | None]) -> str:
-        filtered_query_lines = [q for q in query_lines if q is not None]
-        return "\n".join(filtered_query_lines)
-
-    @property
-    def _column_spec(self) -> str:
-        """
-        Return either empty string or comma-separated list of columns in parentheses,
-        e.g. '("A", "B")'
-        """
-        if self.columns is not None:
-            formatted = [
-                self.connection.format.default_format_ident(c) for c in self.columns
-            ]
-            comma_sep = ",".join(formatted)
-            if comma_sep != "":
-                return f"({comma_sep})"
-        return ""
-
-    @property
-    def _column_delimiter(self) -> str | None:
-        if self.column_delimiter is None:
-            return None
-        return (
-            f"COLUMN DELIMITER = {self.connection.format.quote(self.column_delimiter)}"
-        )
-
-    @property
-    def _column_separator(self) -> str | None:
-        if self.column_separator is None:
-            return None
-        return (
-            f"COLUMN SEPARATOR = {self.connection.format.quote(self.column_separator)}"
-        )
-
-    @property
-    def _comment(self) -> str | None:
-        if self.comment is None:
-            return None
-
-        if "*/" in self.comment:
-            raise ValueError(
-                f'Invalid comment "{self.comment}". Comment must not contain "*/".'
-            )
-        return f"/*{self.comment}*/"
-
-    @property
-    def _encoding(self) -> str | None:
-        if self.encoding is None:
-            return None
-        return f"ENCODING = {self.connection.format.quote(self.encoding)}"
-
-    @property
-    def _file_ext(self) -> str:
-        if self.format is None:
-            if self.compression:
-                return "gz"
-            return "csv"
-        if self.format not in ("gz", "bz2", "zip"):
-            raise ValueError(f"Unsupported compression format: {self.format}")
-        return self.format
-
-    @property
-    def _null(self) -> str | None:
-        if self.null is None:
-            return None
-        return f"NULL = {self.connection.format.quote(self.null)}"
-
-    @property
-    def _row_separator(self) -> str | None:
-        if self.row_separator is None:
-            return None
-        return f"ROW SEPARATOR = {self.connection.format.quote(self.row_separator)}"
 
 
 @dataclass
 class ImportQuery(SqlQuery):
     # set these values in param dictionary to ExaConnection
     skip: str | int | None = None
-    trim: str | None = None
+    trim: Trim | None = None
 
     def build_query(self, table: str, exa_address_list: list[str]) -> str:
-        query_lines = [
-            self._comment,
-            self._get_import(table=table),
-            *self._get_file_list(exa_address_list=exa_address_list),
-            self._encoding,
-            self._null,
-            self._skip,
-            self._trim,
-            self._row_separator,
-            self._column_separator,
-            self._column_delimiter,
-        ]
-        return self._get_query_str(query_lines)
+        import_builder = self._get_import_builder()
+        return import_builder.build_query(
+            database_version=self.connection.exasol_db_version,
+            encryption=self.connection.options["encryption"],
+            exa_address_list=exa_address_list,
+            formatter=self.connection.format,
+            table=table,
+        )
 
     @staticmethod
     def load_from_dict(
@@ -174,46 +69,38 @@ class ImportQuery(SqlQuery):
         """
         return ImportQuery(connection=connection, compression=compression, **params)
 
-    def _get_import(self, table: str) -> str:
-        return f"IMPORT INTO {table}{self._column_spec} FROM CSV"
-
-    @property
-    def _skip(self) -> str | None:
-        if self.skip is None:
-            return None
-        return f"SKIP = {self.connection.format.safe_decimal(self.skip)}"
-
-    @property
-    def _trim(self) -> str | None:
-        if self.trim is None:
-            return None
-
-        trim = str(self.trim).upper()
-        if trim not in ("TRIM", "LTRIM", "RTRIM"):
-            raise ValueError(f"Invalid value for import parameter TRIM: {trim}")
-        return trim
+    def _get_import_builder(self) -> ImportBuilder:
+        return ImportBuilder(
+            compression=self.compression,
+            column_delimiter=self.column_delimiter,
+            column_separator=self.column_separator,
+            columns=self.columns,
+            comment=self.comment,
+            csv_cols=self.csv_cols,
+            encoding=self.encoding,
+            format=self.format,
+            null=self.null,
+            row_separator=self.row_separator,
+            skip=self.skip,
+            trim=self.trim,
+        )
 
 
 @dataclass
 class ExportQuery(SqlQuery):
     # set these values in param dictionary to ExaConnection
-    delimit: str | None = None
+    delimit: Delimit | None = None
     with_column_names: bool = False
 
     def build_query(self, table: str, exa_address_list: list[str]) -> str:
-        query_lines = [
-            self._comment,
-            self._get_export(table=table),
-            *self._get_file_list(exa_address_list=exa_address_list),
-            self._delimit,
-            self._encoding,
-            self._null,
-            self._row_separator,
-            self._column_separator,
-            self._column_delimiter,
-            self._with_column_names,
-        ]
-        return self._get_query_str(query_lines)
+        export_builder = self._get_export_builder()
+        return export_builder.build_query(
+            database_version=self.connection.exasol_db_version,
+            encryption=self.connection.options["encryption"],
+            exa_address_list=exa_address_list,
+            formatter=self.connection.format,
+            table=table,
+        )
 
     @staticmethod
     def load_from_dict(
@@ -227,29 +114,21 @@ class ExportQuery(SqlQuery):
         """
         return ExportQuery(connection=connection, compression=compression, **params)
 
-    def _get_export(self, table: str) -> str:
-        return f"EXPORT {table}{self._column_spec} INTO CSV"
-
-    @property
-    def _delimit(self) -> str | None:
-        if self.delimit is None:
-            return None
-
-        delimit = str(self.delimit).upper()
-        if delimit not in ("AUTO", "ALWAYS", "NEVER"):
-            raise ValueError(f"Invalid value for export parameter DELIMIT: {delimit}")
-        return f"DELIMIT={delimit}"
-
-    @property
-    def _with_column_names(self) -> str | None:
-        if not isinstance(self.with_column_names, bool):
-            raise ValueError(
-                "Invalid value for export parameter WITH_COLUMNS: "
-                f"{self.with_column_names}. Only a boolean is allowed."
-            )
-        if self.with_column_names is False:
-            return None
-        return "WITH COLUMN NAMES"
+    def _get_export_builder(self) -> ExportBuilder:
+        return ExportBuilder(
+            compression=self.compression,
+            column_delimiter=self.column_delimiter,
+            column_separator=self.column_separator,
+            columns=list(self.columns) if self.columns is not None else None,
+            comment=self.comment,
+            csv_cols=list(self.csv_cols) if self.csv_cols is not None else None,
+            delimit=self.delimit,
+            encoding=self.encoding,
+            format=self.format,
+            null=self.null,
+            row_separator=self.row_separator,
+            with_column_names=self.with_column_names,
+        )
 
 
 class ExaSQLThread(threading.Thread):

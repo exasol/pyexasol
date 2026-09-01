@@ -42,6 +42,7 @@ dependencies = [
     # If we encounter a breaking change, upstream projects can narrow the range.
     "packaging>=24.1.0",
     "websocket-client>=1.0.1,<2",
+    "pydantic (>=2.13.4,<3.0.0)",
 ]
 
 [project.optional-dependencies]
@@ -120,6 +121,9 @@ fail-under = 6.0
 [tool.pylint.format]
 max-line-length = 88
 max-module-lines = 800
+
+[tool.mypy]
+plugins = ['pydantic.mypy']
 
 [[tool.mypy.overrides]]
 module = [

@@ -3,8 +3,46 @@ from packaging.version import Version
 
 from pyexasol.query_builders.common_formattings import (
     MIN_DATABASE_VERSION_FOR_TLS_PUBLIC_KEY,
+    StringEnum,
     TransportEndpoint,
 )
+
+
+class ExampleStringEnum(StringEnum):
+    LOWER = "lower"
+    UPPER = "UPPER"
+
+
+class TestStringEnum:
+    @staticmethod
+    @pytest.mark.parametrize(
+        "member,expected",
+        [
+            (ExampleStringEnum.LOWER, "lower"),
+            (ExampleStringEnum.UPPER, "UPPER"),
+        ],
+    )
+    def test_behaves_as_string(member, expected):
+        assert member == expected
+        assert isinstance(member, str)
+
+    @staticmethod
+    @pytest.mark.parametrize(
+        "value,expected",
+        [
+            ("LOWER", ExampleStringEnum.LOWER),
+            ("upper", ExampleStringEnum.UPPER),
+        ],
+    )
+    def test_matches_values_case_insensitively(value, expected):
+        assert ExampleStringEnum(value) is expected
+
+    @staticmethod
+    def test_rejects_unsupported_value():
+        with pytest.raises(
+            ValueError, match="'invalid' is not a valid ExampleStringEnum"
+        ):
+            ExampleStringEnum("invalid")
 
 
 class TestTransportEndpoint:

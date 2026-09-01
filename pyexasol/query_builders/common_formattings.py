@@ -1,9 +1,29 @@
 from dataclasses import dataclass
+from enum import Enum
 from re import match
 
 from packaging.version import Version
 
 MIN_DATABASE_VERSION_FOR_TLS_PUBLIC_KEY = Version("8.32.0")
+
+
+class StringEnum(str, Enum):
+    """Enum whose string representation is its underlying value."""
+
+    def __str__(self) -> str:
+        return self.value
+
+    def __format__(self, format_spec: str) -> str:
+        return format(self.value, format_spec)
+
+    @classmethod
+    def _missing_(cls, value):
+        if isinstance(value, str):
+            normalized_value = value.upper()
+            for member in cls:
+                if member.value.upper() == normalized_value:
+                    return member
+        return None
 
 
 @dataclass(frozen=True)
