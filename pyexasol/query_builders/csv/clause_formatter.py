@@ -29,10 +29,9 @@ class ExportSourceType(str, Enum):
         Strings containing a space are treated as SQL queries for compatibility
         with the existing ``query_or_table`` API; other strings are table names.
         """
-        if (
-            isinstance(query_or_table, tuple)
-            or str(query_or_table).strip().find(" ") == -1
-        ):
+        if isinstance(query_or_table, tuple):
+            return cls.TABLE
+        if " " not in query_or_table.strip():
             return cls.TABLE
         return cls.QUERY
 
