@@ -30,6 +30,7 @@ class ImportBuilder(BaseModel):
     # set these values in the param dictionary to `ExaConnection`
     comment: Comment = None
     max_concurrent_reads: int = Field(default=1, ge=1, le=1)
+    max_connections: int = Field(default=1, ge=1, le=1)
 
     def build_query(
         self,
@@ -51,6 +52,7 @@ class ImportBuilder(BaseModel):
                 exa_address_list=exa_address_list,
                 connection_parameters={
                     "MaxConcurrentReads": self.max_concurrent_reads,
+                    "MaxConnections": self.max_connections,
                 },
             ),
         ]

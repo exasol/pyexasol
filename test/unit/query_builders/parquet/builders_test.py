@@ -14,8 +14,10 @@ def test_build_query_default_works(formatter):
     )
     assert result == (
         'IMPORT INTO "SCHEMA"."TABLE" FROM PARQUET\n'
-        "AT 'http://127.0.0.1:8563;MaxConcurrentReads=1' FILE '000.parquet'\n"
-        "AT 'http://127.0.0.2:8563;MaxConcurrentReads=1' FILE '001.parquet'"
+        "AT 'http://127.0.0.1:8563;MaxConcurrentReads=1;MaxConnections=1' "
+        "FILE '000.parquet'\n"
+        "AT 'http://127.0.0.2:8563;MaxConcurrentReads=1;MaxConnections=1' "
+        "FILE '001.parquet'"
     )
 
 
@@ -35,6 +37,7 @@ class TestConnectionParameters:
     def test_default_works(formatter):
         import_builder = ImportBuilder(table=("SCHEMA", "TABLE"))
         assert import_builder.max_concurrent_reads == 1
+        assert import_builder.max_connections == 1
 
     @staticmethod
     def test_rejects_other_max_concurrent_reads_values():
@@ -45,4 +48,26 @@ class TestConnectionParameters:
             ImportBuilder(
                 table=("SCHEMA", "TABLE"),
                 max_concurrent_reads=2,
+            )
+
+    @staticmethod
+    def test_rejects_other_max_connections_values():
+        with pytest.raises(
+            ValidationError,
+            match=r"max_connections\s+Input should be less than or equal to 1",
+        ):
+            ImportBuilder(
+                table=("SCHEMA", "TABLE"),
+                max_concurrent_reads=2,
+            )
+
+    @staticmethod
+    def test_rejects_other_max_connections_values():
+        with pytest.raises(
+            ValidationError,
+            match=r"max_connections\s+Input should be less than or equal to 1",
+        ):
+            ImportBuilder(
+                table=("SCHEMA", "TABLE"),
+                max_connections=2,
             )
