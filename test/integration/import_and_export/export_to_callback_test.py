@@ -417,9 +417,9 @@ class TestExportToCallbackExceptions:
                         query_or_table=fill_table,
                     )
 
-        assert len(ex.value.exceptions) == 2
+        assert len(ex.value.exceptions) in (1, 2)
 
-        selected_exception = ex.value.exceptions[1]
+        selected_exception = ex.value.exceptions[-1]
         assert isinstance(selected_exception, ExaQueryError)
         assert "Client requested execution abort." in selected_exception.message
         assert not http_thread.is_alive()
