@@ -1,6 +1,9 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import (
+    TYPE_CHECKING,
+    Literal,
+)
 
 from pydantic import (
     BaseModel,
@@ -24,13 +27,34 @@ if TYPE_CHECKING:
 
 @validate_build_query
 class ImportBuilder(BaseModel):
-    model_config = ConfigDict(frozen=True, extra="forbid")
+    model_config = ConfigDict(
+        frozen=True,
+        extra="forbid",
+        populate_by_name=True,
+    )
 
     table: str | tuple[str, ...]
     # set these values in the param dictionary to `ExaConnection`
     comment: Comment = None
-    max_concurrent_reads: int = Field(default=1, ge=1, le=1)
-    max_connections: int = Field(default=1, ge=1, le=1)
+    max_batch_fetch_size: int | None = Field(
+        default=None, gt=0, alias="MaxBatchFetchSize"
+    )
+    max_concurrent_reads: Literal[1] = Field(default=1, alias="MaxConcurrentReads")
+    max_connections: Literal[1] = Field(default=1, alias="MaxConnections")
+    max_rows: int | None = Field(default=None, gt=0, alias="MaxRows")
+
+    @property
+    def connection_parameters(self) -> dict[str, int]:
+        return self.model_dump(
+            by_alias=True,
+            exclude_none=True,
+            include={
+                "max_batch_fetch_size",
+                "max_concurrent_reads",
+                "max_connections",
+                "max_rows",
+            },
+        )
 
     def build_query(
         self,
@@ -50,10 +74,7 @@ class ImportBuilder(BaseModel):
             *clause_formatter.file_clauses(
                 transport_endpoint=transport_endpoint,
                 exa_address_list=exa_address_list,
-                connection_parameters={
-                    "MaxConcurrentReads": self.max_concurrent_reads,
-                    "MaxConnections": self.max_connections,
-                },
+                connection_parameters=self.connection_parameters,
             ),
         ]
         return join_query_lines(*query_lines)

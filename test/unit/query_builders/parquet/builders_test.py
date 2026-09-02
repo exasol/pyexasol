@@ -38,36 +38,40 @@ class TestConnectionParameters:
         import_builder = ImportBuilder(table=("SCHEMA", "TABLE"))
         assert import_builder.max_concurrent_reads == 1
         assert import_builder.max_connections == 1
+        assert import_builder.max_batch_fetch_size is None
 
     @staticmethod
-    def test_rejects_other_max_concurrent_reads_values():
+    @pytest.mark.parametrize(
+        "parameter_name", ["max_concurrent_reads", "max_connections"]
+    )
+    def test_rejects_other_connection_parameter_values(parameter_name):
         with pytest.raises(
             ValidationError,
-            match=r"max_concurrent_reads\s+Input should be less than or equal to 1",
+            match=rf"{parameter_name}\s+Input should be 1",
         ):
-            ImportBuilder(
-                table=("SCHEMA", "TABLE"),
-                max_concurrent_reads=2,
-            )
+            ImportBuilder(table=("SCHEMA", "TABLE"), **{parameter_name: 2})
 
     @staticmethod
-    def test_rejects_other_max_connections_values():
+    @pytest.mark.parametrize("parameter_name", ["max_batch_fetch_size", "max_rows"])
+    def test_rejects_non_positive_connection_parameter_values(parameter_name):
         with pytest.raises(
             ValidationError,
-            match=r"max_connections\s+Input should be less than or equal to 1",
+            match=rf"{parameter_name}\s+Input should be greater than 0",
         ):
-            ImportBuilder(
-                table=("SCHEMA", "TABLE"),
-                max_concurrent_reads=2,
-            )
+            ImportBuilder(table=("SCHEMA", "TABLE"), **{parameter_name: 0})
 
     @staticmethod
-    def test_rejects_other_max_connections_values():
-        with pytest.raises(
-            ValidationError,
-            match=r"max_connections\s+Input should be less than or equal to 1",
-        ):
-            ImportBuilder(
-                table=("SCHEMA", "TABLE"),
-                max_connections=2,
-            )
+    def test_includes_optional_connection_parameters_when_configured(formatter):
+        query = ImportBuilder(
+            table="TABLE",
+            max_batch_fetch_size=100,
+            max_rows=200,
+        ).build_query(
+            database_version=Version("2026.1.0"),
+            encryption=False,
+            exa_address_list=["127.0.0.1:8563"],
+            formatter=formatter,
+        )
+
+        assert ";MaxBatchFetchSize=100;" in query
+        assert ";MaxRows=200'" in query
