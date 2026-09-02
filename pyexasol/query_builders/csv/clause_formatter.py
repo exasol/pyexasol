@@ -23,11 +23,17 @@ class ExportSourceType(str, Enum):
     def from_query_or_table(
         cls, query_or_table: str | tuple[str, ...]
     ) -> ExportSourceType:
-        """Classify an export source as a table identifier or SQL query.
+        """Classify the ``query_or_table`` as a table identifier or SQL query.
 
-        Tuples are table identifiers, including schema-qualified identifiers.
-        Strings containing a space are treated as SQL queries for compatibility
-        with the existing ``query_or_table`` API; other strings are table names.
+        Args:
+            query_or_table:
+                Source from which to export data. Can be one of:
+
+                - ``tuple[str, ...]``: fully qualified table identifier, such as
+                  ``("SCHEMA", "TABLE")``. Quoted table names must be fully qualified
+                  using this tuple pattern.
+                - ``str``: if lacks non-trailing space, it is treated like a
+                  table identifier. Otherwise, it is treated like a query.
         """
         if isinstance(query_or_table, tuple):
             return cls.TABLE

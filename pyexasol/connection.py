@@ -513,10 +513,11 @@ class ExaConnection:
             query_or_table:
                 Source from which to export data. Can be one of:
 
-                - ``tuple[str, ...]``: schema-qualified table identifier, such as
-                  ``("SCHEMA", "TABLE")``.
-                - ``str``: if it contains a non-trailing space, it is treated like
-                  an SQL query. Otherwise, it is treated like a table identifier.
+                - ``tuple[str, ...]``: fully qualified table identifier, such as
+                  ``("SCHEMA", "TABLE")``. Quoted table names must be fully qualified
+                  using this tuple pattern.
+                - ``str``: if lacks non-trailing space, it is treated like a
+                  table identifier. Otherwise, it is treated like a query.
             query_params:
                 Values for SQL query placeholders.
             export_params:
@@ -547,10 +548,11 @@ class ExaConnection:
             query_or_table:
                 Source from which to export data. Can be one of:
 
-                - ``tuple[str, ...]``: schema-qualified table identifier, such as
-                  ``("SCHEMA", "TABLE")``.
-                - ``str``: if it contains a non-trailing space, it is treated like
-                  an SQL query. Otherwise, it is treated like a table identifier.
+                - ``tuple[str, ...]``: fully qualified table identifier, such as
+                  ``("SCHEMA", "TABLE")``. Quoted table names must be fully qualified
+                  using this tuple pattern.
+                - ``str``: if lacks non-trailing space, it is treated like a
+                  table identifier. Otherwise, it is treated like a query.
             query_params:
                 Values for SQL query placeholders.
             export_params:
@@ -586,10 +588,11 @@ class ExaConnection:
             query_or_table:
                 Source from which to export data. Can be one of:
 
-                - ``tuple[str, ...]``: schema-qualified table identifier, such as
-                  ``("SCHEMA", "TABLE")``.
-                - ``str``: if it contains a non-trailing space, it is treated like
-                  an SQL query. Otherwise, it is treated like a table identifier.
+                - ``tuple[str, ...]``: fully qualified table identifier, such as
+                  ``("SCHEMA", "TABLE")``. Quoted table names must be fully qualified
+                  using this tuple pattern.
+                - ``str``: if lacks non-trailing space, it is treated like a
+                  table identifier. Otherwise, it is treated like a query.
             query_params:
                 Values for SQL query placeholders.
             callback_params:
@@ -661,10 +664,11 @@ class ExaConnection:
             query_or_table:
                 Source from which to export data. Can be one of:
 
-                - ``tuple[str, ...]``: schema-qualified table identifier, such as
-                  ``("SCHEMA", "TABLE")``.
-                - ``str``: if it contains a non-trailing space, it is treated like
-                  an SQL query. Otherwise, it is treated like a table identifier.
+                - ``tuple[str, ...]``: fully qualified table identifier, such as
+                  ``("SCHEMA", "TABLE")``. Quoted table names must be fully qualified
+                  using this tuple pattern.
+                - ``str``: if lacks non-trailing space, it is treated like a
+                  table identifier. Otherwise, it is treated like a query.
             query_params:
                 Values for SQL query placeholders.
             callback_params:
@@ -718,10 +722,11 @@ class ExaConnection:
             query_or_table:
                 Source from which to export data. Can be one of:
 
-                - ``tuple[str, ...]``: schema-qualified table identifier, such as
-                  ``("SCHEMA", "TABLE")``.
-                - ``str``: if it contains a non-trailing space, it is treated like
-                  an SQL query. Otherwise, it is treated like a table identifier.
+                - ``tuple[str, ...]``: fully qualified table identifier, such as
+                  ``("SCHEMA", "TABLE")``. Quoted table names must be fully qualified
+                  using this tuple pattern.
+                - ``str``: if lacks non-trailing space, it is treated like a
+                  table identifier. Otherwise, it is treated like a query.
             query_params:
                 Values for SQL query placeholders.
             callback_params:
@@ -922,10 +927,11 @@ class ExaConnection:
             query_or_table:
                 Source from which to export data. Can be one of:
 
-                - ``tuple[str, ...]``: schema-qualified table identifier, such as
-                  ``("SCHEMA", "TABLE")``.
-                - ``str``: if it contains a non-trailing space, it is treated like
-                  an SQL query. Otherwise, it is treated like a table identifier.
+                - ``tuple[str, ...]``: fully qualified table identifier, such as
+                  ``("SCHEMA", "TABLE")``. Quoted table names must be fully qualified
+                  using this tuple pattern.
+                - ``str``: if lacks non-trailing space, it is treated like a
+                  table identifier. Otherwise, it is treated like a query.
             query_params:
                 Values for SQL query placeholders.
             callback_params:
