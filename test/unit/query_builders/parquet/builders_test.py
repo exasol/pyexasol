@@ -19,6 +19,17 @@ def test_build_query_default_works(formatter):
     )
 
 
+def test_build_query_with_comment(formatter):
+    result = ImportBuilder(table="TABLE", comment="valid comment").build_query(
+        database_version=Version("2026.1.0"),
+        encryption=False,
+        exa_address_list=["127.0.0.1:8563"],
+        formatter=formatter,
+    )
+
+    assert result.startswith('/*valid comment*/\nIMPORT INTO "TABLE" FROM PARQUET')
+
+
 class TestConnectionParameters:
     @staticmethod
     def test_default_works(formatter):

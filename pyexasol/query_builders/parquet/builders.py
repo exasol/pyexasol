@@ -9,7 +9,11 @@ from pydantic import (
 )
 
 from ..base_builder import validate_build_query
-from ..common_formattings import TransportEndpoint
+from ..common_formattings import (
+    Comment,
+    TransportEndpoint,
+    join_query_lines,
+)
 from .clause_formatter import ClauseFormatter
 
 if TYPE_CHECKING:
@@ -23,6 +27,8 @@ class ImportBuilder(BaseModel):
     model_config = ConfigDict(frozen=True, extra="forbid")
 
     table: str | tuple[str, ...]
+    # set these values in the param dictionary to `ExaConnection`
+    comment: Comment = None
     max_concurrent_reads: int = Field(default=1, ge=1, le=1)
 
     def build_query(
@@ -38,6 +44,7 @@ class ImportBuilder(BaseModel):
             encryption=encryption,
         )
         query_lines = [
+            self.comment,
             clause_formatter.import_statement(self.table),
             *clause_formatter.file_clauses(
                 transport_endpoint=transport_endpoint,
@@ -47,4 +54,4 @@ class ImportBuilder(BaseModel):
                 },
             ),
         ]
-        return "\n".join(query_lines)
+        return join_query_lines(*query_lines)

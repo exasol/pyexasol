@@ -18,8 +18,10 @@ from pydantic import (
 
 from ..base_builder import validate_build_query
 from ..common_formattings import (
+    Comment,
     StringEnum,
     TransportEndpoint,
+    join_query_lines,
 )
 from .clause_formatter import (
     ClauseFormatter,
@@ -65,15 +67,6 @@ def resolve_format(file_format: FileFormat | None, compression: bool) -> FileFor
     return FileFormat.CSV
 
 
-def validate_comment(comment: str | None) -> str | None:
-    """Validate that a comment can be safely embedded in a SQL comment."""
-    if comment is None:
-        return comment
-    if "*/" in comment:
-        raise ValueError(f"'comment' {comment} must not contain '*/'")
-    return f"/*{comment}*/"
-
-
 def validate_csv_cols(csv_cols: Iterable[str] | None) -> list[str] | None:
     """Validate that CSV column specifications are safe for SQL embedding."""
     if csv_cols is None:
@@ -102,13 +95,8 @@ def validate_columns(columns: Iterable[str] | None) -> list[str] | None:
     return list(columns)
 
 
-Comment = Annotated[str | None, AfterValidator(validate_comment)]
 CsvCols = Annotated[Iterable[str] | None, AfterValidator(validate_csv_cols)]
 Columns = Annotated[Iterable[str] | None, AfterValidator(validate_columns)]
-
-
-def _join_query_lines(*query_lines: str | None) -> str:
-    return "\n".join(filter(None, query_lines))
 
 
 @validate_build_query
@@ -174,7 +162,7 @@ class ImportBuilder(BaseModel):
             clause_formatter.column_separator(self.column_separator),
             clause_formatter.column_delimiter(self.column_delimiter),
         ]
-        return _join_query_lines(*query_lines)
+        return join_query_lines(*query_lines)
 
 
 @validate_build_query
@@ -257,4 +245,4 @@ class ExportBuilder(BaseModel):
             clause_formatter.column_delimiter(self.column_delimiter),
             clause_formatter.with_column_names(self.with_column_names),
         ]
-        return _join_query_lines(*query_lines)
+        return join_query_lines(*query_lines)

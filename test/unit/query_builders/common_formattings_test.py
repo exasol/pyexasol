@@ -5,6 +5,8 @@ from pyexasol.database_versions import MIN_VERSION_FOR_TLS_PUBLIC_KEY
 from pyexasol.query_builders.common_formattings import (
     StringEnum,
     TransportEndpoint,
+    join_query_lines,
+    validate_comment,
 )
 
 
@@ -43,6 +45,31 @@ class TestStringEnum:
             ValueError, match="'invalid' is not a valid ExampleStringEnum"
         ):
             ExampleStringEnum("invalid")
+
+
+class TestValidateComment:
+    @staticmethod
+    @pytest.mark.parametrize(
+        "comment,expected_comment",
+        [
+            (None, None),
+            ("", "/**/"),
+            ("valid comment", "/*valid comment*/"),
+            ("/*", "/*/**/"),
+        ],
+    )
+    def test_accepts_and_formats_valid_comment(comment, expected_comment):
+        assert validate_comment(comment) == expected_comment
+
+    @staticmethod
+    @pytest.mark.parametrize("comment", ("invalid */ comment",))
+    def test_rejects_comment_closing_delimiter(comment):
+        with pytest.raises(ValueError, match=r"must not contain '\*/'"):
+            validate_comment(comment)
+
+
+def test_join_query_lines_omits_none_lines():
+    assert join_query_lines("first", None, "third") == "first\nthird"
 
 
 class TestBuildPublicKeyClause:

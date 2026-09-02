@@ -1,10 +1,29 @@
 from dataclasses import dataclass
 from enum import Enum
 from re import match
+from typing import Annotated
 
 from packaging.version import Version
+from pydantic import AfterValidator
 
 from pyexasol.database_versions import MIN_VERSION_FOR_TLS_PUBLIC_KEY
+
+
+def validate_comment(comment: str | None) -> str | None:
+    """Validate that a comment can be safely embedded in a SQL comment."""
+    if comment is None:
+        return comment
+    if "*/" in comment:
+        raise ValueError(f"'comment' {comment} must not contain '*/'")
+    return f"/*{comment}*/"
+
+
+Comment = Annotated[str | None, AfterValidator(validate_comment)]
+
+
+def join_query_lines(*query_lines: str | None) -> str:
+    """Join non-empty SQL query lines with newline separators."""
+    return "\n".join(filter(None, query_lines))
 
 
 class StringEnum(str, Enum):
