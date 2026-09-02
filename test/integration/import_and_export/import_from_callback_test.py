@@ -44,6 +44,20 @@ class TestImportParams:
         assert select_result(connection) == all_data.list_tuple()
 
     @staticmethod
+    def test_comment_with_block_comment_start(
+        connection, empty_table, tmp_path, all_data
+    ):
+        filepath = all_data.write_csv(directory=tmp_path)
+
+        connection.import_from_file(
+            src=filepath,
+            table=empty_table,
+            import_params={"comment": "/*"},
+        )
+
+        assert select_result(connection) == all_data.list_tuple()
+
+    @staticmethod
     def test_csv_cols(connection, empty_table, tmp_path, all_data):
         filepath = all_data.write_csv(directory=tmp_path)
         params = {"csv_cols": ["1..7"]}

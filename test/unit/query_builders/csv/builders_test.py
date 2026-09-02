@@ -196,7 +196,12 @@ class TestCsvBuilderComment:
     @staticmethod
     @pytest.mark.parametrize(
         "comment,expected_comment",
-        [(None, None), ("", "/**/"), ("valid comment", "/*valid comment*/")],
+        [
+            (None, None),
+            ("", "/**/"),
+            ("valid comment", "/*valid comment*/"),
+            ("/*", "/*/**/"),
+        ],
     )
     def test_accepts_and_formats_valid_comment(csv_builder, comment, expected_comment):
         builder = csv_builder(compression=False, comment=comment)
@@ -204,10 +209,10 @@ class TestCsvBuilderComment:
         assert builder.comment == expected_comment
 
     @staticmethod
-    @pytest.mark.parametrize("comment", ("invalid /* comment", "invalid */ comment"))
-    def test_rejects_comment_delimiters(csv_builder, comment):
+    @pytest.mark.parametrize("comment", ("invalid */ comment",))
+    def test_rejects_comment_closing_delimiter(csv_builder, comment):
 
-        with pytest.raises(ValidationError, match=r"must not contain '/\*' or '\*/'"):
+        with pytest.raises(ValidationError, match=r"must not contain '\*/'"):
             csv_builder(compression=False, comment=comment)
 
 

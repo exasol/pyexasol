@@ -69,8 +69,8 @@ def validate_comment(comment: str | None) -> str | None:
     """Validate that a comment can be safely embedded in a SQL comment."""
     if comment is None:
         return comment
-    if "/*" in comment or "*/" in comment:
-        raise ValueError(f"'comment' {comment} must not contain '/*' or '*/'")
+    if "*/" in comment:
+        raise ValueError(f"'comment' {comment} must not contain '*/'")
     return f"/*{comment}*/"
 
 
