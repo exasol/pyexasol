@@ -18,6 +18,7 @@ from pydantic import (
 
 from ..base_builder import validate_build_query
 from ..common_formattings import (
+    COLUMN_NUMBER_OR_RANGE,
     Comment,
     StringEnum,
     TransportEndpoint,
@@ -51,7 +52,9 @@ class Trim(StringEnum):
 # Match a single column number (for example, ``1``) or a numeric range
 # (``1..3``), optionally followed by a case-insensitive FORMAT clause, such as
 # ``4 FORMAT='YYYY'`` or ``4 format='YYYY'``.
-REGEX_CSV_COLS = re.compile(r"^(\d+|\d+\.\.\d+)(\sFORMAT='[^'\n]+')?$", re.IGNORECASE)
+REGEX_CSV_COLS = re.compile(
+    rf"^({COLUMN_NUMBER_OR_RANGE})(\sFORMAT='[^'\n]+')?$", re.IGNORECASE
+)
 
 if TYPE_CHECKING:
     from packaging.version import Version

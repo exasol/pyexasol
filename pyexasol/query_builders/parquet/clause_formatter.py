@@ -21,7 +21,7 @@ class ClauseFormatter:
     def file_clauses(
         transport_endpoint: TransportEndpoint,
         exa_address_list: list[str],
-        connection_parameters: dict[str, int],
+        connection_parameters: dict[str, int | str],
     ) -> list[str]:
         file_clauses = []
         for index, endpoint_address in enumerate(exa_address_list):

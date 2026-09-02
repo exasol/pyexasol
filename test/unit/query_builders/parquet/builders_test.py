@@ -2,7 +2,10 @@ import pytest
 from packaging.version import Version
 from pydantic import ValidationError
 
-from pyexasol.query_builders.parquet.builders import ImportBuilder
+from pyexasol.query_builders.parquet.builders import (
+    ImportBuilder,
+    validate_parquet_skip_cols,
+)
 
 
 def test_build_query_default_works(formatter):
@@ -39,6 +42,21 @@ class TestConnectionParameters:
         assert import_builder.max_concurrent_reads == 1
         assert import_builder.max_connections == 1
         assert import_builder.max_batch_fetch_size is None
+        assert import_builder.parquet_skip_cols is None
+
+    @staticmethod
+    @pytest.mark.parametrize("skip_cols", [["1"], ["1", "3..8", "11"]])
+    def test_accepts_parquet_skip_cols(skip_cols):
+        assert validate_parquet_skip_cols(skip_cols) == ",".join(skip_cols)
+
+    @staticmethod
+    @pytest.mark.parametrize(
+        "skip_cols",
+        ["1,3..8,11", [""], ["1,"], ["1...3"], ["1", "foo"], ["1 3"]],
+    )
+    def test_rejects_invalid_parquet_skip_cols(skip_cols):
+        with pytest.raises(ValueError, match="parquet_skip_cols"):
+            ImportBuilder(table="TABLE", parquet_skip_cols=skip_cols)
 
     @staticmethod
     @pytest.mark.parametrize(
@@ -66,6 +84,7 @@ class TestConnectionParameters:
             table="TABLE",
             max_batch_fetch_size=100,
             max_rows=200,
+            parquet_skip_cols=["1", "3..8", "11"],
         ).build_query(
             database_version=Version("2026.1.0"),
             encryption=False,
@@ -74,4 +93,5 @@ class TestConnectionParameters:
         )
 
         assert ";MaxBatchFetchSize=100;" in query
-        assert ";MaxRows=200'" in query
+        assert ";MaxRows=200;" in query
+        assert ";SkipCols=1,3..8,11'" in query

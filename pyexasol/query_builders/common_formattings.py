@@ -8,6 +8,8 @@ from pydantic import AfterValidator
 
 from pyexasol.database_versions import MIN_VERSION_FOR_TLS_PUBLIC_KEY
 
+COLUMN_NUMBER_OR_RANGE = r"\d+|\d+\.\.\d+"
+
 
 def validate_comment(comment: str | None) -> str | None:
     """Validate that a comment can be safely embedded in a SQL comment."""
