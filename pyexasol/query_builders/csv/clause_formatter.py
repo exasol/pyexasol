@@ -3,10 +3,43 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
+if TYPE_CHECKING:
+    from pyexasol import ExaFormatter
+
+from enum import Enum
+from typing import TYPE_CHECKING
+
 from ..common_formattings import TransportEndpoint
 
 if TYPE_CHECKING:
     from pyexasol import ExaFormatter
+
+
+class ExportSourceType(str, Enum):
+    TABLE = "table"
+    QUERY = "query"
+
+    @classmethod
+    def from_query_or_table(
+        cls, query_or_table: str | tuple[str, ...]
+    ) -> ExportSourceType:
+        """Classify the ``query_or_table`` as a table identifier or SQL query.
+
+        Args:
+            query_or_table:
+                Source from which to export data. Can be one of:
+
+                - ``tuple[str, ...]``: fully qualified table identifier, such as
+                  ``("SCHEMA", "TABLE")``. Quoted table names must be fully qualified
+                  using this tuple pattern.
+                - ``str``: if lacks non-trailing space, it is treated like a
+                  table identifier. Otherwise, it is treated like a query.
+        """
+        if isinstance(query_or_table, tuple):
+            return cls.TABLE
+        if " " not in query_or_table.strip():
+            return cls.TABLE
+        return cls.QUERY
 
 
 @dataclass(frozen=True)
@@ -56,8 +89,23 @@ class ClauseFormatter:
             return None
         return f"ENCODING = {self.formatter.quote(encoding)}"
 
-    def export_statement(self, table: str, columns: list[str] | None) -> str:
-        return f"EXPORT {table}{self._column_specification(columns)} INTO CSV"
+    def export_statement(
+        self,
+        query_or_table: str | tuple[str, ...],
+        source_type: ExportSourceType,
+        columns: list[str] | None,
+    ) -> str:
+        if source_type is ExportSourceType.TABLE:
+            export_source = self.formatter.default_format_ident(query_or_table)
+            column_specification = self._column_specification(columns)
+            return f"EXPORT {export_source}{column_specification} INTO CSV"
+
+        if not isinstance(query_or_table, str):
+            raise TypeError("A SQL query export source must be a string")
+        # New lines are mandatory to handle queries with single-line comments '--'
+        export_query = query_or_table.lstrip(" \n").rstrip(" \n;")
+        export_source = f"(\n{export_query}\n)"
+        return f"EXPORT {export_source} INTO CSV"
 
     def file_clauses(
         self,
@@ -80,8 +128,12 @@ class ClauseFormatter:
             )
         return file_clauses
 
-    def import_statement(self, table: str, columns: list[str] | None) -> str:
-        return f"IMPORT INTO {table}{self._column_specification(columns)} FROM CSV"
+    def import_statement(
+        self, table: str | tuple[str, ...], columns: list[str] | None
+    ) -> str:
+        formatted_table = self.formatter.default_format_ident(table)
+        column_specification = self._column_specification(columns)
+        return f"IMPORT INTO {formatted_table}{column_specification} FROM CSV"
 
     def null(self, null: str | None) -> str | None:
         if null is None:

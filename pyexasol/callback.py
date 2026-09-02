@@ -240,11 +240,12 @@ def import_from_parquet(
 
     Args:
         source: Local filepath specification(s) to process. Can be one of:
-            - list[pathlib.Path]: list of specific files
-            - pathlib.Path: can be either a file or directory. If it is a directory,
-            all files matching the following pattern *.parquet will be processed.
-            - str: representing a filepath which already contains a glob pattern
-            (e.g., "/local_dir/*.parquet")
+
+            - ``list[pathlib.Path]``: list of specific files
+            - ``pathlib.Path``: can be either a file or directory. If it is a directory,
+              all files matching the following pattern ``*.parquet`` will be processed.
+            - ``str``: representing a filepath which already contains a glob pattern
+              (e.g., ``/local_dir/*.parquet``)
         **kwargs:
             Custom params for :func:`pyarrow.parquet.ParquetFile.iter_batches`. This can be used
             to specify what columns should be read and their preferred order.

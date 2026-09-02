@@ -8,11 +8,14 @@ from pyexasol.query_builders.csv.builders import (
     ImportBuilder,
     Trim,
 )
+from pyexasol.query_builders.csv.clause_formatter import ExportSourceType
 
 
 @pytest.fixture(params=(ImportBuilder, ExportBuilder))
 def csv_builder(request):
-    return request.param
+    if request.param is ImportBuilder:
+        return lambda **kwargs: ImportBuilder(table="TABLE", **kwargs)
+    return lambda **kwargs: ExportBuilder(query_or_table="TABLE", **kwargs)
 
 
 class TestCsvBuilderFormat:
@@ -61,6 +64,13 @@ class TestCsvBuilderColumns:
         assert isinstance(builder.columns, list)
 
 
+class TestImportBuilderTable:
+    @staticmethod
+    def test_accepts_schema_qualified_table():
+        builder = ImportBuilder(compression=False, table=("SCHEMA", "TABLE"))
+        assert builder.table == ("SCHEMA", "TABLE")
+
+
 class TestCsvBuilderCsvCols:
     @staticmethod
     @pytest.mark.parametrize("csv_cols", (["1"], ["1..3", "4 FORMAT='YYYY'"]))
@@ -87,7 +97,9 @@ class TestExportBuilderDelimit:
         + [(None, None)],
     )
     def test_accepts_and_normalizes_delimit(delimit, expected):
-        builder = ExportBuilder(compression=False, delimit=delimit)
+        builder = ExportBuilder(
+            compression=False, query_or_table="TABLE", delimit=delimit
+        )
 
         assert builder.delimit == expected
 
@@ -98,14 +110,16 @@ class TestExportBuilderDelimit:
             ValidationError,
             match=r"Input should be 'AUTO', 'ALWAYS' or 'NEVER'",
         ):
-            ExportBuilder(compression=False, delimit=delimit)
+            ExportBuilder(compression=False, query_or_table="TABLE", delimit=delimit)
 
 
 class TestExportBuilderWithColumnNames:
     @staticmethod
     @pytest.mark.parametrize("value", [True, False])
     def test_accepts_boolean(value):
-        builder = ExportBuilder(compression=False, with_column_names=value)
+        builder = ExportBuilder(
+            compression=False, query_or_table="TABLE", with_column_names=value
+        )
 
         assert builder.with_column_names is value
 
@@ -113,14 +127,59 @@ class TestExportBuilderWithColumnNames:
     @pytest.mark.parametrize("value", ["False", "true", "abc", 1, 0])
     def test_rejects_non_boolean(value):
         with pytest.raises(ValidationError, match="Input should be a valid boolean"):
-            ExportBuilder(compression=False, with_column_names=value)
+            ExportBuilder(
+                compression=False, query_or_table="TABLE", with_column_names=value
+            )
+
+
+class TestExportBuilderSourceType:
+    @staticmethod
+    @pytest.mark.parametrize(
+        "query_or_table,expected",
+        [
+            ("TABLE", ExportSourceType.TABLE),
+            (("SCHEMA", "TABLE"), ExportSourceType.TABLE),
+            ("SELECT * FROM TABLE", ExportSourceType.QUERY),
+        ],
+    )
+    def test_identifies_export_source_type(query_or_table, expected):
+        builder = ExportBuilder(compression=False, query_or_table=query_or_table)
+
+        assert builder.source_type is expected
+        assert "source_type" not in ExportBuilder.model_fields
+
+    @staticmethod
+    def test_accepts_empty_columns_for_query_source():
+        builder = ExportBuilder(
+            compression=False,
+            query_or_table="SELECT * FROM TABLE",
+            columns=[],
+        )
+
+        assert builder.columns == []
+
+    @staticmethod
+    @pytest.mark.parametrize("columns", [["COLUMN"]])
+    def test_rejects_columns_for_query_source(columns):
+        with pytest.raises(
+            ValidationError,
+            match=(
+                r"'query_or_table' was identified as a query, and 'columns' is not "
+                r"compatible with a query export source"
+            ),
+        ):
+            ExportBuilder(
+                compression=False,
+                query_or_table="SELECT * FROM TABLE",
+                columns=columns,
+            )
 
 
 class TestImportBuilderFileExt:
     @staticmethod
     @pytest.mark.parametrize("file_format", tuple(FileFormat))
     def test_keeps_explicit_file_format(file_format):
-        builder = ImportBuilder(compression=False, format=file_format)
+        builder = ImportBuilder(table="TABLE", compression=False, format=file_format)
         assert builder.file_ext == file_format
 
     @staticmethod
@@ -129,8 +188,7 @@ class TestImportBuilderFileExt:
         [(True, "gz"), (False, "csv")],
     )
     def test_resolves_file_ext_from_compression(compression, expected_file_ext):
-        builder = ImportBuilder(compression=compression, format=None)
-
+        builder = ImportBuilder(table="TABLE", compression=compression, format=None)
         assert builder.file_ext == expected_file_ext
 
 
@@ -138,7 +196,12 @@ class TestCsvBuilderComment:
     @staticmethod
     @pytest.mark.parametrize(
         "comment,expected_comment",
-        [(None, None), ("", "/**/"), ("valid comment", "/*valid comment*/")],
+        [
+            (None, None),
+            ("", "/**/"),
+            ("valid comment", "/*valid comment*/"),
+            ("/*", "/*/**/"),
+        ],
     )
     def test_accepts_and_formats_valid_comment(csv_builder, comment, expected_comment):
         builder = csv_builder(compression=False, comment=comment)
@@ -146,10 +209,10 @@ class TestCsvBuilderComment:
         assert builder.comment == expected_comment
 
     @staticmethod
-    @pytest.mark.parametrize("comment", ("invalid /* comment", "invalid */ comment"))
-    def test_rejects_comment_delimiters(csv_builder, comment):
+    @pytest.mark.parametrize("comment", ("invalid */ comment",))
+    def test_rejects_comment_closing_delimiter(csv_builder, comment):
 
-        with pytest.raises(ValidationError, match=r"must not contain '/\*' or '\*/'"):
+        with pytest.raises(ValidationError, match=r"must not contain '\*/'"):
             csv_builder(compression=False, comment=comment)
 
 
@@ -162,7 +225,7 @@ class TestImportBuilderTrim:
         + [(None, None)],
     )
     def test_accepts_and_normalizes_trim(trim, expected_trim):
-        builder = ImportBuilder(compression=False, trim=trim)
+        builder = ImportBuilder(compression=False, table="TABLE", trim=trim)
 
         assert builder.trim == expected_trim
 
@@ -173,4 +236,4 @@ class TestImportBuilderTrim:
             ValidationError,
             match=r"Input should be 'TRIM', 'LTRIM' or 'RTRIM'",
         ):
-            ImportBuilder(compression=False, trim=trim)
+            ImportBuilder(compression=False, table="TABLE", trim=trim)

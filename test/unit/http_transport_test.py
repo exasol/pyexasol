@@ -15,6 +15,7 @@ from pyexasol import (
 from pyexasol.http_transport import (
     ExaHttpThread,
     ExaHTTPTransportWrapper,
+    ExaSQLExportThread,
     ExaSQLThread,
     ExportQuery,
     ImportQuery,
@@ -98,7 +99,7 @@ class TestImportQuery:
         )
         assert (
             result
-            == "IMPORT INTO TABLE FROM CSV\nAT 'https://127.18.0.2:8364' PUBLIC KEY 'sha256//YHistZoLhU9+FKoSEHHbNGtC/Ee4KT75DDBO+s5OG8o=' FILE '000.gz'"
+            == "IMPORT INTO \"TABLE\" FROM CSV\nAT 'https://127.18.0.2:8364' PUBLIC KEY 'sha256//YHistZoLhU9+FKoSEHHbNGtC/Ee4KT75DDBO+s5OG8o=' FILE '000.gz'"
         )
 
     @staticmethod
@@ -124,7 +125,7 @@ class TestImportQuery:
 
         query = import_query.build_query("TABLE", ["127.18.0.2:8364"])
 
-        assert 'IMPORT INTO TABLE("SECOND") FROM CSV' in query
+        assert 'IMPORT INTO "TABLE"("SECOND") FROM CSV' in query
 
     @staticmethod
     def test_build_query_can_be_called_repeatedly_with_columns(mock_connection):
@@ -139,7 +140,7 @@ class TestImportQuery:
         first_query = import_query.build_query("TABLE", exa_address_list)
         second_query = import_query.build_query("TABLE", exa_address_list)
 
-        assert 'IMPORT INTO TABLE("FIRST","SECOND") FROM CSV' in first_query
+        assert 'IMPORT INTO "TABLE"("FIRST","SECOND") FROM CSV' in first_query
         assert second_query == first_query
 
 
@@ -154,7 +155,7 @@ class TestExportQuery:
         )
         assert (
             result
-            == "EXPORT TABLE INTO CSV\nAT 'https://127.18.0.2:8364' PUBLIC KEY 'sha256//YHistZoLhU9+FKoSEHHbNGtC/Ee4KT75DDBO+s5OG8o=' FILE '000.gz'"
+            == "EXPORT \"TABLE\" INTO CSV\nAT 'https://127.18.0.2:8364' PUBLIC KEY 'sha256//YHistZoLhU9+FKoSEHHbNGtC/Ee4KT75DDBO+s5OG8o=' FILE '000.gz'"
         )
 
     #
@@ -177,7 +178,7 @@ class TestExportQuery:
 
         query = export_query.build_query("TABLE", ["127.18.0.2:8364"])
 
-        assert 'EXPORT TABLE("SECOND") INTO CSV' in query
+        assert 'EXPORT "TABLE"("SECOND") INTO CSV' in query
 
     @staticmethod
     def test_load_from_dict_rejects_unsupported_parameter(mock_connection):
@@ -203,8 +204,98 @@ class TestExportQuery:
         first_query = export_query.build_query("TABLE", exa_address_list)
         second_query = export_query.build_query("TABLE", exa_address_list)
 
-        assert 'EXPORT TABLE("FIRST","SECOND") INTO CSV' in first_query
+        assert 'EXPORT "TABLE"("FIRST","SECOND") INTO CSV' in first_query
         assert second_query == first_query
+
+
+class TestExaSQLExportThread:
+    @staticmethod
+    @pytest.mark.parametrize(
+        "query_or_table,expected_source",
+        [
+            ("TABLE", '"TABLE"'),
+            ("  SELECT * FROM TABLE;  ", "(\nSELECT * FROM TABLE\n)"),
+        ],
+    )
+    def test_run_sql_formats_export_source_in_export_statement(
+        mock_connection, query_or_table, expected_source
+    ):
+        mock_connection.options["encryption"] = False
+        thread = ExaSQLExportThread(
+            connection=mock_connection,
+            compression=False,
+            query_or_table=query_or_table,
+            export_params={},
+        )
+        thread.exa_address_list = ["127.0.0.1:8563"]
+
+        thread.run_sql()
+
+        executed_query = mock_connection.execute.call_args.args[0]
+        assert f"EXPORT {expected_source} INTO CSV" in executed_query
+
+    @staticmethod
+    def test_run_sql_forwards_export_parameters(mock_connection):
+        mock_connection.options["encryption"] = False
+        thread = ExaSQLExportThread(
+            connection=mock_connection,
+            compression=False,
+            query_or_table="TABLE",
+            export_params={"delimit": "AUTO", "with_column_names": True},
+        )
+        thread.set_exa_address_list(["127.0.0.1:8563"])
+
+        thread.run_sql()
+
+        executed_query = mock_connection.execute.call_args.args[0]
+        assert "DELIMIT = AUTO" in executed_query
+        assert "WITH COLUMN NAMES" in executed_query
+
+    @staticmethod
+    def test_run_terminates_http_thread_when_export_fails(mock_connection):
+        expected_error = RuntimeError("EXPORT failed")
+        mock_connection.options["encryption"] = False
+        mock_connection.execute.side_effect = expected_error
+        http_thread = Mock()
+        worker_finished_event = threading.Event()
+        thread = ExaSQLExportThread(
+            connection=mock_connection,
+            compression=False,
+            query_or_table="TABLE",
+            export_params={},
+            worker_finished_event=worker_finished_event,
+        )
+        thread.http_thread = http_thread
+        thread.exa_address_list = ["127.0.0.1:8563"]
+
+        thread.run()
+
+        assert thread.exc is expected_error
+        assert worker_finished_event.is_set()
+        http_thread.terminate.assert_called_once_with()
+
+
+class TestExaSQLThread:
+    @staticmethod
+    def test_run_sql_executes_query_from_builder(mock_connection):
+        query_builder = Mock()
+        query_builder.build_query.return_value = "EXPORT ..."
+        thread = ExaSQLThread(
+            connection=mock_connection,
+            compression=False,
+            query_builder=query_builder,
+        )
+        thread.set_exa_address_list(["127.0.0.1:8563"])
+
+        thread.run_sql()
+
+        query_builder.build_query.assert_called_once_with(
+            database_version=mock_connection.exasol_db_version,
+            encryption=mock_connection.options["encryption"],
+            exa_address_list=["127.0.0.1:8563"],
+            formatter=mock_connection.format,
+        )
+        mock_connection.execute.assert_called_once_with("EXPORT ...")
 
 
 ERROR_MESSAGE = "Error from callback"

@@ -13,6 +13,7 @@ from dataclasses import dataclass
 from ssl import SSLContext
 from typing import TYPE_CHECKING
 
+from .query_builders.base_builder import QueryBuilder
 from .query_builders.csv.builders import (
     Delimit,
     ExportBuilder,
@@ -47,14 +48,15 @@ class ImportQuery(SqlQuery):
     skip: str | int | None = None
     trim: Trim | None = None
 
-    def build_query(self, table: str, exa_address_list: list[str]) -> str:
-        import_builder = self._get_import_builder()
+    def build_query(
+        self, table: str | tuple[str, ...], exa_address_list: list[str]
+    ) -> str:
+        import_builder = self._get_import_builder(table)
         return import_builder.build_query(
             database_version=self.connection.exasol_db_version,
             encryption=self.connection.options["encryption"],
             exa_address_list=exa_address_list,
             formatter=self.connection.format,
-            table=table,
         )
 
     @staticmethod
@@ -69,9 +71,10 @@ class ImportQuery(SqlQuery):
         """
         return ImportQuery(connection=connection, compression=compression, **params)
 
-    def _get_import_builder(self) -> ImportBuilder:
+    def _get_import_builder(self, table: str | tuple[str, ...]) -> ImportBuilder:
         return ImportBuilder(
             compression=self.compression,
+            table=table,
             column_delimiter=self.column_delimiter,
             column_separator=self.column_separator,
             columns=self.columns,
@@ -92,14 +95,17 @@ class ExportQuery(SqlQuery):
     delimit: Delimit | None = None
     with_column_names: bool = False
 
-    def build_query(self, table: str, exa_address_list: list[str]) -> str:
-        export_builder = self._get_export_builder()
+    def build_query(
+        self,
+        table: str | tuple[str, ...],
+        exa_address_list: list[str],
+    ) -> str:
+        export_builder = self._get_export_builder(table)
         return export_builder.build_query(
             database_version=self.connection.exasol_db_version,
             encryption=self.connection.options["encryption"],
             exa_address_list=exa_address_list,
             formatter=self.connection.format,
-            table=table,
         )
 
     @staticmethod
@@ -114,9 +120,12 @@ class ExportQuery(SqlQuery):
         """
         return ExportQuery(connection=connection, compression=compression, **params)
 
-    def _get_export_builder(self) -> ExportBuilder:
+    def _get_export_builder(
+        self, query_or_table: str | tuple[str, ...]
+    ) -> ExportBuilder:
         return ExportBuilder(
             compression=self.compression,
+            query_or_table=query_or_table,
             column_delimiter=self.column_delimiter,
             column_separator=self.column_separator,
             columns=list(self.columns) if self.columns is not None else None,
@@ -141,6 +150,7 @@ class ExaSQLThread(threading.Thread):
         connection: ExaConnection,
         compression: bool,
         worker_finished_event: threading.Event | None = None,
+        query_builder: QueryBuilder | None = None,
     ):
         self.connection = connection
         self.compression = compression
@@ -150,6 +160,7 @@ class ExaSQLThread(threading.Thread):
         self.exa_address_list: list[str] = []
         self.exc = None
         self.worker_finished_event = worker_finished_event
+        self.query_builder = query_builder
 
         super().__init__()
 
@@ -174,7 +185,14 @@ class ExaSQLThread(threading.Thread):
                 self.worker_finished_event.set()
 
     def run_sql(self):
-        pass
+        if self.query_builder is not None:
+            query = self.query_builder.build_query(
+                database_version=self.connection.exasol_db_version,
+                encryption=self.connection.options["encryption"],
+                exa_address_list=self.exa_address_list,
+                formatter=self.connection.format,
+            )
+            self.connection.execute(query)
 
     def join_with_exc(self, *args):
         super().join(*args)
@@ -204,26 +222,12 @@ class ExaSQLExportThread(ExaSQLThread):
         self.params = export_params
 
     def run_sql(self):
-        if (
-            isinstance(self.query_or_table, tuple)
-            or str(self.query_or_table).strip().find(" ") == -1
-        ):
-            export_table = self.connection.format.default_format_ident(
-                self.query_or_table
-            )
-        else:
-            # New lines are mandatory to handle queries with single-line comments '--'
-            export_query = self.query_or_table.lstrip(" \n").rstrip(" \n;")
-            export_table = f"(\n{export_query}\n)"
-
-            if self.params.get("columns"):
-                raise ValueError(
-                    "Export option 'columns' is not compatible with SQL query export source"
-                )
-
         export_query = ExportQuery.load_from_dict(
             connection=self.connection, compression=self.compression, params=self.params
-        ).build_query(table=export_table, exa_address_list=self.exa_address_list)
+        ).build_query(
+            table=self.query_or_table,
+            exa_address_list=self.exa_address_list,
+        )
         self.connection.execute(export_query)
 
 
@@ -237,7 +241,7 @@ class ExaSQLImportThread(ExaSQLThread):
         self,
         connection: ExaConnection,
         compression: bool,
-        table: str,
+        table: str | tuple[str, ...],
         import_params: dict,
         worker_finished_event: threading.Event | None = None,
     ):
@@ -249,11 +253,9 @@ class ExaSQLImportThread(ExaSQLThread):
         self.params = import_params
 
     def run_sql(self):
-        table = self.connection.format.default_format_ident(self.table)
-
         import_query = ImportQuery.load_from_dict(
             connection=self.connection, compression=self.compression, params=self.params
-        ).build_query(table=table, exa_address_list=self.exa_address_list)
+        ).build_query(table=self.table, exa_address_list=self.exa_address_list)
         self.connection.execute(import_query)
 
 

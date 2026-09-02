@@ -11,7 +11,7 @@ from pyexasol.exceptions import (
 )
 from pyexasol.http_transport import (
     ExaHttpRequestHandler,
-    ExaSQLImportThread,
+    ExaSQLThread,
     ExaTCPServer,
 )
 
@@ -40,6 +40,20 @@ class TestImportParams:
         filepath = all_data.write_csv(directory=tmp_path)
 
         connection.import_from_file(src=filepath, table=empty_table)
+
+        assert select_result(connection) == all_data.list_tuple()
+
+    @staticmethod
+    def test_comment_with_block_comment_start(
+        connection, empty_table, tmp_path, all_data
+    ):
+        filepath = all_data.write_csv(directory=tmp_path)
+
+        connection.import_from_file(
+            src=filepath,
+            table=empty_table,
+            import_params={"comment": "/*"},
+        )
 
         assert select_result(connection) == all_data.list_tuple()
 
@@ -164,6 +178,20 @@ class TestImportGeneral:
 
         assert select_result(connection) == all_data.list_tuple()
 
+    @staticmethod
+    def test_custom_import_callback_with_schema_qualified_table(
+        connection, schema, empty_table, tmp_path, all_data, import_cb
+    ):
+        filepath = all_data.write_csv(directory=tmp_path)
+
+        connection.import_from_callback(
+            callback=import_cb,
+            src=filepath,
+            table=(schema, empty_table),
+        )
+
+        assert select_result(connection) == all_data.list_tuple()
+
 
 @pytest.mark.etl
 @pytest.mark.exceptions
@@ -185,7 +213,7 @@ class TestImportFromCallbackExceptions:
         def import_cb(pipe, src, **kwargs):
             raise error
 
-        with capture_callback_threads(ExaSQLImportThread) as (
+        with capture_callback_threads(ExaSQLThread) as (
             http_thread,
             sql_thread,
         ):
@@ -223,7 +251,7 @@ class TestImportFromCallbackExceptions:
             new_connection.close(disconnect=False)
             import_cb(pipe, src, **kwargs)
 
-        with capture_callback_threads(ExaSQLImportThread) as (
+        with capture_callback_threads(ExaSQLThread) as (
             http_thread,
             sql_thread,
         ):
@@ -274,7 +302,7 @@ class TestImportFromCallbackExceptions:
             autospec=True,
             side_effect=write_chunk_with_exception,
         ):
-            with capture_callback_threads(ExaSQLImportThread) as (
+            with capture_callback_threads(ExaSQLThread) as (
                 http_thread,
                 sql_thread,
             ):
@@ -319,7 +347,7 @@ class TestImportFromCallbackExceptions:
             autospec=True,
             side_effect=handle_request_with_exception,
         ):
-            with capture_callback_threads(ExaSQLImportThread) as (
+            with capture_callback_threads(ExaSQLThread) as (
                 http_thread,
                 sql_thread,
             ):
@@ -364,7 +392,7 @@ class TestImportFromCallbackExceptions:
         )
 
         with patch.object(connection, "execute", side_effect=license_error):
-            with capture_callback_threads(ExaSQLImportThread) as (
+            with capture_callback_threads(ExaSQLThread) as (
                 http_thread,
                 sql_thread,
             ):
@@ -398,7 +426,7 @@ class TestImportFromCallbackExceptions:
         The aggregated ``ExaImportError`` therefore contains only the SQL-thread
         exception.
         """
-        with capture_callback_threads(ExaSQLImportThread) as (
+        with capture_callback_threads(ExaSQLThread) as (
             http_thread,
             sql_thread,
         ):
@@ -425,14 +453,14 @@ class TestImportFromCallbackExceptions:
           - The callback pipe is closed while the callback is still active, so the
             HTTP/callback path contributes a second exception.
         """
-        with patch("pyexasol.connection.ExaSQLImportThread.run_sql") as mock:
+        with patch("pyexasol.connection.ExaSQLThread.run_sql") as mock:
             mock.side_effect = ExaQueryError(
                 message="Client requested execution abort.",
                 query="mock response",
                 connection=connection,
                 code="40007",
             )
-            with capture_callback_threads(ExaSQLImportThread) as (
+            with capture_callback_threads(ExaSQLThread) as (
                 http_thread,
                 sql_thread,
             ):
@@ -468,7 +496,7 @@ class TestImportFromCallbackExceptions:
         def import_cb(pipe, src, **kwargs):
             raise error
 
-        with capture_callback_threads(ExaSQLImportThread) as (
+        with capture_callback_threads(ExaSQLThread) as (
             http_thread,
             sql_thread,
         ):

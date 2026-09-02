@@ -13,13 +13,18 @@ from pydantic import (
     ConfigDict,
     StrictBool,
     computed_field,
+    model_validator,
 )
 
+from ..base_builder import validate_build_query
 from ..common_formattings import (
     StringEnum,
     TransportEndpoint,
 )
-from .clause_formatter import ClauseFormatter
+from .clause_formatter import (
+    ClauseFormatter,
+    ExportSourceType,
+)
 
 
 class Delimit(StringEnum):
@@ -64,8 +69,8 @@ def validate_comment(comment: str | None) -> str | None:
     """Validate that a comment can be safely embedded in a SQL comment."""
     if comment is None:
         return comment
-    if "/*" in comment or "*/" in comment:
-        raise ValueError(f"'comment' {comment} must not contain '/*' or '*/'")
+    if "*/" in comment:
+        raise ValueError(f"'comment' {comment} must not contain '*/'")
     return f"/*{comment}*/"
 
 
@@ -106,6 +111,7 @@ def _join_query_lines(*query_lines: str | None) -> str:
     return "\n".join(filter(None, query_lines))
 
 
+@validate_build_query
 class ImportBuilder(BaseModel):
     model_config = ConfigDict(
         frozen=True,
@@ -114,6 +120,7 @@ class ImportBuilder(BaseModel):
     )
 
     compression: bool
+    table: str | tuple[str, ...]
     # set these values in the param dictionary to `ExaConnection`
     column_delimiter: str | None = None
     column_separator: str | None = None
@@ -138,7 +145,6 @@ class ImportBuilder(BaseModel):
         encryption: bool,
         exa_address_list: list[str],
         formatter: ExaFormatter,
-        table: str,
     ) -> str:
         """Build an IMPORT query using this builder's options."""
         clause_formatter = ClauseFormatter(formatter)
@@ -149,13 +155,16 @@ class ImportBuilder(BaseModel):
         query_lines = [
             self.comment,
             clause_formatter.import_statement(
-                table=table, columns=self.columns  # type: ignore[arg-type]  # AfterValidator output not inferred by mypy
+                table=self.table,
+                # AfterValidator output not inferred by mypy
+                columns=self.columns,  # type: ignore[arg-type]
             ),
             *clause_formatter.file_clauses(
                 transport_endpoint=transport_endpoint,
                 exa_address_list=exa_address_list,
                 file_ext=self.file_ext,
-                csv_cols=self.csv_cols,  # type: ignore[arg-type]  # AfterValidator output not inferred by mypy
+                # AfterValidator output not inferred by mypy
+                csv_cols=self.csv_cols,  # type: ignore[arg-type]
             ),
             clause_formatter.encoding(self.encoding),
             clause_formatter.null(self.null),
@@ -168,6 +177,7 @@ class ImportBuilder(BaseModel):
         return _join_query_lines(*query_lines)
 
 
+@validate_build_query
 class ExportBuilder(BaseModel):
     model_config = ConfigDict(
         frozen=True,
@@ -176,6 +186,7 @@ class ExportBuilder(BaseModel):
     )
 
     compression: bool
+    query_or_table: str | tuple[str, ...]
     # set these values in the param dictionary to `ExaConnection`
     column_delimiter: str | None = None
     column_separator: str | None = None
@@ -191,6 +202,22 @@ class ExportBuilder(BaseModel):
 
     @computed_field  # type: ignore[misc]
     @property
+    def source_type(self) -> ExportSourceType:
+        """Identify whether the export source is a table or a query."""
+        return ExportSourceType.from_query_or_table(self.query_or_table)
+
+    @model_validator(mode="after")
+    def validate_query_columns(self) -> ExportBuilder:
+        """Reject columns when the export source is a SQL query."""
+        if self.source_type is ExportSourceType.QUERY and self.columns:
+            raise ValueError(
+                "'query_or_table' was identified as a query, and 'columns' is not "
+                "compatible with a query export source. 'columns' may only be None."
+            )
+        return self
+
+    @computed_field  # type: ignore[misc]
+    @property
     def file_ext(self) -> str:
         return resolve_format(self.format, self.compression)
 
@@ -200,7 +227,6 @@ class ExportBuilder(BaseModel):
         encryption: bool,
         exa_address_list: list[str],
         formatter: ExaFormatter,
-        table: str,
     ) -> str:
         """Build an EXPORT query using this builder's options."""
         clause_formatter = ClauseFormatter(formatter)
@@ -211,13 +237,17 @@ class ExportBuilder(BaseModel):
         query_lines = [
             self.comment,
             clause_formatter.export_statement(
-                table=table, columns=self.columns  # type: ignore[arg-type]  # AfterValidator output not inferred by mypy
+                query_or_table=self.query_or_table,
+                source_type=self.source_type,
+                # AfterValidator output not inferred by mypy
+                columns=self.columns,  # type: ignore[arg-type]
             ),
             *clause_formatter.file_clauses(
                 transport_endpoint=transport_endpoint,
                 exa_address_list=exa_address_list,
                 file_ext=self.file_ext,
-                csv_cols=self.csv_cols,  # type: ignore[arg-type]  # AfterValidator output not inferred by mypy
+                # AfterValidator output not inferred by mypy
+                csv_cols=self.csv_cols,  # type: ignore[arg-type]
             ),
             clause_formatter.delimit(self.delimit),
             clause_formatter.encoding(self.encoding),

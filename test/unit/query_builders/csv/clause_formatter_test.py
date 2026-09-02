@@ -2,7 +2,10 @@ from unittest.mock import Mock
 
 import pytest
 
-from pyexasol.query_builders.csv.clause_formatter import ClauseFormatter
+from pyexasol.query_builders.csv.clause_formatter import (
+    ClauseFormatter,
+    ExportSourceType,
+)
 
 
 @pytest.fixture
@@ -58,10 +61,10 @@ class TestClauseFormatter:
     @pytest.mark.parametrize(
         "columns,expected",
         [
-            (None, "IMPORT INTO TABLE FROM CSV"),
+            (None, 'IMPORT INTO "TABLE" FROM CSV'),
             (
                 ["LASTNAME", "FIRSTNAME"],
-                'IMPORT INTO TABLE("LASTNAME","FIRSTNAME") FROM CSV',
+                'IMPORT INTO "TABLE"("LASTNAME","FIRSTNAME") FROM CSV',
             ),
         ],
     )
@@ -69,18 +72,44 @@ class TestClauseFormatter:
         assert clause_formatter.import_statement("TABLE", columns) == expected
 
     @staticmethod
+    def test_import_statement_with_schema_qualified_table(clause_formatter):
+        clause_formatter.formatter.default_format_ident.side_effect = (
+            lambda identifier: (
+                ".".join(f'"{part}"' for part in identifier)
+                if isinstance(identifier, tuple)
+                else f'"{identifier}"'
+            )
+        )
+
+        result = clause_formatter.import_statement(("SCHEMA", "TABLE"), None)
+
+        assert result == 'IMPORT INTO "SCHEMA"."TABLE" FROM CSV'
+
+    @staticmethod
     @pytest.mark.parametrize(
         "columns,expected",
         [
-            (None, "EXPORT TABLE INTO CSV"),
+            (None, 'EXPORT "TABLE" INTO CSV'),
             (
                 ["LASTNAME", "FIRSTNAME"],
-                'EXPORT TABLE("LASTNAME","FIRSTNAME") INTO CSV',
+                'EXPORT "TABLE"("LASTNAME","FIRSTNAME") INTO CSV',
             ),
         ],
     )
     def test_export_statement(clause_formatter, columns, expected):
-        assert clause_formatter.export_statement("TABLE", columns) == expected
+        export_statement = clause_formatter.export_statement(
+            "TABLE", ExportSourceType.TABLE, columns
+        )
+
+        assert export_statement == expected
+
+    @staticmethod
+    def test_export_statement_wraps_query(clause_formatter):
+        result = clause_formatter.export_statement(
+            "  SELECT * FROM TABLE;  ", ExportSourceType.QUERY, None
+        )
+
+        assert result == "EXPORT (\nSELECT * FROM TABLE\n) INTO CSV"
 
     @staticmethod
     @pytest.mark.parametrize(
@@ -145,3 +174,18 @@ class TestClauseFormatter:
     )
     def test_with_column_names(clause_formatter, with_column_names, expected):
         assert clause_formatter.with_column_names(with_column_names) == expected
+
+
+class TestExportSourceType:
+    @staticmethod
+    @pytest.mark.parametrize(
+        "query_or_table,expected",
+        [
+            ("SCHEMA.TABLE", ExportSourceType.TABLE),
+            (("SCHEMA", "TABLE"), ExportSourceType.TABLE),
+            ("  TABLE  ", ExportSourceType.TABLE),
+            ("SELECT * FROM TABLE", ExportSourceType.QUERY),
+        ],
+    )
+    def test_from_query_or_table(query_or_table, expected):
+        assert ExportSourceType.from_query_or_table(query_or_table) == expected
