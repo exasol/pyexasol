@@ -2,15 +2,20 @@ import pytest
 from packaging.version import Version
 from pydantic import ValidationError
 
+from pyexasol.database_versions import MIN_VERSION_FOR_NATIVE_PARQUET_IMPORT
 from pyexasol.query_builders.parquet.builders import (
     ImportBuilder,
     validate_parquet_skip_cols,
 )
 
 
-def test_build_query_default_works(formatter):
+@pytest.mark.parametrize(
+    "database_version",
+    [MIN_VERSION_FOR_NATIVE_PARQUET_IMPORT.version, Version("2026.1.1")],
+)
+def test_build_query_works_for_supported_database_versions(formatter, database_version):
     result = ImportBuilder(table=("SCHEMA", "TABLE")).build_query(
-        database_version=Version("2026.1.0"),
+        database_version=database_version,
         encryption=False,
         exa_address_list=["127.0.0.1:8563", "127.0.0.2:8563"],
         formatter=formatter,
