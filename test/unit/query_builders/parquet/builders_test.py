@@ -30,6 +30,9 @@ def test_build_query_works_for_supported_database_versions(formatter, database_v
 
 
 def test_build_query_rejects_unsupported_database_version(formatter):
+    import_builder = ImportBuilder(table="TABLE")
+    unsupported_database_version = Version("2025.2.0")
+
     with pytest.raises(
         ValueError,
         match=(
@@ -37,8 +40,8 @@ def test_build_query_rejects_unsupported_database_version(formatter):
             r"but 2025\.2\.0 was provided\."
         ),
     ):
-        ImportBuilder(table="TABLE").build_query(
-            database_version=Version("2025.2.0"),
+        import_builder.build_query(
+            database_version=unsupported_database_version,
             encryption=False,
             exa_address_list=[],
             formatter=formatter,
