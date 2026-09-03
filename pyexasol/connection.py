@@ -37,6 +37,7 @@ from . import callback as cb
 from . import constant
 from ._metadata import __version__
 from ._sql_splitter import split_sql_script
+from .database_versions import MIN_VERSION_FOR_NATIVE_PARQUET_IMPORT
 from .exceptions import (
     ExaAuthError,
     ExaCommunicationError,
@@ -55,16 +56,19 @@ from .ext import ExaExtension
 from .formatter import ExaFormatter
 from .http_transport import (
     ExaHttpThread,
+    ExaParquetHttpThread,
     ExaSQLExportThread,
     ExaSQLImportThread,
     ExaSQLThread,
 )
 from .logger import ExaLogger
 from .meta import ExaMetaData
+from .query_builders.base_builder import QueryBuilder
 from .query_builders.csv.builders import (
     ExportBuilder,
     ImportBuilder,
 )
+from .query_builders.parquet.builders import ImportBuilder as ParquetImportBuilder
 from .script_output import ExaScriptOutputProcess
 from .statement import ExaStatement
 from .warnings import PyexasolWarning
@@ -903,9 +907,61 @@ class ExaConnection:
             import_params:
                 Custom parameters for IMPORT query.
         """
+        if MIN_VERSION_FOR_NATIVE_PARQUET_IMPORT.is_supported_by(
+            self.exasol_db_version
+        ):
+            return self._import_from_native_parquet(
+                source, table, import_params=import_params
+            )
+
         return self.import_from_callback(
             cb.import_from_parquet, source, table, callback_params, import_params
         )
+
+    def _import_from_native_parquet(
+        self,
+        source: list[Path] | Path | str,
+        table: str | tuple[str, ...],
+        import_params: dict | None = None,
+    ):
+        parquet_files = cb.get_parquet_files(source)
+        if not parquet_files:
+            raise ValueError(f"source {source} does not match any files")
+
+        http_thread = ExaParquetHttpThread(
+            ipaddr=self.ws_ipaddr,
+            port=self.ws_port,
+            parquet_files=parquet_files,
+            encryption=self.options["encryption"],
+        )
+        sql_thread = ExaSQLThread(
+            connection=self,
+            compression=False,
+            query_builder=ParquetImportBuilder(
+                table=table, **(import_params if import_params is not None else {})
+            ),
+        )
+
+        try:
+            http_thread.start()
+            sql_thread.set_http_thread(http_thread)
+            sql_thread.start()
+            sql_thread.join_with_exc()
+            http_thread.terminate()
+            http_thread.join_with_exc()
+        except (Exception, KeyboardInterrupt) as error:
+            http_thread.terminate()
+            http_thread.join()
+            sql_thread.join(1)
+
+            if sql_thread.is_alive():
+                self.abort_query()
+                sql_thread.join()
+
+            raise ExaImportError(
+                connection=self,
+                exceptions=(error, http_thread.exc, sql_thread.exc),
+            ) from error
 
     def export_to_callback(
         self,
@@ -1089,6 +1145,24 @@ class ExaConnection:
             table=table,
             **import_params,
         )
+
+        return ExaConnection._import_from_callback(
+            self,
+            callback=callback,
+            src=src,
+            callback_params=callback_params,
+            import_builder=import_builder,
+            compression=compression,
+        )
+
+    def _import_from_callback(
+        self,
+        callback: Callable,
+        src,
+        callback_params: dict,
+        import_builder: QueryBuilder,
+        compression: bool,
+    ):
 
         # Set when either worker finishes, successfully or exceptionally. It
         # wakes the coordinator but does not terminate the other worker.
