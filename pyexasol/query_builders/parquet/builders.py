@@ -16,6 +16,8 @@ from pydantic import (
     Field,
 )
 
+from pyexasol.database_versions import MIN_VERSION_FOR_NATIVE_PARQUET_IMPORT
+
 from ..base_builder import validate_build_query
 from ..common_formattings import (
     COLUMN_NUMBER_OR_RANGE,
@@ -102,6 +104,13 @@ class ImportBuilder(BaseModel):
         exa_address_list: list[str],
         formatter: ExaFormatter,
     ) -> str:
+        if not MIN_VERSION_FOR_NATIVE_PARQUET_IMPORT.is_supported_by(database_version):
+            raise ValueError(
+                "Native Parquet import requires Exasol "
+                f"{MIN_VERSION_FOR_NATIVE_PARQUET_IMPORT.version} or newer, "
+                f"but {database_version} was provided."
+            )
+
         clause_formatter = ClauseFormatter(formatter)
         transport_endpoint = TransportEndpoint(
             database_version=database_version,

@@ -24,6 +24,22 @@ def test_build_query_default_works(formatter):
     )
 
 
+def test_build_query_rejects_unsupported_database_version(formatter):
+    with pytest.raises(
+        ValueError,
+        match=(
+            r"Native Parquet import requires Exasol 2026\.1\.0 or newer, "
+            r"but 2025\.2\.0 was provided\."
+        ),
+    ):
+        ImportBuilder(table="TABLE").build_query(
+            database_version=Version("2025.2.0"),
+            encryption=False,
+            exa_address_list=[],
+            formatter=formatter,
+        )
+
+
 def test_build_query_with_comment(formatter):
     result = ImportBuilder(table="TABLE", comment="valid comment").build_query(
         database_version=Version("2026.1.0"),
