@@ -122,6 +122,7 @@ class ClauseFormatter:
             endpoint_clause = transport_endpoint.build_endpoint_clause(
                 endpoint_address=exa_address
             )
+            # Build a filename with the index zero-padded on the left to three digits.
             file_name = f"{index:03d}.{file_ext}"
             file_clauses.append(
                 f"{endpoint_clause} FILE '{file_name}'{csv_cols_clause}"

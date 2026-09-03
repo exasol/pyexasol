@@ -29,5 +29,6 @@ class ClauseFormatter:
                 endpoint_address=endpoint_address,
                 connection_parameters=connection_parameters,
             )
+            # Build a filename with the index zero-padded on the left to three digits.
             file_clauses.append(f"{endpoint_clause} FILE '{index:03d}.parquet'")
         return file_clauses
