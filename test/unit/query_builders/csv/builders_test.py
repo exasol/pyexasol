@@ -1,4 +1,5 @@
 import pytest
+from packaging.version import Version
 from pydantic import ValidationError
 
 from pyexasol.query_builders.csv.builders import (
@@ -63,12 +64,35 @@ class TestCsvBuilderColumns:
         assert builder.columns == ["FIRST", "SECOND"]
         assert isinstance(builder.columns, list)
 
+    @staticmethod
+    def test_rejects_string_as_iterable_column_name(csv_builder):
+        with pytest.raises(
+            ValidationError,
+            match=r"columns\s+Value error, must be an iterable, not a single string\.",
+        ):
+            csv_builder(compression=False, columns="FIRST")
+
 
 class TestImportBuilderTable:
     @staticmethod
     def test_accepts_schema_qualified_table():
         builder = ImportBuilder(compression=False, table=("SCHEMA", "TABLE"))
         assert builder.table == ("SCHEMA", "TABLE")
+
+    @staticmethod
+    def test_build_query_renders_comment(formatter):
+        query = ImportBuilder(
+            compression=False,
+            table="TABLE",
+            comment="valid comment",
+        ).build_query(
+            database_version=Version("2026.1.0"),
+            encryption=False,
+            exa_address_list=["127.0.0.1:8563"],
+            formatter=formatter,
+        )
+
+        assert query.startswith('/*valid comment*/\nIMPORT INTO "TABLE" FROM CSV')
 
 
 class TestCsvBuilderCsvCols:
@@ -86,6 +110,14 @@ class TestCsvBuilderCsvCols:
             match=r"'csv_cols' had unsafe parts: \[1\.2, 3\.4\]",
         ):
             csv_builder(compression=False, csv_cols=["1.2", "3.4"])
+
+    @staticmethod
+    def test_rejects_string_as_iterable_csv_column_specification(csv_builder):
+        with pytest.raises(
+            ValidationError,
+            match=r"csv_cols\s+Value error, must be an iterable, not a single string\.",
+        ):
+            csv_builder(compression=False, csv_cols="12")
 
 
 class TestExportBuilderDelimit:
@@ -190,30 +222,6 @@ class TestImportBuilderFileExt:
     def test_resolves_file_ext_from_compression(compression, expected_file_ext):
         builder = ImportBuilder(table="TABLE", compression=compression, format=None)
         assert builder.file_ext == expected_file_ext
-
-
-class TestCsvBuilderComment:
-    @staticmethod
-    @pytest.mark.parametrize(
-        "comment,expected_comment",
-        [
-            (None, None),
-            ("", "/**/"),
-            ("valid comment", "/*valid comment*/"),
-            ("/*", "/*/**/"),
-        ],
-    )
-    def test_accepts_and_formats_valid_comment(csv_builder, comment, expected_comment):
-        builder = csv_builder(compression=False, comment=comment)
-
-        assert builder.comment == expected_comment
-
-    @staticmethod
-    @pytest.mark.parametrize("comment", ("invalid */ comment",))
-    def test_rejects_comment_closing_delimiter(csv_builder, comment):
-
-        with pytest.raises(ValidationError, match=r"must not contain '\*/'"):
-            csv_builder(compression=False, comment=comment)
 
 
 class TestImportBuilderTrim:

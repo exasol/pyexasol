@@ -1,10 +1,13 @@
 import pytest
 from packaging.version import Version
 
+from pyexasol.database_versions import MIN_VERSION_FOR_TLS_PUBLIC_KEY
 from pyexasol.query_builders.common_formattings import (
-    MIN_DATABASE_VERSION_FOR_TLS_PUBLIC_KEY,
     StringEnum,
     TransportEndpoint,
+    join_query_lines,
+    reject_string_as_iterable,
+    validate_comment,
 )
 
 
@@ -45,11 +48,103 @@ class TestStringEnum:
             ExampleStringEnum("invalid")
 
 
+class TestValidateComment:
+    @staticmethod
+    @pytest.mark.parametrize(
+        "comment,expected_comment",
+        [
+            (None, None),
+            ("", "/**/"),
+            ("valid comment", "/*valid comment*/"),
+            ("/*", "/*/**/"),
+        ],
+    )
+    def test_accepts_and_formats_valid_comment(comment, expected_comment):
+        assert validate_comment(comment) == expected_comment
+
+    @staticmethod
+    @pytest.mark.parametrize("comment", ("invalid */ comment",))
+    def test_rejects_comment_closing_delimiter(comment):
+        with pytest.raises(ValueError, match=r"must not contain '\*/'"):
+            validate_comment(comment)
+
+
+def test_join_query_lines_omits_none_lines():
+    assert join_query_lines("first", None, "third") == "first\nthird"
+
+
+class TestRejectStringAsIterable:
+    @staticmethod
+    def test_rejects_string():
+        with pytest.raises(
+            ValueError,
+            match="must be an iterable, not a single string",
+        ):
+            reject_string_as_iterable("FIRST")
+
+    @staticmethod
+    @pytest.mark.parametrize("value", [None, ["FIRST"], ("FIRST",)])
+    def test_returns_non_string_value_unchanged(value):
+        assert reject_string_as_iterable(value) is value
+
+
+class TestBuildPublicKeyClause:
+    @staticmethod
+    @pytest.mark.parametrize(
+        "database_version,encryption",
+        [
+            pytest.param(
+                Version("7.1.19"),
+                False,
+                id="lower_version_without_encryption",
+            ),
+            pytest.param(
+                Version("7.1.19"),
+                True,
+                id="lower_version_with_encryption",
+            ),
+            pytest.param(
+                MIN_VERSION_FOR_TLS_PUBLIC_KEY.version,
+                False,
+                id="equal_version_without_encryption",
+            ),
+            pytest.param(None, False, id="no_db_version_without_encryption"),
+            pytest.param(None, True, id="no_db_version_with_encryption"),
+        ],
+    )
+    def test_returns_empty_string_for_non_required_key(database_version, encryption):
+        transport_endpoint = TransportEndpoint(
+            database_version=database_version, encryption=encryption
+        )
+        clause = transport_endpoint._build_public_key_clause("public-key")
+        assert clause == ""
+
+    @staticmethod
+    def test_returns_clause_for_required_key():
+        transport_endpoint = TransportEndpoint(
+            database_version=MIN_VERSION_FOR_TLS_PUBLIC_KEY.version,
+            encryption=True,
+        )
+        clause = transport_endpoint._build_public_key_clause("public-key")
+
+        assert clause == " PUBLIC KEY 'sha256//public-key'"
+
+    @staticmethod
+    def test_raises_without_required_key():
+        transport_endpoint = TransportEndpoint(
+            database_version=MIN_VERSION_FOR_TLS_PUBLIC_KEY.version,
+            encryption=True,
+        )
+
+        with pytest.raises(ValueError, match="Public key is required to be in"):
+            transport_endpoint._build_public_key_clause(None)
+
+
 class TestTransportEndpoint:
     @staticmethod
     @pytest.mark.parametrize(
         "database_version",
-        (Version("7.1.19"), MIN_DATABASE_VERSION_FOR_TLS_PUBLIC_KEY, None),
+        (Version("7.1.19"), MIN_VERSION_FOR_TLS_PUBLIC_KEY.version, None),
     )
     def test_build_endpoint_clause_without_encryption(database_version):
         endpoint_clause = TransportEndpoint(
@@ -73,7 +168,7 @@ class TestTransportEndpoint:
 
     @staticmethod
     @pytest.mark.parametrize(
-        "database_version", (MIN_DATABASE_VERSION_FOR_TLS_PUBLIC_KEY,)
+        "database_version", (MIN_VERSION_FOR_TLS_PUBLIC_KEY.version,)
     )
     def test_build_endpoint_clause_with_encryption_at_min_database_version(
         database_version,
@@ -91,13 +186,33 @@ class TestTransportEndpoint:
     @staticmethod
     def test_build_endpoint_clause_raises_exception():
         transport_endpoint = TransportEndpoint(
-            database_version=MIN_DATABASE_VERSION_FOR_TLS_PUBLIC_KEY,
+            database_version=MIN_VERSION_FOR_TLS_PUBLIC_KEY.version,
             encryption=True,
         )
         with pytest.raises(ValueError, match="Public key is required to be in"):
             transport_endpoint.build_endpoint_clause(
                 endpoint_address="127.18.0.2:8156",
             )
+
+    @staticmethod
+    def test_build_endpoint_clause_with_connection_parameters():
+        endpoint_clause = TransportEndpoint(
+            database_version=None, encryption=False
+        ).build_endpoint_clause(
+            endpoint_address="127.18.0.2:8156",
+            connection_parameters={"MaxConnections": 1, "MaxConcurrentReads": 1},
+        )
+        assert endpoint_clause == (
+            "AT 'http://127.18.0.2:8156;MaxConnections=1;MaxConcurrentReads=1'"
+        )
+
+    @staticmethod
+    def test_build_connection_parameters_with_empty_dict_returns_empty_string():
+        assert TransportEndpoint._build_connection_clause({}) == ""
+
+    @staticmethod
+    def test_build_connection_parameters_with_none_returns_empty_string():
+        assert TransportEndpoint._build_connection_clause(None) == ""
 
     @staticmethod
     @pytest.mark.parametrize(
@@ -112,38 +227,6 @@ class TestTransportEndpoint:
             database_version=None, encryption=encryption
         ).url_prefix
         assert url_prefix == expected
-
-    @staticmethod
-    @pytest.mark.parametrize(
-        "db_version,encryption,expected",
-        [
-            pytest.param(
-                Version("7.1.19"), False, False, id="lower_version_without_encryption"
-            ),
-            pytest.param(
-                Version("7.1.19"), True, False, id="lower_version_with_encryption"
-            ),
-            pytest.param(
-                MIN_DATABASE_VERSION_FOR_TLS_PUBLIC_KEY,
-                True,
-                True,
-                id="equal_version_with_encryption",
-            ),
-            pytest.param(
-                MIN_DATABASE_VERSION_FOR_TLS_PUBLIC_KEY,
-                False,
-                False,
-                id="equal_version_without_encryption",
-            ),
-            pytest.param(None, False, False, id="no_db_version_without_encryption"),
-            pytest.param(None, True, False, id="no_db_version_with_encryption"),
-        ],
-    )
-    def test_is_tls_public_key_required(db_version, encryption, expected):
-        result = TransportEndpoint(
-            database_version=db_version, encryption=encryption
-        ).is_tls_public_key_required
-        assert result == expected
 
     @staticmethod
     @pytest.mark.parametrize(

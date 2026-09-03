@@ -18,3 +18,7 @@ existing public `ImportQuery` and `ExportQuery` classes.
 ## Bugfixes
 
 * #353: Fixed EXPORT `query_or_table` and IMPORT `table` type annotations to include tuple table identifiers (`tuple[str, ...]`)
+
+## Feature
+
+* #393: Added `ImportBuilder` for native parquet import

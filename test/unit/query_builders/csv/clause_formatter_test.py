@@ -9,11 +9,7 @@ from pyexasol.query_builders.csv.clause_formatter import (
 
 
 @pytest.fixture
-def clause_formatter():
-    formatter = Mock()
-    formatter.quote.side_effect = lambda value: f"'{value}'"
-    formatter.default_format_ident.side_effect = lambda column: f'"{column}"'
-    formatter.safe_decimal.side_effect = str
+def clause_formatter(formatter):
     return ClauseFormatter(formatter)
 
 
@@ -73,16 +69,7 @@ class TestClauseFormatter:
 
     @staticmethod
     def test_import_statement_with_schema_qualified_table(clause_formatter):
-        clause_formatter.formatter.default_format_ident.side_effect = (
-            lambda identifier: (
-                ".".join(f'"{part}"' for part in identifier)
-                if isinstance(identifier, tuple)
-                else f'"{identifier}"'
-            )
-        )
-
         result = clause_formatter.import_statement(("SCHEMA", "TABLE"), None)
-
         assert result == 'IMPORT INTO "SCHEMA"."TABLE" FROM CSV'
 
     @staticmethod
