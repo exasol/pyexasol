@@ -6,6 +6,7 @@ from pyexasol.query_builders.common_formattings import (
     StringEnum,
     TransportEndpoint,
     join_query_lines,
+    reject_string_as_iterable,
     validate_comment,
 )
 
@@ -70,6 +71,21 @@ class TestValidateComment:
 
 def test_join_query_lines_omits_none_lines():
     assert join_query_lines("first", None, "third") == "first\nthird"
+
+
+class TestRejectStringAsIterable:
+    @staticmethod
+    def test_rejects_string():
+        with pytest.raises(
+            ValueError,
+            match="must be an iterable, not a single string",
+        ):
+            reject_string_as_iterable("FIRST")
+
+    @staticmethod
+    @pytest.mark.parametrize("value", [None, ["FIRST"], ("FIRST",)])
+    def test_returns_non_string_value_unchanged(value):
+        assert reject_string_as_iterable(value) is value
 
 
 class TestBuildPublicKeyClause:

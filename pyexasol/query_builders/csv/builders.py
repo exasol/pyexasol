@@ -10,6 +10,7 @@ from typing import (
 from pydantic import (
     AfterValidator,
     BaseModel,
+    BeforeValidator,
     ConfigDict,
     StrictBool,
     computed_field,
@@ -23,6 +24,7 @@ from ..common_formattings import (
     StringEnum,
     TransportEndpoint,
     join_query_lines,
+    reject_string_as_iterable,
 )
 from .clause_formatter import (
     ClauseFormatter,
@@ -98,8 +100,16 @@ def validate_columns(columns: Iterable[str] | None) -> list[str] | None:
     return list(columns)
 
 
-CsvCols = Annotated[Iterable[str] | None, AfterValidator(validate_csv_cols)]
-Columns = Annotated[Iterable[str] | None, AfterValidator(validate_columns)]
+CsvCols = Annotated[
+    Iterable[str] | None,
+    BeforeValidator(reject_string_as_iterable),
+    AfterValidator(validate_csv_cols),
+]
+Columns = Annotated[
+    Iterable[str] | None,
+    BeforeValidator(reject_string_as_iterable),
+    AfterValidator(validate_columns),
+]
 
 
 @validate_build_query

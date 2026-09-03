@@ -11,6 +11,13 @@ from pyexasol.database_versions import MIN_VERSION_FOR_TLS_PUBLIC_KEY
 COLUMN_NUMBER_OR_RANGE = r"\d+|\d+\.\.\d+"
 
 
+def reject_string_as_iterable(value: object) -> object:
+    """Reject strings before Pydantic converts iterables into generators."""
+    if isinstance(value, str):
+        raise ValueError("must be an iterable, not a single string.")
+    return value
+
+
 def validate_comment(comment: str | None) -> str | None:
     """Validate that a comment can be safely embedded in a SQL comment."""
     if comment is None:

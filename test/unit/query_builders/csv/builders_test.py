@@ -64,6 +64,14 @@ class TestCsvBuilderColumns:
         assert builder.columns == ["FIRST", "SECOND"]
         assert isinstance(builder.columns, list)
 
+    @staticmethod
+    def test_rejects_string_as_iterable_column_name(csv_builder):
+        with pytest.raises(
+            ValidationError,
+            match=r"columns\s+Value error, must be an iterable, not a single string\.",
+        ):
+            csv_builder(compression=False, columns="FIRST")
+
 
 class TestImportBuilderTable:
     @staticmethod
@@ -102,6 +110,14 @@ class TestCsvBuilderCsvCols:
             match=r"'csv_cols' had unsafe parts: \[1\.2, 3\.4\]",
         ):
             csv_builder(compression=False, csv_cols=["1.2", "3.4"])
+
+    @staticmethod
+    def test_rejects_string_as_iterable_csv_column_specification(csv_builder):
+        with pytest.raises(
+            ValidationError,
+            match=r"csv_cols\s+Value error, must be an iterable, not a single string\.",
+        ):
+            csv_builder(compression=False, csv_cols="12")
 
 
 class TestExportBuilderDelimit:

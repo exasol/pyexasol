@@ -50,12 +50,29 @@ class TestConnectionParameters:
         assert validate_parquet_skip_cols(skip_cols) == ",".join(skip_cols)
 
     @staticmethod
+    def test_rejects_string_as_iterable_skip_cols():
+        with pytest.raises(
+            ValidationError,
+            match=(
+                r"parquet_skip_cols\s+Value error, must be an iterable, "
+                r"not a single string\."
+            ),
+        ):
+            ImportBuilder(table="TABLE", parquet_skip_cols="12")
+
+    @staticmethod
     @pytest.mark.parametrize(
         "skip_cols",
-        ["1,3..8,11", [""], ["1,"], ["1...3"], ["1", "foo"], ["1 3"]],
+        [["1,3..8,11"], [""], ["1,"], ["1...3"], ["1", "foo"], ["1 3"]],
     )
     def test_rejects_invalid_parquet_skip_cols(skip_cols):
-        with pytest.raises(ValueError, match="parquet_skip_cols"):
+        with pytest.raises(
+            ValidationError,
+            match=(
+                r"parquet_skip_cols\s+Value error, 'parquet_skip_cols' "
+                r"had unsafe parts"
+            ),
+        ):
             ImportBuilder(table="TABLE", parquet_skip_cols=skip_cols)
 
     @staticmethod

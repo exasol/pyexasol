@@ -11,6 +11,7 @@ from typing import (
 from pydantic import (
     AfterValidator,
     BaseModel,
+    BeforeValidator,
     ConfigDict,
     Field,
 )
@@ -21,6 +22,7 @@ from ..common_formattings import (
     Comment,
     TransportEndpoint,
     join_query_lines,
+    reject_string_as_iterable,
 )
 from .clause_formatter import ClauseFormatter
 
@@ -38,7 +40,6 @@ def validate_parquet_skip_cols(skip_cols: Iterable[str] | None) -> str | None:
     """Validate a Parquet ``SkipCols`` column specification."""
     if skip_cols is None:
         return None
-
     validated_skip_cols = list(skip_cols)
     invalid_skip_cols = [
         column_specification
@@ -55,7 +56,9 @@ def validate_parquet_skip_cols(skip_cols: Iterable[str] | None) -> str | None:
 
 
 ParquetSkipCols = Annotated[
-    Iterable[str] | None, AfterValidator(validate_parquet_skip_cols)
+    Iterable[str] | None,
+    BeforeValidator(reject_string_as_iterable),
+    AfterValidator(validate_parquet_skip_cols),
 ]
 
 
