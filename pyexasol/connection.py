@@ -1257,7 +1257,7 @@ class ExaConnection:
         and calls this "releaseVersion".
         """
         if release_version := self.login_info.get("releaseVersion"):
-            return database_versions.sanitize(release_version)
+            return database_versions.parse(release_version)
         return None
 
     def last_statement(self) -> ExaStatement:

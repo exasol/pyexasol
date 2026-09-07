@@ -12,7 +12,7 @@ class ExasolVersionFormatError(Exception):
     """Unsupported format of Exasol version."""
 
 
-def sanitize(version: str) -> Version:
+def parse(version: str) -> Version:
     if m := VERSION_PATTERN.match(version):
         return Version(m.group(0))
     raise ExasolVersionFormatError(f'Unsupported Exasol version "{version}".')

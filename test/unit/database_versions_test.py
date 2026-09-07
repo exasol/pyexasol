@@ -1,19 +1,14 @@
 import pytest
 from packaging.version import Version
 
-from pyexasol.database_versions import (
-    MIN_VERSION_FOR_NATIVE_PARQUET_IMPORT,
-    MIN_VERSION_FOR_TLS_PUBLIC_KEY,
-    ExasolVersionFormatError,
-    sanitize,
-)
+import pyexasol.database_versions as impl
 
 
 @pytest.mark.parametrize(
     "feature_version",
     [
-        MIN_VERSION_FOR_TLS_PUBLIC_KEY,
-        MIN_VERSION_FOR_NATIVE_PARQUET_IMPORT,
+        impl.MIN_VERSION_FOR_TLS_PUBLIC_KEY,
+        impl.MIN_VERSION_FOR_NATIVE_PARQUET_IMPORT,
     ],
 )
 class TestDatabaseFeatureVersion:
@@ -49,20 +44,14 @@ class TestDatabaseFeatureVersion:
         ("2025.1.13", "2025.1.13"),
     ],
 )
-def test_sanitize_success(version, expected) -> None:
-    assert sanitize(version) == Version(expected)
+def test_parse_success(version: str, expected: str) -> None:
+    assert impl.parse(version) == Version(expected)
 
 
-@pytest.mark.parametrize(
-    "version",
-    [
-        "1.2",
-        "2025",
-        "",
-    ],
-)
-def test_sanitize_failure(version) -> None:
+@pytest.mark.parametrize("version", ["1.2", "2025", ""])
+def test_parse_failure(version: str) -> None:
     with pytest.raises(
-        ExasolVersionFormatError, match=f'Unsupported Exasol version "{version}".'
+        impl.ExasolVersionFormatError,
+        match=f'Unsupported Exasol version "{version}".',
     ):
-        sanitize(version)
+        impl.parse(version)
