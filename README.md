@@ -47,4 +47,4 @@ Check out PyExasol's [Getting Started](https://exasol.github.io/pyexasol/master/
 
 ## Developers
 * Created by [Vitaly Markov](https://www.linkedin.com/in/markov-vitaly/), 2018 — 2022
-* Maintained by [Exasol](https://www.exasol.com) 2023 — Today
+* Maintained by [Exasol](https://www.exasol.com) 2023 — Today 
