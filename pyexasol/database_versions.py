@@ -5,7 +5,7 @@ from dataclasses import dataclass
 
 from packaging.version import Version
 
-VERSION_PATTERN = re.compile(r"([0-9]+\.[0-9]+\.[0-9]+)")
+VERSION_PATTERN = re.compile(r"[0-9]+\.[0-9]+\.[0-9]+")
 
 
 class ExasolVersionFormatError(Exception):
