@@ -4,6 +4,8 @@ from packaging.version import Version
 from pyexasol.database_versions import (
     MIN_VERSION_FOR_NATIVE_PARQUET_IMPORT,
     MIN_VERSION_FOR_TLS_PUBLIC_KEY,
+    ExasolVersionFormatError,
+    sanitize,
 )
 
 
@@ -35,3 +37,32 @@ class TestDatabaseFeatureVersion:
         assert feature_version.is_supported_by(
             Version(f"{feature_version.version.major + 1}.0.0")
         )
+
+
+@pytest.mark.parametrize(
+    "version, expected",
+    [
+        ("1.2.3", "1.2.3"),
+        ("1.2.3.4", "1.2.3"),
+        ("2025.1.13-p.2", "2025.1.13"),
+        ("2025.1.13+p.2", "2025.1.13"),
+        ("2025.1.13", "2025.1.13"),
+    ],
+)
+def test_sanitize_success(version, expected) -> None:
+    assert sanitize(version) == Version(expected)
+
+
+@pytest.mark.parametrize(
+    "version",
+    [
+        "1.2",
+        "2025",
+        "",
+    ],
+)
+def test_sanitize_failure(version) -> None:
+    with pytest.raises(
+        ExasolVersionFormatError, match=f'Unsupported Exasol version "{version}".'
+    ):
+        sanitize(version)

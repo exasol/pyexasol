@@ -1,8 +1,21 @@
 """Minimum Exasol database versions required for supported features."""
 
+import re
 from dataclasses import dataclass
 
 from packaging.version import Version
+
+VERSION_PATTERN = re.compile(r"([0-9]+\.[0-9]+\.[0-9]+)")
+
+
+class ExasolVersionFormatError(Exception):
+    """Unsupported format of Exasol version."""
+
+
+def sanitize(version: str) -> Version:
+    if m := VERSION_PATTERN.match(version):
+        return Version(m.group(0))
+    raise ExasolVersionFormatError(f'Unsupported Exasol version "{version}".')
 
 
 @dataclass(frozen=True)

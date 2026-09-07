@@ -18,6 +18,7 @@ existing public `ImportQuery` and `ExportQuery` classes.
 ## Bugfixes
 
 * #353: Fixed EXPORT `query_or_table` and IMPORT `table` type annotations to include tuple table identifiers (`tuple[str, ...]`)
+* #398: Fixed Exasol version parsing for `2025.1.3-p.2`
 
 ## Feature
 
