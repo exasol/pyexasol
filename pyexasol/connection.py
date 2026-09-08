@@ -34,7 +34,10 @@ from cryptography.hazmat.primitives.asymmetric import padding
 from packaging.version import Version
 
 from . import callback as cb
-from . import constant
+from . import (
+    constant,
+    database_versions,
+)
 from ._metadata import __version__
 from ._sql_splitter import split_sql_script
 from .exceptions import (
@@ -1254,7 +1257,7 @@ class ExaConnection:
         and calls this "releaseVersion".
         """
         if release_version := self.login_info.get("releaseVersion"):
-            return Version(release_version)
+            return database_versions.parse(release_version)
         return None
 
     def last_statement(self) -> ExaStatement:
