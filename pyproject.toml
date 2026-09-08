@@ -41,7 +41,7 @@ dependencies = [
     # Releases are published as needed for ecosystem interoperability PEP changes.
     # If we encounter a breaking change, upstream projects can narrow the range.
     "packaging>=24.1.0",
-    "websocket-client>=1.0.1,<=1.9.0",
+    "websocket-client>=1.0.1,<=1.9.0", # See https://github.com/exasol/pyexasol/issues/401
     "pydantic (>=2.13.4,<3.0.0)",
 ]
 

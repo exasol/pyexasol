@@ -1,4 +1,4 @@
-# 2.4.0 - 2026-09-07
+# 2.4.0 - 2026-09-08
 
 ## Summary
 
@@ -49,7 +49,6 @@ This release fixes vulnerabilities by updating dependencies:
 * Added dependency `pydantic:2.13.5`
 * Updated dependency `pytest-benchmark:5.2.3` to `5.3.0`
 * Updated dependency `python-rapidjson:1.23` to `1.25`
-* Updated dependency `websocket-client:1.9.0` to `1.9.2`
 
 ### `dev`
 
