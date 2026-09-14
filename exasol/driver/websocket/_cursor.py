@@ -18,6 +18,7 @@ import pyexasol.exceptions
 from exasol.driver.websocket._errors import (
     Error,
     NotSupportedError,
+    translate_exception,
 )
 from exasol.driver.websocket._types import TypeCode
 
@@ -227,7 +228,7 @@ class Cursor:
         try:
             self._cursor = connection.execute(operation)
         except pyexasol.exceptions.ExaError as ex:
-            raise Error() from ex
+            raise translate_exception(ex) from ex
 
     @staticmethod
     def _adapt_to_requested_db_types(parameters, db_response):
@@ -299,7 +300,7 @@ class Cursor:
         try:
             self._cursor.execute_prepared(parameters)
         except pyexasol.exceptions.ExaError as ex:
-            raise Error() from ex
+            raise translate_exception(ex) from ex
 
     def _convert(self, rows):
         if rows is None:
