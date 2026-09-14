@@ -11,7 +11,7 @@ from functools import wraps
 import pyexasol
 from exasol.driver.websocket._cursor import Cursor as DefaultCursor
 from exasol.driver.websocket._errors import (
-    Error,
+    InterfaceError,
     translate_exception,
 )
 
@@ -21,13 +21,13 @@ def _requires_connection(method):
     Decorator requires the object to have a working connection.
 
     Raises:
-        Error if the connection object has no active connection.
+        InterfaceError if the connection object has no active connection.
     """
 
     @wraps(method)
     def wrapper(self, *args, **kwargs):
         if not self._connection:
-            raise Error("No active connection available")
+            raise InterfaceError("No active connection available")
         return method(self, *args, **kwargs)
 
     return wrapper
