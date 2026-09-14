@@ -4,6 +4,7 @@ import pytest
 
 from exasol.driver.websocket.dbapi2 import (
     Error,
+    InterfaceError,
     NotSupportedError,
     TypeCode,
     connect,
@@ -235,7 +236,7 @@ def test_cursor_closed_cursor_raises_exception_on_property_access(connection, pr
     cursor = connection.cursor()
     cursor.close()
 
-    with pytest.raises(Error) as exec_info:
+    with pytest.raises(InterfaceError) as exec_info:
         _ = getattr(cursor, property)
 
     assert f"{exec_info.value}" == expected
@@ -268,7 +269,7 @@ def test_cursor_closed_cursor_raises_exception_on_method_usage(
     cursor.execute("SELECT 1;")
     cursor.close()
 
-    with pytest.raises(Error) as exec_info:
+    with pytest.raises(InterfaceError) as exec_info:
         method = getattr(cursor, method)
         method(*args)
 

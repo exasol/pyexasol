@@ -16,7 +16,6 @@ from exasol.driver.websocket._cursor import (
 from exasol.driver.websocket._errors import translate_exception
 from exasol.driver.websocket.dbapi2 import (
     DatabaseError,
-    Error,
     InterfaceError,
     OperationalError,
     ProgrammingError,
@@ -113,7 +112,7 @@ def test_requires_connection_decorator_throws_exception_if_no_connection_is_avai
             self._connection = object()
 
     connection = MyConnection()
-    with pytest.raises(Error) as e_info:
+    with pytest.raises(InterfaceError) as e_info:
         connection.close()
 
     assert "No active connection available" == f"{e_info.value}"

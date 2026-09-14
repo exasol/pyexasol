@@ -16,7 +16,7 @@ from functools import wraps
 
 import pyexasol.exceptions
 from exasol.driver.websocket._errors import (
-    Error,
+    InterfaceError,
     NotSupportedError,
     translate_exception,
 )
@@ -58,13 +58,13 @@ def _is_not_closed(method):
     Mark a function to require an open connection.
 
     Raises:
-        An Error if the marked function is called without an open connection.
+        InterfaceError if the marked function is called without an open connection.
     """
 
     @wraps(method)
     def wrapper(self, *args, **kwargs):
         if self._is_closed:
-            raise Error(
+            raise InterfaceError(
                 f"Unable to execute operation <{method.__name__}>, because cursor was already closed."
             )
         return method(self, *args, **kwargs)
@@ -77,13 +77,13 @@ def _requires_result(method):
     Decorator requires the object to have a result.
 
     Raises:
-        Error if the cursor object has not produced a result yet.
+        InterfaceError if the cursor object has not produced a result yet.
     """
 
     @wraps(method)
     def wrapper(self, *args, **kwargs):
         if not self._cursor:
-            raise Error("No result has been produced.")
+            raise InterfaceError("No result has been produced.")
         return method(self, *args, **kwargs)
 
     return wrapper
