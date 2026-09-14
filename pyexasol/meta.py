@@ -86,8 +86,11 @@ class ExaMetaData:
 
         Args:
             table_name:
-                Name of the table to check for.
-                If schema was not specified, ``current_schema`` is used.
+                Name of the table to check for. Can be one of:
+
+                - ``str``: table identifier.
+                - ``tuple[str, ...]``: schema-qualified table identifier, such as
+                  ``("SCHEMA", "TABLE")``.
 
         Returns:
             ``True`` if the table exists, otherwise ``False``.
@@ -134,8 +137,11 @@ class ExaMetaData:
 
         Args:
             view_name:
-                Name of the table to check for.
-                If schema was not specified, ``current_schema`` is used.
+                Name of the view to check for. Can be one of:
+
+                - ``str``: view identifier.
+                - ``tuple[str, ...]``: schema-qualified view identifier, such as
+                  ``("SCHEMA", "VIEW")``.
 
         Returns:
             ``True`` if the view exists, otherwise ``False``.
