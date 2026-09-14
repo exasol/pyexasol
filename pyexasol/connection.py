@@ -884,7 +884,7 @@ class ExaConnection:
         import_params: dict | None = None,
     ):
         """
-        Import a large amount of data from :class:`pyarrow.parquet.Table`.
+        Import a large amount of data from local parquet file(s).
 
         Args:
             source: Local filepath specification(s) to process. Can be one of:
