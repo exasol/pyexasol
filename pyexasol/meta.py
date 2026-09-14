@@ -137,7 +137,7 @@ class ExaMetaData:
 
         Args:
             view_name:
-                Name of the table to check for. Can be one of:
+                Name of the view to check for. Can be one of:
 
                 - ``str``: view identifier.
                 - ``tuple[str, ...]``: schema-qualified view identifier, such as
