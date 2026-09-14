@@ -4,6 +4,7 @@ This module contains compatibility tests for pythons dbapi module interface
 
 import datetime
 import importlib
+from unittest.mock import Mock
 
 import pytest
 
@@ -12,15 +13,36 @@ from exasol.driver.websocket._cursor import (
     MetaData,
     _pyexasol2dbapi_metadata,
 )
+from exasol.driver.websocket._errors import translate_exception
 from exasol.driver.websocket.dbapi2 import (
+    DatabaseError,
     Error,
+    InterfaceError,
+    OperationalError,
+    ProgrammingError,
     TypeCode,
+)
+from pyexasol.exceptions import (
+    ExaCallbackError,
+    ExaCommunicationError,
+    ExaConcurrencyError,
+    ExaConnectionError,
+    ExaQueryError,
+    ExaRequestError,
+    ExaRuntimeError,
 )
 
 
 @pytest.fixture
 def dbapi():
     yield importlib.import_module("exasol.driver.websocket.dbapi2")
+
+
+@pytest.fixture
+def source_connection():
+    connection = Mock()
+    connection.options = {"verbose_error": False}
+    return connection
 
 
 def test_defines_api_level(dbapi):
@@ -121,6 +143,104 @@ def test_requires_connection_decorator_does_use_wrap():
 
     connection = MyConnection()
     assert "close" == connection.close.__name__
+
+
+class TestTranslateException:
+    def test_connection_error(self, source_connection):
+        source = ExaConnectionError(source_connection, "server diagnostic")
+
+        translated = translate_exception(source)
+
+        assert isinstance(translated, OperationalError)
+        assert str(translated) == str(source)
+
+    def test_communication_error(self, source_connection):
+        source = ExaCommunicationError(source_connection, "server diagnostic")
+
+        translated = translate_exception(source)
+
+        assert isinstance(translated, OperationalError)
+        assert str(translated) == str(source)
+
+    def test_runtime_error(self, source_connection):
+        source = ExaRuntimeError(source_connection, "server diagnostic")
+
+        translated = translate_exception(source)
+
+        assert isinstance(translated, DatabaseError)
+        assert str(translated) == str(source)
+
+    def test_query_error(self, source_connection):
+        source = ExaQueryError(source_connection, "SELECT 1", 1234, "server diagnostic")
+
+        translated = translate_exception(source)
+
+        assert isinstance(translated, ProgrammingError)
+        assert str(translated) == str(source)
+
+    def test_request_error(self, source_connection):
+        source = ExaRequestError(source_connection, 1234, "server diagnostic")
+
+        translated = translate_exception(source)
+
+        assert isinstance(translated, DatabaseError)
+        assert str(translated) == str(source)
+
+    def test_concurrency_error(self, source_connection):
+        source = ExaConcurrencyError(source_connection, "server diagnostic")
+
+        translated = translate_exception(source)
+
+        assert isinstance(translated, InterfaceError)
+        assert str(translated) == str(source)
+
+    def test_callback_error(self, source_connection):
+        source = ExaCallbackError(source_connection, ())
+        source.message = "server diagnostic"
+
+        translated = translate_exception(source)
+
+        assert isinstance(translated, DatabaseError)
+        assert str(translated) == str(source)
+
+
+def test_cursor_execute_passes_message_and_preserves_cause():
+    from exasol.driver.websocket._cursor import Cursor
+
+    source_connection = Mock()
+    source_connection.options = {"verbose_error": False}
+    source = ExaQueryError(
+        source_connection,
+        "select * from no_such_table",
+        1234,
+        "object NO_SUCH_TABLE not found",
+    )
+    underlying_connection = Mock()
+    underlying_connection.execute.side_effect = source
+    connection = Mock(connection=underlying_connection)
+    cursor = Cursor(connection)
+
+    with pytest.raises(ProgrammingError) as exception_info:
+        cursor.execute("select * from no_such_table")
+
+    assert str(exception_info.value) == "object NO_SUCH_TABLE not found"
+    assert exception_info.value.args == ("object NO_SUCH_TABLE not found",)
+    assert exception_info.value.__cause__ is source
+
+
+def test_cursor_execute_propagates_non_exasol_exception():
+    from exasol.driver.websocket._cursor import Cursor
+
+    source = RuntimeError("unexpected adapter failure")
+    underlying_connection = Mock()
+    underlying_connection.execute.side_effect = source
+    connection = Mock(connection=underlying_connection)
+    cursor = Cursor(connection)
+
+    with pytest.raises(RuntimeError) as exception_info:
+        cursor.execute("select 1")
+
+    assert exception_info.value is source
 
 
 @pytest.mark.parametrize(
