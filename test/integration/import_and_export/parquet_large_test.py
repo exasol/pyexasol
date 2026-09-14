@@ -134,6 +134,7 @@ def prepare_parquet_table(list_dict: list[dict]) -> pa.Table:
 
 
 @pytest.mark.parquet
+@pytest.mark.parquet_slow
 class TestLargeExportToParquet:
     @staticmethod
     @pytest.mark.repeat(5)

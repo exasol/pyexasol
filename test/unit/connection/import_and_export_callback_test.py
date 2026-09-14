@@ -4,6 +4,7 @@ from unittest.mock import (
 )
 
 import pytest
+from pydantic import ValidationError
 
 from pyexasol.connection import ExaConnection
 
@@ -15,20 +16,29 @@ def mock_http_thread():
         instance = mock_cls.return_value
         instance.write_pipe = MagicMock()
         instance.write_pipe.__enter__.return_value = MagicMock(spec=["write"])
+
+        def construct_http_thread(*args, **kwargs):
+            worker_finished_event = kwargs.get("worker_finished_event")
+            if worker_finished_event is not None:
+                # The real HTTP thread signals this event when it finishes.
+                worker_finished_event.set()
+            return instance
+
+        mock_cls.side_effect = construct_http_thread
         yield mock_cls
 
 
 @pytest.fixture
 def mock_sql_import_thread():
-    """Mock ExaSQLImportThread instances"""
-    with patch("pyexasol.connection.ExaSQLImportThread") as mock_cls:
+    """Mock ExaSQLThread instances used by import callbacks."""
+    with patch("pyexasol.connection.ExaSQLThread") as mock_cls:
         yield mock_cls
 
 
 @pytest.fixture
-def mock_sql_export_thread():
-    """Mock ExaSQLExportThread instances"""
-    with patch("pyexasol.connection.ExaSQLExportThread") as mock_cls:
+def mock_sql_thread():
+    """Mock ExaSQLThread instances used by export callbacks."""
+    with patch("pyexasol.connection.ExaSQLThread") as mock_cls:
         yield mock_cls
 
 
@@ -69,7 +79,7 @@ def callback_spy():
 class TestExportToCallback:
     @staticmethod
     def test_not_a_callable_raises_an_exception(
-        exa_conn, mock_http_thread, mock_sql_export_thread
+        exa_conn, mock_http_thread, mock_sql_thread
     ):
         with pytest.raises(TypeError) as ex:
             exa_conn.export_to_callback(
@@ -77,7 +87,7 @@ class TestExportToCallback:
             )
 
         assert mock_http_thread.call_count == 0
-        assert mock_sql_export_thread.call_count == 0
+        assert mock_sql_thread.call_count == 0
         assert str(ex.value) == (
             "`callback` must be callable. " "Received: 'not_a_function' (type: str)"
         )
@@ -86,7 +96,7 @@ class TestExportToCallback:
     def test_set_defaults_as_expected(
         exa_conn,
         mock_http_thread,
-        mock_sql_export_thread,
+        mock_sql_thread,
         callback_spy,
     ):
 
@@ -95,23 +105,40 @@ class TestExportToCallback:
         )
 
         mock_http_thread.return_value.start.assert_called_once()
-        mock_sql_export_thread.return_value.start.assert_called_once()
+        mock_sql_thread.return_value.start.assert_called_once()
         assert result == "success_marker"
 
-        # verify compression set as expected when import_params=None, then
+        # verify compression set as expected when export_params=None, then
         # this is set to self.options["compression"]
-        http_args, _ = mock_http_thread.call_args
-        assert http_args[2] is exa_conn.options["compression"]
+        _, http_kwargs = mock_http_thread.call_args
+        assert http_kwargs["compression"] is exa_conn.options["compression"]
 
-        sql_args, _ = mock_sql_export_thread.call_args
-        # verify query_params=None would format query_or_table
-        assert sql_args[2] == "dummy_table"
-        # verify import_params=None maps to empty dictionary
-        assert sql_args[3] == {}
+        _, sql_kwargs = mock_sql_thread.call_args
+        assert sql_kwargs["query_builder"].query_or_table == "dummy_table"
+        assert sql_kwargs["worker_finished_event"].is_set()
 
         # verify callback_params=None maps to empty dictionary
         _, callback_kwargs = callback_spy.call_args
         assert callback_kwargs == {}
+
+    @staticmethod
+    def test_rejects_multiple_export_parameter_errors_before_starting_threads(
+        exa_conn,
+        mock_http_thread,
+        mock_sql_thread,
+        callback_spy,
+    ):
+        with pytest.raises(ValidationError) as exception:
+            exa_conn.export_to_callback(
+                callback=callback_spy,
+                dst=None,
+                query_or_table="dummy_table",
+                export_params={"format": "invalid", "delimit": "invalid"},
+            )
+
+        assert len(exception.value.errors()) >= 2
+        assert mock_http_thread.call_count == 0
+        assert mock_sql_thread.call_count == 0
 
 
 class TestImportFromCallback:
@@ -147,13 +174,31 @@ class TestImportFromCallback:
 
         # verify compression set as expected when import_params=None, then
         # this is set to self.options["compression"]
-        http_args, _ = mock_http_thread.call_args
-        assert http_args[2] is exa_conn.options["compression"]
+        _, http_kwargs = mock_http_thread.call_args
+        assert http_kwargs["compression"] is exa_conn.options["compression"]
+        assert http_kwargs["worker_finished_event"].is_set()
 
-        # verify import_params=None maps to empty dictionary
-        sql_args, _ = mock_sql_import_thread.call_args
-        assert sql_args[3] == {}
+        # verify the import builder receives default parameters
+        _, sql_kwargs = mock_sql_import_thread.call_args
+        assert sql_kwargs["query_builder"].table == "dummy_table"
+        assert sql_kwargs["worker_finished_event"].is_set()
 
         # verify callback_params=None maps to empty dictionary
         _, callback_kwargs = callback_spy.call_args
         assert callback_kwargs == {}
+
+    @staticmethod
+    def test_passes_schema_qualified_table_to_import_thread(
+        exa_conn,
+        mock_http_thread,
+        mock_sql_import_thread,
+        callback_spy,
+    ):
+        table = ("SCHEMA", "TABLE")
+
+        exa_conn.import_from_callback(
+            callback=callback_spy, src="src_data", table=table
+        )
+
+        _, sql_kwargs = mock_sql_import_thread.call_args
+        assert sql_kwargs["query_builder"].table == table

@@ -6,7 +6,7 @@ on:
 jobs:
   build-matrix:
     name: Build Matrix
-    uses: ./.github/workflows/matrix.yml
+    uses: $/.github/workflows/matrix.yml
     with:
       matrix_keys_json: ${{ github.workflow == 'Periodic-Validation' && '["minimum_python_version", "exasol_versions"]' || '["python_versions", "exasol_versions"]' }}
     permissions:
@@ -47,7 +47,7 @@ jobs:
 
       - name: Run Integration Tests
         id: run-integration-tests
-        run: poetry run -- nox -s test:integration -- --coverage --db-version ${MATRIX_EXASOL_VERSIONS}
+        run: poetry run -- nox -s test:integration -- --coverage --db-version ${MATRIX_EXASOL_VERSIONS} --with-cert
         env:
           MATRIX_EXASOL_VERSIONS: ${{ matrix.exasol_versions }}
 

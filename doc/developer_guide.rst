@@ -3,6 +3,11 @@
 :octicon:`tools` Developer Guide
 ================================
 
+.. toctree::
+    :maxdepth: 2
+
+    developer_guide/import_export_threading
+
 This guide explains how to develop PyExasol and run tests.
 
 Initial Setup
@@ -75,13 +80,16 @@ Integration Tests
 
 .. important::
 
-    To (temporarily) skip integration tests that require `ssl.CERT_REQUIRED`, you can deselect those
-    tests by using:
+    By default, local integration test runs only execute the `ssl.CERT_NONE` variant, so they do
+    not require a certificate setup.
 
+    To enable the certificate-verification variant locally, pass:
 
     .. code-block:: shell
 
-        poetry run -- nox -s test:integration -- -m "not with_cert"
+        poetry run -- nox -s test:integration -- --with-cert
+
+    Continuous integration enables this automatically, so both certificate modes are covered there.
 
 
 .. code-block:: shell
@@ -89,6 +97,13 @@ Integration Tests
     nox -s test:integration
 
 Passing additional arguments to pytest works the same as for the unit tests.
+
+The large parquet tests can be excluded from an integration test run using
+the ``parquet_slow`` marker:
+
+.. code-block:: shell
+
+    nox -s test:integration -- -m "not parquet_slow"
 
 Performance Tests
 -----------------

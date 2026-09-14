@@ -15,19 +15,19 @@ jobs:
 
   examples:
     needs: [ approve-run-merge-gate-extension ]
-    uses: ./.github/workflows/examples.yml
+    uses: $/.github/workflows/examples.yml
     permissions:
       contents: read
 
   ssl_cert:
     needs: [ approve-run-merge-gate-extension ]
-    uses: ./.github/workflows/ssl_cert.yml
+    uses: $/.github/workflows/ssl_cert.yml
     permissions:
       contents: read
 
 # Will re-activate in #262
 #  performance-checks:
 #    needs: [ approve-run-merge-gate-extension ]
-#    uses: ./.github/workflows/performance-checks.yml
+#    uses: $/.github/workflows/performance-checks.yml
 #    permissions:
 #      contents: read

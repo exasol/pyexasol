@@ -34,7 +34,10 @@ from cryptography.hazmat.primitives.asymmetric import padding
 from packaging.version import Version
 
 from . import callback as cb
-from . import constant
+from . import (
+    constant,
+    database_versions,
+)
 from ._metadata import __version__
 from ._sql_splitter import split_sql_script
 from .exceptions import (
@@ -57,9 +60,14 @@ from .http_transport import (
     ExaHttpThread,
     ExaSQLExportThread,
     ExaSQLImportThread,
+    ExaSQLThread,
 )
 from .logger import ExaLogger
 from .meta import ExaMetaData
+from .query_builders.csv.builders import (
+    ExportBuilder,
+    ImportBuilder,
+)
 from .script_output import ExaScriptOutputProcess
 from .statement import ExaStatement
 from .warnings import PyexasolWarning
@@ -492,7 +500,7 @@ class ExaConnection:
     def export_to_file(
         self,
         dst,
-        query_or_table: str,
+        query_or_table: str | tuple[str, ...],
         query_params: dict | None = None,
         export_params: dict | None = None,
     ):
@@ -506,7 +514,13 @@ class ExaConnection:
             dst:
                 Path to file or file-like object where data will be exported to.
             query_or_table:
-                SQL query or table from which to export data.
+                Source from which to export data. Can be one of:
+
+                - ``tuple[str, ...]``: fully qualified table identifier, such as
+                  ``("SCHEMA", "TABLE")``. Quoted table names must be fully qualified
+                  using this tuple pattern.
+                - ``str``: if lacks non-trailing space, it is treated like a
+                  table identifier. Otherwise, it is treated like a query.
             query_params:
                 Values for SQL query placeholders.
             export_params:
@@ -526,7 +540,7 @@ class ExaConnection:
 
     def export_to_list(
         self,
-        query_or_table: str,
+        query_or_table: str | tuple[str, ...],
         query_params: dict | None = None,
         export_params: dict | None = None,
     ) -> list:
@@ -535,7 +549,13 @@ class ExaConnection:
 
         Args:
             query_or_table:
-                SQL query or table from which to export data.
+                Source from which to export data. Can be one of:
+
+                - ``tuple[str, ...]``: fully qualified table identifier, such as
+                  ``("SCHEMA", "TABLE")``. Quoted table names must be fully qualified
+                  using this tuple pattern.
+                - ``str``: if lacks non-trailing space, it is treated like a
+                  table identifier. Otherwise, it is treated like a query.
             query_params:
                 Values for SQL query placeholders.
             export_params:
@@ -559,7 +579,7 @@ class ExaConnection:
 
     def export_to_pandas(
         self,
-        query_or_table: str,
+        query_or_table: str | tuple[str, ...],
         query_params: dict | None = None,
         callback_params: dict | None = None,
         export_params: dict | None = None,
@@ -569,7 +589,13 @@ class ExaConnection:
 
         Args:
             query_or_table:
-                SQL query or table from which to export data.
+                Source from which to export data. Can be one of:
+
+                - ``tuple[str, ...]``: fully qualified table identifier, such as
+                  ``("SCHEMA", "TABLE")``. Quoted table names must be fully qualified
+                  using this tuple pattern.
+                - ``str``: if lacks non-trailing space, it is treated like a
+                  table identifier. Otherwise, it is treated like a query.
             query_params:
                 Values for SQL query placeholders.
             callback_params:
@@ -607,7 +633,7 @@ class ExaConnection:
     def export_to_parquet(
         self,
         dst: Path | str,
-        query_or_table: str,
+        query_or_table: str | tuple[str, ...],
         query_params: dict | None = None,
         callback_params: dict | None = None,
         export_params: dict | None = None,
@@ -639,7 +665,13 @@ class ExaConnection:
                 discussed on `Importing and Exporting Data <https://exasol.github.io/pyexasol/master/user_guide/exploring_features/import_and_export/index.html>`__.
 
             query_or_table:
-                SQL query or table from which to export data.
+                Source from which to export data. Can be one of:
+
+                - ``tuple[str, ...]``: fully qualified table identifier, such as
+                  ``("SCHEMA", "TABLE")``. Quoted table names must be fully qualified
+                  using this tuple pattern.
+                - ``str``: if lacks non-trailing space, it is treated like a
+                  table identifier. Otherwise, it is treated like a query.
             query_params:
                 Values for SQL query placeholders.
             callback_params:
@@ -681,7 +713,7 @@ class ExaConnection:
 
     def export_to_polars(
         self,
-        query_or_table: str,
+        query_or_table: str | tuple[str, ...],
         query_params: dict | None = None,
         callback_params: dict | None = None,
         export_params: dict | None = None,
@@ -691,7 +723,13 @@ class ExaConnection:
 
         Args:
             query_or_table:
-                SQL query or table from which to export data.
+                Source from which to export data. Can be one of:
+
+                - ``tuple[str, ...]``: fully qualified table identifier, such as
+                  ``("SCHEMA", "TABLE")``. Quoted table names must be fully qualified
+                  using this tuple pattern.
+                - ``str``: if lacks non-trailing space, it is treated like a
+                  table identifier. Otherwise, it is treated like a query.
             query_params:
                 Values for SQL query placeholders.
             callback_params:
@@ -726,7 +764,12 @@ class ExaConnection:
             export_params,
         )
 
-    def import_from_file(self, src, table: str, import_params: dict | None = None):
+    def import_from_file(
+        self,
+        src,
+        table: str | tuple[str, ...],
+        import_params: dict | None = None,
+    ):
         """
         Import a large amount of data from a file or file-like object.
 
@@ -734,7 +777,11 @@ class ExaConnection:
             src:
                 Source file or file-like object.
             table:
-                Destination table for IMPORT.
+                Destination table for IMPORT. Can be one of:
+
+                - ``str``: table identifier.
+                - ``tuple[str, ...]``: schema-qualified table identifier, such as
+                  ``("SCHEMA", "TABLE")``.
             import_params:
                 Custom parameters for IMPORT query.
 
@@ -746,7 +793,10 @@ class ExaConnection:
         )
 
     def import_from_iterable(
-        self, src: Iterable, table: str, import_params: dict | None = None
+        self,
+        src: Iterable,
+        table: str | tuple[str, ...],
+        import_params: dict | None = None,
     ):
         """
         Import a large amount of data from an ``iterable`` Python object.
@@ -756,7 +806,11 @@ class ExaConnection:
                 Source object implementing ``__iter__``.
                 Iterator must return tuples of values.
             table:
-                Destination table for IMPORT.
+                Destination table for IMPORT. Can be one of:
+
+                - ``str``: table identifier.
+                - ``tuple[str, ...]``: schema-qualified table identifier, such as
+                  ``("SCHEMA", "TABLE")``.
             import_params:
                 Custom parameters for IMPORT query.
         """
@@ -767,7 +821,7 @@ class ExaConnection:
     def import_from_pandas(
         self,
         src: "pandas.DataFrame",
-        table: str,
+        table: str | tuple[str, ...],
         callback_params: dict | None = None,
         import_params: dict | None = None,
     ):
@@ -778,7 +832,11 @@ class ExaConnection:
             src:
                 Source :class:`pandas.DataFrame` instance.
             table:
-                Destination table for IMPORT.
+                Destination table for IMPORT. Can be one of:
+
+                - ``str``: table identifier.
+                - ``tuple[str, ...]``: schema-qualified table identifier, such as
+                  ``("SCHEMA", "TABLE")``.
             callback_params:
                 Dictionary with additional parameters for callback function
                 `pandas.DataFrame.to_csv <https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.to_csv.html>`__.
@@ -792,7 +850,7 @@ class ExaConnection:
     def import_from_polars(
         self,
         src: Union["polars.LazyFrame", "polars.DataFrame"],
-        table: str,
+        table: str | tuple[str, ...],
         callback_params: dict | None = None,
         import_params: dict | None = None,
     ):
@@ -803,7 +861,11 @@ class ExaConnection:
             src:
                 Source :class:`polars.DataFrame` or :class:`polars.LazyFrame` instance.
             table:
-                Destination table for IMPORT.
+                Destination table for IMPORT. Can be one of:
+
+                - ``str``: table identifier.
+                - ``tuple[str, ...]``: schema-qualified table identifier, such as
+                  ``("SCHEMA", "TABLE")``.
             callback_params:
                 Dictionary with additional parameters for callback function
                 `polars.DataFrame.write_csv <https://docs.pola.rs/api/python/stable/reference/api/polars.DataFrame.write_csv.html>`__.
@@ -817,7 +879,7 @@ class ExaConnection:
     def import_from_parquet(
         self,
         source: list[Path] | Path | str,
-        table: str,
+        table: str | tuple[str, ...],
         callback_params: dict | None = None,
         import_params: dict | None = None,
     ):
@@ -826,13 +888,18 @@ class ExaConnection:
 
         Args:
             source: Local filepath specification(s) to process. Can be one of:
-                - list[pathlib.Path]: list of specific files
-                - pathlib.Path: can be either a file or directory. If it's a directory,
-                all files matching this pattern *.parquet will be processed.
-                - str: representing a filepath which already contains a glob pattern
-                (e.g., "/local_dir/*.parquet")
+
+                - ``list[pathlib.Path]``: list of specific files
+                - ``pathlib.Path``: can be either a file or directory. If it's a directory,
+                  all files matching this pattern ``*.parquet`` will be processed.
+                - ``str``: representing a filepath which already contains a glob pattern
+                  (e.g., ``/local_dir/*.parquet``)
             table:
-                Destination table for IMPORT.
+                Destination table for IMPORT. Can be one of:
+
+                - ``str``: table identifier.
+                - ``tuple[str, ...]``: schema-qualified table identifier, such as
+                  ``("SCHEMA", "TABLE")``.
             callback_params:
                 Dict with additional parameters for callback function
                 `parquet.ParquetFile.iter_batches <https://arrow.apache.org/docs/python/generated/pyarrow.parquet.ParquetFile.html#pyarrow.parquet.ParquetFile.iter_batches>`__.
@@ -847,7 +914,7 @@ class ExaConnection:
         self,
         callback: Callable,
         dst,
-        query_or_table: str,
+        query_or_table: str | tuple[str, ...],
         query_params: dict | None = None,
         callback_params: dict | None = None,
         export_params: dict | None = None,
@@ -861,7 +928,13 @@ class ExaConnection:
             dst:
                 (optional) Path to file or file-like object where data will be exported to.
             query_or_table:
-                SQL query or table from which to export data.
+                Source from which to export data. Can be one of:
+
+                - ``tuple[str, ...]``: fully qualified table identifier, such as
+                  ``("SCHEMA", "TABLE")``. Quoted table names must be fully qualified
+                  using this tuple pattern.
+                - ``str``: if lacks non-trailing space, it is treated like a
+                  table identifier. Otherwise, it is treated like a query.
             query_params:
                 Values for SQL query placeholders.
             callback_params:
@@ -874,6 +947,7 @@ class ExaConnection:
 
         Raises:
             TypeError: callback argument is not Callable.
+            pydantic.ValidationError: Invalid values from ``export_params``.
             ExaExportError: one or more exceptions occurred when executing the
                callback function.
 
@@ -899,21 +973,34 @@ class ExaConnection:
         if export_params is None:
             export_params = {}
 
-        if query_params is not None:
+        if query_params is not None and isinstance(query_or_table, str):
             query_or_table = self.format.format(query_or_table, **query_params)
 
         compression = (
             False if ("format" in export_params) else self.options["compression"]
         )
 
-        http_thread = ExaHttpThread(
-            self.ws_ipaddr,  # type: ignore
-            self.ws_port,  # type: ignore
-            compression,
-            self.options["encryption"],
+        export_builder = ExportBuilder(
+            compression=compression,
+            query_or_table=query_or_table,
+            **export_params,
         )
-        sql_thread = ExaSQLExportThread(
-            self, compression, query_or_table, export_params
+
+        # Set when either worker finishes, successfully or exceptionally. It
+        # wakes the coordinator but does not terminate the other worker.
+        worker_finished_event = threading.Event()
+        http_thread = ExaHttpThread(
+            ipaddr=self.ws_ipaddr,  # type: ignore
+            port=self.ws_port,  # type: ignore
+            compression=compression,
+            encryption=self.options["encryption"],
+            worker_finished_event=worker_finished_event,
+        )
+        sql_thread = ExaSQLThread(
+            connection=self,
+            compression=compression,
+            worker_finished_event=worker_finished_event,
+            query_builder=export_builder,
         )
 
         try:
@@ -925,6 +1012,14 @@ class ExaConnection:
             with http_thread.read_pipe as pipe:
                 result = callback(pipe, dst, **callback_params)
 
+            # Either worker may finish first. Wake up as soon as one reports
+            # completion so errors can be observed without waiting on the
+            # other connection indefinitely.
+            worker_finished_event.wait()
+
+            # Join HTTP first: an SQL failure terminates HTTP, while HTTP does
+            # not terminate SQL directly. The order prevents waiting on HTTP
+            # before the SQL worker has had a chance to stop it.
             http_thread.join_with_exc()
             sql_thread.join_with_exc()
 
@@ -950,7 +1045,7 @@ class ExaConnection:
         self,
         callback: Callable,
         src,
-        table: str,
+        table: str | tuple[str, ...],
         callback_params: dict | None = None,
         import_params: dict | None = None,
     ):
@@ -963,7 +1058,11 @@ class ExaConnection:
             src:
                 Source for the callback function.
             table:
-                Destination table for IMPORT.
+                Destination table for IMPORT. Can be one of:
+
+                - ``str``: table identifier.
+                - ``tuple[str, ...]``: schema-qualified table identifier, such as
+                  ``("SCHEMA", "TABLE")``.
             callback_params:
                 Dictionary with additional parameters for callback function.
             import_params:
@@ -971,6 +1070,7 @@ class ExaConnection:
 
         Raises:
             TypeError: callback argument is not Callable.
+            pydantic.ValidationError: Invalid values from ``import_params``.
         """
         if not callable(callback):
             raise TypeError(
@@ -987,13 +1087,28 @@ class ExaConnection:
             False if ("format" in import_params) else self.options["compression"]
         )
 
-        http_thread = ExaHttpThread(
-            self.ws_ipaddr,  # type: ignore
-            self.ws_port,  # type: ignore
-            compression,
-            self.options["encryption"],
+        import_builder = ImportBuilder(
+            compression=compression,
+            table=table,
+            **import_params,
         )
-        sql_thread = ExaSQLImportThread(self, compression, table, import_params)
+
+        # Set when either worker finishes, successfully or exceptionally. It
+        # wakes the coordinator but does not terminate the other worker.
+        worker_finished_event = threading.Event()
+        http_thread = ExaHttpThread(
+            ipaddr=self.ws_ipaddr,  # type: ignore
+            port=self.ws_port,  # type: ignore
+            compression=compression,
+            encryption=self.options["encryption"],
+            worker_finished_event=worker_finished_event,
+        )
+        sql_thread = ExaSQLThread(
+            connection=self,
+            compression=compression,
+            worker_finished_event=worker_finished_event,
+            query_builder=import_builder,
+        )
 
         try:
             http_thread.start()
@@ -1004,6 +1119,18 @@ class ExaConnection:
             with http_thread.write_pipe as pipe:
                 result = callback(pipe, src, **callback_params)
 
+            # The callback has finished writing. Allow the HTTP handler to send the
+            # final chunk and finish the request.
+            http_thread.server.can_finish_get.set()
+
+            # Either worker may finish first. Wake up as soon as one reports
+            # completion so errors can be observed without waiting on the
+            # other connection indefinitely.
+            worker_finished_event.wait()
+
+            # Join HTTP first: an SQL failure terminates HTTP, while HTTP does
+            # not terminate SQL directly. The order prevents waiting on HTTP
+            # before the SQL worker has had a chance to stop it.
             http_thread.join_with_exc()
             sql_thread.join_with_exc()
 
@@ -1130,7 +1257,7 @@ class ExaConnection:
         and calls this "releaseVersion".
         """
         if release_version := self.login_info.get("releaseVersion"):
-            return Version(release_version)
+            return database_versions.parse(release_version)
         return None
 
     def last_statement(self) -> ExaStatement:
