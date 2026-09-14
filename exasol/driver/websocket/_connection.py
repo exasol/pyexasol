@@ -10,7 +10,10 @@ from functools import wraps
 
 import pyexasol
 from exasol.driver.websocket._cursor import Cursor as DefaultCursor
-from exasol.driver.websocket._errors import Error
+from exasol.driver.websocket._errors import (
+    Error,
+    translate_exception,
+)
 
 
 def _requires_connection(method):
@@ -107,10 +110,8 @@ class Connection:
         """See also :py:meth: `Connection.connect`"""
         try:
             self._connection = pyexasol.connect(**self._options)
-        except pyexasol.exceptions.ExaConnectionError as ex:
-            raise Error(f"Connection failed, {ex}") from ex
-        except Exception as ex:
-            raise Error() from ex
+        except pyexasol.exceptions.ExaError as ex:
+            raise translate_exception(ex) from ex
         return self
 
     @property
@@ -126,24 +127,24 @@ class Connection:
             return
         try:
             connection_to_close.close()
-        except Exception as ex:
-            raise Error() from ex
+        except pyexasol.exceptions.ExaError as ex:
+            raise translate_exception(ex) from ex
 
     @_requires_connection
     def commit(self):
         """See also :py:meth: `Connection.commit`"""
         try:
             self._connection.commit()
-        except Exception as ex:
-            raise Error() from ex
+        except pyexasol.exceptions.ExaError as ex:
+            raise translate_exception(ex) from ex
 
     @_requires_connection
     def rollback(self):
         """See also :py:meth: `Connection.rollback`"""
         try:
             self._connection.rollback()
-        except Exception as ex:
-            raise Error() from ex
+        except pyexasol.exceptions.ExaError as ex:
+            raise translate_exception(ex) from ex
 
     @_requires_connection
     def cursor(self):
