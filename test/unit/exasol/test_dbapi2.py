@@ -115,7 +115,7 @@ def test_requires_connection_decorator_throws_exception_if_no_connection_is_avai
     with pytest.raises(InterfaceError) as e_info:
         connection.close()
 
-    assert "No active connection available" == f"{e_info.value}"
+    assert f"{e_info.value}" == "No active connection available"
 
 
 def test_requires_connection_decorator_does_not_throw_exception_connection_is_available():
@@ -141,7 +141,7 @@ def test_requires_connection_decorator_does_use_wrap():
             return True
 
     connection = MyConnection()
-    assert "close" == connection.close.__name__
+    assert connection.close.__name__ == "close"
 
 
 class TestTranslateException:

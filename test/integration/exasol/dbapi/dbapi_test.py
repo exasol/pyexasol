@@ -269,9 +269,9 @@ def test_cursor_closed_cursor_raises_exception_on_method_usage(
     cursor.execute("SELECT 1;")
     cursor.close()
 
+    cursor_method = getattr(cursor, method)
     with pytest.raises(InterfaceError) as exec_info:
-        method = getattr(cursor, method)
-        method(*args)
+        cursor_method(*args)
 
     assert f"{exec_info.value}" == expected
 
