@@ -39,7 +39,10 @@ class ExaExtension:
         Get columns of SQL query without executing it.
 
         Args:
-            object_name: Object name may be passed as tuple to specify custom schema.
+            query:
+                SQL query string to get columns for.
+            query_params:
+                Optional query parameters.
 
         Caution:
             **DEPRECATED**, please use ``.meta.sql_columns`` instead.
