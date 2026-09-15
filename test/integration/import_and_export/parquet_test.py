@@ -89,7 +89,12 @@ class TestImportFromParquet:
         self, tmp_path, empty_table, connection, table_name, all_data
     ):
         filepath = tmp_path / "single_file.parquet"
-        self._create_parquet_file(filepath, all_data.list_dict)
+        parquet_table = pa.Table.from_pylist(all_data.list_dict)
+        # so this is requiring a conversion -> switch Database schema
+        parquet_table = parquet_table.set_column(
+            6, "SCORE", parquet_table["SCORE"].cast(pa.decimal128(10, 2))
+        )
+        pq.write_table(parquet_table, filepath)
 
         connection.import_from_parquet(filepath, table_name)
 
