@@ -18,6 +18,7 @@ with pyexasol.connect(
         print(stmt.fetchmany(3))  # fetch 3 rows
         print(stmt.fetchall())  # fetch all remaining rows
 
+    # The `is_closed` check is not needed code execution, but it shows the status of the context manager.
     print(stmt.is_closed)
 print(C.is_closed)
 
