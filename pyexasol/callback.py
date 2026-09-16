@@ -308,5 +308,5 @@ def import_from_file(pipe, src):
     """
     if not hasattr(src, "read"):
         src = open(src, "rb")
-
+    #print(src.read())
     shutil.copyfileobj(src, pipe, 65536)

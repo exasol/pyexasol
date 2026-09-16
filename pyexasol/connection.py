@@ -1,6 +1,7 @@
 import base64
 import getpass
 import hashlib
+import io
 import itertools
 import platform
 import random
@@ -771,7 +772,7 @@ class ExaConnection:
         import_params: dict | None = None,
     ):
         """
-        Import a large amount of data from a file or file-like object.
+        Import a large amount of data from a file or file-like object.#todo update, update docu
 
         Args:
             src:
@@ -788,6 +789,11 @@ class ExaConnection:
         Note:
             File must be opened in binary mode.
         """
+        #todo check filemode
+        if isinstance(src, io.TextIOBase):
+            print("err")
+        if not isinstance(src.read(0), bytes): #todo reset pointer?
+            print("err2")
         return self.import_from_callback(
             cb.import_from_file, src, table, None, import_params
         )
