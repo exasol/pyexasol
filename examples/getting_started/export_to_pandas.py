@@ -14,4 +14,4 @@ with pyexasol.connect(
     websocket_sslopt=config.websocket_sslopt,
 ) as C:
     df = C.export_to_pandas("SELECT * FROM EXA_ALL_USERS")
-    print(df.head())
+print(df.head())
