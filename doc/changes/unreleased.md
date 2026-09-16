@@ -4,4 +4,4 @@
 
 ## Bugfixes
 
-- Fixed documentation inconsistencies in type hints and docstrings (#353)
+* #353: Fixed documentation inconsistencies in type hints and docstrings
