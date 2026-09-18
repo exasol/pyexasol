@@ -304,9 +304,8 @@ def import_from_polars(
 
 def import_from_file(pipe, src):
     """
-    Basic example of how to import from file or file-like object opened in binary mode
+    Basic example of how to import from file-path or file-like object opened in binary mode
     """
     if not hasattr(src, "read"):
         src = open(src, "rb")
-
     shutil.copyfileobj(src, pipe, 65536)

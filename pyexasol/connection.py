@@ -1,6 +1,7 @@
 import base64
 import getpass
 import hashlib
+import io
 import itertools
 import platform
 import random
@@ -776,6 +777,7 @@ class ExaConnection:
         Args:
             src:
                 Source file or file-like object.
+                Must be either a file-path, or a binary stream , i.e. a file opened in binary mode
             table:
                 Destination table for IMPORT. Can be one of:
 
@@ -788,6 +790,23 @@ class ExaConnection:
         Note:
             File must be opened in binary mode.
         """
+        # throw an error if the passed object is a text instead of a byte stream.
+        # if it is a text obj that we can open as a file(like a filepath), that is also fine
+        if isinstance(src, io.TextIOBase):
+            # try to open the src in binary mode. If not possible raise error
+            try:
+                with open(  # type: ignore
+                    src, "rb"
+                ):  # it would be cleaner to just expect a binary stream for cb.import_from_file
+                    pass
+            except TypeError:
+                raise TypeError(
+                    "Source must be either a file path, or a binary stream , i.e. a file opened in binary mode"
+                )
+            except OSError:
+                # some tests pass Pathlike objects as src. theses will throw an OSError here
+                pass
+
         return self.import_from_callback(
             cb.import_from_file, src, table, None, import_params
         )
