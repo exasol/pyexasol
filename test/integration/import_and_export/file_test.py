@@ -57,7 +57,7 @@ def make_files(which_file: str, tmp_path, all_data):
 @pytest.mark.parametrize(
     "which_file", ["StringIO", "BytesIO", "openCsv", "openBinaryCsv", "CsvPath"]
 )
-class TestImportFromFile:
+class TestImportFromFileError:
     @staticmethod
     def test_import_from_non_binary_gives_correct_error(
         which_file, connection, empty_table, table_name, tmp_path, all_data

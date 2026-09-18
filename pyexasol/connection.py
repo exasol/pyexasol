@@ -793,8 +793,9 @@ class ExaConnection:
         # throw an error if the passed object is a text instead of a byte stream.
         # if it is a text obj that we can open as a file(like a filepath), that is also fine
         if isinstance(src, io.TextIOBase):
+            # try to open the src in binary mode. If not possible raise error
             try:
-                with open(
+                with open(  # type: ignore
                     src, "rb"
                 ):  # it would be cleaner to just expect a binary stream for cb.import_from_file
                     pass
