@@ -10,6 +10,7 @@ import threading
 import zlib
 from collections.abc import Iterable
 from dataclasses import dataclass
+from pathlib import Path
 from ssl import SSLContext
 from typing import TYPE_CHECKING
 
@@ -796,3 +797,176 @@ class ExaHttpRequestHandler(socketserver.StreamRequestHandler):
 
     def write_error_headers(self):
         self.wfile.write(self.error_headers)
+
+
+class ExaParquetTCPServer(ExaTCPServer):
+    """Serve local Parquet files through the Exasol HTTP tunnel."""
+
+    parquet_files: list[Path]
+
+    def __init__(self, *args, parquet_files: list[Path], **kwargs):
+        self.parquet_files = parquet_files
+        super().__init__(*args, **kwargs)
+
+    @property
+    def total_size(self) -> int:
+        return sum(parquet_file.stat().st_size for parquet_file in self.parquet_files)
+
+
+class ExaParquetHttpRequestHandler(socketserver.StreamRequestHandler):
+    """Handle metadata and byte-range requests for local Parquet files."""
+
+    server: ExaParquetTCPServer
+
+    def handle(self):
+        while not self.server.is_terminated:
+            request_line = self.rfile.readline().decode("iso-8859-1").split()
+            if not request_line:
+                return
+            if len(request_line) != 3:
+                return
+
+            method = request_line[0]
+            headers = self._read_headers()
+            if method not in ("HEAD", "GET"):
+                self._write_status(405, "Method Not Allowed")
+                return
+
+            byte_range = self._parse_range(headers.get("range"))
+            if byte_range is None:
+                self._write_status(416, "Range Not Satisfiable")
+                return
+
+            start, end = byte_range
+            status = 206 if headers.get("range") else 200
+            self._write_headers(status, start, end)
+            if method == "GET":
+                self._write_range(start, end)
+
+    def _read_headers(self) -> dict[str, str]:
+        headers = {}
+        while line := self.rfile.readline():
+            if line == b"\r\n":
+                break
+            name, _, value = line.decode("iso-8859-1").partition(":")
+            headers[name.lower()] = value.strip()
+        return headers
+
+    def _parse_range(self, range_header: str | None) -> tuple[int, int] | None:
+        file_size = self.server.total_size
+        if file_size == 0:
+            return None
+        if not range_header:
+            return 0, file_size - 1
+
+        if not range_header.startswith("bytes="):
+            return None
+        range_specification = range_header[6:].split(",", 1)[0]
+        start_text, separator, end_text = range_specification.partition("-")
+        if not separator:
+            return None
+
+        try:
+            if start_text:
+                start = int(start_text)
+                end = int(end_text) if end_text else file_size - 1
+            else:
+                suffix_length = int(end_text)
+                start = max(file_size - suffix_length, 0)
+                end = file_size - 1
+        except ValueError:
+            return None
+
+        if start < 0 or start >= file_size or end < start:
+            return None
+        return start, min(end, file_size - 1)
+
+    def _write_status(self, status_code: int, reason: str):
+        self.wfile.write(
+            f"HTTP/1.1 {status_code} {reason}\r\nConnection: close\r\n\r\n".encode()
+        )
+
+    def _write_headers(self, status_code: int, start: int, end: int):
+        file_size = self.server.total_size
+        content_length = end - start + 1
+        headers = [
+            f"HTTP/1.1 {status_code} {'Partial Content' if status_code == 206 else 'OK'}",
+            "Connection: keep-alive",
+            "Accept-Ranges: bytes",
+            f"Content-Length: {content_length}",
+            "Content-Type: application/octet-stream",
+        ]
+        if status_code == 206:
+            headers.append(f"Content-Range: bytes {start}-{end}/{file_size}")
+        self.wfile.write(("\r\n".join(headers) + "\r\n\r\n").encode())
+
+    def _write_range(self, start: int, end: int):
+        offset = 0
+        remaining_start = start
+        remaining_end = end
+        for parquet_file in self.server.parquet_files:
+            file_size = parquet_file.stat().st_size
+            file_end = offset + file_size - 1
+            if remaining_start > file_end:
+                offset += file_size
+                continue
+
+            read_start = max(remaining_start - offset, 0)
+            read_end = min(remaining_end - offset, file_size - 1)
+            with parquet_file.open("rb") as source_file:
+                source_file.seek(read_start)
+                bytes_to_read = read_end - read_start + 1
+                while bytes_to_read:
+                    chunk = source_file.read(min(bytes_to_read, 65536))
+                    if not chunk:
+                        return
+                    self.wfile.write(chunk)
+                    bytes_to_read -= len(chunk)
+
+            if remaining_end <= file_end:
+                return
+            offset += file_size
+            remaining_start = file_end + 1
+
+
+class ExaParquetHttpThread(threading.Thread):
+    """Serve local Parquet files through a dedicated Exasol HTTP tunnel."""
+
+    def __init__(
+        self,
+        ipaddr: str,
+        port: int,
+        parquet_files: list[Path],
+        encryption: bool,
+    ):
+        self.server = ExaParquetTCPServer(
+            (ipaddr, port),
+            ExaParquetHttpRequestHandler,
+            parquet_files=parquet_files,
+            encryption=encryption,
+        )
+        self.exc = None
+        super().__init__()
+
+    @property
+    def exa_address(self) -> str:
+        address = f"{self.server.exa_address_ipaddr}:{self.server.exa_address_port}"
+        if public_key := self.server.exa_address_public_key:
+            address = f"{address}/{public_key}"
+        return address
+
+    def run(self):
+        try:
+            self.server.handle_request()
+        except BaseException as error:
+            self.exc = error
+        finally:
+            self.server.server_close()
+
+    def terminate(self):
+        self.server.is_terminated = True
+
+    def join_with_exc(self):
+        self.join()
+        if self.exc:
+            raise self.exc
