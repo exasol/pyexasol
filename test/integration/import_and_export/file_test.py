@@ -1,5 +1,4 @@
 import io
-
 from test.integration.import_and_export.helper import select_result
 
 import pytest
@@ -25,33 +24,52 @@ class TestImportFromFile:
 
         assert select_result(connection) == all_data.list_tuple()
 
-def make_files(which_file: str, tmp_path,all_data):
+
+def make_files(which_file: str, tmp_path, all_data):
+    all_data_tuple = all_data.list_tuple()
     if which_file == "StringIO":
-        return io.StringIO("a,b\n"), "a,b"#TypeError: a bytes-like object is required, not 'str'
-        #  Following error occured while reading data from external connection [https://172.18.0.2:41931/000.csv failed after 0 bytes. [transfer closed with outstanding read data remaining],[18],[Transferred a partial file]]
+        return (
+            io.StringIO("a,b\n"),
+            "Source must be either a file path, or a binary stream , i.e. a file opened in binary mode",
+        )
     elif which_file == "BytesIO":
-        return io.BytesIO(b"a,b\n"), "a,b"#format not correct
+        return (
+            io.BytesIO(
+                b"Anna,Thompson,1993-08-18,1993-08-18 12:00:00.900000,False,29,80.94"
+            ),
+            all_data_tuple[0:1],
+        )
     filepath = all_data.write_csv(directory=tmp_path)
     if which_file == "openCsv":
-        return open(filepath), all_data.list_tuple() # TypeError: a bytes-like object is required, not 'str'
-        # ETL-5105: Following error occured while reading data from external connection [https://172.18.0.2:38913/000.csv failed after 0 bytes. [transfer closed with outstanding read data remaining],[18],[Transferred a partial file]] (Session: 1876489509139382272)
+        return (
+            open(filepath),
+            "Source must be either a file path, or a binary stream , i.e. a file opened in binary mode",
+        )
     elif which_file == "openBinaryCsv":
-        return open(filepath, "rb"), all_data.list_tuple()
+        return open(filepath, "rb"), all_data_tuple
     elif which_file == "CsvPath":
-        return filepath, all_data.list_tuple()
+        return filepath, all_data_tuple
     else:
         return None, ""
 
 
-
 @pytest.mark.etl
-@pytest.mark.parametrize("which_file", ["StringIO", "BytesIO", "openCsv", "openBinaryCsv", "CsvPath"])
+@pytest.mark.parametrize(
+    "which_file", ["StringIO", "BytesIO", "openCsv", "openBinaryCsv", "CsvPath"]
+)
 class TestImportFromFile:
     @staticmethod
-    def test_import_from_non_binary_gives_correct_error(which_file, connection, empty_table, table_name, tmp_path, all_data):
-        scr, expected = make_files(which_file=which_file, tmp_path=tmp_path, all_data=all_data)
-        connection.import_from_file(src=scr, table=table_name)
-        print(which_file)
-        print(select_result(connection))
+    def test_import_from_non_binary_gives_correct_error(
+        which_file, connection, empty_table, table_name, tmp_path, all_data
+    ):
+        scr, expected = make_files(
+            which_file=which_file, tmp_path=tmp_path, all_data=all_data
+        )
 
-        assert select_result(connection) == expected
+        if isinstance(expected, list):
+            connection.import_from_file(src=scr, table=table_name)
+            assert select_result(connection) == expected
+        else:
+            with pytest.raises(TypeError) as e:
+                connection.import_from_file(src=scr, table=table_name)
+                assert e.value == expected

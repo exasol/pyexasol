@@ -20,6 +20,8 @@ It is okay to use common fetching for small data sets up to 1M of records.
 For large data sets, you should always consider :ref:`variants` (``export_*`` and ``import_*`` functions).
 They scale relatively well and prevent creation and destruction of intermediate Python objects.
 
+Note: The data source for import_from_file be either a file-path, or a binary stream , i.e. a file opened in binary mode.
+
 .. code-block:: python
 
     pd = C.export_to_pandas('SELECT * FROM table')

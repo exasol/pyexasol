@@ -57,3 +57,29 @@ def mock_exaconnection_factory():
         return mock_exaconnection(**config)
 
     return _exaconnection_fixture
+
+
+@pytest.fixture()
+def mock_http_thread():
+    """Patch ExaHttpThread where ExaConnection looks it up."""
+    with patch("pyexasol.connection.ExaHttpThread") as mock_cls:
+        instance = mock_cls.return_value
+        instance.write_pipe = MagicMock()
+        instance.write_pipe.__enter__.return_value = MagicMock(spec=["write"])
+
+        def construct_http_thread(*args, **kwargs):
+            worker_finished_event = kwargs.get("worker_finished_event")
+            if worker_finished_event is not None:
+                # The real HTTP thread signals this event when it finishes.
+                worker_finished_event.set()
+            return instance
+
+        mock_cls.side_effect = construct_http_thread
+        yield mock_cls
+
+
+@pytest.fixture()
+def mock_sql_import_thread():
+    """Mock ExaSQLThread instances used by import callbacks."""
+    with patch("pyexasol.connection.ExaSQLThread") as mock_cls:
+        yield mock_cls
