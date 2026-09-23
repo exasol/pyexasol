@@ -5,6 +5,7 @@ This module provides `PEP-249`_ DBAPI compliant connection implementation.
 .. _PEP-249-connection: https://peps.python.org/pep-0249/#connection-objects
 """
 
+import re
 import ssl
 from functools import wraps
 
@@ -31,6 +32,13 @@ def _requires_connection(method):
         return method(self, *args, **kwargs)
 
     return wrapper
+
+
+def _is_alter_session(operation) -> bool:
+    if not isinstance(operation, str):
+        return False
+    result = re.search(r"^ALTER\s+SESSION\b", operation.strip(), re.IGNORECASE)
+    return result is not None
 
 
 class Connection:
@@ -118,6 +126,17 @@ class Connection:
     def connection(self):
         """Underlying connection used by this Connection"""
         return self._connection
+
+    @_requires_connection
+    def validate_session_datetime_formats(self, operation):
+        """Validate the active session date/time format models.
+
+        Operations containing ``ALTER SESSION`` are allowed through so that an
+        application can change or restore session settings. The following
+        operation will validate the new date/time formats.
+        """
+        if _is_alter_session(operation):
+            return
 
     def close(self):
         """See also :py:meth: `Connection.close`"""
