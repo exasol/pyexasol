@@ -23,13 +23,17 @@ def _requires_connection(method):
 
     Raises:
         InterfaceError if the connection object has no active connection.
+        A DBAPI error translated from an ``ExaError`` raised by the method.
     """
 
     @wraps(method)
     def wrapper(self, *args, **kwargs):
         if not self._connection:
             raise InterfaceError("No active connection available")
-        return method(self, *args, **kwargs)
+        try:
+            return method(self, *args, **kwargs)
+        except pyexasol.exceptions.ExaError as ex:
+            raise translate_exception(ex) from ex
 
     return wrapper
 
@@ -152,18 +156,12 @@ class Connection:
     @_requires_connection
     def commit(self):
         """See also :py:meth: `Connection.commit`"""
-        try:
-            self._connection.commit()
-        except pyexasol.exceptions.ExaError as ex:
-            raise translate_exception(ex) from ex
+        self._connection.commit()
 
     @_requires_connection
     def rollback(self):
         """See also :py:meth: `Connection.rollback`"""
-        try:
-            self._connection.rollback()
-        except pyexasol.exceptions.ExaError as ex:
-            raise translate_exception(ex) from ex
+        self._connection.rollback()
 
     @_requires_connection
     def cursor(self):

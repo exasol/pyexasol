@@ -7,7 +7,13 @@ import pytest
 from exasol.driver.websocket._connection import (
     Connection,
     _is_alter_session,
+    _requires_connection,
 )
+from exasol.driver.websocket._errors import (
+    InterfaceError,
+    ProgrammingError,
+)
+from pyexasol.exceptions import ExaQueryError
 
 
 class TestIsAlterSession:
@@ -65,3 +71,72 @@ class TestValidateSessionDatetimeFormats:
 
         connection._connection.execute.assert_not_called()
         connection._connection = None
+
+
+class TestRequiresConnection:
+    @staticmethod
+    def test_translates_exasol_errors_and_preserves_cause(source_connection):
+        source = ExaQueryError(
+            source_connection,
+            "COMMIT",
+            1234,
+            "transaction failed",
+        )
+        underlying_connection = Mock()
+        underlying_connection.commit.side_effect = source
+        connection = Connection()
+        connection._connection = underlying_connection
+
+        try:
+            with pytest.raises(ProgrammingError) as exception_info:
+                connection.commit()
+
+            assert str(exception_info.value) == "transaction failed"
+            assert exception_info.value.__cause__ is source
+        finally:
+            connection._connection = None
+
+    @staticmethod
+    def test_no_connection():
+        class MyConnection:
+            def __init__(self, con=None):
+                self._connection = con
+
+            @_requires_connection
+            def close(self):
+                pass
+
+            def connect(self):
+                self._connection = object()
+
+        connection = MyConnection()
+        with pytest.raises(InterfaceError) as exception:
+            connection.close()
+
+        assert f"{exception.value}" == "No active connection available"
+
+    @staticmethod
+    def test_connection_available():
+        class MyConnection:
+            def __init__(self, con=None):
+                self._connection = con
+
+            @_requires_connection
+            def close(self):
+                return self._connection
+
+            def connect(self):
+                self._connection = object()
+
+        connection = MyConnection(con=object())
+        assert connection.close()
+
+    @staticmethod
+    def test_preserves_wrapped_name():
+        class MyConnection:
+            @_requires_connection
+            def close(self):
+                return True
+
+        connection = MyConnection()
+        assert connection.close.__name__ == "close"
