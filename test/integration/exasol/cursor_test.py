@@ -35,3 +35,12 @@ class TestSessionDatetimeFormats:
         message = str(exception_info.value)
         assert "Unsupported NLS_DATE_FORMAT 'DD.MM.YYYY'" in message
         assert "Unsupported NLS_TIMESTAMP_FORMAT 'DD.MM.YYYY HH24:MI:SS'" in message
+        assert (
+            "- Fix with: ALTER SESSION SET NLS_DATE_FORMAT = '<supported-format>';"
+            in message
+        )
+        assert (
+            "- Fix with: ALTER SESSION SET NLS_TIMESTAMP_FORMAT = "
+            "'<supported-format>';" in message
+        )
+        assert "\n\n" in message

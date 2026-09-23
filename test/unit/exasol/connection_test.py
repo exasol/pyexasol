@@ -146,6 +146,15 @@ class TestValidateSessionDatetimeFormatsHelper:
         message = str(exception_info.value)
         assert "Unsupported NLS_DATE_FORMAT" in message
         assert "Unsupported NLS_TIMESTAMP_FORMAT" in message
+        assert (
+            "- Fix with: ALTER SESSION SET NLS_DATE_FORMAT = '<supported-format>';"
+            in message
+        )
+        assert (
+            "- Fix with: ALTER SESSION SET NLS_TIMESTAMP_FORMAT = "
+            "'<supported-format>';" in message
+        )
+        assert "\n\n" in message
 
 
 class TestRequiresConnection:

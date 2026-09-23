@@ -78,12 +78,14 @@ def _validate_session_datetime_formats(session_formats):
 
         supported_values = ", ".join(repr(value) for value in supported_formats)
         errors.append(
-            f"Unsupported {parameter_name} {actual_format!r}. "
-            f"Supported formats: {supported_values}."
+            f"Unsupported {parameter_name} {actual_format!r}.\n"
+            f"- Supported formats: {supported_values}.\n"
+            f"- Fix with: ALTER SESSION SET {parameter_name} = "
+            "'<supported-format>';"
         )
 
     if errors:
-        raise InterfaceError("\n".join(errors))
+        raise InterfaceError("\n\n".join(errors))
 
 
 class Connection:
