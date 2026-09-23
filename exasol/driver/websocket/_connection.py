@@ -16,6 +16,26 @@ from exasol.driver.websocket._errors import (
     translate_exception,
 )
 
+_TIMESTAMP_EXASOL_FORMAT = "YYYY-MM-DD HH24:MI:SS"
+
+
+SUPPORTED_DATE_FORMATS = [
+    "YYYY-MM-DD",
+]
+
+SUPPORTED_TIMESTAMP_FORMATS = [
+    _TIMESTAMP_EXASOL_FORMAT,
+    f"{_TIMESTAMP_EXASOL_FORMAT}.FF1",
+    f"{_TIMESTAMP_EXASOL_FORMAT}.FF2",
+    f"{_TIMESTAMP_EXASOL_FORMAT}.FF3",
+    f"{_TIMESTAMP_EXASOL_FORMAT}.FF4",
+    f"{_TIMESTAMP_EXASOL_FORMAT}.FF5",
+    f"{_TIMESTAMP_EXASOL_FORMAT}.FF6",
+    f"{_TIMESTAMP_EXASOL_FORMAT}.FF7",
+    f"{_TIMESTAMP_EXASOL_FORMAT}.FF8",
+    f"{_TIMESTAMP_EXASOL_FORMAT}.FF9",
+]
+
 
 def _requires_connection(method):
     """
