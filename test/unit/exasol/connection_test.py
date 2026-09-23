@@ -1,13 +1,17 @@
 """Unit tests for the WebSocket DBAPI connection wrapper."""
 
+from contextlib import contextmanager
 from unittest.mock import Mock
 
 import pytest
 
 from exasol.driver.websocket._connection import (
+    SUPPORTED_DATE_FORMATS,
+    SUPPORTED_TIMESTAMP_FORMATS,
     Connection,
     _is_alter_session,
     _requires_connection,
+    _validate_session_datetime_formats,
 )
 from exasol.driver.websocket._errors import (
     InterfaceError,
@@ -61,6 +65,41 @@ class TestIsAlterSession:
 
 
 class TestValidateSessionDatetimeFormats:
+    @staticmethod
+    @contextmanager
+    def _connection_with_session_formats(date_format, timestamp_format):
+        connection = Connection()
+        connection._connection = Mock()
+        result = Mock()
+        result.fetchall.return_value = [
+            ("NLS_DATE_FORMAT", date_format),
+            ("NLS_TIMESTAMP_FORMAT", timestamp_format),
+        ]
+        connection._connection.execute.return_value = result
+        try:
+            yield connection
+        finally:
+            connection._connection = None
+
+    def test_accepts_supported_formats(self):
+        with self._connection_with_session_formats(
+            SUPPORTED_DATE_FORMATS[0],
+            SUPPORTED_TIMESTAMP_FORMATS[0],
+        ) as connection:
+            connection.validate_session_datetime_formats("SELECT 1")
+
+    def test_rejects_unsupported_formats(self):
+        with self._connection_with_session_formats(
+            "DD.MM.YYYY",
+            "DD.MM.YYYY HH24:MI:SS",
+        ) as connection:
+            with pytest.raises(InterfaceError) as exception_info:
+                connection.validate_session_datetime_formats("SELECT 1")
+
+        message = str(exception_info.value)
+        assert "Unsupported NLS_DATE_FORMAT 'DD.MM.YYYY'" in message
+        assert "Unsupported NLS_TIMESTAMP_FORMAT 'DD.MM.YYYY HH24:MI:SS'" in message
+
     def test_skips_alter_session_operations(self):
         connection = Connection()
         connection._connection = Mock()
@@ -71,6 +110,42 @@ class TestValidateSessionDatetimeFormats:
 
         connection._connection.execute.assert_not_called()
         connection._connection = None
+
+
+class TestValidateSessionDatetimeFormatsHelper:
+    @staticmethod
+    @pytest.mark.parametrize("timestamp_format", SUPPORTED_TIMESTAMP_FORMATS)
+    def test_accepts_formats(timestamp_format):
+        _validate_session_datetime_formats(
+            {
+                "NLS_DATE_FORMAT": SUPPORTED_DATE_FORMATS[0],
+                "NLS_TIMESTAMP_FORMAT": timestamp_format,
+            }
+        )
+
+    @staticmethod
+    def test_rejects_format():
+        with pytest.raises(InterfaceError, match="Unsupported NLS_DATE_FORMAT"):
+            _validate_session_datetime_formats(
+                {
+                    "NLS_DATE_FORMAT": "DD.MM.YYYY",
+                    "NLS_TIMESTAMP_FORMAT": SUPPORTED_TIMESTAMP_FORMATS[0],
+                }
+            )
+
+    @staticmethod
+    def test_reports_all_errors():
+        with pytest.raises(InterfaceError) as exception_info:
+            _validate_session_datetime_formats(
+                {
+                    "NLS_DATE_FORMAT": "DD.MM.YYYY",
+                    "NLS_TIMESTAMP_FORMAT": "DD.MM.YYYY HH24:MI:SS",
+                }
+            )
+
+        message = str(exception_info.value)
+        assert "Unsupported NLS_DATE_FORMAT" in message
+        assert "Unsupported NLS_TIMESTAMP_FORMAT" in message
 
 
 class TestRequiresConnection:

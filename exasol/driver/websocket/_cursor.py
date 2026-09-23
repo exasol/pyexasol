@@ -224,9 +224,9 @@ class Cursor:
             self.executemany(operation, [parameters])
             return
 
-        connection = self._connection.connection
         try:
-            self._cursor = connection.execute(operation)
+            self._connection.validate_session_datetime_formats(operation)
+            self._cursor = self._connection.connection.execute(operation)
         except pyexasol.exceptions.ExaError as ex:
             raise translate_exception(ex) from ex
 
@@ -289,15 +289,18 @@ class Cursor:
         parameters = [
             [_dbapi2pyexasol(p) for p in params] for params in seq_of_parameters
         ]
-        connection = self._connection.connection
-        self._cursor = connection.cls_statement(connection, operation, prepare=True)
 
-        parameter_data = self._cursor.parameter_data
-        parameters = [
-            Cursor._adapt_to_requested_db_types(params, parameter_data)
-            for params in parameters
-        ]
         try:
+            self._connection.validate_session_datetime_formats(operation)
+            self._cursor = self._connection.connection.cls_statement(
+                self._connection.connection, operation, prepare=True
+            )
+
+            parameter_data = self._cursor.parameter_data
+            parameters = [
+                Cursor._adapt_to_requested_db_types(params, parameter_data)
+                for params in parameters
+            ]
             self._cursor.execute_prepared(parameters)
         except pyexasol.exceptions.ExaError as ex:
             raise translate_exception(ex) from ex

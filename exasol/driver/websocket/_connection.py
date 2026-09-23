@@ -65,6 +65,27 @@ def _is_alter_session(operation) -> bool:
     return result is not None
 
 
+def _validate_session_datetime_formats(session_formats):
+    """Raise one interface error for all unsupported session formats."""
+    errors = []
+    for parameter_name, supported_formats in (
+        ("NLS_DATE_FORMAT", SUPPORTED_DATE_FORMATS),
+        ("NLS_TIMESTAMP_FORMAT", SUPPORTED_TIMESTAMP_FORMATS),
+    ):
+        actual_format = session_formats.get(parameter_name)
+        if actual_format in supported_formats:
+            continue
+
+        supported_values = ", ".join(repr(value) for value in supported_formats)
+        errors.append(
+            f"Unsupported {parameter_name} {actual_format!r}. "
+            f"Supported formats: {supported_values}."
+        )
+
+    if errors:
+        raise InterfaceError("\n".join(errors))
+
+
 class Connection:
     """
     Implementation of a websocket-based connection.
@@ -161,6 +182,16 @@ class Connection:
         """
         if _is_alter_session(operation):
             return
+
+        session_datetime_format_query = """
+        SELECT parameter_name, session_value
+        FROM EXA_PARAMETERS
+        WHERE parameter_name IN ('NLS_DATE_FORMAT', 'NLS_TIMESTAMP_FORMAT')
+        """
+        result = self._connection.execute(session_datetime_format_query)
+        session_formats = dict(result.fetchall())
+
+        _validate_session_datetime_formats(session_formats)
 
     def close(self):
         """See also :py:meth: `Connection.close`"""
