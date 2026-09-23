@@ -60,7 +60,20 @@ def _requires_connection(method):
 def _is_alter_session(operation) -> bool:
     if not isinstance(operation, str):
         return False
-    result = re.search(r"^ALTER\s+SESSION\b", operation.strip(), re.IGNORECASE)
+
+    operation = operation.lstrip()
+    if operation.startswith("/*"):
+        comment_end = operation.find("*/", 2)
+        if comment_end == -1:
+            return False
+        operation = operation[comment_end + 2 :].lstrip()
+    elif operation.startswith("--"):
+        line_end = re.search(r"\r\n|\r|\n", operation)
+        if line_end is None:
+            return False
+        operation = operation[line_end.end() :].lstrip()
+
+    result = re.search(r"^ALTER\s+SESSION\b", operation, re.IGNORECASE)
     return result is not None
 
 

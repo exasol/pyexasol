@@ -40,6 +40,18 @@ class TestIsAlterSession:
                 "  ALTER SESSION SET NLS_DATE_FORMAT = 'YYYY-MM-DD'  ",
                 id="leading-and-trailing-whitespace",
             ),
+            pytest.param(
+                "/* application tag */ ALTER SESSION SET NLS_DATE_FORMAT = 'YYYY-MM-DD'",
+                id="leading-block-comment",
+            ),
+            pytest.param(
+                "/* application\n                   tag */ ALTER SESSION SET NLS_DATE_FORMAT = 'YYYY-MM-DD'",
+                id="leading-multiline-block-comment",
+            ),
+            pytest.param(
+                "-- application tag\nALTER SESSION SET NLS_DATE_FORMAT = 'YYYY-MM-DD'",
+                id="leading-line-comment",
+            ),
         ],
     )
     def test_matches(self, operation):
@@ -57,6 +69,8 @@ class TestIsAlterSession:
                 "SELECT 'ALTER SESSION SET NLS_DATE_FORMAT = ''YYYY-MM-DD'''",
                 id="text-containing-alter-session",
             ),
+            pytest.param("/* unclosed comment", id="unclosed-block-comment"),
+            pytest.param("-- comment without statement", id="line-comment-only"),
             pytest.param(None, id="non-string-operation"),
         ],
     )
