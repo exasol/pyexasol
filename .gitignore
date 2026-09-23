@@ -25,3 +25,6 @@ build/
 test/performance/.benchmarks/
 
 /.serena/
+
+# Emacs
+/TAGS

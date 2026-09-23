@@ -136,4 +136,5 @@ This can be used for profiling and auditing. Example:
     This query is importing user from CSV.
     '''})
 
-The comment is inserted as a block comment (``/* <comment> */``). The block comment closing sequence (``*/``) is forbidden in the comment.
+The comment is inserted as a block comment (``/* <comment> */``). The block comment
+closing sequence (``*/``) is forbidden in the comment.

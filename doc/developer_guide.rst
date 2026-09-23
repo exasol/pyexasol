@@ -3,6 +3,11 @@
 :octicon:`tools` Developer Guide
 ================================
 
+.. toctree::
+    :maxdepth: 2
+
+    developer_guide/import_export_threading
+
 This guide explains how to develop PyExasol and run tests.
 
 Initial Setup
@@ -92,6 +97,13 @@ Integration Tests
     nox -s test:integration
 
 Passing additional arguments to pytest works the same as for the unit tests.
+
+The large parquet tests can be excluded from an integration test run using
+the ``parquet_slow`` marker:
+
+.. code-block:: shell
+
+    nox -s test:integration -- -m "not parquet_slow"
 
 Performance Tests
 -----------------

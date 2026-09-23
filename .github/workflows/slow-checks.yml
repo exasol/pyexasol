@@ -6,7 +6,7 @@ on:
 jobs:
   build-matrix:
     name: Build Matrix
-    uses: ./.github/workflows/matrix.yml
+    uses: $/.github/workflows/matrix.yml
     with:
       matrix_keys_json: ${{ github.workflow == 'Periodic-Validation' && '["minimum_python_version", "exasol_versions"]' || '["python_versions", "exasol_versions"]' }}
     permissions:

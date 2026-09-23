@@ -1,5 +1,5 @@
 # Generated and maintained by the exasol-toolbox.
-# Last generated with exasol-toolbox version 10.4.0.
+# Last generated with exasol-toolbox version 10.5.0.
 name: Periodic-Validation
 
 on:
@@ -27,7 +27,7 @@ jobs:
 
   run-fast-checks:
     name: Fast Checks
-    uses: ./.github/workflows/checks.yml
+    uses: $/.github/workflows/checks.yml
     needs:
       - restrict-to-default-branch
     permissions:
@@ -35,7 +35,7 @@ jobs:
 
   run-fast-tests:
     name: Fast Tests
-    uses: ./.github/workflows/fast-tests.yml
+    uses: $/.github/workflows/fast-tests.yml
     needs:
       - restrict-to-default-branch
     permissions:
@@ -43,7 +43,7 @@ jobs:
 
   run-slow-checks:
     name: Slow Checks
-    uses: ./.github/workflows/slow-checks.yml
+    uses: $/.github/workflows/slow-checks.yml
     needs:
       - restrict-to-default-branch
     permissions:
@@ -55,7 +55,7 @@ jobs:
       - run-fast-checks
       - run-fast-tests
       - run-slow-checks
-    uses: ./.github/workflows/report.yml
+    uses: $/.github/workflows/report.yml
     secrets:
       SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
     permissions:

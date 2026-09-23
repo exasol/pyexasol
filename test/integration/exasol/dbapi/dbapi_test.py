@@ -4,7 +4,9 @@ import pytest
 
 from exasol.driver.websocket.dbapi2 import (
     Error,
+    InterfaceError,
     NotSupportedError,
+    OperationalError,
     TypeCode,
     connect,
 )
@@ -26,9 +28,8 @@ def test_websocket_dbapi_connect_fails():
     dsn = "127.0.0.2:9999"
     username = "ShouldNotExist"
     password = "ThisShouldNotBeAValidPasswordForTheUser"
-    with pytest.raises(Error) as e_info:
+    with pytest.raises(OperationalError, match="Connection refused"):
         connect(dsn=dsn, username=username, password=password)
-    assert "Connection failed" in f"{e_info.value}"
 
 
 def test_retrieve_cursor_from_connection(connection):
@@ -235,7 +236,7 @@ def test_cursor_closed_cursor_raises_exception_on_property_access(connection, pr
     cursor = connection.cursor()
     cursor.close()
 
-    with pytest.raises(Error) as exec_info:
+    with pytest.raises(InterfaceError) as exec_info:
         _ = getattr(cursor, property)
 
     assert f"{exec_info.value}" == expected
@@ -268,9 +269,9 @@ def test_cursor_closed_cursor_raises_exception_on_method_usage(
     cursor.execute("SELECT 1;")
     cursor.close()
 
-    with pytest.raises(Error) as exec_info:
-        method = getattr(cursor, method)
-        method(*args)
+    cursor_method = getattr(cursor, method)
+    with pytest.raises(InterfaceError) as exec_info:
+        cursor_method(*args)
 
     assert f"{exec_info.value}" == expected
 

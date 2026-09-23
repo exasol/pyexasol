@@ -69,34 +69,9 @@ Run basic query
     which is the returned object from :func:`C.execute()`.
 
 
-.. code-block:: python
-
-    import pyexasol
-
-    # Usage of the context manager for a DB connection is helpful as it ensures proper
-    # resource management -- like closing the connection after proper usage or an
-    # exception is raised.
-    with pyexasol.connect(dsn='<host:port>', user='sys', password='exasol') as C:
-        with C.execute("SELECT * FROM EXA_ALL_USERS") as stmt:
-            # to fetch 1 row
-            print(stmt.fetchone())
-
-            # to fetch n=3 rows
-            print(stmt.fetchmany(3))
-
-            # to fetch all remaining rows
-            print(stmt.fetchall())
-
-        # This is not needed for the code to run, but it shows the value of a context manager.
-        print(stmt.is_closed)
-    # This is not needed for the code to run, but it shows the value of a context manager.
-    print(C.is_closed)
-
-    with pyexasol.connect(dsn='<host:port>', user='sys', password='exasol') as C:
-        with C.execute("SELECT * FROM EXA_ALL_USERS") as stmt:
-            # to iterate through all rows
-            for row in stmt:
-                print(row)
+.. literalinclude:: ../../examples/getting_started/basic_query.py
+   :language: python3
+   :caption: examples/getting_started/basic_query.py
 
 Export data into a DataFrame
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -104,38 +79,23 @@ Export data into a DataFrame
 Using pandas
 """"""""""""
 
-.. code-block:: python
-
-    # pip install pyexasol[pandas]
-    import pyexasol
-
-    C = pyexasol.connect(dsn='<host:port>', user='sys', password='exasol', compression=True)
-    df = C.export_to_pandas("SELECT * FROM EXA_ALL_USERS")
-    print(df.head())
+.. literalinclude:: ../../examples/getting_started/export_to_pandas.py
+   :language: python3
+   :caption: examples/getting_started/export_to_pandas.py
 
 Using parquet
 """""""""""""
 
-.. code-block:: python
-
-    # pip install pyexasol[pyarrow]
-    import pyexasol
-
-    C = pyexasol.connect(dsn='<host:port>', user='sys', password='exasol', compression=True)
-    df = C.export_to_parquet("SELECT * FROM EXA_ALL_USERS")
-    print(df.head())
+.. literalinclude:: ../../examples/getting_started/export_to_parquet.py
+   :language: python3
+   :caption: examples/getting_started/export_to_parquet.py
 
 Using polars
 """"""""""""
 
-.. code-block:: python
-
-    # pip install pyexasol[polars]
-    import pyexasol
-
-    C = pyexasol.connect(dsn='<host:port>', user='sys', password='exasol', compression=True)
-    df = C.export_to_polars("SELECT * FROM EXA_ALL_USERS")
-    print(df.head())
+.. literalinclude:: ../../examples/getting_started/export_to_polars.py
+   :language: python3
+   :caption: examples/getting_started/export_to_polars.py
 
 Diving Deeper
 -------------

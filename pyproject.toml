@@ -1,6 +1,6 @@
 [project]
 name = "pyexasol"
-version = "2.3.1"
+version = "2.4.1"
 description = "Exasol python driver with extra features"
 authors = [
     { name = "Vitaly Markov", email = "wild.desu@gmail.com" },
@@ -41,8 +41,9 @@ dependencies = [
     # Releases are published as needed for ecosystem interoperability PEP changes.
     # If we encounter a breaking change, upstream projects can narrow the range.
     "packaging>=24.1.0",
-    "websocket-client>=1.0.1,<2",
-    "exasol-telemetry-client (>=0.1.6)",
+    "websocket-client>=1.0.1,<=1.9.0", # See https://github.com/exasol/pyexasol/issues/401
+    "pydantic (>=2.13.4,<3.0.0)",
+    "exasol-telemetry-client (>=0.2.0,<0.3.0)",
 ]
 
 [project.optional-dependencies]
@@ -122,6 +123,9 @@ fail-under = 6.0
 max-line-length = 88
 max-module-lines = 800
 
+[tool.mypy]
+plugins = ['pydantic.mypy']
+
 [[tool.mypy.overrides]]
 module = [
     # no stubs available as of 2025
@@ -170,6 +174,7 @@ markers = [
     "misc: miscellaneous tests which did not fit in the other categories.",
     "pandas: tests related to support of pandas library.",
     "parquet: tests related to support of pyarrow.parquet library.",
+    "parquet_slow: slow parquet integration tests.",
     "polars: tests related to support of polars library.",
     "smoke: smoke tests which always should pass.",
     "tls: tests related to tls.",
