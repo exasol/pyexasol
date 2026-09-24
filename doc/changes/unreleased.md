@@ -9,9 +9,9 @@ handling and connection error behavior:
   ``NLS_TIMESTAMP_FORMAT`` values against the supported ISO-compatible formats,
   reporting all invalid parameters together with corrective ``ALTER SESSION``
   guidance.
-* Connection methods consistently use the ``_requires_connection`` wrapper to
-  reject operations without an active connection and translate underlying
-  Exasol errors into the appropriate DBAPI exceptions.
+* WebSocket DBAPI connection operations that require an active connection now
+  consistently reject calls made without one and translate underlying Exasol
+  errors into the appropriate DBAPI exceptions.
 
 ## Bugfixes
 
