@@ -190,9 +190,9 @@ class Connection:
     def validate_session_datetime_formats(self, operation):
         """Validate the active session date/time format models.
 
-        Operations containing ``ALTER SESSION`` are allowed through so that an
-        application can change or restore session settings. The following
-        operation will validate the new date/time formats.
+        Operations containing ``ALTER SESSION`` are ignored so that an
+        application can change or restore session settings while bypassing the validation.
+        The following operation will validate the new date/time formats.
         """
         if _is_alter_session(operation):
             return
