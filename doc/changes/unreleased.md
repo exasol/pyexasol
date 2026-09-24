@@ -5,10 +5,10 @@
 In this major release, the WebSocket DBAPI improves session date/time format
 handling and connection error behavior:
 
-* WebSocket DBAPI executions now validate the active ``NLS_DATE_FORMAT`` and
-  ``NLS_TIMESTAMP_FORMAT`` values against the supported ISO-compatible formats,
-  reporting all invalid parameters together with corrective ``ALTER SESSION``
-  guidance.
+* WebSocket DBAPI executions now validate the ``NLS_DATE_FORMAT`` and
+  ``NLS_TIMESTAMP_FORMAT`` EXA_PARAMETERS against the ISO-compatible formats
+  supported by PyExasol, reporting all invalid parameters together with
+  corrective ``ALTER SESSION`` guidance.
 * WebSocket DBAPI connection operations that require an active connection now
   consistently reject calls made without one and translate underlying Exasol
   errors into the appropriate DBAPI exceptions.
