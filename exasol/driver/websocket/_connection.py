@@ -57,21 +57,30 @@ def _requires_connection(method):
     return wrapper
 
 
-def _is_alter_session(operation) -> bool:
-    if not isinstance(operation, str):
-        return False
-
+def _remove_leading_sql_comment(operation: str) -> str | None:
+    """Remove a leading SQL comment and surrounding whitespace from a SQL statement."""
     operation = operation.lstrip()
     if operation.startswith("/*"):
         comment_end = operation.find("*/", 2)
         if comment_end == -1:
-            return False
-        operation = operation[comment_end + 2 :].lstrip()
+            return None
+        return operation[comment_end + 2 :].lstrip()
     elif operation.startswith("--"):
         line_end = re.search(r"\r\n|\r|\n", operation)
         if line_end is None:
-            return False
-        operation = operation[line_end.end() :].lstrip()
+            return None
+        return operation[line_end.end() :].lstrip()
+
+    return operation
+
+
+def _is_alter_session(operation) -> bool:
+    if not isinstance(operation, str):
+        return False
+
+    operation = _remove_leading_sql_comment(operation)
+    if operation is None:
+        return False
 
     result = re.search(r"^ALTER\s+SESSION\b", operation, re.IGNORECASE)
     return result is not None

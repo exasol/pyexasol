@@ -10,6 +10,7 @@ from exasol.driver.websocket._connection import (
     SUPPORTED_TIMESTAMP_FORMATS,
     Connection,
     _is_alter_session,
+    _remove_leading_sql_comment,
     _requires_connection,
     _validate_session_datetime_formats,
 )
@@ -44,14 +45,6 @@ class TestIsAlterSession:
                 "/* application tag */ ALTER SESSION SET NLS_DATE_FORMAT = 'YYYY-MM-DD'",
                 id="leading-block-comment",
             ),
-            pytest.param(
-                "/* application\n                   tag */ ALTER SESSION SET NLS_DATE_FORMAT = 'YYYY-MM-DD'",
-                id="leading-multiline-block-comment",
-            ),
-            pytest.param(
-                "-- application tag\nALTER SESSION SET NLS_DATE_FORMAT = 'YYYY-MM-DD'",
-                id="leading-line-comment",
-            ),
         ],
     )
     def test_matches(self, operation):
@@ -69,13 +62,34 @@ class TestIsAlterSession:
                 "SELECT 'ALTER SESSION SET NLS_DATE_FORMAT = ''YYYY-MM-DD'''",
                 id="text-containing-alter-session",
             ),
-            pytest.param("/* unclosed comment", id="unclosed-block-comment"),
-            pytest.param("-- comment without statement", id="line-comment-only"),
             pytest.param(None, id="non-string-operation"),
         ],
     )
     def test_rejects_other_text(self, operation):
         assert not _is_alter_session(operation)
+
+
+class TestRemoveLeadingSqlComment:
+    @pytest.mark.parametrize(
+        ("operation", "expected_operation"),
+        [
+            pytest.param(
+                "  /* application tag */ SELECT 1",
+                "SELECT 1",
+                id="block-comment",
+            ),
+            pytest.param(
+                "-- application tag\nSELECT 1",
+                "SELECT 1",
+                id="line-comment",
+            ),
+            pytest.param("SELECT 1", "SELECT 1", id="no-comment"),
+            pytest.param("/* unclosed comment", None, id="unclosed-block-comment"),
+            pytest.param("-- comment without statement", None, id="line-comment-only"),
+        ],
+    )
+    def test_removes_leading_comment(self, operation, expected_operation):
+        assert _remove_leading_sql_comment(operation) == expected_operation
 
 
 class TestValidateSessionDatetimeFormats:
