@@ -157,7 +157,7 @@ class Connection:
             "compression": False,
             "encryption": tls,
             "fetch_dict": False,
-            "fetch_mapper": None,
+            "fetch_mapper": pyexasol.exasol_mapper,
             "fetch_size_bytes": 5 * 1024 * 1024,
             "lower_ident": False,
             "quote_ident": False,
