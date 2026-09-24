@@ -52,8 +52,9 @@ Session Date/Time Formats
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Before executing a user statement, the WebSocket DBAPI checks the active session
-values of ``NLS_DATE_FORMAT`` and ``NLS_TIMESTAMP_FORMAT``. The DBAPI currently
-supports only the exact formats listed below. Format-model matching is case-sensitive.
+values of ExaParameters``NLS_DATE_FORMAT`` and ``NLS_TIMESTAMP_FORMAT``. The DBAPI
+currently supports only the exact formats listed below. Format-model matching is
+case-sensitive.
 
 The supported values are represented by the following definitions in the DBAPI
 connection implementation:
