@@ -88,7 +88,7 @@ def exasol_mapper(val, data_type):
             return decimal.Decimal(val)
     elif data_type["type"] == "DATE":
         return datetime.date.fromisoformat(val)
-    elif data_type["type"] == "TIMESTAMP":
+    elif data_type["type"] in ("TIMESTAMP", "TIMESTAMP WITH LOCAL TIME ZONE"):
         # Normalize fractional seconds for Python 3.10 compatibility and truncate
         # Exasol's optional nanoseconds to Python's microsecond precision.
         timestamp_value = val
