@@ -31,6 +31,7 @@ from warnings import warn
 import websocket
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import padding
+from exasol.telemetry import client as telemetry
 from packaging.version import Version
 
 from . import callback as cb
@@ -260,6 +261,7 @@ class ExaConnection:
             refresh_token:
                 OpenID refresh token to use for the login process
         """
+        telemetry.track("PYEXA", __version__, "connect")
 
         # convert all arguments to a dict[argument_name, argument_value]
         sig = get_exaconnection_signature()
