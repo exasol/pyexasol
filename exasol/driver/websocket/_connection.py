@@ -5,6 +5,7 @@ This module provides `PEP-249`_ DBAPI compliant connection implementation.
 .. _PEP-249-connection: https://peps.python.org/pep-0249/#connection-objects
 """
 
+import re
 import ssl
 from functools import wraps
 
@@ -15,6 +16,25 @@ from exasol.driver.websocket._errors import (
     translate_exception,
 )
 
+# Start: supported session date/time formats included in the DBAPI documentation.
+SUPPORTED_DATE_FORMATS = [
+    "YYYY-MM-DD",
+]
+
+SUPPORTED_TIMESTAMP_FORMATS = [
+    "YYYY-MM-DD HH24:MI:SS",
+    "YYYY-MM-DD HH24:MI:SS.FF1",
+    "YYYY-MM-DD HH24:MI:SS.FF2",
+    "YYYY-MM-DD HH24:MI:SS.FF3",
+    "YYYY-MM-DD HH24:MI:SS.FF4",
+    "YYYY-MM-DD HH24:MI:SS.FF5",
+    "YYYY-MM-DD HH24:MI:SS.FF6",
+    "YYYY-MM-DD HH24:MI:SS.FF7",
+    "YYYY-MM-DD HH24:MI:SS.FF8",
+    "YYYY-MM-DD HH24:MI:SS.FF9",
+]
+# End: supported session date/time formats included in the DBAPI documentation.
+
 
 def _requires_connection(method):
     """
@@ -22,15 +42,71 @@ def _requires_connection(method):
 
     Raises:
         InterfaceError if the connection object has no active connection.
+        A DBAPI error translated from an ``ExaError`` raised by the method.
     """
 
     @wraps(method)
     def wrapper(self, *args, **kwargs):
         if not self._connection:
             raise InterfaceError("No active connection available")
-        return method(self, *args, **kwargs)
+        try:
+            return method(self, *args, **kwargs)
+        except pyexasol.exceptions.ExaError as ex:
+            raise translate_exception(ex) from ex
 
     return wrapper
+
+
+def _remove_leading_sql_comment(operation: str) -> str | None:
+    """Remove a leading SQL comment and surrounding whitespace from a SQL statement."""
+    operation = operation.lstrip()
+    if operation.startswith("/*"):
+        comment_end = operation.find("*/", 2)
+        if comment_end == -1:
+            return None
+        return operation[comment_end + 2 :].lstrip()
+    elif operation.startswith("--"):
+        line_end = re.search(r"\r\n|\r|\n", operation)
+        if line_end is None:
+            return None
+        return operation[line_end.end() :].lstrip()
+
+    return operation
+
+
+def _is_alter_session(operation) -> bool:
+    if not isinstance(operation, str):
+        return False
+
+    operation = _remove_leading_sql_comment(operation)
+    if operation is None:
+        return False
+
+    result = re.search(r"^ALTER\s+SESSION\b", operation, re.IGNORECASE)
+    return result is not None
+
+
+def _validate_session_datetime_formats(session_formats):
+    """Raise one interface error for all unsupported session formats."""
+    errors = []
+    for parameter_name, supported_formats in (
+        ("NLS_DATE_FORMAT", SUPPORTED_DATE_FORMATS),
+        ("NLS_TIMESTAMP_FORMAT", SUPPORTED_TIMESTAMP_FORMATS),
+    ):
+        actual_format = session_formats.get(parameter_name)
+        if actual_format in supported_formats:
+            continue
+
+        supported_values = ", ".join(repr(value) for value in supported_formats)
+        errors.append(
+            f"Unsupported {parameter_name} {actual_format!r}.\n"
+            f"- Supported formats: {supported_values}.\n"
+            f"- Fix with: ALTER SESSION SET {parameter_name} = "
+            "'<supported-format>';"
+        )
+
+    if errors:
+        raise InterfaceError("\n\n".join(errors))
 
 
 class Connection:
@@ -119,6 +195,27 @@ class Connection:
         """Underlying connection used by this Connection"""
         return self._connection
 
+    @_requires_connection
+    def validate_session_datetime_formats(self, operation):
+        """Validate the active session date/time format models.
+
+        Operations containing ``ALTER SESSION`` are ignored so that an
+        application can change or restore session settings while bypassing the validation.
+        The following operation will validate the new date/time formats.
+        """
+        if _is_alter_session(operation):
+            return
+
+        session_datetime_format_query = """
+        SELECT parameter_name, session_value
+        FROM EXA_PARAMETERS
+        WHERE parameter_name IN ('NLS_DATE_FORMAT', 'NLS_TIMESTAMP_FORMAT')
+        """
+        result = self._connection.execute(session_datetime_format_query)
+        session_formats = dict(result.fetchall())
+
+        _validate_session_datetime_formats(session_formats)
+
     def close(self):
         """See also :py:meth: `Connection.close`"""
         connection_to_close = self._connection
@@ -133,18 +230,12 @@ class Connection:
     @_requires_connection
     def commit(self):
         """See also :py:meth: `Connection.commit`"""
-        try:
-            self._connection.commit()
-        except pyexasol.exceptions.ExaError as ex:
-            raise translate_exception(ex) from ex
+        self._connection.commit()
 
     @_requires_connection
     def rollback(self):
         """See also :py:meth: `Connection.rollback`"""
-        try:
-            self._connection.rollback()
-        except pyexasol.exceptions.ExaError as ex:
-            raise translate_exception(ex) from ex
+        self._connection.rollback()
 
     @_requires_connection
     def cursor(self):

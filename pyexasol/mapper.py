@@ -67,9 +67,6 @@ def exasol_mapper(val, data_type):
     """
     Convert into Python 3 data types according to Exasol manual
 
-    strptime() function is slow, so we use direct string slicing for performance reasons
-    More details about this problem: http://ze.phyr.us/faster-strptime/
-
     DECIMAL(p,0)           -> int
     DECIMAL(p,s)           -> decimal.Decimal
     DOUBLE                 -> float
@@ -90,17 +87,14 @@ def exasol_mapper(val, data_type):
         else:
             return decimal.Decimal(val)
     elif data_type["type"] == "DATE":
-        return datetime.date(int(val[0:4]), int(val[5:7]), int(val[8:10]))
+        return datetime.date.fromisoformat(val)
     elif data_type["type"] == "TIMESTAMP":
-        return datetime.datetime(
-            int(val[0:4]),
-            int(val[5:7]),
-            int(val[8:10]),  # year, month, day
-            int(val[11:13]),
-            int(val[14:16]),
-            int(val[17:19]),  # hour, minute, second
-            int(val[20:26].ljust(6, "0")) if len(val) > 20 else 0,
-        )  # microseconds (if available)
+        # Normalize fractional seconds for Python 3.10 compatibility and truncate
+        # Exasol's optional nanoseconds to Python's microsecond precision.
+        timestamp_value = val
+        if len(val) > 19:
+            timestamp_value = f"{val[:19]}.{val[20:26].ljust(6, '0')}"
+        return datetime.datetime.fromisoformat(timestamp_value)
     elif data_type["type"] == "INTERVAL DAY TO SECOND":
         return ExaTimeDelta.from_interval(val)
     else:

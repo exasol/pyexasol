@@ -45,6 +45,31 @@ A good example is `TurboODBC <https://github.com/blue-yonder/turbodbc>`__. Very 
 
 Minor intentional incompatibilities with DB-API 2.0 force users to look through the manual and to learn about :ref:`Best Practices` of getting the job done.
 
+Usage Notes
+-----------
+
+Session Date/Time Formats
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Before executing a user statement, the WebSocket DBAPI checks the active session
+values of ExaParameters``NLS_DATE_FORMAT`` and ``NLS_TIMESTAMP_FORMAT``. The DBAPI
+currently supports only the exact formats listed below. Format-model matching is
+case-sensitive.
+
+The supported values are represented by the following definitions in the DBAPI
+connection implementation:
+
+.. literalinclude:: ../../../../exasol/driver/websocket/_connection.py
+   :language: python
+   :start-after: # Start: supported session date/time formats included in the DBAPI documentation.
+   :end-before: # End: supported session date/time formats included in the DBAPI documentation.
+
+Statements containing ``ALTER SESSION`` are allowed so applications can change
+these settings. If either format is unsupported, execution raises one
+``InterfaceError`` containing all invalid parameters, their supported formats,
+and an example ``ALTER SESSION`` statement showing where to insert a supported
+format.
+
 Exasol Specific Problems with DB-API 2.0
 ----------------------------------------
 
