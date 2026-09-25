@@ -5,7 +5,10 @@ from exasol.driver.websocket._connection import (
     SUPPORTED_TIMESTAMP_FORMATS,
 )
 from exasol.driver.websocket._errors import DatabaseError
-from exasol.driver.websocket.dbapi2 import InterfaceError
+from exasol.driver.websocket.dbapi2 import (
+    InterfaceError,
+    TypeCode,
+)
 
 
 class TestSessionDatetimeFormats:
@@ -101,3 +104,63 @@ class TestRowCount:
     @staticmethod
     def test_before_execute(cursor):
         assert cursor.rowcount == -1
+
+
+class TestDescription:
+    @staticmethod
+    def test_before_execute(cursor):
+        assert cursor.description is None
+
+    @staticmethod
+    def test_table_description(cursor, filled_table, rows):
+        cursor.execute(f"SELECT * FROM {filled_table};")
+        cursor.fetchone()
+
+        assert cursor.description == (
+            ("DECIMAL_INTEGER", TypeCode.Decimal, None, None, 18, 0, None),
+            ("DECIMAL_FRACTION", TypeCode.Decimal, None, None, 18, 3, None),
+            ("DOUBLE_VALUE", TypeCode.Double, None, None, None, None, None),
+            ("CHAR_VALUE", TypeCode.Char, None, 5, None, None, None),
+            ("VARCHAR_VALUE", TypeCode.String, None, 20, None, None, None),
+            ("DATE_VALUE", TypeCode.Date, None, 4, None, None, None),
+            ("TIMESTAMP_VALUE", TypeCode.Timestamp, None, 16, None, None, None),
+            ("TIMESTAMP_LOCAL_VALUE", TypeCode.TimestampTz, None, 16, None, None, None),
+            (
+                "INTERVAL_YEAR_MONTH",
+                TypeCode.IntervalYearToMonth,
+                None,
+                8,
+                4,
+                None,
+                None,
+            ),
+            (
+                "INTERVAL_DAY_SECOND",
+                TypeCode.IntervalDayToSecond,
+                None,
+                26,
+                9,
+                None,
+                None,
+            ),
+            ("BOOLEAN_VALUE", TypeCode.Bool, None, None, None, None, None),
+            ("GEOMETRY_VALUE", TypeCode.Geometry, None, 2000000, None, None, None),
+            ("HASHTYPE_VALUE", TypeCode.Hashtype, None, 32, None, None, None),
+        )
+
+    @staticmethod
+    def test_for_query(cursor):
+        cursor.execute(
+            "SELECT "
+            "CAST(1 AS INT) AS DECIMAL_VALUE, "
+            "CAST(1 AS DOUBLE) AS DOUBLE_VALUE, "
+            "CAST(TRUE AS BOOLEAN) AS BOOLEAN_VALUE, "
+            "CAST('Foo' AS VARCHAR(10)) AS VARCHAR_VALUE;"
+        )
+
+        assert cursor.description == (
+            ("DECIMAL_VALUE", TypeCode.Decimal, None, None, 18, 0, None),
+            ("DOUBLE_VALUE", TypeCode.Double, None, None, None, None, None),
+            ("BOOLEAN_VALUE", TypeCode.Bool, None, None, None, None, None),
+            ("VARCHAR_VALUE", TypeCode.String, None, 10, None, None, None),
+        )
