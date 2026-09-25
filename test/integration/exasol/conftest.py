@@ -123,4 +123,4 @@ def filled_table(cursor, empty_table, rows):
         f"INSERT INTO {empty_table} VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
         rows,
     )
-    yield empty_table
+    return empty_table
