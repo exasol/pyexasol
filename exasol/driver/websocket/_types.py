@@ -61,6 +61,7 @@ class TypeCode(Enum):
     Decimal = "DECIMAL"
     Double = "DOUBLE"
     Geometry = "GEOMETRY"
+    Hashtype = "HASHTYPE"
     IntervalDayToSecond = "INTERVAL DAY TO SECOND"
     IntervalYearToMonth = "INTERVAL YEAR TO MONTH"
     Timestamp = "TIMESTAMP"
