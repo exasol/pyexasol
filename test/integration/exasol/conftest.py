@@ -25,12 +25,9 @@ def cursor(connection):
     dbapi_cursor.close()
 
 
-@pytest.fixture
-def schema_table(cursor, schema):
-    cursor.execute(f"DROP SCHEMA IF EXISTS {schema} CASCADE")
-    cursor.execute(f"CREATE SCHEMA {schema};")
-    yield f"{schema}.DATA_TYPES"
-    cursor.execute(f"DROP SCHEMA IF EXISTS {schema} CASCADE")
+@pytest.fixture(scope="session")
+def schema_table(schema):
+    return f"{schema}.DATA_TYPES"
 
 
 @pytest.fixture
