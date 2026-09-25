@@ -109,16 +109,5 @@ def test_description(cursor, query, expected_user_table_column_last_visit_ts):
 
 
 @pytest.mark.dbapi2
-def test_rowcount(cursor, query):
-    stmt, expected_values = query
-    cursor.execute(stmt)
-    cursor.fetchall()
-
-    expected = len(expected_values)
-    actual = cursor.rowcount
-    assert actual == expected
-
-
-@pytest.mark.dbapi2
 def test_autocommit(connection):
     assert not connection.attr["autocommit"]

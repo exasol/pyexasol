@@ -68,3 +68,36 @@ class TestExecuteMany:
                 f"INSERT INTO {empty_table} VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                 [(1, 2)],
             )
+
+
+class TestRowCount:
+    @staticmethod
+    @pytest.mark.parametrize(
+        "sql_statement,expected",
+        (
+            ("SELECT 1;", 1),
+            ("SELECT * FROM VALUES TRUE, FALSE as T(A);", 2),
+            ("SELECT * FROM VALUES TRUE, FALSE, TRUE as T(A);", 3),
+            # ATTENTION: As of today 03.02.2023 it seems there is no trivial way to make this test pass.
+            #            Also, it is unclear if this semantic is required in order to function correctly
+            #            with SQLA.
+            #
+            #            NOTE: In order to implement this semantic, subclassing pyexasol.ExaConnection and
+            #                  pyexasol.ExaStatement most likely will be required.
+            pytest.param("DROP SCHEMA IF EXISTS FOOBAR;", -1, marks=pytest.mark.xfail),
+        ),
+    )
+    def test_after_execute(cursor, sql_statement, expected):
+        cursor.execute(sql_statement)
+        assert cursor.rowcount == expected
+
+    @staticmethod
+    def test_after_fetchall(cursor, filled_table, rows):
+        cursor.execute(f"SELECT decimal_integer FROM {filled_table};")
+        cursor.fetchall()
+
+        assert cursor.rowcount == len(rows)
+
+    @staticmethod
+    def test_before_execute(cursor):
+        assert cursor.rowcount == -1
