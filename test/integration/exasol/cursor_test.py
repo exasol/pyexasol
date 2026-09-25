@@ -115,6 +115,18 @@ class TestFetchAll:
         assert result == rows
 
 
+class TestFetchMany:
+    @staticmethod
+    def test_fetches_rows_in_batches(cursor, filled_table, rows):
+        cursor.execute(f"SELECT * FROM {filled_table};")
+
+        actual = cursor.fetchmany(2)
+        assert actual == rows[:2]
+
+        actual = cursor.fetchmany(2)
+        assert actual == rows[2:]
+
+
 class TestDescription:
     @staticmethod
     def test_before_execute(cursor):

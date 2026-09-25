@@ -60,17 +60,3 @@ def test_fetchone(cursor, query):
     for expected in expected_values:
         actual = cursor.fetchone()
         assert actual == expected
-
-
-@pytest.mark.dbapi2
-def test_fetch_many(cursor, query):
-    stmt, expected_values = query
-    cursor.execute(stmt)
-
-    actual = set(cursor.fetchmany(3))
-    expected = set(expected_values[:3])
-    assert actual == expected
-
-    actual = set(cursor.fetchmany(3))
-    expected = set(expected_values[3:])
-    assert actual == expected
