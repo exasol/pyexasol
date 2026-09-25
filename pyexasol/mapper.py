@@ -1,6 +1,9 @@
 import datetime
 
-from pyexasol.data_types.to_python import convert_decimal
+from pyexasol.data_types.to_python import (
+    convert_date,
+    convert_decimal,
+)
 
 
 class ExaTimeDelta(datetime.timedelta):
@@ -85,7 +88,7 @@ def exasol_mapper(val, data_type):
     elif data_type["type"] == "DECIMAL":
         return convert_decimal(val, data_type["scale"])
     elif data_type["type"] == "DATE":
-        return datetime.date.fromisoformat(val)
+        return convert_date(val)
     elif data_type["type"] == "TIMESTAMP":
         # Normalize fractional seconds for Python 3.10 compatibility and truncate
         # Exasol's optional nanoseconds to Python's microsecond precision.
