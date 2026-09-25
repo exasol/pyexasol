@@ -1,3 +1,6 @@
+import datetime
+import decimal
+
 import pytest
 
 from exasol.driver.websocket.dbapi2 import connect
@@ -21,3 +24,104 @@ def cursor(connection):
     dbapi_cursor = connection.cursor()
     yield dbapi_cursor
     dbapi_cursor.close()
+
+
+@pytest.fixture
+def schema_table(cursor, schema):
+    cursor.execute(f"DROP SCHEMA IF EXISTS {schema} CASCADE")
+    cursor.execute(f"CREATE SCHEMA {schema};")
+    yield f"{schema}.DATA_TYPES"
+    cursor.execute(f"DROP SCHEMA IF EXISTS {schema} CASCADE")
+
+
+@pytest.fixture
+def empty_table(cursor, schema_table):
+    """Create an empty table using Exasol's supported data types.
+
+    See https://docs.exasol.com/db/latest/sql_references/data_types/datatypedetails.htm
+    """
+    cursor.execute(f"""
+        CREATE TABLE {schema_table} (
+            decimal_integer DECIMAL(18, 0),
+            decimal_fraction DECIMAL(18, 3),
+            double_value DOUBLE,
+            char_value CHAR(5),
+            varchar_value VARCHAR(20),
+            date_value DATE,
+            timestamp_value TIMESTAMP(6),
+            -- Custom fractional-second precision for this type was introduced in Exasol 8.32.0:
+            -- https://docs.exasol.com/db/latest/changelogs/13409.htm
+            timestamp_local_value TIMESTAMP WITH LOCAL TIME ZONE,
+            interval_year_month INTERVAL YEAR(4) TO MONTH,
+            interval_day_second INTERVAL DAY(9) TO SECOND(6),
+            boolean_value BOOLEAN,
+            geometry_value GEOMETRY,
+            hashtype_value HASHTYPE(16 BYTE)
+        )
+        """)
+
+    yield schema_table
+
+    cursor.execute(f"DROP TABLE IF EXISTS {schema_table};")
+
+
+@pytest.fixture
+def rows():
+    """Return three Python value rows covering the data-types table columns."""
+    return (
+        (
+            42,
+            decimal.Decimal("42.125"),
+            3.5,
+            "abc",
+            "hello",
+            datetime.date(2020, 1, 2),
+            datetime.datetime(2020, 1, 2, 3, 4, 5, 123456),
+            datetime.datetime(2020, 1, 2, 3, 4, 5, 123000),
+            "2-3",
+            "2 03:04:05.123456",
+            True,
+            "POINT (10 20)",
+            "550e8400-e29b-11d4-a716-446655440000",
+        ),
+        (
+            -7,
+            decimal.Decimal("-7.500"),
+            -2.25,
+            "xy",
+            "world",
+            datetime.date(2021, 3, 4),
+            datetime.datetime(2021, 3, 4, 5, 6, 7, 654321),
+            datetime.datetime(2021, 3, 4, 5, 6, 7, 654000),
+            "1-11",
+            "3 04:05:06.654321",
+            False,
+            "LINESTRING (10 20, 30 40)",
+            "6ba7b810-9dad-11d1-80b4-00c04fd430c8",
+        ),
+        (
+            0,
+            decimal.Decimal("0.001"),
+            0.0,
+            "z",
+            "Exasol",
+            datetime.date(2022, 12, 31),
+            datetime.datetime(2022, 12, 31, 23, 59, 59),
+            datetime.datetime(2022, 12, 31, 23, 59, 59),
+            "0-0",
+            "0 00:00:00.000000",
+            True,
+            "POLYGON ((10 20, 30 40, 50 20, 10 20))",
+            "00000000-0000-0000-0000-000000000000",
+        ),
+    )
+
+
+@pytest.fixture
+def filled_table(cursor, empty_table, rows):
+    """Insert the data-types fixture rows into the empty table."""
+    cursor.executemany(
+        f"INSERT INTO {empty_table} VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        rows,
+    )
+    yield empty_table

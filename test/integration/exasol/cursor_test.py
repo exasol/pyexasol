@@ -4,6 +4,7 @@ from exasol.driver.websocket._connection import (
     SUPPORTED_DATE_FORMATS,
     SUPPORTED_TIMESTAMP_FORMATS,
 )
+from exasol.driver.websocket._errors import DatabaseError
 from exasol.driver.websocket.dbapi2 import InterfaceError
 
 
@@ -44,3 +45,26 @@ class TestSessionDatetimeFormats:
             "'<supported-format>';" in message
         )
         assert "\n\n" in message
+
+
+class TestExecuteMany:
+    @staticmethod
+    def test_inserts_multiple_rows(empty_table, rows, cursor):
+        cursor.execute(f"SELECT COUNT(*) FROM {empty_table};")
+        assert cursor.fetchone()[0] == 0
+
+        cursor.executemany(
+            f"INSERT INTO {empty_table} VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);",
+            rows,
+        )
+
+        cursor.execute(f"SELECT COUNT(*) FROM {empty_table};")
+        assert cursor.fetchone()[0] == len(rows)
+
+    @staticmethod
+    def test_rejects_rows_with_wrong_column_count(cursor, empty_table):
+        with pytest.raises(DatabaseError):
+            cursor.executemany(
+                f"INSERT INTO {empty_table} VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                [(1, 2)],
+            )
