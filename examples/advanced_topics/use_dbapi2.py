@@ -18,10 +18,6 @@ with closing(
         certificate_validation=False,
     )
 ) as connection:
-    # Connection-level operations do not require a cursor.
-    # Autocommit is False by default.
-    print(connection.connection.options["autocommit"])
-
     # Query and result operations require an active cursor.
     with connection.cursor() as cursor:
         # Fetch tuples row-by-row as iterator
