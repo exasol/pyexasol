@@ -47,20 +47,6 @@ def test_cursor_execute(cursor, sql_statement):
     cursor.execute(sql_statement)
 
 
-@pytest.mark.parametrize(
-    "sql_statement, expected",
-    [
-        ("SELECT 1;", (1,)),
-        ("SELECT * FROM VALUES (1, 2, 3);", (1, 2, 3)),
-        ("SELECT * FROM VALUES 1, 5, 9, 13;", (1,)),
-    ],
-    ids=str,
-)
-def test_cursor_fetchone(cursor, sql_statement, expected):
-    cursor.execute(sql_statement)
-    assert cursor.fetchone() == expected
-
-
 @pytest.mark.parametrize("method", ("fetchone", "fetchmany", "fetchall"))
 def test_cursor_function_raises_exception_if_no_result_has_been_produced(
     cursor, method

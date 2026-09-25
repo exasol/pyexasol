@@ -127,6 +127,17 @@ class TestFetchMany:
         assert actual == rows[2:]
 
 
+class TestFetchOne:
+    @staticmethod
+    def test_fetches_rows_one_at_a_time(cursor, filled_table, rows):
+        cursor.execute(f"SELECT * FROM {filled_table};")
+
+        for expected_row in rows:
+            assert cursor.fetchone() == expected_row
+
+        assert cursor.fetchone() is None
+
+
 class TestDescription:
     @staticmethod
     def test_before_execute(cursor):
