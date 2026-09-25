@@ -12,24 +12,26 @@ from exasol.driver.websocket.dbapi2 import (
 )
 
 
-def test_websocket_dbapi(dsn, user, password, schema):
-    connection = connect(
-        dsn=dsn,
-        username=user,
-        password=password,
-        schema=schema,
-        certificate_validation=False,
-    )
-    assert connection
-    connection.close()
+class TestConnection:
+    @staticmethod
+    def test_connect(dsn, user, password, schema):
+        connection = connect(
+            dsn=dsn,
+            username=user,
+            password=password,
+            schema=schema,
+            certificate_validation=False,
+        )
+        assert connection
+        connection.close()
 
-
-def test_websocket_dbapi_connect_fails():
-    dsn = "127.0.0.2:9999"
-    username = "ShouldNotExist"
-    password = "ThisShouldNotBeAValidPasswordForTheUser"
-    with pytest.raises(OperationalError, match="Connection refused"):
-        connect(dsn=dsn, username=username, password=password)
+    @staticmethod
+    def test_connect_refused():
+        dsn = "127.0.0.2:9999"
+        username = "ShouldNotExist"
+        password = "ThisShouldNotBeAValidPasswordForTheUser"
+        with pytest.raises(OperationalError, match="Connection refused"):
+            connect(dsn=dsn, username=username, password=password)
 
 
 def test_retrieve_cursor_from_connection(connection):
