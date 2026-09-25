@@ -23,6 +23,7 @@ class TestConnection:
             certificate_validation=False,
         )
         assert connection
+        assert connection.connection.attr["autocommit"] is True
         connection.close()
 
     @staticmethod

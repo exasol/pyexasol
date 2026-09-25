@@ -106,8 +106,3 @@ def test_description(cursor, query, expected_user_table_column_last_visit_ts):
     }
     actual = set(cursor.description)
     assert actual == expected
-
-
-@pytest.mark.dbapi2
-def test_autocommit(connection):
-    assert not connection.attr["autocommit"]
