@@ -105,42 +105,6 @@ def test_cursor_fetchmany(cursor, sql_statement, size, expected):
     assert cursor.fetchmany(size) == expected
 
 
-@pytest.mark.parametrize(
-    "sql_statement, expected",
-    [
-        ("SELECT 1;", ((1,),)),
-        (
-            "SELECT * FROM VALUES ((1,2), (3,4));",
-            (
-                (1, 2),
-                (3, 4),
-            ),
-        ),
-        (
-            "SELECT * FROM VALUES ((1,2), (3,4), (5,6));",
-            (
-                (1, 2),
-                (3, 4),
-                (5, 6),
-            ),
-        ),
-        (
-            "SELECT * FROM VALUES ((1,2), (3,4), (5,6), (7, 8));",
-            (
-                (1, 2),
-                (3, 4),
-                (5, 6),
-                (7, 8),
-            ),
-        ),
-    ],
-    ids=str,
-)
-def test_cursor_fetchall(cursor, sql_statement, expected):
-    cursor.execute(sql_statement)
-    assert cursor.fetchall() == expected
-
-
 def test_callproc_is_not_supported(cursor):
     expected = "Optional and therefore not supported"
     with pytest.raises(NotSupportedError) as exec_info:

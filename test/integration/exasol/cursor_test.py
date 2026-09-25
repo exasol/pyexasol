@@ -106,6 +106,15 @@ class TestRowCount:
         assert cursor.rowcount == -1
 
 
+class TestFetchAll:
+    @staticmethod
+    def test_fetches_all_rows(cursor, filled_table, rows):
+        cursor.execute(f"SELECT * FROM {filled_table};")
+        result = cursor.fetchall()
+
+        assert result == rows
+
+
 class TestDescription:
     @staticmethod
     def test_before_execute(cursor):
