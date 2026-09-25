@@ -1,7 +1,14 @@
-Compatibility with DB-API 2.0
-=============================
+Using DB-API 2.0
+================
 
-`PyExasol <https://github.com/exasol/pyexasol/blob/master/exasol/driver/websocket/dbapi2.py>`__ is similar to `PEP-249 DB-API 2.0 <https://peps.python.org/pep-0249/>`__ specification, but it does not strictly follow it. This page explains the reasons behind this decision and your alternative(s) if you need or want to use a DBAPI2 compatible driver.
+PyExasol provides a `PEP 249-compatible DB-API 2.0
+<https://peps.python.org/pep-0249/>`__ adapter in the ``exasol.driver.websocket.dbapi2``
+module. The adapter does not strictly follow the specification. This page
+introduces the adapter, explains the reasons for its intentional differences,
+and describes alternative drivers when they are a better fit for your application.
+
+The `SQLAlchemy-Exasol dialect <https://github.com/exasol/sqlalchemy-exasol>`__
+uses this adapter to connect SQLAlchemy applications to Exasol.
 
 Alternatives
 ------------
@@ -9,9 +16,52 @@ Alternatives
 Exasol WebSocket Driver
 ^^^^^^^^^^^^^^^^^^^^^^^
 
-The ``pyexasol`` package includes a DBAPI2 compatible driver facade, located in the ``exasol.driver`` package. However, using ``pyexasol`` directly will generally yield better performance when utilizing Exasol in an OLAP manner, which is likely the typical use case.
+The ``pyexasol`` package includes this DB-API 2.0 adapter in the
+``exasol.driver.websocket.dbapi2`` module. However, using ``pyexasol``
+directly will generally yield better performance when utilizing Exasol in an
+OLAP manner, which is likely the typical use case.
 
-That said, in specific scenarios, the DBAPI2 API can be advantageous or even necessary. This is particularly true when integrating with "DB-Agnostic" frameworks. In such cases, you can just import and use the DBAPI2 compliant facade as illustrated in the example below.
+In specific scenarios, the DB-API 2.0 interface can be advantageous or even
+necessary, particularly when integrating with database-agnostic frameworks.
+
+TurboODBC
+^^^^^^^^^
+
+`TurboODBC <https://github.com/blue-yonder/turbodbc>`__ offers an alternative
+ODBC-based, DBAPI2-compatible driver, which supports the Exasol database.
+
+Pyodbc
+^^^^^^
+
+`Pyodbc <https://github.com/mkleehammer/pyodbc>`__ provides an ODBC-based,
+DBAPI2-compatible driver. For further details, please refer to the
+`wiki <https://github.com/mkleehammer/pyodbc/wiki>`__.
+
+Rationale
+---------
+
+PEP-249 was originally created for general purpose OLTP row store databases running on a
+single server: SQLite, MySQL, PostgreSQL, MSSQL, Oracle, etc.
+
+It does not work very well for OLAP columnar databases (like Exasol) running on multiple
+servers because it was never designed for this purpose. Despite both OLTP DBMS and OLAP
+DBMS using SQL for communication, the foundation and usage patterns are completely
+different.
+
+When people use DB-API 2.0 drivers, they tend to skip manuals and automatically apply
+OLTP usage patterns without even realizing how much they lose in terms of performance
+and efficiency.
+
+A good example is `TurboODBC <https://github.com/blue-yonder/turbodbc>`__. Very few
+know that it is possible to fetch data as
+`NumPy arrays <https://turbodbc.readthedocs.io/en/latest/pages/advanced_usage.html#numpy-support>`__
+and as `Apache Arrow <https://turbodbc.readthedocs.io/en/latest/pages/advanced_usage.html#apache-arrow-support>`__.
+
+Minor intentional incompatibilities with DB-API 2.0 force users to look through the
+manual and to learn about :ref:`Best Practices` of getting the job done.
+
+Usage Notes
+-----------
 
 .. code-block:: python
 
@@ -22,31 +72,7 @@ That said, in specific scenarios, the DBAPI2 API can be advantageous or even nec
     with connection.cursor() as cursor:
         cursor.execute("SELECT 1;")
 
-TurboODBC
-^^^^^^^^^
-
-`TurboODBC <https://github.com/blue-yonder/turbodbc>`__ offers an alternative ODBC-based, DBAPI2-compatible driver, which supports the Exasol database.
-
-Pyodbc
-^^^^^^
-
-`Pyodbc <https://github.com/mkleehammer/pyodbc>`__ provides an ODBC-based, DBAPI2-compatible driver. For further details, please refer to our `wiki <https://github.com/mkleehammer/pyodbc/wiki>`__.
-
-Rationale
----------
-
-PEP-249 was originally created for general purpose OLTP row store databases running on a single server: SQLite, MySQL, PostgreSQL, MSSQL, Oracle, etc.
-
-It does not work very well for OLAP columnar databases (like Exasol) running on multiple servers because it was never designed for this purpose. Despite both OLTP DBMS and OLAP DBMS using SQL for communication, the foundation and usage patterns are completely different.
-
-When people use DB-API 2.0 drivers, they tend to skip manuals and automatically apply OLTP usage patterns without even realizing how much they lose in terms of performance and efficiency.
-
-A good example is `TurboODBC <https://github.com/blue-yonder/turbodbc>`__. Very few know that it is possible to fetch data as `NumPy arrays <https://turbodbc.readthedocs.io/en/latest/pages/advanced_usage.html#numpy-support>`__ and as `Apache Arrow <https://turbodbc.readthedocs.io/en/latest/pages/advanced_usage.html#apache-arrow-support>`__.
-
-Minor intentional incompatibilities with DB-API 2.0 force users to look through the manual and to learn about :ref:`Best Practices` of getting the job done.
-
-Usage Notes
------------
+See the :ref:`Using DB-API 2.0 <using_dbapi2_example>` example for a longer usage example.
 
 Session Date/Time Formats
 ^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -128,5 +154,3 @@ Replace with:
 .. code-block:: python
 
     C.export_to_pandas('SELECT * FROM table')
-
-...etc.
