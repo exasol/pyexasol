@@ -8,7 +8,7 @@ additional conversion to preserve their appropriate Python representation.
 """
 
 import datetime
-import decimal as decimal_module
+import decimal
 from typing import Final
 
 # These formats are strictly enforced by the WebSocket DBAPI. They also describe
@@ -31,7 +31,7 @@ SUPPORTED_TIMESTAMP_FORMATS: Final[tuple[str, ...]] = (
 # End: supported session date/time formats included in the DBAPI documentation.
 
 
-def convert_decimal(value: str, scale: int) -> int | decimal_module.Decimal:
+def convert_decimal(value: str, scale: int) -> int | decimal.Decimal:
     """
     Convert an Exasol DECIMAL value to the appropriate Python type.
 
@@ -40,7 +40,7 @@ def convert_decimal(value: str, scale: int) -> int | decimal_module.Decimal:
     """
     if scale == 0:
         return int(value)
-    return decimal_module.Decimal(value)
+    return decimal.Decimal(value)
 
 
 def convert_date(value: str) -> datetime.date:
