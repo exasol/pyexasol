@@ -4,8 +4,8 @@ from exasol.driver.websocket._connection import (
     SUPPORTED_DATE_FORMATS,
     SUPPORTED_TIMESTAMP_FORMATS,
 )
-from exasol.driver.websocket._errors import DatabaseError
 from exasol.driver.websocket.dbapi2 import (
+    DatabaseError,
     InterfaceError,
     TypeCode,
 )
