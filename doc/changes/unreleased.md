@@ -18,6 +18,8 @@ In this major release, the following changes were made:
 
 * #353: Fixed documentation inconsistencies in type hints and docstrings
 * #409: Restricted allowed formats for TIMESTAMP and DATE to ISO-formats
+* #415: Fixed a ``KeyError`` when accessing ``cursor.description`` for result
+  sets containing ``HASHTYPE`` columns by adding ``HASHTYPE`` to ``TypeCode``
 
 ## Refactorings
 
