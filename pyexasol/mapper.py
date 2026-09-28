@@ -94,5 +94,4 @@ def exasol_mapper(val, data_type):
         return convert_timestamp(val)
     elif data_type["type"] == "INTERVAL DAY TO SECOND":
         return ExaTimeDelta.from_interval(val)
-    else:
-        return val
+    return val
