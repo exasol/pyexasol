@@ -4,8 +4,6 @@ import decimal
 import pytest
 
 from pyexasol.data_types.to_python import (
-    SUPPORTED_DATE_FORMATS,
-    SUPPORTED_TIMESTAMP_FORMATS,
     convert_date,
     convert_decimal,
     convert_timestamp,
@@ -28,25 +26,14 @@ def test_convert_decimal(value, scale, expected):
     assert convert_decimal(value, scale) == expected
 
 
-@pytest.mark.parametrize(
-    "format_definition",
-    [
-        pytest.param(format_definition, id=format_definition)
-        for format_definition in SUPPORTED_DATE_FORMATS
-    ],
-)
-def test_convert_date(format_definition):
+def test_convert_date():
     expected_date = datetime.date(2026, 9, 11)
     value = expected_date.strftime("%Y-%m-%d")
 
     assert convert_date(value) == expected_date
 
 
-@pytest.mark.parametrize(
-    "format_definition",
-    [pytest.param(SUPPORTED_TIMESTAMP_FORMATS[0], id=SUPPORTED_TIMESTAMP_FORMATS[0])],
-)
-def test_convert_timestamp_without_fractional_seconds(format_definition):
+def test_convert_timestamp_without_fractional_seconds():
     expected_timestamp = datetime.datetime(2026, 9, 11, 12, 34, 56)
     value = expected_timestamp.strftime("%Y-%m-%d %H:%M:%S")
 
