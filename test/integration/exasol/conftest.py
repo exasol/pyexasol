@@ -37,7 +37,7 @@ def empty_table(cursor, schema_table):
     See https://docs.exasol.com/db/latest/sql_references/data_types/datatypedetails.htm
     """
     cursor.execute(f"""
-        CREATE TABLE {schema_table} (
+        CREATE OR REPLACE TABLE {schema_table} (
             decimal_integer DECIMAL(18, 0),
             decimal_fraction DECIMAL(18, 3),
             double_value DOUBLE,
