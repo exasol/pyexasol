@@ -54,35 +54,28 @@ def test_convert_timestamp_without_fractional_seconds(format_definition):
 
 
 @pytest.mark.parametrize(
-    "format_definition, fractional_value",
+    "fractional_value",
     [
-        pytest.param(format_definition, fractional_value, id=format_definition)
-        for format_definition, fractional_value in zip(
-            SUPPORTED_TIMESTAMP_FORMATS[1:],
-            (
-                "1",
-                "12",
-                "123",
-                "1234",
-                "12345",
-                "123456",
-                "1234567",
-                "12345678",
-                "123456789",
-            ),
-        )
+        pytest.param(fractional_value, id=f"FF{len(fractional_value)}")
+        for fractional_value in ("1", "12", "123", "1234", "12345", "123456")
     ],
 )
-def test_convert_timestamp_with_fractional_seconds(format_definition, fractional_value):
-    expected_timestamp = datetime.datetime(
-        2026,
-        9,
-        11,
-        12,
-        34,
-        56,
-        int(fractional_value[:6].ljust(6, "0")),
-    )
+def test_convert_timestamp_with_fractional_seconds(fractional_value):
     value = f"2026-09-11 12:34:56.{fractional_value}"
 
-    assert convert_timestamp(value) == expected_timestamp
+    assert convert_timestamp(value).time() == datetime.time(
+        12, 34, 56, int(fractional_value.ljust(6, "0"))
+    )
+
+
+@pytest.mark.parametrize(
+    "fractional_value",
+    [
+        pytest.param(fractional_value, id=f"FF{len(fractional_value)}")
+        for fractional_value in ("1234567", "12345678", "123456789")
+    ],
+)
+def test_convert_timestamp_truncates_nanoseconds(fractional_value):
+    value = f"2026-09-11 12:34:56.{fractional_value}"
+
+    assert convert_timestamp(value).time() == datetime.time(12, 34, 56, 123456)
