@@ -70,7 +70,7 @@ class ExaTimeDelta(datetime.timedelta):
 
 def exasol_mapper(val, data_type):
     """
-    Convert into Python  data types according to the Exasol manual
+    Convert into Python data types according to the Exasol manual
 
     DECIMAL(p,0)           -> int
     DECIMAL(p,s)           -> decimal.Decimal
