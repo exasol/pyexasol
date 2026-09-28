@@ -217,12 +217,14 @@ Edge Cases
     :language: python
     :caption: storing and fetching biggest and smallest values for data types available in Exasol
 
-DB-API 2.0 Compatibility
+.. _using_dbapi2_example:
+
+Using DB-API 2.0
 ++++++++++++++++++++++++
 
-.. literalinclude:: ../../../examples/c03_db2_compat.py
+.. literalinclude:: ../../../examples/advanced_topics/use_dbapi2.py
     :language: python
-    :caption: DB-API 2.0 compatibility wrapper
+    :caption: using the DB-API 2.0 facade
 
 SSL Encryption
 ++++++++++++++

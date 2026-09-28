@@ -110,19 +110,18 @@ def run_examples(session: Session) -> None:
     path = _ROOT / "examples"
 
     errors = []
-    files = sorted(path.glob("[abcj]*.py")) + sorted(
-        (path / "getting_started").glob("*.py")
-    )
-    for file in files:
+    files = [
+        file
+        for pattern in ("[abcj]*.py", "getting_started/*.py", "advanced_topics/*.py")
+        for file in path.glob(pattern)
+    ]
+    for file in sorted(files):
         try:
+            module_parts = file.relative_to(path).with_suffix("").parts
             session.run(
                 "python",
                 "-m",
-                (
-                    f"examples.getting_started.{file.stem}"
-                    if "getting_started" in str(file)
-                    else f"examples.{file.stem}"
-                ),
+                ".".join(("examples", *module_parts)),
             )
         except Exception:
             errors.append(file.name)

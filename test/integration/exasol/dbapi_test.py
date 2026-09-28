@@ -1,0 +1,121 @@
+import pytest
+
+from exasol.driver.websocket.dbapi2 import (
+    Error,
+    InterfaceError,
+    NotSupportedError,
+    OperationalError,
+    connect,
+)
+
+
+class TestConnection:
+    @staticmethod
+    def test_connect(dsn, user, password, schema):
+        connection = connect(
+            dsn=dsn,
+            username=user,
+            password=password,
+            schema=schema,
+            certificate_validation=False,
+        )
+        assert connection
+        assert connection.connection.attr["autocommit"] is True
+        connection.close()
+
+    @staticmethod
+    def test_connect_refused():
+        dsn = "127.0.0.2:9999"
+        username = "ShouldNotExist"
+        password = "ThisShouldNotBeAValidPasswordForTheUser"
+        with pytest.raises(OperationalError, match="Connection refused"):
+            connect(dsn=dsn, username=username, password=password)
+
+
+def test_retrieve_cursor_from_connection(connection):
+    cursor = connection.cursor()
+    assert cursor
+    cursor.close()
+
+
+@pytest.mark.parametrize(
+    "sql_statement", ["SELECT 1;", "SELECT * FROM VALUES 1, 2, 3, 4;"]
+)
+def test_cursor_execute(cursor, sql_statement):
+    # Because the dbapi does not specify a required return value, this is just a smoke test
+    # to ensure the execute call won't crash.
+    cursor.execute(sql_statement)
+
+
+@pytest.mark.parametrize("method", ("fetchone", "fetchmany", "fetchall"))
+def test_cursor_function_raises_exception_if_no_result_has_been_produced(
+    cursor, method
+):
+    expected = "No result has been produced."
+    cursor_method = getattr(cursor, method)
+    with pytest.raises(Error) as e_info:
+        cursor_method()
+    assert f"{e_info.value}" == expected
+
+
+def test_callproc_is_not_supported(cursor):
+    expected = "Optional and therefore not supported"
+    with pytest.raises(NotSupportedError) as exec_info:
+        cursor.callproc(None)
+    assert f"{exec_info.value}" == expected
+
+
+def test_cursor_nextset_is_not_supported(cursor):
+    expected = "Optional and therefore not supported"
+    with pytest.raises(NotSupportedError) as exec_info:
+        cursor.nextset()
+    assert f"{exec_info.value}" == expected
+
+
+@pytest.mark.parametrize("property", ("arraysize", "description", "rowcount"))
+def test_cursor_closed_cursor_raises_exception_on_property_access(connection, property):
+    expected = (
+        f"Unable to execute operation <{property}>, because cursor was already closed."
+    )
+
+    cursor = connection.cursor()
+    cursor.close()
+
+    with pytest.raises(InterfaceError) as exec_info:
+        _ = getattr(cursor, property)
+
+    assert f"{exec_info.value}" == expected
+
+
+@pytest.mark.parametrize(
+    "method,args",
+    (
+        ("callproc", [None]),
+        ("execute", ["SELECT 1;"]),
+        ("executemany", ["SELECT 1;", []]),
+        ("fetchone", []),
+        ("fetchmany", []),
+        ("fetchall", []),
+        ("nextset", []),
+        ("setinputsizes", [None]),
+        ("setoutputsize", [None, None]),
+        ("close", []),
+    ),
+    ids=str,
+)
+def test_cursor_closed_cursor_raises_exception_on_method_usage(
+    connection, method, args
+):
+    expected = (
+        f"Unable to execute operation <{method}>, because cursor was already closed."
+    )
+
+    cursor = connection.cursor()
+    cursor.execute("SELECT 1;")
+    cursor.close()
+
+    cursor_method = getattr(cursor, method)
+    with pytest.raises(InterfaceError) as exec_info:
+        cursor_method(*args)
+
+    assert f"{exec_info.value}" == expected
