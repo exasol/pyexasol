@@ -28,6 +28,5 @@ In this major release, the following changes were made:
   consistently
 * #415: Removed the ``pyexasol.db2`` compatibility module, which was
   [deprecated in July 2024](https://github.com/exasol/pyexasol/commit/8e3b361)
-* #417: Centralized Exasol data-type conversion helpers and expanded unit and
-  integration coverage for mapper conversions, database type aliases, and all
-  supported ``TypeCode`` values
+* #417: Moved DECIMAL, DATE, and TIMESTAMP conversion helpers into
+  ``pyexasol.data_types.to_python`` and improved unit test coverage
