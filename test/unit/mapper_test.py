@@ -30,6 +30,7 @@ MAPPER_CASES = [
     ("BOOLEAN", True, True),
     ("VARCHAR", "text", "text"),
     ("CHAR", "text", "text"),
+    ("HASHTYPE", "hash", "hash"),
     ("GEOMETRY", "POINT (10 20)", "POINT (10 20)"),
     ("INTERVAL YEAR TO MONTH", "+000000001-02", "+000000001-02"),
     (
