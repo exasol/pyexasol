@@ -9,7 +9,6 @@ from pyexasol.mapper import (
 )
 
 MAPPER_CASES = [
-    ("ALL_NONE_CASE", None, None),
     ("DECIMAL", "123", 123),
     (
         "DATE",
@@ -56,4 +55,8 @@ class TestExasolMapper:
         tested_type_names = {type_name for type_name, _, _ in MAPPER_CASES}
         expected_type_names = {type_code.value for type_code in TypeCode}
 
-        assert tested_type_names - {"ALL_NONE_CASE"} == expected_type_names
+        assert tested_type_names == expected_type_names
+
+    @staticmethod
+    def test_maps_none():
+        assert exasol_mapper(None, {"type": "DECIMAL", "scale": 0}) is None
