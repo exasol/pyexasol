@@ -159,7 +159,6 @@ markers = [
     "basic: basic driver tests.",
     "configuration: tests related to pyexasol settings and configuration.",
     "context_managers: tests related to pyexasol context_managers.",
-    "dbapi2: tests related to dbapi2 compatibility.",
     "edge_cases: tests related to pyexasol and exasol edge cases scenarios.",
     "etl: etl related tests, export, load (import) and transform data.",
     "exceptions: tests related to exceptions in pyexasol.",
