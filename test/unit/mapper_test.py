@@ -2,7 +2,7 @@ import datetime
 
 import pytest
 
-from exasol.driver.websocket._types import TypeCode
+from exasol.driver.websocket.dbapi2 import TypeCode
 from pyexasol.mapper import (
     ExaTimeDelta,
     exasol_mapper,
