@@ -11,6 +11,7 @@ import datetime
 import decimal as decimal_module
 from typing import Final
 
+# Start: supported session date/time formats included in the DBAPI documentation.
 SUPPORTED_DATE_FORMATS: Final[list[str]] = ["YYYY-MM-DD"]
 SUPPORTED_TIMESTAMP_FORMATS: Final[list[str]] = [
     "YYYY-MM-DD HH24:MI:SS",
@@ -24,6 +25,7 @@ SUPPORTED_TIMESTAMP_FORMATS: Final[list[str]] = [
     "YYYY-MM-DD HH24:MI:SS.FF8",
     "YYYY-MM-DD HH24:MI:SS.FF9",
 ]
+# End: supported session date/time formats included in the DBAPI documentation.
 
 
 def convert_decimal(value: str, scale: int) -> int | decimal_module.Decimal:

@@ -83,14 +83,13 @@ values for ``NLS_DATE_FORMAT`` and ``NLS_TIMESTAMP_FORMAT`` in
 currently supports only the exact formats listed below. Format-model matching is
 case-sensitive.
 
-The supported values are:
+The supported values are represented by the following definitions in the
+WebSocket-to-Python conversion module:
 
-* ``NLS_DATE_FORMAT``: ``YYYY-MM-DD``
-* ``NLS_TIMESTAMP_FORMAT``: ``YYYY-MM-DD HH24:MI:SS`` with optional fractional
-  seconds from ``FF1`` through ``FF9``
-
-The corresponding WebSocket-to-Python type conversions are implemented in
-``pyexasol/data_types/to_python.py``.
+.. literalinclude:: ../../../../pyexasol/data_types/to_python.py
+   :language: python
+   :start-after: # Start: supported session date/time formats included in the DBAPI documentation.
+   :end-before: # End: supported session date/time formats included in the DBAPI documentation.
 
 Statements containing ``ALTER SESSION`` are allowed so applications can change
 these settings. If either format is unsupported, execution raises one
