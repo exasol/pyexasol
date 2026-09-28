@@ -11,9 +11,12 @@ import datetime
 import decimal as decimal_module
 from typing import Final
 
+# These formats are strictly enforced by the WebSocket DBAPI. They also describe
+# the ISO-only values that are parsed through these helpers. Keep them next to the
+# parsers because this limitation applies to both consumers.
 # Start: supported session date/time formats included in the DBAPI documentation.
-SUPPORTED_DATE_FORMATS: Final[list[str]] = ["YYYY-MM-DD"]
-SUPPORTED_TIMESTAMP_FORMATS: Final[list[str]] = [
+SUPPORTED_DATE_FORMATS: Final[tuple[str, ...]] = ("YYYY-MM-DD",)
+SUPPORTED_TIMESTAMP_FORMATS: Final[tuple[str, ...]] = (
     "YYYY-MM-DD HH24:MI:SS",
     "YYYY-MM-DD HH24:MI:SS.FF1",
     "YYYY-MM-DD HH24:MI:SS.FF2",
@@ -24,7 +27,7 @@ SUPPORTED_TIMESTAMP_FORMATS: Final[list[str]] = [
     "YYYY-MM-DD HH24:MI:SS.FF7",
     "YYYY-MM-DD HH24:MI:SS.FF8",
     "YYYY-MM-DD HH24:MI:SS.FF9",
-]
+)
 # End: supported session date/time formats included in the DBAPI documentation.
 
 
