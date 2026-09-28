@@ -118,13 +118,31 @@ class TestFetchAll:
 class TestFetchMany:
     @staticmethod
     def test_fetches_rows_in_batches(cursor, filled_table, rows):
+        size = 2
+        assert size < len(rows)
         cursor.execute(f"SELECT * FROM {filled_table};")
 
-        actual = cursor.fetchmany(2)
-        assert actual == rows[:2]
+        assert cursor.fetchmany(size) == rows[:size]
+        assert cursor.fetchmany(size) == rows[size:]
+        assert cursor.fetchmany(size) == ()
 
-        actual = cursor.fetchmany(2)
-        assert actual == rows[2:]
+    @staticmethod
+    def test_fetches_rows_using_arraysize(cursor, filled_table, rows):
+        cursor.execute(f"SELECT * FROM {filled_table};")
+
+        for expected_row in rows:
+            assert cursor.fetchmany() == (expected_row,)
+
+        assert cursor.fetchmany() == ()
+
+    @staticmethod
+    def test_fetches_all_rows_when_size_exceeds_result(cursor, filled_table, rows):
+        size = 4
+        assert size > len(rows)
+        cursor.execute(f"SELECT * FROM {filled_table};")
+
+        assert cursor.fetchmany(size) == rows
+        assert cursor.fetchmany(size) == ()
 
 
 class TestFetchOne:
