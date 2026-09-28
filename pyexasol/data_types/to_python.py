@@ -12,6 +12,18 @@ import decimal as decimal_module
 from typing import Final
 
 SUPPORTED_DATE_FORMATS: Final[list[str]] = ["YYYY-MM-DD"]
+SUPPORTED_TIMESTAMP_FORMATS: Final[list[str]] = [
+    "YYYY-MM-DD HH24:MI:SS",
+    "YYYY-MM-DD HH24:MI:SS.FF1",
+    "YYYY-MM-DD HH24:MI:SS.FF2",
+    "YYYY-MM-DD HH24:MI:SS.FF3",
+    "YYYY-MM-DD HH24:MI:SS.FF4",
+    "YYYY-MM-DD HH24:MI:SS.FF5",
+    "YYYY-MM-DD HH24:MI:SS.FF6",
+    "YYYY-MM-DD HH24:MI:SS.FF7",
+    "YYYY-MM-DD HH24:MI:SS.FF8",
+    "YYYY-MM-DD HH24:MI:SS.FF9",
+]
 
 
 def convert_decimal(value: str, scale: int) -> int | decimal_module.Decimal:
@@ -34,3 +46,27 @@ def convert_date(value: str) -> datetime.date:
     depends on the Exasol session's ``NLS_DATE_FORMAT`` EXA_PARAMETERS value.
     """
     return datetime.date.fromisoformat(value)
+
+
+def convert_timestamp(value: str) -> datetime.datetime:
+    """
+    Convert an Exasol TIMESTAMP value to ``datetime.datetime``.
+
+    The expected value format is ``YYYY-MM-DD HH24:MI:SS`` with optional
+    fractional seconds from ``FF1`` through ``FF9``. The value depends on the
+    session's ``NLS_TIMESTAMP_FORMAT`` EXA_PARAMETERS value.
+    Exasol supports optional fractional seconds with nanosecond precision;
+    Python datetime values are truncated to microsecond precision.
+    """
+    # Python 3.10 is stricter about the fractional-second portion accepted by
+    # datetime.fromisoformat(), while Exasol can return between 1 and 9 digits.
+    # Normalize shorter values to six digits and truncate nanoseconds because
+    # Python datetime only supports microsecond precision.
+    timestamp_value = value
+    if len(timestamp_value) > 19:
+        date_and_time = timestamp_value[:19]
+        fractional_seconds = timestamp_value[20:]
+        microseconds = fractional_seconds[:6].ljust(6, "0")
+        timestamp_value = f"{date_and_time}.{microseconds}"
+
+    return datetime.datetime.fromisoformat(timestamp_value)

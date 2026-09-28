@@ -15,22 +15,10 @@ from exasol.driver.websocket._errors import (
     InterfaceError,
     translate_exception,
 )
-from pyexasol.data_types.to_python import SUPPORTED_DATE_FORMATS
-
-# Start: supported session date/time formats included in the DBAPI documentation.
-SUPPORTED_TIMESTAMP_FORMATS = [
-    "YYYY-MM-DD HH24:MI:SS",
-    "YYYY-MM-DD HH24:MI:SS.FF1",
-    "YYYY-MM-DD HH24:MI:SS.FF2",
-    "YYYY-MM-DD HH24:MI:SS.FF3",
-    "YYYY-MM-DD HH24:MI:SS.FF4",
-    "YYYY-MM-DD HH24:MI:SS.FF5",
-    "YYYY-MM-DD HH24:MI:SS.FF6",
-    "YYYY-MM-DD HH24:MI:SS.FF7",
-    "YYYY-MM-DD HH24:MI:SS.FF8",
-    "YYYY-MM-DD HH24:MI:SS.FF9",
-]
-# End: supported session date/time formats included in the DBAPI documentation.
+from pyexasol.data_types.to_python import (
+    SUPPORTED_DATE_FORMATS,
+    SUPPORTED_TIMESTAMP_FORMATS,
+)
 
 
 def _requires_connection(method):

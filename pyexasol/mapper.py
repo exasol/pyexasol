@@ -3,6 +3,7 @@ import datetime
 from pyexasol.data_types.to_python import (
     convert_date,
     convert_decimal,
+    convert_timestamp,
 )
 
 
@@ -90,12 +91,7 @@ def exasol_mapper(val, data_type):
     elif data_type["type"] == "DATE":
         return convert_date(val)
     elif data_type["type"] == "TIMESTAMP":
-        # Normalize fractional seconds for Python 3.10 compatibility and truncate
-        # Exasol's optional nanoseconds to Python's microsecond precision.
-        timestamp_value = val
-        if len(val) > 19:
-            timestamp_value = f"{val[:19]}.{val[20:26].ljust(6, '0')}"
-        return datetime.datetime.fromisoformat(timestamp_value)
+        return convert_timestamp(val)
     elif data_type["type"] == "INTERVAL DAY TO SECOND":
         return ExaTimeDelta.from_interval(val)
     else:

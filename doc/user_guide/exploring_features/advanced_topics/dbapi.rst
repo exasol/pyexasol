@@ -78,17 +78,19 @@ Session Date/Time Formats
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Before executing a user statement, the WebSocket DBAPI checks the active session
-values of ExaParameters``NLS_DATE_FORMAT`` and ``NLS_TIMESTAMP_FORMAT``. The DBAPI
+values for ``NLS_DATE_FORMAT`` and ``NLS_TIMESTAMP_FORMAT`` in
+``EXA_PARAMETERS``. The DBAPI
 currently supports only the exact formats listed below. Format-model matching is
 case-sensitive.
 
-The supported values are represented by the following definitions in the DBAPI
-connection implementation:
+The supported values are:
 
-.. literalinclude:: ../../../../exasol/driver/websocket/_connection.py
-   :language: python
-   :start-after: # Start: supported session date/time formats included in the DBAPI documentation.
-   :end-before: # End: supported session date/time formats included in the DBAPI documentation.
+* ``NLS_DATE_FORMAT``: ``YYYY-MM-DD``
+* ``NLS_TIMESTAMP_FORMAT``: ``YYYY-MM-DD HH24:MI:SS`` with optional fractional
+  seconds from ``FF1`` through ``FF9``
+
+The corresponding WebSocket-to-Python type conversions are implemented in
+``pyexasol/data_types/to_python.py``.
 
 Statements containing ``ALTER SESSION`` are allowed so applications can change
 these settings. If either format is unsupported, execution raises one
