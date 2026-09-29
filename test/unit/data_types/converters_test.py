@@ -32,6 +32,30 @@ INTERVAL_CASES = [
 class TestExaTimeDelta:
     @staticmethod
     @pytest.mark.parametrize(
+        "value, expected",
+        [
+            pytest.param(
+                ExaTimeDelta(),
+                (0, 0),
+                id="zero-duration",
+            ),
+            pytest.param(
+                ExaTimeDelta(seconds=1),
+                (86399, 0),
+                id="duration-with-seconds",
+            ),
+            pytest.param(
+                ExaTimeDelta(seconds=1, microseconds=1),
+                (86398, 999999),
+                id="duration-with-seconds-and-microseconds",
+            ),
+        ],
+    )
+    def test_reverse_seconds(value, expected):
+        assert value.reverse_seconds() == expected
+
+    @staticmethod
+    @pytest.mark.parametrize(
         "value, interval",
         INTERVAL_CASES,
     )
