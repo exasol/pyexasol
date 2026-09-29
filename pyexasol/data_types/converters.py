@@ -51,7 +51,14 @@ class ExaTimeDelta(datetime.timedelta):
     def from_timedelta(cls, td):
         return cls(days=td.days, seconds=td.seconds, microseconds=td.microseconds)
 
-    def to_interval(self):
+    def to_interval(self) -> str:
+        """
+        Convert this duration to an Exasol ``INTERVAL DAY TO SECOND`` string.
+
+        The result uses the format ``[+-]DDDDDDDDD HH:MM:SS.NNNNNNNNN``.
+        Python microseconds are represented with nanosecond precision by appending
+        three zeros.
+        """
         if self.days < 0:
             seconds, microseconds = self.reverse_seconds()
             if seconds or microseconds:
@@ -68,5 +75,5 @@ class ExaTimeDelta(datetime.timedelta):
         s = s + "%02d:%02d:%02d.%09d" % (hh, mm, ss, microseconds * 1000)
         return s
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.to_interval()
