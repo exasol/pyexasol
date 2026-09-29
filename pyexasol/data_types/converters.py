@@ -65,7 +65,7 @@ class ExaTimeDelta(datetime.timedelta):
             if seconds or microseconds:
                 s = "-%09d " % (abs(self.days) - 1,)
             else:
-                s = "-%09d " % (abs(self.days) - 1,)
+                s = "-%09d " % abs(self.days)
         else:
             seconds = self.seconds
             microseconds = self.microseconds
