@@ -8,6 +8,8 @@ Exasol into appropriate Python representations and serialize Python values
 back into the formats expected by Exasol.
 """
 
+from __future__ import annotations
+
 import datetime
 
 
@@ -48,7 +50,8 @@ class ExaTimeDelta(datetime.timedelta):
         return td
 
     @classmethod
-    def from_timedelta(cls, td):
+    def from_timedelta(cls, td: datetime.timedelta) -> ExaTimeDelta:
+        """Create an ExaTimeDelta from a datetime.timedelta."""
         return cls(days=td.days, seconds=td.seconds, microseconds=td.microseconds)
 
     def to_interval(self) -> str:
