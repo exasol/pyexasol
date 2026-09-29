@@ -1,6 +1,6 @@
 import datetime
 
-from pyexasol.data_types.to_python import (
+from pyexasol.data_types.websocket_to_python import (
     convert_date,
     convert_decimal,
     convert_timestamp,

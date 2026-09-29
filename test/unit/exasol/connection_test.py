@@ -16,7 +16,7 @@ from exasol.driver.websocket._errors import (
     InterfaceError,
     ProgrammingError,
 )
-from pyexasol.data_types.to_python import (
+from pyexasol.data_types.websocket_to_python import (
     SUPPORTED_DATE_FORMATS,
     SUPPORTED_TIMESTAMP_FORMATS,
 )
