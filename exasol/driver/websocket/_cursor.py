@@ -20,7 +20,7 @@ from exasol.driver.websocket._errors import (
     NotSupportedError,
     translate_exception,
 )
-from exasol.driver.websocket._types import TypeCode
+from pyexasol.data_types.websocket_types import WebSocketDataType
 
 
 @dataclass
@@ -28,7 +28,7 @@ class MetaData:
     """Metadata describing a result column"""
 
     name: str
-    type_code: TypeCode
+    type_code: WebSocketDataType
     display_size: int | None = None
     internal_size: int | None = None
     precision: int | None = None
@@ -37,7 +37,7 @@ class MetaData:
 
 
 def _pyexasol2dbapi_metadata(name, metadata) -> MetaData:
-    type_mapping = {t.value: t for t in TypeCode}
+    type_mapping = {t.value: t for t in WebSocketDataType}
     key_mapping = {
         "name": "name",
         "type_code": "type",
@@ -118,8 +118,8 @@ def _pyexasol2dbapi(value, metadata):
     converters = defaultdict(
         lambda: _identity,
         {
-            TypeCode.Date: to_date,
-            TypeCode.Double: to_float,
+            WebSocketDataType.Date: to_date,
+            WebSocketDataType.Double: to_float,
         },
     )
     converter = converters[metadata.type_code]
