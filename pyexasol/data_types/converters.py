@@ -14,17 +14,16 @@ import datetime
 
 
 class ExaTimeDelta(datetime.timedelta):
-    def reverse_seconds(self):
+    def reverse_seconds(self) -> tuple[int, int]:
+        """Return the complemented seconds and microseconds of a negative duration."""
         if self.microseconds > 0:
             seconds = 86399 - self.seconds
             microseconds = 1000000 - self.microseconds
+            return seconds, microseconds
         elif self.seconds > 0:
             seconds = 86400 - self.seconds
-            microseconds = 0
-        else:
-            seconds = 0
-            microseconds = 0
-        return seconds, microseconds
+            return seconds, 0
+        return 0, 0
 
     @classmethod
     def from_interval(cls, val: str) -> ExaTimeDelta:
