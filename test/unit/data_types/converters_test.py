@@ -4,8 +4,42 @@ import pytest
 
 from pyexasol.data_types.converters import ExaTimeDelta
 
+INTERVAL_CASES = [
+    pytest.param(
+        ExaTimeDelta(days=-3, seconds=1),
+        "-000000002 23:59:59.000000000",
+        id="negative-duration-with-seconds",
+    ),
+    pytest.param(
+        ExaTimeDelta(days=-3),
+        "-000000003 00:00:00.000000000",
+        id="negative-duration-without-seconds",
+    ),
+    pytest.param(
+        ExaTimeDelta(
+            days=3,
+            hours=10,
+            minutes=59,
+            seconds=59,
+            microseconds=123456,
+        ),
+        "+000000003 10:59:59.123456000",
+        id="positive-duration",
+    ),
+]
+
 
 class TestExaTimeDelta:
+    @staticmethod
+    @pytest.mark.parametrize(
+        "value, interval",
+        INTERVAL_CASES,
+    )
+    def test_from_interval(value, interval):
+        actual = ExaTimeDelta.from_interval(interval)
+
+        assert actual == value
+
     @staticmethod
     def test_from_timedelta():
         days = 3
@@ -34,33 +68,11 @@ class TestExaTimeDelta:
 
     @staticmethod
     @pytest.mark.parametrize(
-        "value, expected",
-        [
-            pytest.param(
-                ExaTimeDelta(days=-3, seconds=1),
-                "-000000002 23:59:59.000000000",
-                id="negative-duration-with-seconds",
-            ),
-            pytest.param(
-                ExaTimeDelta(days=-3),
-                "-000000003 00:00:00.000000000",
-                id="negative-duration-without-seconds",
-            ),
-            pytest.param(
-                ExaTimeDelta(
-                    days=3,
-                    hours=10,
-                    minutes=59,
-                    seconds=59,
-                    microseconds=123000,
-                ),
-                "+000000003 10:59:59.123000000",
-                id="non-negative-duration-",
-            ),
-        ],
+        "value, interval",
+        INTERVAL_CASES,
     )
-    def test_to_interval(value, expected):
-        assert value.to_interval() == expected
+    def test_to_interval(value, interval):
+        assert value.to_interval() == interval
 
     @staticmethod
     def test_str_returns_interval_representation():
