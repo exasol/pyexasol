@@ -60,6 +60,7 @@ class ExaTimeDelta(datetime.timedelta):
         three zeros.
         """
         if self.days < 0:
+            # Python's timedelta normalizes hours and minutes into seconds.
             seconds, microseconds = self.reverse_seconds()
             if seconds or microseconds:
                 s = "-%09d " % (abs(self.days) - 1,)
