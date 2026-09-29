@@ -10,8 +10,9 @@ from datetime import (
     datetime,
     time,
 )
-from enum import Enum
 from time import localtime
+
+from pyexasol.data_types.websocket_types import WebSocketDataType
 
 Date = date
 Time = time
@@ -48,27 +49,6 @@ def TimestampFromTicks(ticks: int) -> datetime:  # pylint: disable=C0103
     return Timestamp(year, month, day, hour, minute, second)
 
 
-class TypeCode(Enum):
-    """
-    Type codes for Exasol DB column types.
-
-    See: https://github.com/exasol/websocket-api/blob/master/docs/WebsocketAPIV3.md#data-types-type-names-and-properties
-    """
-
-    Bool = "BOOLEAN"
-    Char = "CHAR"
-    Date = "DATE"
-    Decimal = "DECIMAL"
-    Double = "DOUBLE"
-    Geometry = "GEOMETRY"
-    Hashtype = "HASHTYPE"
-    IntervalDayToSecond = "INTERVAL DAY TO SECOND"
-    IntervalYearToMonth = "INTERVAL YEAR TO MONTH"
-    Timestamp = "TIMESTAMP"
-    TimestampTz = "TIMESTAMP WITH LOCAL TIME ZONE"
-    String = "VARCHAR"
-
-
 class _DBAPITypeObject:
     def __init__(self, *type_codes) -> None:
         self.type_codes = type_codes
@@ -77,16 +57,16 @@ class _DBAPITypeObject:
         return other in self.type_codes
 
 
-STRING = _DBAPITypeObject(TypeCode.String)
+STRING = _DBAPITypeObject(WebSocketDataType.String)
 # A binary type is not natively supported by Exasol
 BINARY = _DBAPITypeObject(None)
-NUMBER = _DBAPITypeObject(TypeCode.Decimal, TypeCode.Double)
+NUMBER = _DBAPITypeObject(WebSocketDataType.Decimal, WebSocketDataType.Double)
 DATETIME = _DBAPITypeObject(
-    TypeCode.Date,
-    TypeCode.Timestamp,
-    TypeCode.TimestampTz,
-    TypeCode.IntervalDayToSecond,
-    TypeCode.IntervalYearToMonth,
+    WebSocketDataType.Date,
+    WebSocketDataType.Timestamp,
+    WebSocketDataType.TimestampTz,
+    WebSocketDataType.IntervalDayToSecond,
+    WebSocketDataType.IntervalYearToMonth,
 )
 # Exasol does manage indexes internally
 ROWID = _DBAPITypeObject(None)
