@@ -63,7 +63,7 @@ class TestProcessDsn:
 
 
 class TestIpRanges:
-    """Tests converted from integration tests — these do not require a running DB."""
+    """Tests validating correct behavior of ExaConnection._process_dsn() using a mocked connection"""
 
     @staticmethod
     def test_ip_range_with_custom_port(mock_exaconnection_factory):
