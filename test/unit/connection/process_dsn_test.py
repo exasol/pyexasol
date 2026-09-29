@@ -1,3 +1,5 @@
+from unittest.mock import patch
+
 import pytest
 
 from pyexasol import ExaConnectionDsnError
@@ -58,3 +60,127 @@ class TestProcessDsn:
             for host in connection._process_dsn(dsn)
         }
         assert actual == set(expected)
+
+
+class TestIpRanges:
+    """Tests converted from integration tests — these do not require a running DB."""
+
+    @staticmethod
+    def test_ip_range_with_custom_port(mock_exaconnection_factory):
+        connection = mock_exaconnection_factory(resolve_hostnames=False)
+        dsn = "127.0.0.10..19:8564"
+        expected = {
+            ("127.0.0.10", 8564, None),
+            ("127.0.0.11", 8564, None),
+            ("127.0.0.12", 8564, None),
+            ("127.0.0.13", 8564, None),
+            ("127.0.0.14", 8564, None),
+            ("127.0.0.15", 8564, None),
+            ("127.0.0.16", 8564, None),
+            ("127.0.0.17", 8564, None),
+            ("127.0.0.18", 8564, None),
+            ("127.0.0.19", 8564, None),
+        }
+        actual = {
+            (host.hostname, host.port, host.fingerprint)
+            for host in connection._process_dsn(dsn)
+        }
+        assert actual == expected
+
+    @staticmethod
+    def test_multiple_ranges_with_multiple_ports_and_default_port_at_the_end(
+        mock_exaconnection_factory,
+    ):
+        connection = mock_exaconnection_factory(resolve_hostnames=False)
+        dsn = "127.0.0.10..19:8564,127.0.0.20,127.0.0.100:8565,127.0.0.21..23"
+        expected = {
+            ("127.0.0.10", 8564, None),
+            ("127.0.0.11", 8564, None),
+            ("127.0.0.12", 8564, None),
+            ("127.0.0.13", 8564, None),
+            ("127.0.0.14", 8564, None),
+            ("127.0.0.15", 8564, None),
+            ("127.0.0.16", 8564, None),
+            ("127.0.0.17", 8564, None),
+            ("127.0.0.18", 8564, None),
+            ("127.0.0.19", 8564, None),
+            ("127.0.0.20", 8565, None),
+            ("127.0.0.21", 8563, None),
+            ("127.0.0.22", 8563, None),
+            ("127.0.0.23", 8563, None),
+            ("127.0.0.100", 8565, None),
+        }
+        actual = {
+            (host.hostname, host.port, host.fingerprint)
+            for host in connection._process_dsn(dsn)
+        }
+        assert actual == expected
+
+    @staticmethod
+    def test_multiple_ranges_with_fingerprint_and_port(mock_exaconnection_factory):
+        connection = mock_exaconnection_factory(resolve_hostnames=False)
+        dsn = "127.0.0.10..19/ABC,127.0.0.20,127.0.0.100/CDE:8564"
+        expected = {
+            ("127.0.0.10", 8564, "ABC"),
+            ("127.0.0.11", 8564, "ABC"),
+            ("127.0.0.12", 8564, "ABC"),
+            ("127.0.0.13", 8564, "ABC"),
+            ("127.0.0.14", 8564, "ABC"),
+            ("127.0.0.15", 8564, "ABC"),
+            ("127.0.0.16", 8564, "ABC"),
+            ("127.0.0.17", 8564, "ABC"),
+            ("127.0.0.18", 8564, "ABC"),
+            ("127.0.0.19", 8564, "ABC"),
+            ("127.0.0.20", 8564, "CDE"),
+            ("127.0.0.100", 8564, "CDE"),
+        }
+        actual = {
+            (host.hostname, host.port, host.fingerprint)
+            for host in connection._process_dsn(dsn)
+        }
+        assert actual == expected
+
+    @staticmethod
+    def test_empty_dsn(mock_exaconnection_factory):
+        connection = mock_exaconnection_factory()
+        with pytest.raises(ExaConnectionDsnError) as excinfo:
+            connection._process_dsn(" ")
+        assert excinfo.value.message == "Connection string is empty"
+
+    @staticmethod
+    def test_invalid_range(mock_exaconnection_factory):
+        connection = mock_exaconnection_factory(resolve_hostnames=False)
+        dsn = "127.0.0.15..10"
+        with pytest.raises(ExaConnectionDsnError) as excinfo:
+            connection._process_dsn(dsn)
+        expected = (
+            "Connection string part [127.0.0.15..10] contains an invalid range, "
+            "lower bound is higher than upper bound"
+        )
+        assert excinfo.value.message == expected
+
+    @staticmethod
+    def test_hostname_cannot_be_resolved(mock_exaconnection_factory):
+        connection = mock_exaconnection_factory()
+        dsn = "test1..5.zlan"
+        with patch("socket.gethostbyname_ex", side_effect=OSError("Name not resolved")):
+            with pytest.raises(ExaConnectionDsnError) as excinfo:
+                connection._process_dsn(dsn)
+        expected = (
+            "Could not resolve IP address of hostname "
+            "[test1.zlan] derived from connection string"
+        )
+        assert excinfo.value.message == expected
+
+    @staticmethod
+    def test_hostname_range_with_zero_padding(mock_exaconnection_factory):
+        connection = mock_exaconnection_factory()
+        dsn = "test01..20.zlan"
+        with patch("socket.gethostbyname_ex", side_effect=OSError("Name not resolved")):
+            with pytest.raises(ExaConnectionDsnError) as excinfo:
+                connection._process_dsn(dsn)
+        expected = (
+            "Could not resolve IP address of hostname "
+            "[test01.zlan] derived from connection string"
+        )
+        assert excinfo.value.message == expected
