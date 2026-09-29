@@ -1,5 +1,10 @@
 import datetime
-import decimal
+
+from pyexasol.data_types.to_python import (
+    convert_date,
+    convert_decimal,
+    convert_timestamp,
+)
 
 
 class ExaTimeDelta(datetime.timedelta):
@@ -65,7 +70,7 @@ class ExaTimeDelta(datetime.timedelta):
 
 def exasol_mapper(val, data_type):
     """
-    Convert into Python 3 data types according to Exasol manual
+    Convert into Python data types according to the Exasol manual
 
     DECIMAL(p,0)           -> int
     DECIMAL(p,s)           -> decimal.Decimal
@@ -82,20 +87,11 @@ def exasol_mapper(val, data_type):
     if val is None:
         return None
     elif data_type["type"] == "DECIMAL":
-        if data_type["scale"] == 0:
-            return int(val)
-        else:
-            return decimal.Decimal(val)
+        return convert_decimal(val, data_type["scale"])
     elif data_type["type"] == "DATE":
-        return datetime.date.fromisoformat(val)
+        return convert_date(val)
     elif data_type["type"] == "TIMESTAMP":
-        # Normalize fractional seconds for Python 3.10 compatibility and truncate
-        # Exasol's optional nanoseconds to Python's microsecond precision.
-        timestamp_value = val
-        if len(val) > 19:
-            timestamp_value = f"{val[:19]}.{val[20:26].ljust(6, '0')}"
-        return datetime.datetime.fromisoformat(timestamp_value)
+        return convert_timestamp(val)
     elif data_type["type"] == "INTERVAL DAY TO SECOND":
         return ExaTimeDelta.from_interval(val)
-    else:
-        return val
+    return val

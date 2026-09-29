@@ -1,79 +1,68 @@
 import datetime
+import decimal
 
 import pytest
 
-from exasol.driver.websocket._connection import (
-    SUPPORTED_DATE_FORMATS,
-    SUPPORTED_TIMESTAMP_FORMATS,
+from exasol.driver.websocket.dbapi2 import TypeCode
+from pyexasol.mapper import (
+    ExaTimeDelta,
+    exasol_mapper,
 )
-from pyexasol.mapper import exasol_mapper
+
+MAPPER_CASES = [
+    ("DECIMAL", "123", 0, 123),
+    ("DECIMAL", "123.45", 2, decimal.Decimal("123.45")),
+    (
+        "DATE",
+        "2026-09-11",
+        0,
+        datetime.date(2026, 9, 11),
+    ),
+    (
+        "TIMESTAMP",
+        "2026-09-11 12:34:56",
+        0,
+        datetime.datetime(2026, 9, 11, 12, 34, 56),
+    ),
+    (
+        "INTERVAL DAY TO SECOND",
+        "+000000003 10:59:59.123000000",
+        0,
+        ExaTimeDelta(days=3, hours=10, minutes=59, seconds=59, microseconds=123000),
+    ),
+    ("DOUBLE", 1.25, 0, 1.25),
+    ("BOOLEAN", True, 0, True),
+    ("VARCHAR", "text", 0, "text"),
+    ("CHAR", "text", 0, "text"),
+    ("HASHTYPE", "hash", 0, "hash"),
+    ("GEOMETRY", "POINT (10 20)", 0, "POINT (10 20)"),
+    ("INTERVAL YEAR TO MONTH", "+000000001-02", 0, "+000000001-02"),
+    (
+        "TIMESTAMP WITH LOCAL TIME ZONE",
+        "2026-09-11 12:34:56",
+        0,
+        "2026-09-11 12:34:56",
+    ),
+]
 
 
 class TestExasolMapper:
+    @staticmethod
     @pytest.mark.parametrize(
-        "format_definition",
-        [
-            pytest.param(format_definition, id=format_definition)
-            for format_definition in SUPPORTED_DATE_FORMATS
-        ],
+        "type_name,value,scale,expected",
+        MAPPER_CASES,
     )
-    def test_maps_supported_date_formats(self, format_definition):
-        expected_date = datetime.date(2026, 9, 11)
-        value = expected_date.strftime("%Y-%m-%d")
+    def test_maps_types(type_name, value, scale, expected):
+        data_type = {"type": type_name, "scale": scale}
+        assert exasol_mapper(value, data_type) == expected
 
-        assert exasol_mapper(value, {"type": "DATE"}) == expected_date
+    @staticmethod
+    def test_maps_all_type_codes():
+        tested_type_names = {type_name for type_name, _, _, _ in MAPPER_CASES}
+        expected_type_names = {type_code.value for type_code in TypeCode}
 
-    @pytest.mark.parametrize(
-        "format_definition",
-        [
-            pytest.param(
-                SUPPORTED_TIMESTAMP_FORMATS[0],
-                id=SUPPORTED_TIMESTAMP_FORMATS[0],
-            )
-        ],
-    )
-    def test_maps_supported_timestamp_formats_without_fractional_seconds(
-        self, format_definition
-    ):
-        expected_timestamp = datetime.datetime(2026, 9, 11, 12, 34, 56)
-        value = expected_timestamp.strftime("%Y-%m-%d %H:%M:%S")
-        assert exasol_mapper(value, {"type": "TIMESTAMP"}) == expected_timestamp
+        assert tested_type_names == expected_type_names
 
-    @pytest.mark.parametrize(
-        "format_definition, fractional_value",
-        [
-            pytest.param(
-                format_definition,
-                fractional_value,
-                id=format_definition,
-            )
-            for format_definition, fractional_value in zip(
-                SUPPORTED_TIMESTAMP_FORMATS[1:],
-                (
-                    "1",
-                    "12",
-                    "123",
-                    "1234",
-                    "12345",
-                    "123456",
-                    "1234567",
-                    "12345678",
-                    "123456789",
-                ),
-            )
-        ],
-    )
-    def test_maps_supported_timestamp_formats_with_fractional_seconds(
-        self, format_definition, fractional_value
-    ):
-        expected_timestamp = datetime.datetime(
-            2026,
-            9,
-            11,
-            12,
-            34,
-            56,
-            int(fractional_value[:6].ljust(6, "0")),
-        )
-        value = f"2026-09-11 12:34:56.{fractional_value}"
-        assert exasol_mapper(value, {"type": "TIMESTAMP"}) == expected_timestamp
+    @staticmethod
+    def test_maps_none():
+        assert exasol_mapper(None, {"type": "DECIMAL", "scale": 0}) is None

@@ -1,13 +1,13 @@
 import pytest
 
-from exasol.driver.websocket._connection import (
-    SUPPORTED_DATE_FORMATS,
-    SUPPORTED_TIMESTAMP_FORMATS,
-)
 from exasol.driver.websocket.dbapi2 import (
     DatabaseError,
     InterfaceError,
     TypeCode,
+)
+from pyexasol.data_types.to_python import (
+    SUPPORTED_DATE_FORMATS,
+    SUPPORTED_TIMESTAMP_FORMATS,
 )
 
 
