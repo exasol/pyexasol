@@ -4,8 +4,8 @@ import decimal
 import pytest
 
 from exasol.driver.websocket.dbapi2 import TypeCode
+from pyexasol.data_types.converters import ExaTimeDelta
 from pyexasol.mapper import (
-    ExaTimeDelta,
     exasol_mapper,
 )
 
