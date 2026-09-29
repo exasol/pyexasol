@@ -13,11 +13,9 @@ class TestExaTimeDelta:
                 "-000000002 23:59:59.000000000",
                 id="negative-duration-with-seconds",
             ),
-            # BUG: Exact negative days currently lose one day; expected output is
-            # "-000000003 00:00:00.000000000".
             pytest.param(
                 ExaTimeDelta(days=-3),
-                "-000000002 00:00:00.000000000",
+                "-000000003 00:00:00.000000000",
                 id="negative-duration-without-seconds",
             ),
             pytest.param(
