@@ -6,6 +6,7 @@ import pytest
 from exasol.driver.websocket.dbapi2 import TypeCode
 from pyexasol.data_types.converters import ExaTimeDelta
 from pyexasol.data_types.websocket_to_python import (
+    SUPPORTED_TIMESTAMP_FORMATS,
     convert_date,
     convert_decimal,
     convert_timestamp,
@@ -41,6 +42,15 @@ def test_convert_timestamp_without_fractional_seconds():
     value = expected_timestamp.strftime("%Y-%m-%d %H:%M:%S")
 
     assert convert_timestamp(value) == expected_timestamp
+
+
+@pytest.mark.parametrize("timestamp_format", SUPPORTED_TIMESTAMP_FORMATS)
+def test_convert_timestamp_supports_all_formats(timestamp_format):
+    digits = int(timestamp_format.partition(".FF")[2] or 0)
+    fraction_digits = "1" * digits
+    fraction = f".{fraction_digits}" if digits else ""
+
+    assert convert_timestamp(f"2026-09-11 12:34:56{fraction}")
 
 
 @pytest.mark.parametrize(
