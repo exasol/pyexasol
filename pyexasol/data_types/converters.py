@@ -27,27 +27,37 @@ class ExaTimeDelta(datetime.timedelta):
         return seconds, microseconds
 
     @classmethod
-    def from_interval(cls, val):
+    def from_interval(cls, val: str) -> ExaTimeDelta:
+        """
+        Convert an Exasol ``INTERVAL DAY TO SECOND`` string to an ExaTimeDelta.
+
+        The expected format is ``[+-]DDDDDDDDD HH:MM:SS.NNNNNNNNN``.
+        Nanoseconds are rounded to Python's microsecond precision.
+        """
+        # Exasol supports nanosecond precision; round to Python's microseconds.
+        microseconds = 0
+        if len(val) > 20:
+            fractional_seconds = val[20:29]
+            fractional_nanoseconds = float(fractional_seconds.ljust(9, "0"))
+            microseconds = int(round(fractional_nanoseconds / 1000))
+
         td = cls(
             days=int(val[0:10]),
             hours=int(val[11:13]),
             minutes=int(val[14:16]),
             seconds=int(val[17:19]),
-            microseconds=(
-                int(round(float(val[20:29].ljust(9, "0")) / 1000))
-                if len(val) > 20
-                else 0
-            ),
+            microseconds=microseconds,
         )
-        if val[0] == "-":
-            # normalize according to Python timedelta rules (days are negative; remaining parts apply back "up" towards 0)
-            # - e.g. -6 days, 1:00:00.000000 would represent 5 days, 23 hours ago (6 days back, 1 hour forward)
-            seconds, microseconds = td.reverse_seconds()
-            if seconds or microseconds:
-                td = cls(days=td.days - 1, seconds=seconds, microseconds=microseconds)
-            else:
-                td = cls(days=td.days, seconds=seconds, microseconds=microseconds)
-        return td
+        if val[0] != "-":
+            return td
+
+        # Negative numbers are normalized according to Python's timedelta rules
+        # (days are negative; remaining parts apply back "up" towards 0)
+        #   -6 days, 1:00:00.000000 would represent 5 days, 23 hours ago (6 days back, 1 hour forward)
+        seconds, microseconds = td.reverse_seconds()
+        if seconds or microseconds:
+            return cls(days=td.days - 1, seconds=seconds, microseconds=microseconds)
+        return cls(days=td.days, seconds=seconds, microseconds=microseconds)
 
     @classmethod
     def from_timedelta(cls, td: datetime.timedelta) -> ExaTimeDelta:
