@@ -4,6 +4,7 @@ import decimal
 import pytest
 
 import pyexasol
+from pyexasol.mapper import ExaTimeDelta
 
 
 # For the fetch_mapper tests we need to configure the connection accordingly
@@ -23,7 +24,7 @@ def connection(connection_factory):
         ("SELECT CAST(1 AS DOUBLE);", float),
         ("SELECT DATE '2024-05-13';", datetime.date),
         ("SELECT TIMESTAMP '2024-05-13 12:34:56';", datetime.datetime),
-        ("SELECT TO_DSINTERVAL('3 10:59:59.123');", pyexasol.mapper.ExaTimeDelta),
+        ("SELECT TO_DSINTERVAL('3 10:59:59.123');", ExaTimeDelta),
         ("SELECT CAST(1 AS BOOLEAN);", bool),
         ("SELECT CAST(1 AS VARCHAR(1));", str),
         ("SELECT CAST(1 AS CHAR);", str),
