@@ -1,9 +1,37 @@
+import datetime
+
 import pytest
 
 from pyexasol.data_types.converters import ExaTimeDelta
 
 
 class TestExaTimeDelta:
+    @staticmethod
+    def test_from_timedelta():
+        days = 3
+        hours = 10
+        minutes = 59
+        seconds = 15
+        microseconds = 12345
+
+        actual = ExaTimeDelta.from_timedelta(
+            datetime.timedelta(
+                days=days,
+                hours=hours,
+                minutes=minutes,
+                seconds=seconds,
+                microseconds=microseconds,
+            )
+        )
+
+        assert actual == ExaTimeDelta(
+            days=days,
+            hours=hours,
+            minutes=minutes,
+            seconds=seconds,
+            microseconds=microseconds,
+        )
+
     @staticmethod
     @pytest.mark.parametrize(
         "value, expected",
