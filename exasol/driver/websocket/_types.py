@@ -14,6 +14,8 @@ from time import localtime
 
 from pyexasol.data_types.websocket_types import WebSocketDataType
 
+TypeCode = WebSocketDataType
+
 Date = date
 Time = time
 Timestamp = datetime
@@ -57,16 +59,16 @@ class _DBAPITypeObject:
         return other in self.type_codes
 
 
-STRING = _DBAPITypeObject(WebSocketDataType.String)
+STRING = _DBAPITypeObject(TypeCode.String)
 # A binary type is not natively supported by Exasol
 BINARY = _DBAPITypeObject(None)
-NUMBER = _DBAPITypeObject(WebSocketDataType.Decimal, WebSocketDataType.Double)
+NUMBER = _DBAPITypeObject(TypeCode.Decimal, TypeCode.Double)
 DATETIME = _DBAPITypeObject(
-    WebSocketDataType.Date,
-    WebSocketDataType.Timestamp,
-    WebSocketDataType.TimestampTz,
-    WebSocketDataType.IntervalDayToSecond,
-    WebSocketDataType.IntervalYearToMonth,
+    TypeCode.Date,
+    TypeCode.Timestamp,
+    TypeCode.TimestampTz,
+    TypeCode.IntervalDayToSecond,
+    TypeCode.IntervalYearToMonth,
 )
 # Exasol does manage indexes internally
 ROWID = _DBAPITypeObject(None)
