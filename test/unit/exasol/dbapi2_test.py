@@ -33,7 +33,7 @@ from pyexasol.exceptions import (
 
 @pytest.fixture
 def dbapi():
-    yield importlib.import_module("exasol.driver.websocket.dbapi2")
+    return importlib.import_module("exasol.driver.websocket.dbapi2")
 
 
 def test_defines_api_level(dbapi):

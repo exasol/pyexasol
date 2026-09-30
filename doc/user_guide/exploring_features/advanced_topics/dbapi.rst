@@ -86,7 +86,7 @@ case-sensitive.
 The supported values are represented by the following definitions in the
 WebSocket-to-Python conversion module:
 
-.. literalinclude:: ../../../../pyexasol/data_types/to_python.py
+.. literalinclude:: ../../../../pyexasol/data_types/websocket_to_python.py
    :language: python
    :start-after: # Start: supported session date/time formats included in the DBAPI documentation.
    :end-before: # End: supported session date/time formats included in the DBAPI documentation.
