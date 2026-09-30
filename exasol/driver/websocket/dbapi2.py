@@ -37,10 +37,8 @@ from exasol.driver.websocket._types import (
     TimeFromTicks,
     Timestamp,
     TimestampFromTicks,
+    TypeCode,
 )
-from pyexasol.data_types.websocket_types import WebSocketDataType
-
-TypeCode = WebSocketDataType
 
 # Add remaining definitions
 
