@@ -4,9 +4,12 @@ from unittest.mock import (
 )
 
 import pytest
+from packaging.version import Version
 from pydantic import ValidationError
 
+from pyexasol import callback as callback_module
 from pyexasol.connection import ExaConnection
+from pyexasol.database_versions import MIN_VERSION_FOR_NATIVE_PARQUET_IMPORT
 
 
 @pytest.fixture
@@ -186,6 +189,53 @@ class TestImportFromCallback:
         # verify callback_params=None maps to empty dictionary
         _, callback_kwargs = callback_spy.call_args
         assert callback_kwargs == {}
+
+
+class TestImportFromParquetVersionSelection:
+    @staticmethod
+    @pytest.mark.parametrize(
+        "database_version, use_native",
+        [
+            (Version("2025.2.0"), False),
+            (MIN_VERSION_FOR_NATIVE_PARQUET_IMPORT.version, True),
+            (Version("2026.1.1"), True),
+        ],
+    )
+    def test_selects_import_path_by_database_version(
+        exa_conn, database_version, use_native
+    ):
+        source = "data.parquet"
+        table = "TARGET_TABLE"
+        callback_params = {"columns": ["FIRST"]}
+        import_params = {"columns": ["FIRST"]}
+        exa_conn.exasol_db_version = database_version
+        exa_conn.import_from_callback = MagicMock(return_value="legacy_result")
+        exa_conn._import_from_native_parquet = MagicMock(return_value="native_result")
+
+        result = ExaConnection.import_from_parquet(
+            exa_conn,
+            source=source,
+            table=table,
+            callback_params=callback_params,
+            import_params=import_params,
+        )
+        runner = exa_conn._import_from_native_parquet
+
+        if use_native:
+            assert result == "native_result"
+            exa_conn.import_from_callback.assert_not_called()
+            runner.assert_called_once()
+            assert runner.call_args.args == (source, table)
+            assert runner.call_args.kwargs == {"import_params": import_params}
+        else:
+            assert result == "legacy_result"
+            exa_conn.import_from_callback.assert_called_once_with(
+                callback_module.import_from_parquet,
+                source,
+                table,
+                callback_params,
+                import_params,
+            )
 
     @staticmethod
     def test_passes_schema_qualified_table_to_import_thread(
