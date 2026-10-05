@@ -32,5 +32,6 @@ In this major release, the following changes were made:
   [deprecated in July 2024](https://github.com/exasol/pyexasol/commit/8e3b361)
 * #417: Moved DECIMAL, DATE, and TIMESTAMP conversion helpers into
   ``pyexasol.data_types.to_python`` and improved unit test coverage
+* #238: Moved DSN parsing and connection tests from integration tests to unit tests, so they no longer require a running Docker database
 * #238: Moved DSN parsing tests from integration tests to unit tests, so they no longer require a running Docker database
 * #419: Moved ``exasol_mapper`` and ``ExaTimeDelta`` into ``pyexasol.data_types`` with compatibility exports
