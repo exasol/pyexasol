@@ -65,7 +65,7 @@ class ExaTimeDelta(datetime.timedelta):
         seconds, microseconds = td.reverse_seconds()
         if seconds or microseconds:
             return cls(days=td.days - 1, seconds=seconds, microseconds=microseconds)
-        return cls(days=td.days, seconds=seconds, microseconds=microseconds)
+        return td
 
     @classmethod
     def from_timedelta(cls, td: datetime.timedelta) -> ExaTimeDelta:
