@@ -12,17 +12,20 @@ from __future__ import annotations
 
 import datetime
 
+SECONDS_PER_DAY = 24 * 60 * 60
+MICROSECONDS_PER_SECOND = 1_000_000
+
 
 class ExaTimeDelta(datetime.timedelta):
     def reverse_seconds(self) -> tuple[int, int]:
         """Return the complemented seconds and microseconds of a negative duration."""
         if self.microseconds > 0:
-            seconds = 86399 - self.seconds
-            microseconds = 1000000 - self.microseconds
-            return seconds, microseconds
+            complemented_seconds = SECONDS_PER_DAY - 1 - self.seconds
+            complemented_microseconds = MICROSECONDS_PER_SECOND - self.microseconds
+            return complemented_seconds, complemented_microseconds
         elif self.seconds > 0:
-            seconds = 86400 - self.seconds
-            return seconds, 0
+            complemented_seconds = SECONDS_PER_DAY - self.seconds
+            return complemented_seconds, 0
         return 0, 0
 
     @classmethod
