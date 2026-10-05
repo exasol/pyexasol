@@ -4,7 +4,7 @@ import decimal
 import pytest
 
 import pyexasol
-from pyexasol.mapper import ExaTimeDelta
+from pyexasol.data_types.converters import ExaTimeDelta
 
 
 # For the fetch_mapper tests we need to configure the connection accordingly
