@@ -24,7 +24,7 @@ class ExaTimeDelta(datetime.timedelta):
     """
 
     def reverse_seconds(self) -> tuple[int, int]:
-        """Return the complemented seconds and microseconds of a negative duration."""
+        """Return the seconds and microseconds complement relative to one day."""
         if self.microseconds > 0:
             complemented_seconds = SECONDS_PER_DAY - 1 - self.seconds
             complemented_microseconds = MICROSECONDS_PER_SECOND - self.microseconds
