@@ -1,6 +1,10 @@
 import datetime
+import importlib
+
+import pytest
 
 import pyexasol
+import pyexasol.mapper as mapper_module
 from pyexasol.data_types.converters import ExaTimeDelta as CanonicalExaTimeDelta
 from pyexasol.data_types.websocket_to_python import (
     exasol_mapper as CanonicalExasolMapper,
@@ -9,6 +13,12 @@ from pyexasol.mapper import (
     ExaTimeDelta,
     exasol_mapper,
 )
+from pyexasol.warnings import PyexasolDeprecationWarning
+
+
+def test_import_mapper_module_emits_deprecation_warning():
+    with pytest.warns(PyexasolDeprecationWarning):
+        importlib.reload(mapper_module)
 
 
 def test_exposes_exatimedelta_compatibility_import():
