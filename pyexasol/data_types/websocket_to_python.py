@@ -11,6 +11,9 @@ import datetime
 import decimal
 from typing import Final
 
+from pyexasol.data_types.converters import ExaTimeDelta
+from pyexasol.data_types.websocket_types import WebSocketDataType
+
 # These formats are strictly enforced by the WebSocket DBAPI. They also describe
 # the ISO-only values that are parsed through these helpers. Keep them next to the
 # parsers because this limitation applies to both consumers.
@@ -75,3 +78,32 @@ def convert_timestamp(value: str) -> datetime.datetime:
         timestamp_value = f"{date_and_time}.{microseconds}"
 
     return datetime.datetime.fromisoformat(timestamp_value)
+
+
+def exasol_mapper(val, data_type):
+    """
+    Convert into Python data types according to the Exasol manual
+
+    DECIMAL(p,0)           -> int
+    DECIMAL(p,s)           -> decimal.Decimal
+    DOUBLE                 -> float
+    DATE                   -> datetime.date
+    TIMESTAMP              -> datetime.datetime
+    BOOLEAN                -> bool
+    VARCHAR                -> str
+    CHAR                   -> str
+    INTERVAL DAY TO SECOND -> datetime.timedelta
+    <others>               -> str
+    """
+
+    if val is None:
+        return None
+    elif data_type["type"] == WebSocketDataType.Decimal.value:
+        return convert_decimal(val, data_type["scale"])
+    elif data_type["type"] == WebSocketDataType.Date.value:
+        return convert_date(val)
+    elif data_type["type"] == WebSocketDataType.Timestamp.value:
+        return convert_timestamp(val)
+    elif data_type["type"] == WebSocketDataType.IntervalDayToSecond.value:
+        return ExaTimeDelta.from_interval(val)
+    return val
