@@ -11,8 +11,12 @@ In this major release, the following changes were made:
 * WebSocket DBAPI connection operations that require an active connection now
   consistently reject calls made without one and translate underlying Exasol
   errors into the appropriate DBAPI exceptions.
-* The deprecated ``pyexasol.mapper`` compatibility module now emits a
-  deprecation warning on import; use ``pyexasol.data_types`` instead.
+* WebSocket result metadata types are now exposed as
+  ``pyexasol.data_types.WebSocketDataType``; the public ``TypeCode`` alias
+  remains available but displays using the canonical name.
+* ``exasol_mapper`` and ``ExaTimeDelta`` are available from
+  ``pyexasol.data_types``; the old ``pyexasol.mapper`` compatibility module
+  emits a deprecation warning on import.
 * The deprecated ``pyexasol.db2`` compatibility layer was removed; the
   maintained ``exasol.driver.websocket.dbapi2`` interface remains available.
 
@@ -35,10 +39,5 @@ In this major release, the following changes were made:
   ``pyexasol.data_types.to_python`` and improved unit test coverage
 * #238: Moved DSN parsing and connection tests from integration tests to unit tests, so they no longer require a running Docker database
 * #238: Moved DSN parsing tests from integration tests to unit tests, so they no longer require a running Docker database
-* #419: Centralized WebSocket result metadata type names in
-  ``pyexasol.data_types.websocket_types`` as ``WebSocketDataType``, retained
-  the public ``TypeCode`` compatibility alias; its class name and member
-  representations now use ``WebSocketDataType``, moved ``exasol_mapper`` and
-  ``ExaTimeDelta`` into
-  ``pyexasol.data_types`` with compatibility exports, and deprecated the
-  ``pyexasol.mapper`` compatibility module with an import-time warning
+* #419: Centralized WebSocket metadata types and moved mapper implementations
+  into ``pyexasol.data_types``, retaining compatibility exports.
