@@ -17,6 +17,12 @@ MICROSECONDS_PER_SECOND = 1_000_000
 
 
 class ExaTimeDelta(datetime.timedelta):
+    """Represent Exasol intervals and convert them in both directions.
+
+    ``from_interval`` converts WebSocket values to Python, while
+    ``to_interval`` converts Python values back to Exasol's format.
+    """
+
     def reverse_seconds(self) -> tuple[int, int]:
         """Return the complemented seconds and microseconds of a negative duration."""
         if self.microseconds > 0:
