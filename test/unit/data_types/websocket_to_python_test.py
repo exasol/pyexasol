@@ -3,7 +3,7 @@ import decimal
 
 import pytest
 
-from exasol.driver.websocket.dbapi2 import TypeCode
+from pyexasol.data_types import WebSocketDataType
 from pyexasol.data_types.converters import ExaTimeDelta
 from pyexasol.data_types.websocket_to_python import (
     SUPPORTED_TIMESTAMP_FORMATS,
@@ -131,7 +131,7 @@ class TestExasolMapper:
     @staticmethod
     def test_maps_all_type_codes():
         tested_type_names = {type_name for type_name, _, _, _ in MAPPER_CASES}
-        expected_type_names = {type_code.value for type_code in TypeCode}
+        expected_type_names = {data_type.value for data_type in WebSocketDataType}
 
         assert tested_type_names == expected_type_names
 
