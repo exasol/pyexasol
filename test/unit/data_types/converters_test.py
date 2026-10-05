@@ -26,6 +26,34 @@ INTERVAL_CASES = [
         "+000000003 10:59:59.123456000",
         id="positive-duration",
     ),
+    pytest.param(
+        ExaTimeDelta(days=-2, seconds=86398, microseconds=500000),
+        "-000000001 00:00:01.500000000",
+        id="negative-duration-with-microseconds",
+    ),
+    pytest.param(
+        ExaTimeDelta(microseconds=-500000),
+        "-000000000 00:00:00.500000000",
+        id="negative-duration-under-one-day-with-microseconds",
+    ),
+    pytest.param(
+        ExaTimeDelta(hours=-1),
+        "-000000000 01:00:00.000000000",
+        id="negative-duration-under-one-day",
+    ),
+]
+
+FROM_INTERVAL_CASES = [
+    pytest.param(
+        ExaTimeDelta(seconds=1),
+        "+000000000 00:00:00.999999999",
+        id="nanoseconds-rounded-to-one-second",
+    ),
+    pytest.param(
+        ExaTimeDelta(days=-3),
+        "-000000003 00:00:00",
+        id="without-fractional-part",
+    ),
 ]
 
 
@@ -63,6 +91,14 @@ class TestExaTimeDelta:
         actual = ExaTimeDelta.from_interval(interval)
 
         assert actual == value
+
+    @staticmethod
+    @pytest.mark.parametrize(
+        "value, interval",
+        FROM_INTERVAL_CASES,
+    )
+    def test_from_interval_parsing_cases(value, interval):
+        assert ExaTimeDelta.from_interval(interval) == value
 
     @staticmethod
     def test_from_timedelta():
