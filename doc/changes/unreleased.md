@@ -20,8 +20,7 @@ In this major release, the following changes were made:
 * #409: Restricted allowed formats for TIMESTAMP and DATE to ISO-formats
 * #415: Fixed a ``KeyError`` when accessing ``cursor.description`` for result
   sets containing ``HASHTYPE`` columns by adding ``HASHTYPE`` to ``TypeCode``
-* #419: Fixed exact negative-day intervals in ``ExaTimeDelta`` being formatted
-  with a day count one too low
+* #419: Fixed exact negative-day intervals in ``ExaTimeDelta`` being formatted with a day count one too low
 
 ## Refactorings
 
