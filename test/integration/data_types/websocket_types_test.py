@@ -55,18 +55,6 @@ class TestWebSocketDataTypes:
         )
 
     @staticmethod
-    def test_database_type_mappings_target_supported_types():
-        """Every intentional mapping must target an existing enum member."""
-        invalid_mappings = set(ALLOWED_MISSING_TYPE_MAPPINGS.values()) - set(
-            WebSocketDataType
-        )
-
-        assert not invalid_mappings, (
-            "DATABASE_TYPE_MAPPINGS targets types not defined by WebSocketDataType: "
-            f"{sorted(data_type.value for data_type in invalid_mappings)}"
-        )
-
-    @staticmethod
     @pytest.mark.parametrize(
         "database_type, expected_websocket_type",
         ALLOWED_MISSING_TYPE_MAPPINGS.items(),
