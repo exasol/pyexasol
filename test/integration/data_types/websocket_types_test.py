@@ -35,8 +35,9 @@ class TestWebSocketDataTypes:
         """Every supported WebSocket type must be represented by the catalog."""
         missing_database_types = websocket_types - database_types
 
-        # "DOUBLE" is a noted change in ALLOWED_MISSING_TYPE_MAPPINGS
-        missing_database_types -= {"DOUBLE"}
+        missing_database_types -= {
+            data_type.value for data_type in ALLOWED_MISSING_TYPE_MAPPINGS.values()
+        }
         assert (
             not missing_database_types
         ), "WebSocketDataType entries missing from EXA_SQL_TYPES"
