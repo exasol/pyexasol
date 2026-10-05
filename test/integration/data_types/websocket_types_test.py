@@ -38,9 +38,10 @@ class TestWebSocketDataTypes:
         missing_database_types -= {
             data_type.value for data_type in ALLOWED_MISSING_TYPE_MAPPINGS.values()
         }
-        assert (
-            not missing_database_types
-        ), "WebSocketDataType entries missing from EXA_SQL_TYPES"
+        assert not missing_database_types, (
+            "WebSocketDataType entries missing from EXA_SQL_TYPES: "
+            f"{sorted(missing_database_types)}"
+        )
 
     @staticmethod
     def test_all_needed_database_types_declared(database_types, websocket_types):
@@ -48,9 +49,10 @@ class TestWebSocketDataTypes:
         missing_websocket_types = database_types - websocket_types
         missing_websocket_types -= ALLOWED_MISSING_TYPE_MAPPINGS.keys()
 
-        assert (
-            not missing_websocket_types
-        ), "EXA_SQL_TYPES contains types not in WebSocketDataType"
+        assert not missing_websocket_types, (
+            "EXA_SQL_TYPES contains types not in WebSocketDataType: "
+            f"{sorted(missing_websocket_types)}"
+        )
 
     @staticmethod
     def test_database_type_mappings_target_supported_types():
