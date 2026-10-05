@@ -27,7 +27,7 @@ def test_exposes_exasol_mapper_compatibility_import():
     assert exasol_mapper("123", {"type": "DECIMAL", "scale": 0}) == 123
 
 
-def test_exposes_root_level_compatibility_imports():
+def test_exposes_root_level_public_imports():
     assert pyexasol.ExaTimeDelta is CanonicalExaTimeDelta
     assert pyexasol.exasol_mapper is CanonicalExasolMapper
     assert pyexasol.ExaTimeDelta.from_interval("+000000003 10:59:59.123000000") == (
