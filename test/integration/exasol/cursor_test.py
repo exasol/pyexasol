@@ -52,6 +52,7 @@ class TestSessionDatetimeFormats:
 
 class TestExecuteMany:
     @staticmethod
+    @pytest.mark.dbapi_type_conversion
     def test_inserts_multiple_rows(empty_table, rows, cursor):
         cursor.execute(f"SELECT COUNT(*) FROM {empty_table};")
         assert cursor.fetchone()[0] == 0
@@ -63,6 +64,18 @@ class TestExecuteMany:
 
         cursor.execute(f"SELECT COUNT(*) FROM {empty_table};")
         assert cursor.fetchone()[0] == len(rows)
+
+    @staticmethod
+    @pytest.mark.dbapi_type_conversion
+    def test_execute_with_parameters_inserts_row(empty_table, rows, cursor):
+        """Verify execute(parameters) adapts and inserts one all-types fixture row."""
+        cursor.execute(
+            f"INSERT INTO {empty_table} VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);",
+            rows[0],
+        )
+
+        cursor.execute(f"SELECT COUNT(*) FROM {empty_table};")
+        assert cursor.fetchone()[0] == 1
 
     @staticmethod
     def test_rejects_rows_with_wrong_column_count(cursor, empty_table):
@@ -108,7 +121,9 @@ class TestRowCount:
 
 class TestFetchAll:
     @staticmethod
+    @pytest.mark.dbapi_type_conversion
     def test_fetches_all_rows(cursor, filled_table, rows):
+        """Verify DBAPI fetching and Python conversion for every supported type."""
         cursor.execute(f"SELECT * FROM {filled_table};")
         result = cursor.fetchall()
 
@@ -117,6 +132,7 @@ class TestFetchAll:
 
 class TestFetchMany:
     @staticmethod
+    @pytest.mark.dbapi_type_conversion
     def test_fetches_rows_in_batches(cursor, filled_table, rows):
         size = 2
         assert size < len(rows)
@@ -147,6 +163,7 @@ class TestFetchMany:
 
 class TestFetchOne:
     @staticmethod
+    @pytest.mark.dbapi_type_conversion
     def test_fetches_rows_one_at_a_time(cursor, filled_table, rows):
         cursor.execute(f"SELECT * FROM {filled_table};")
 
