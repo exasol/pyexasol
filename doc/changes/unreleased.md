@@ -37,5 +37,8 @@ In this major release, the following changes were made:
 * #238: Moved DSN parsing tests from integration tests to unit tests, so they no longer require a running Docker database
 * #419: Centralized WebSocket result metadata type names in
   ``pyexasol.data_types.websocket_types`` as ``WebSocketDataType``, retained
-  the public ``TypeCode`` compatibility alias, moved ``exasol_mapper`` and
-  ``ExaTimeDelta`` into ``pyexasol.data_types`` with compatibility exports
+  the public ``TypeCode`` compatibility alias; its class name and member
+  representations now use ``WebSocketDataType``, moved ``exasol_mapper`` and
+  ``ExaTimeDelta`` into
+  ``pyexasol.data_types`` with compatibility exports, and deprecated the
+  ``pyexasol.mapper`` compatibility module with an import-time warning
