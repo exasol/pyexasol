@@ -50,7 +50,10 @@ def test_convert_timestamp_supports_all_formats(timestamp_format):
     fraction_digits = "1" * digits
     fraction = f".{fraction_digits}" if digits else ""
 
-    assert convert_timestamp(f"2026-09-11 12:34:56{fraction}")
+    result = convert_timestamp(f"2026-09-11 12:34:56{fraction}")
+
+    expected_microsecond = int(fraction_digits[:6].ljust(6, "0")) if digits else 0
+    assert result.microsecond == expected_microsecond
 
 
 @pytest.mark.parametrize(
