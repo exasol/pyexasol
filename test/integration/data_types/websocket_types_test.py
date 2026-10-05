@@ -56,8 +56,28 @@ class TestWebSocketDataTypes:
 
     @staticmethod
     @pytest.mark.parametrize(
+        "websocket_type",
+        WebSocketDataType,
+        ids=lambda data_type: data_type.value,
+    )
+    def test_websocket_type_is_reflected_in_result_metadata(connection, websocket_type):
+        """Each WebSocket type name must be reflected in result metadata."""
+        cast_type = websocket_type.value
+        if websocket_type in {WebSocketDataType.Char, WebSocketDataType.String}:
+            cast_type += "(10)"
+
+        statement = connection.execute(
+            f"SELECT CAST(NULL AS {cast_type}) AS TEST_VALUE"
+        )
+        column_metadata = statement.columns()["TEST_VALUE"]
+
+        assert WebSocketDataType(column_metadata["type"]) is websocket_type
+
+    @staticmethod
+    @pytest.mark.parametrize(
         "database_type, expected_websocket_type",
         ALLOWED_MISSING_TYPE_MAPPINGS.items(),
+        ids=ALLOWED_MISSING_TYPE_MAPPINGS.keys(),
     )
     def test_allowed_database_type_mapping_is_reflected_in_result_metadata(
         connection, database_type, expected_websocket_type
