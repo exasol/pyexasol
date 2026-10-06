@@ -14,9 +14,11 @@ In this major release, the following changes were made:
 * WebSocket result metadata types are now exposed as
   ``pyexasol.data_types.WebSocketDataType``; the public ``TypeCode`` alias
   remains available but displays using the canonical name.
-* ``exasol_mapper`` and ``ExaTimeDelta`` are available from
-  ``pyexasol.data_types``; the old ``pyexasol.mapper`` compatibility module
-  emits a deprecation warning on import.
+* ``convert_websocket_to_python`` is the preferred name for converting
+  WebSocket values to Python types; ``exasol_mapper`` remains available as a
+  deprecated compatibility alias. ``ExaTimeDelta`` is also available from
+  ``pyexasol.data_types``, while the old ``pyexasol.mapper`` compatibility
+  module emits a deprecation warning on import.
 * The deprecated ``pyexasol.db2`` compatibility layer was removed; the
   maintained ``exasol.driver.websocket.dbapi2`` interface remains available.
 

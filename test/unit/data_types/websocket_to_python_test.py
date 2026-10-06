@@ -10,7 +10,7 @@ from pyexasol.data_types.websocket_to_python import (
     convert_date,
     convert_decimal,
     convert_timestamp,
-    exasol_mapper,
+    convert_websocket_to_python,
 )
 
 
@@ -121,7 +121,7 @@ MAPPER_CASES = [
 ]
 
 
-class TestExasolMapper:
+class TestConvertWebsocketToPython:
     @staticmethod
     @pytest.mark.parametrize(
         "type_name,value,scale,expected",
@@ -129,7 +129,7 @@ class TestExasolMapper:
     )
     def test_maps_types(type_name, value, scale, expected):
         data_type = {"type": type_name, "scale": scale}
-        assert exasol_mapper(value, data_type) == expected
+        assert convert_websocket_to_python(value, data_type) == expected
 
     @staticmethod
     def test_maps_all_type_codes():
@@ -140,4 +140,6 @@ class TestExasolMapper:
 
     @staticmethod
     def test_maps_none():
-        assert exasol_mapper(None, {"type": "DECIMAL", "scale": 0}) is None
+        assert (
+            convert_websocket_to_python(None, {"type": "DECIMAL", "scale": 0}) is None
+        )

@@ -3,14 +3,16 @@ import decimal
 
 import pytest
 
-import pyexasol
-from pyexasol.data_types.converters import ExaTimeDelta
+from pyexasol.data_types import (
+    ExaTimeDelta,
+    convert_websocket_to_python,
+)
 
 
 # For the fetch_mapper tests we need to configure the connection accordingly
 @pytest.fixture
 def connection(connection_factory):
-    con = connection_factory(fetch_mapper=pyexasol.exasol_mapper)
+    con = connection_factory(fetch_mapper=convert_websocket_to_python)
     yield con
     con.close()
 
@@ -31,7 +33,7 @@ def connection(connection_factory):
         ("SELECT ST_BOUNDARY('POINT (10 20)');", str),
     ],
 )
-def test_fetch_mapper_setting_together_with_exasol_mapper(connection, expected, sql):
+def test_fetch_mapper_with_convert_websocket_to_python(connection, expected, sql):
     result = connection.execute(sql)
     actual = type(result.fetchval())
     assert expected == actual
