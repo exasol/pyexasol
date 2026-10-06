@@ -12,7 +12,8 @@ class TestAdaptToRequestedDbTypes:
     def test_adapts_data_type_case(data_type_case):
         if data_type_case.websocket_data_type is WebSocketDataType.IntervalDayToSecond:
             pytest.xfail(
-                "ExaTimeDelta is not yet converted to a WebSocket interval value"
+                "ExaTimeDelta conversion is tracked in "
+                "https://github.com/exasol/pyexasol/issues/428"
             )
 
         adapted_values = Cursor._adapt_to_requested_db_types(
