@@ -85,39 +85,39 @@ def test_convert_timestamp_truncates_nanoseconds(fractional_value):
 
 
 MAPPER_CASES = [
-    ("BOOLEAN", True, 0, True),
-    ("CHAR", "text", 0, "text"),
+    (WebSocketDataType.Bool, True, 0, True),
+    (WebSocketDataType.Char, "text", 0, "text"),
     (
-        "DATE",
+        WebSocketDataType.Date,
         "2026-09-11",
         0,
         datetime.date(2026, 9, 11),
     ),
-    ("DECIMAL", "123", 0, 123),
-    ("DECIMAL", "123.45", 2, decimal.Decimal("123.45")),
-    ("DOUBLE", 1.25, 0, 1.25),
-    ("GEOMETRY", "POINT (10 20)", 0, "POINT (10 20)"),
-    ("HASHTYPE", "hash", 0, "hash"),
+    (WebSocketDataType.Decimal, "123", 0, 123),
+    (WebSocketDataType.Decimal, "123.45", 2, decimal.Decimal("123.45")),
+    (WebSocketDataType.Double, 1.25, 0, 1.25),
+    (WebSocketDataType.Geometry, "POINT (10 20)", 0, "POINT (10 20)"),
+    (WebSocketDataType.Hashtype, "hash", 0, "hash"),
     (
-        "INTERVAL DAY TO SECOND",
+        WebSocketDataType.IntervalDayToSecond,
         "+000000003 10:59:59.123000000",
         0,
         ExaTimeDelta(days=3, hours=10, minutes=59, seconds=59, microseconds=123000),
     ),
-    ("INTERVAL YEAR TO MONTH", "+000000001-02", 0, "+000000001-02"),
+    (WebSocketDataType.IntervalYearToMonth, "+000000001-02", 0, "+000000001-02"),
     (
-        "TIMESTAMP",
+        WebSocketDataType.Timestamp,
         "2026-09-11 12:34:56",
         0,
         datetime.datetime(2026, 9, 11, 12, 34, 56),
     ),
     (
-        "TIMESTAMP WITH LOCAL TIME ZONE",
+        WebSocketDataType.TimestampTz,
         "2026-09-11 12:34:56",
         0,
         "2026-09-11 12:34:56",
     ),
-    ("VARCHAR", "text", 0, "text"),
+    (WebSocketDataType.String, "text", 0, "text"),
 ]
 
 
@@ -125,7 +125,10 @@ class TestConvertWebsocketToPython:
     @staticmethod
     @pytest.mark.parametrize(
         "type_name,value,scale,expected",
-        MAPPER_CASES,
+        [
+            pytest.param(case[0].value, *case[1:], id=case[0].value)
+            for case in MAPPER_CASES
+        ],
     )
     def test_maps_types(type_name, value, scale, expected):
         data_type = {"type": type_name, "scale": scale}
@@ -134,12 +137,16 @@ class TestConvertWebsocketToPython:
     @staticmethod
     def test_maps_all_type_codes():
         tested_type_names = {type_name for type_name, _, _, _ in MAPPER_CASES}
-        expected_type_names = {data_type.value for data_type in WebSocketDataType}
-
-        assert tested_type_names == expected_type_names
+        assert tested_type_names == set(WebSocketDataType)
 
     @staticmethod
-    def test_maps_none():
-        assert (
-            convert_websocket_to_python(None, {"type": "DECIMAL", "scale": 0}) is None
+    @pytest.mark.parametrize(
+        "data_type",
+        WebSocketDataType,
+        ids=lambda data_type: data_type.value,
+    )
+    def test_maps_none(data_type):
+        result = convert_websocket_to_python(
+            None, {"type": data_type.value, "scale": 0}
         )
+        assert result is None
