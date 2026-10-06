@@ -5,21 +5,32 @@ from typing import (
     NamedTuple,
 )
 
+import pytest
+
 from pyexasol.data_types import WebSocketDataType
 from pyexasol.data_types.converters import ExaTimeDelta
 
 
 class DataTypeCase(NamedTuple):
+    id: str
     websocket_data_type: WebSocketDataType
     websocket_value: Any
     python_value: Any
     scale: int | None = None
 
 
+def to_pytest_params(
+    cases: tuple[DataTypeCase, ...],
+) -> tuple[pytest.ParameterSet, ...]:
+    """Convert data type cases into pytest parameters using their IDs."""
+    return tuple(pytest.param(case, id=case.id) for case in cases)
+
+
 class DataTypeCases:
     @property
     def boolean(self) -> DataTypeCase:
         return DataTypeCase(
+            id="boolean",
             websocket_data_type=WebSocketDataType.Bool,
             websocket_value=True,
             python_value=True,
@@ -28,6 +39,7 @@ class DataTypeCases:
     @property
     def char(self) -> DataTypeCase:
         return DataTypeCase(
+            id="char",
             websocket_data_type=WebSocketDataType.Char,
             websocket_value="text",
             python_value="text",
@@ -36,6 +48,7 @@ class DataTypeCases:
     @property
     def date(self) -> DataTypeCase:
         return DataTypeCase(
+            id="date",
             websocket_data_type=WebSocketDataType.Date,
             websocket_value="2026-09-11",
             python_value=datetime.date(2026, 9, 11),
@@ -44,6 +57,7 @@ class DataTypeCases:
     @property
     def decimal_scale_0(self) -> DataTypeCase:
         return DataTypeCase(
+            id="decimal_scale_0",
             websocket_data_type=WebSocketDataType.Decimal,
             websocket_value=123,
             python_value=123,
@@ -53,6 +67,7 @@ class DataTypeCases:
     @property
     def decimal_scale_2(self) -> DataTypeCase:
         return DataTypeCase(
+            id="decimal_scale_2",
             websocket_data_type=WebSocketDataType.Decimal,
             websocket_value="123.45",
             python_value=decimal.Decimal("123.45"),
@@ -62,6 +77,7 @@ class DataTypeCases:
     @property
     def double(self) -> DataTypeCase:
         return DataTypeCase(
+            id="double",
             websocket_data_type=WebSocketDataType.Double,
             websocket_value=1.25,
             python_value=1.25,
@@ -70,6 +86,7 @@ class DataTypeCases:
     @property
     def geometry(self) -> DataTypeCase:
         return DataTypeCase(
+            id="geometry",
             websocket_data_type=WebSocketDataType.Geometry,
             websocket_value="POINT (10 20)",
             python_value="POINT (10 20)",
@@ -78,6 +95,7 @@ class DataTypeCases:
     @property
     def hashtype(self) -> DataTypeCase:
         return DataTypeCase(
+            id="hashtype",
             websocket_data_type=WebSocketDataType.Hashtype,
             websocket_value="550e8400e29b11d4a716446655440000",
             python_value="550e8400e29b11d4a716446655440000",
@@ -86,6 +104,7 @@ class DataTypeCases:
     @property
     def interval_day_to_second(self) -> DataTypeCase:
         return DataTypeCase(
+            id="interval_day_to_second",
             websocket_data_type=WebSocketDataType.IntervalDayToSecond,
             websocket_value="+000000003 10:59:59.123000000",
             python_value=ExaTimeDelta(
@@ -100,6 +119,7 @@ class DataTypeCases:
     @property
     def interval_year_to_month(self) -> DataTypeCase:
         return DataTypeCase(
+            id="interval_year_to_month",
             websocket_data_type=WebSocketDataType.IntervalYearToMonth,
             websocket_value="+000000001-02",
             python_value="+000000001-02",
@@ -108,6 +128,7 @@ class DataTypeCases:
     @property
     def timestamp(self) -> DataTypeCase:
         return DataTypeCase(
+            id="timestamp",
             websocket_data_type=WebSocketDataType.Timestamp,
             websocket_value="2026-09-11 12:34:56",
             python_value=datetime.datetime(2026, 9, 11, 12, 34, 56),
@@ -116,6 +137,7 @@ class DataTypeCases:
     @property
     def timestamp_with_local_time_zone(self) -> DataTypeCase:
         return DataTypeCase(
+            id="timestamp_with_local_time_zone",
             websocket_data_type=WebSocketDataType.TimestampTz,
             websocket_value="2026-09-11 12:34:56.000000",
             # TIMESTAMP WITH LOCAL TIME ZONE is currently not supported and is
@@ -127,14 +149,25 @@ class DataTypeCases:
     @property
     def varchar(self) -> DataTypeCase:
         return DataTypeCase(
+            id="varchar",
             websocket_data_type=WebSocketDataType.String,
             websocket_value="text",
             python_value="text",
         )
 
     def all_cases(self) -> tuple[DataTypeCase, ...]:
-        return tuple(
-            getattr(self, name)
-            for name, member in vars(type(self)).items()
-            if isinstance(member, property)
+        return (
+            self.boolean,
+            self.char,
+            self.date,
+            self.decimal_scale_0,
+            self.decimal_scale_2,
+            self.double,
+            self.geometry,
+            self.hashtype,
+            self.interval_day_to_second,
+            self.interval_year_to_month,
+            self.timestamp,
+            self.timestamp_with_local_time_zone,
+            self.varchar,
         )

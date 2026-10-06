@@ -2,6 +2,7 @@ import os
 from test.data_type_cases import (
     DataTypeCase,
     DataTypeCases,
+    to_pytest_params,
 )
 
 import pytest
@@ -68,8 +69,7 @@ def data_type_cases() -> tuple[DataTypeCase, ...]:
 
 @pytest.fixture(
     scope="session",
-    params=ALL_CASES,
-    ids=lambda case: case.websocket_data_type.value,
+    params=to_pytest_params(ALL_CASES),
 )
 def data_type_case(request) -> DataTypeCase:
     return request.param

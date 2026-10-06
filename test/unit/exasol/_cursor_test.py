@@ -1,5 +1,8 @@
 import datetime
-from test.data_type_cases import DataTypeCase
+from test.data_type_cases import (
+    DataTypeCase,
+    to_pytest_params,
+)
 
 import pytest
 
@@ -30,24 +33,14 @@ class TestAdaptToRequestedDbTypes:
     @staticmethod
     @pytest.mark.parametrize(
         "data_type_case",
-        [
-            pytest.param(
-                DataTypeCase(WebSocketDataType.String, "123", 123),
-                id="VARCHAR-int",
-            ),
-            pytest.param(
-                DataTypeCase(WebSocketDataType.String, None, None),
-                id="VARCHAR-none",
-            ),
-            pytest.param(
-                DataTypeCase(WebSocketDataType.Double, 1.25, "1.25"),
-                id="DOUBLE-string",
-            ),
-            pytest.param(
-                DataTypeCase(WebSocketDataType.Double, None, None),
-                id="DOUBLE-none",
-            ),
-        ],
+        to_pytest_params(
+            (
+                DataTypeCase("VARCHAR-int", WebSocketDataType.String, "123", 123),
+                DataTypeCase("VARCHAR-none", WebSocketDataType.String, None, None),
+                DataTypeCase("DOUBLE-string", WebSocketDataType.Double, 1.25, "1.25"),
+                DataTypeCase("DOUBLE-none", WebSocketDataType.Double, None, None),
+            )
+        ),
     )
     def test_adapts_special_values(data_type_case):
         db_response = {
