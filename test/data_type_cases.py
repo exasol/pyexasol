@@ -79,8 +79,8 @@ class DataTypeCases:
     def hashtype(self) -> DataTypeCase:
         return DataTypeCase(
             websocket_data_type=WebSocketDataType.Hashtype,
-            websocket_value="hash",
-            python_value="hash",
+            websocket_value="550e8400e29b11d4a716446655440000",
+            python_value="550e8400e29b11d4a716446655440000",
         )
 
     @property
