@@ -42,3 +42,5 @@ In this major release, the following changes were made:
 * #238: Moved DSN parsing and connection tests from integration tests to unit tests, so they no longer require a running Docker database
 * #419: Centralized WebSocket metadata types and moved mapper implementations
   into ``pyexasol.data_types``, retaining compatibility exports.
+* #429: Centralized data-type test cases across unit and integration tests and
+  renamed ``exasol_mapper`` to ``convert_websocket_to_python``
