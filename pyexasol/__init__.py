@@ -37,6 +37,8 @@ from .constant import (
     PROTOCOL_V2,
     PROTOCOL_V3,
 )
+from .data_types.converters import ExaTimeDelta
+from .data_types.websocket_to_python import exasol_mapper
 from .exceptions import (
     ExaAuthError,
     ExaCommunicationError,
@@ -56,10 +58,6 @@ from .formatter import ExaFormatter
 from .http_transport import ExaHTTPTransportWrapper
 from .local_config import ExaLocalConfig
 from .logger import ExaLogger
-from .mapper import (
-    ExaTimeDelta,
-    exasol_mapper,
-)
 from .meta import ExaMetaData
 from .statement import ExaStatement
 from exasol.telemetry import client as telemetry

@@ -20,7 +20,7 @@ from exasol.driver.websocket._errors import (
     NotSupportedError,
     translate_exception,
 )
-from exasol.driver.websocket._types import TypeCode
+from pyexasol.data_types.websocket_types import WebSocketDataType
 
 
 @dataclass
@@ -28,7 +28,7 @@ class MetaData:
     """Metadata describing a result column"""
 
     name: str
-    type_code: TypeCode
+    type_code: WebSocketDataType
     display_size: int | None = None
     internal_size: int | None = None
     precision: int | None = None
@@ -37,7 +37,7 @@ class MetaData:
 
 
 def _pyexasol2dbapi_metadata(name, metadata) -> MetaData:
-    type_mapping = {t.value: t for t in TypeCode}
+    type_mapping = {t.value: t for t in WebSocketDataType}
     key_mapping = {
         "name": "name",
         "type_code": "type",
@@ -118,8 +118,8 @@ def _pyexasol2dbapi(value, metadata):
     converters = defaultdict(
         lambda: _identity,
         {
-            TypeCode.Date: to_date,
-            TypeCode.Double: to_float,
+            WebSocketDataType.Date: to_date,
+            WebSocketDataType.Double: to_float,
         },
     )
     converter = converters[metadata.type_code]
@@ -224,9 +224,9 @@ class Cursor:
             self.executemany(operation, [parameters])
             return
 
-        connection = self._connection.connection
         try:
-            self._cursor = connection.execute(operation)
+            self._connection.validate_session_datetime_formats(operation)
+            self._cursor = self._connection.connection.execute(operation)
         except pyexasol.exceptions.ExaError as ex:
             raise translate_exception(ex) from ex
 
@@ -289,15 +289,18 @@ class Cursor:
         parameters = [
             [_dbapi2pyexasol(p) for p in params] for params in seq_of_parameters
         ]
-        connection = self._connection.connection
-        self._cursor = connection.cls_statement(connection, operation, prepare=True)
 
-        parameter_data = self._cursor.parameter_data
-        parameters = [
-            Cursor._adapt_to_requested_db_types(params, parameter_data)
-            for params in parameters
-        ]
         try:
+            self._connection.validate_session_datetime_formats(operation)
+            self._cursor = self._connection.connection.cls_statement(
+                self._connection.connection, operation, prepare=True
+            )
+
+            parameter_data = self._cursor.parameter_data
+            parameters = [
+                Cursor._adapt_to_requested_db_types(params, parameter_data)
+                for params in parameters
+            ]
             self._cursor.execute_prepared(parameters)
         except pyexasol.exceptions.ExaError as ex:
             raise translate_exception(ex) from ex
