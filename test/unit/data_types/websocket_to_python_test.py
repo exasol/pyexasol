@@ -4,7 +4,6 @@ import decimal
 import pytest
 
 from pyexasol.data_types import WebSocketDataType
-from pyexasol.data_types.converters import ExaTimeDelta
 from pyexasol.data_types.websocket_to_python import (
     SUPPORTED_TIMESTAMP_FORMATS,
     convert_date,
@@ -84,60 +83,17 @@ def test_convert_timestamp_truncates_nanoseconds(fractional_value):
     assert convert_timestamp(value).time() == datetime.time(12, 34, 56, 123456)
 
 
-MAPPER_CASES = [
-    (WebSocketDataType.Bool, True, 0, True),
-    (WebSocketDataType.Char, "text", 0, "text"),
-    (
-        WebSocketDataType.Date,
-        "2026-09-11",
-        0,
-        datetime.date(2026, 9, 11),
-    ),
-    (WebSocketDataType.Decimal, "123", 0, 123),
-    (WebSocketDataType.Decimal, "123.45", 2, decimal.Decimal("123.45")),
-    (WebSocketDataType.Double, 1.25, 0, 1.25),
-    (WebSocketDataType.Geometry, "POINT (10 20)", 0, "POINT (10 20)"),
-    (WebSocketDataType.Hashtype, "hash", 0, "hash"),
-    (
-        WebSocketDataType.IntervalDayToSecond,
-        "+000000003 10:59:59.123000000",
-        0,
-        ExaTimeDelta(days=3, hours=10, minutes=59, seconds=59, microseconds=123000),
-    ),
-    (WebSocketDataType.IntervalYearToMonth, "+000000001-02", 0, "+000000001-02"),
-    (
-        WebSocketDataType.Timestamp,
-        "2026-09-11 12:34:56",
-        0,
-        datetime.datetime(2026, 9, 11, 12, 34, 56),
-    ),
-    (
-        WebSocketDataType.TimestampTz,
-        "2026-09-11 12:34:56",
-        0,
-        "2026-09-11 12:34:56",
-    ),
-    (WebSocketDataType.String, "text", 0, "text"),
-]
-
-
 class TestConvertWebsocketToPython:
     @staticmethod
-    @pytest.mark.parametrize(
-        "type_name,value,scale,expected",
-        [
-            pytest.param(case[0].value, *case[1:], id=case[0].value)
-            for case in MAPPER_CASES
-        ],
-    )
-    def test_maps_types(type_name, value, scale, expected):
-        data_type = {"type": type_name, "scale": scale}
-        assert convert_websocket_to_python(value, data_type) == expected
-
-    @staticmethod
-    def test_maps_all_type_codes():
-        tested_type_names = {type_name for type_name, _, _, _ in MAPPER_CASES}
-        assert tested_type_names == set(WebSocketDataType)
+    def test_maps_types(data_type_case):
+        data_type = {
+            "type": data_type_case.websocket_data_type.value,
+            "scale": data_type_case.scale,
+        }
+        assert (
+            convert_websocket_to_python(data_type_case.websocket_value, data_type)
+            == data_type_case.python_value
+        )
 
     @staticmethod
     @pytest.mark.parametrize(

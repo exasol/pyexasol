@@ -1,4 +1,8 @@
 import os
+from test.data_type_cases import (
+    DataTypeCase,
+    DataTypeCases,
+)
 
 import pytest
 
@@ -52,3 +56,20 @@ def connection(connection_factory):
     con = connection_factory()
     yield con
     con.close()
+
+
+ALL_CASES = DataTypeCases().all_cases()
+
+
+@pytest.fixture(scope="session")
+def data_type_cases() -> tuple[DataTypeCase, ...]:
+    return ALL_CASES
+
+
+@pytest.fixture(
+    scope="session",
+    params=ALL_CASES,
+    ids=lambda case: case.websocket_data_type.value,
+)
+def data_type_case(request) -> DataTypeCase:
+    return request.param
