@@ -62,6 +62,7 @@ from .mapper import (
 )
 from .meta import ExaMetaData
 from .statement import ExaStatement
+from exasol.telemetry import client as telemetry
 
 
 def connect(**kwargs) -> ExaConnection:
@@ -140,3 +141,6 @@ def http_transport(
         The final solution depends on your hardware, network configuration, cloud provider and container orchestration software.
     """
     return ExaHTTPTransportWrapper(ipaddr, port, compression, encryption)
+
+
+telemetry.track("PYEXA", __version__, "imported")
