@@ -87,7 +87,7 @@ class TestAdaptToRequestedDbTypes:
         assert adapted_values == ["2026-09-11", 1.25, "123", True]
 
     @staticmethod
-    def test_rejects_too_many_columns():
+    def test_rejects_too_few_parameters():
         with pytest.raises(ValueError):
             Cursor._adapt_to_requested_db_types(
                 [1, 2],
@@ -95,9 +95,9 @@ class TestAdaptToRequestedDbTypes:
             )
 
     @staticmethod
-    def test_rejects_too_many_parameters():
+    def test_rejects_too_few_columns():
         with pytest.raises(ValueError):
             Cursor._adapt_to_requested_db_types(
-                list(range(14)),
-                {"columns": [{"dataType": {"type": "DECIMAL"}}] * 13},
+                list(range(13)),
+                {"columns": [{"dataType": {"type": "DECIMAL"}}] * 2},
             )
