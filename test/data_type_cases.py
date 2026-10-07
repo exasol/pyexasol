@@ -1,6 +1,9 @@
 import datetime
 import decimal
-from dataclasses import dataclass
+from dataclasses import (
+    dataclass,
+    field,
+)
 from typing import Any
 
 import pytest
@@ -15,12 +18,12 @@ class DataTypeCase:
     websocket_data_type: WebSocketDataType
     websocket_value: Any
     python_value: Any
-    scale: int | None = None
+    scale: int | None = field(default=None, kw_only=True)
 
 
 @dataclass(frozen=True)
 class SqlDataTypeCase(DataTypeCase):
-    sql_template: str = ""
+    sql_template: str
 
 
 def to_pytest_params(
