@@ -21,7 +21,7 @@ class DataTypeCase(NamedTuple):
 
 def to_pytest_params(
     cases: tuple[DataTypeCase, ...],
-) -> tuple[pytest.ParameterSet, ...]:
+) -> tuple:
     """Convert data type cases into pytest parameters using their IDs."""
     return tuple(pytest.param(case, id=case.id) for case in cases)
 
