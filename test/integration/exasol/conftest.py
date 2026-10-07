@@ -78,7 +78,7 @@ def rows():
             DATA_TYPE_CASES.date.python_value,
             # This will change when fetch_mapper is introduced:
             # https://github.com/exasol/pyexasol/issues/361
-            DATA_TYPE_CASES.timestamp.websocket_value + ".000000",
+            DATA_TYPE_CASES.timestamp.websocket_value,
             # TIMESTAMP WITH LOCAL TIME ZONE is currently not supported.
             # This will change with:
             # https://github.com/exasol/pyexasol/issues/116
