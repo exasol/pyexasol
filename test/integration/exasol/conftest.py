@@ -1,5 +1,5 @@
 import datetime
-from test.data_type_cases import DataTypeCases
+from test.data_type_cases import DATA_TYPE_CASES
 
 import pytest
 
@@ -65,35 +65,33 @@ def empty_table(cursor, schema_table):
 @pytest.fixture
 def rows():
     """Return three Python value rows covering the data-types table columns."""
-    data_type_cases = DataTypeCases()
-
     return (
         (
-            data_type_cases.decimal_scale_0.python_value,
+            DATA_TYPE_CASES.decimal_scale_0.python_value,
             # This will change when fetch_mapper is introduced:
             # https://github.com/exasol/pyexasol/issues/361
-            data_type_cases.decimal_scale_2.websocket_value,
-            data_type_cases.double.python_value,
+            DATA_TYPE_CASES.decimal_scale_2.websocket_value,
+            DATA_TYPE_CASES.double.python_value,
             # CHAR(5) pads the four-character value with a trailing space.
-            data_type_cases.char.python_value + " ",
-            data_type_cases.varchar.python_value,
-            data_type_cases.date.python_value,
+            DATA_TYPE_CASES.char.python_value + " ",
+            DATA_TYPE_CASES.varchar.python_value,
+            DATA_TYPE_CASES.date.python_value,
             # This will change when fetch_mapper is introduced:
             # https://github.com/exasol/pyexasol/issues/361
-            data_type_cases.timestamp.websocket_value + ".000000",
+            DATA_TYPE_CASES.timestamp.websocket_value + ".000000",
             # TIMESTAMP WITH LOCAL TIME ZONE is currently not supported.
             # This will change with:
             # https://github.com/exasol/pyexasol/issues/116
-            data_type_cases.timestamp_with_local_time_zone.python_value,
+            DATA_TYPE_CASES.timestamp_with_local_time_zone.python_value,
             # Prepared interval values must match the target column precision;
             # the raw WebSocket values use wider year and fractional-second fields.
             # This will be changed in:
             # https://github.com/exasol/pyexasol/issues/428
             "+0001-02",
             "+000000003 10:59:59.123000",
-            data_type_cases.boolean.python_value,
-            data_type_cases.geometry.python_value,
-            data_type_cases.hashtype.python_value,
+            DATA_TYPE_CASES.boolean.python_value,
+            DATA_TYPE_CASES.geometry.python_value,
+            DATA_TYPE_CASES.hashtype.python_value,
         ),
         (
             -7,
