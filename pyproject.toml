@@ -158,6 +158,7 @@ xfail_strict = true
 markers = [
     "basic: basic driver tests.",
     "configuration: tests related to pyexasol settings and configuration.",
+    "dbapi_type_conversion: DBAPI endpoint coverage for Python/database type conversion.",
     "context_managers: tests related to pyexasol context_managers.",
     "edge_cases: tests related to pyexasol and exasol edge cases scenarios.",
     "etl: etl related tests, export, load (import) and transform data.",
