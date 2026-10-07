@@ -2,6 +2,7 @@ import pytest
 
 from exasol.driver.websocket.dbapi2 import (
     InterfaceError,
+    ProgrammingError,
     TypeCode,
 )
 from pyexasol.data_types.websocket_to_python import (
@@ -50,6 +51,29 @@ class TestSessionDatetimeFormats:
 
 
 class TestExecuteMany:
+    @staticmethod
+    @pytest.mark.dbapi_type_conversion
+    @pytest.mark.parametrize("parameter_count", (12, 14))
+    def test_rejects_rows_with_mismatched_parameter_and_column_shape(
+        empty_table, rows, cursor, parameter_count
+    ):
+        statement = (
+            f"INSERT INTO {empty_table} VALUES "
+            "(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);"
+        )
+        invalid_row = rows[0][:parameter_count]
+        if parameter_count > len(rows[0]):
+            invalid_row += (None,)
+
+        with pytest.raises(
+            ProgrammingError,
+            match=(
+                "Input shape mismatch: "
+                f"received {parameter_count} parameters, 13 columns"
+            ),
+        ):
+            cursor.executemany(statement, [invalid_row])
+
     @staticmethod
     @pytest.mark.dbapi_type_conversion
     def test_inserts_multiple_rows(empty_table, rows, cursor):

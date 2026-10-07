@@ -10,6 +10,7 @@ from exasol.driver.websocket._cursor import (
     Cursor,
     _dbapi2pyexasol,
 )
+from exasol.driver.websocket.dbapi2 import ProgrammingError
 from pyexasol.data_types import WebSocketDataType
 
 
@@ -88,7 +89,10 @@ class TestAdaptToRequestedDbTypes:
 
     @staticmethod
     def test_rejects_too_few_parameters():
-        with pytest.raises(ValueError):
+        with pytest.raises(
+            ProgrammingError,
+            match="Input shape mismatch: received 2 parameters, 13 columns",
+        ):
             Cursor._adapt_to_requested_db_types(
                 [1, 2],
                 {"columns": [{"dataType": {"type": "DECIMAL"}}] * 13},
@@ -96,7 +100,10 @@ class TestAdaptToRequestedDbTypes:
 
     @staticmethod
     def test_rejects_too_few_columns():
-        with pytest.raises(ValueError):
+        with pytest.raises(
+            ProgrammingError,
+            match="Input shape mismatch: received 13 parameters, 2 columns",
+        ):
             Cursor._adapt_to_requested_db_types(
                 list(range(13)),
                 {"columns": [{"dataType": {"type": "DECIMAL"}}] * 2},

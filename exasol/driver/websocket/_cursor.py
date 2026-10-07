@@ -18,6 +18,7 @@ import pyexasol.exceptions
 from exasol.driver.websocket._errors import (
     InterfaceError,
     NotSupportedError,
+    ProgrammingError,
     translate_exception,
 )
 from pyexasol.data_types.websocket_types import WebSocketDataType
@@ -284,13 +285,21 @@ class Cursor:
                 message  => getString: JSON value is not a string. (...)
                 ...
         """
-
+        columns = db_response["columns"]
         selected_converters = (
             _REQUESTED_DB_TYPE_CONVERTERS.get(column["dataType"]["type"], _identity)
-            for column in db_response["columns"]
+            for column in columns
         )
-        parameters = zip(selected_converters, parameters, strict=True)
-        parameters = [converter(value) for converter, value in parameters]
+
+        try:
+            parameter_pairs = list(zip(selected_converters, parameters, strict=True))
+        except ValueError as ex:
+            raise ProgrammingError(
+                "Input shape mismatch: received "
+                f"{len(parameters)} parameters, {len(columns)} columns"
+            ) from ex
+
+        parameters = [converter(value) for converter, value in parameter_pairs]
         return parameters
 
     @_is_not_closed
