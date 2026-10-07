@@ -61,7 +61,8 @@ def convert_date(value: str) -> datetime.date:
 
 def convert_timestamp(value: str) -> datetime.datetime:
     """
-    Convert an Exasol TIMESTAMP value to ``datetime.datetime``.
+    Convert an Exasol TIMESTAMP value, including ``TIMESTAMP WITH LOCAL TIME ZONE``,
+    to ``datetime.datetime``.
 
     The expected value format is ``YYYY-MM-DD HH24:MI:SS`` with optional
     fractional seconds from ``FF1`` through ``FF9``. The value depends on the
@@ -95,6 +96,7 @@ def convert_websocket_to_python(value, data_type):
     DECIMAL(p,s)           -> decimal.Decimal
     INTERVAL DAY TO SECOND -> datetime.timedelta
     TIMESTAMP              -> datetime.datetime
+    TIMESTAMP WITH LOCAL TIME ZONE -> datetime.datetime
 
     Passed through unchanged:
 
@@ -111,7 +113,10 @@ def convert_websocket_to_python(value, data_type):
         return convert_decimal(value, data_type["scale"])
     elif data_type["type"] == WebSocketDataType.Date.value:
         return convert_date(value)
-    elif data_type["type"] == WebSocketDataType.Timestamp.value:
+    elif data_type["type"] in (
+        WebSocketDataType.Timestamp.value,
+        WebSocketDataType.TimestampTz.value,
+    ):
         return convert_timestamp(value)
     elif data_type["type"] == WebSocketDataType.IntervalDayToSecond.value:
         return ExaTimeDelta.from_interval(value)

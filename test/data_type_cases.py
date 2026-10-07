@@ -181,10 +181,7 @@ class DataTypeCases:
             id="timestamp_with_local_time_zone",
             websocket_data_type=WebSocketDataType.TimestampTz,
             websocket_value=shared_value,
-            # TIMESTAMP WITH LOCAL TIME ZONE is currently not supported and is
-            # passed through as a string. This will change with:
-            # https://github.com/exasol/pyexasol/issues/116
-            python_value=shared_value,
+            python_value=datetime.datetime(2026, 9, 11, 12, 34, 56),
             sql_value=shared_value,
             sql_template="SELECT CAST({value} AS TIMESTAMP WITH LOCAL TIME ZONE);",
         )
