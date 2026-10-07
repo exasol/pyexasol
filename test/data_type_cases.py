@@ -139,11 +139,8 @@ class DataTypeCases:
         return DataTypeCase(
             id="timestamp_with_local_time_zone",
             websocket_data_type=WebSocketDataType.TimestampTz,
-            websocket_value="2026-09-11 12:34:56.000000",
-            # TIMESTAMP WITH LOCAL TIME ZONE is currently not supported and is
-            # passed through as a string. This will change with:
-            # https://github.com/exasol/pyexasol/issues/116
-            python_value="2026-09-11 12:34:56.000000",
+            websocket_value="2026-09-11 12:34:56",
+            python_value=datetime.datetime(2026, 9, 11, 12, 34, 56),
         )
 
     @property
