@@ -127,12 +127,34 @@ def _pyexasol2dbapi(value, metadata):
 
 
 def _dbapi2pyexasol(value):
-    converters = defaultdict(
-        lambda: _identity,
-        {decimal.Decimal: str, float: str, datetime.date: str, datetime.datetime: str},
-    )
-    converter = converters[type(value)]
+    converter = _DBAPI_TO_PYEXASOL_CONVERTERS.get(type(value), _identity)
     return converter(value)
+
+
+_DBAPI_TO_PYEXASOL_CONVERTERS = {
+    decimal.Decimal: str,
+    float: str,
+    datetime.date: str,
+    datetime.datetime: str,
+}
+
+
+def _varchar(value):
+    if value is None:
+        return None
+    return str(value)
+
+
+def _double(value):
+    if value is None:
+        return None
+    return float(value)
+
+
+_REQUESTED_DB_TYPE_CONVERTERS = {
+    "VARCHAR": _varchar,
+    "DOUBLE": _double,
+}
 
 
 class Cursor:
@@ -263,21 +285,9 @@ class Cursor:
                 ...
         """
 
-        def varchar(value):
-            if value is None:
-                return None
-            return str(value)
-
-        def double(value):
-            if value is None:
-                return None
-            return float(value)
-
-        converters = defaultdict(
-            lambda: _identity, {"VARCHAR": varchar, "DOUBLE": double}
-        )
         selected_converters = (
-            converters[column["dataType"]["type"]] for column in db_response["columns"]
+            _REQUESTED_DB_TYPE_CONVERTERS.get(column["dataType"]["type"], _identity)
+            for column in db_response["columns"]
         )
         parameters = zip(selected_converters, parameters, strict=True)
         parameters = [converter(value) for converter, value in parameters]
