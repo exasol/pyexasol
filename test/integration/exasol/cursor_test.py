@@ -1,7 +1,6 @@
 import pytest
 
 from exasol.driver.websocket.dbapi2 import (
-    DatabaseError,
     InterfaceError,
     TypeCode,
 )
@@ -76,14 +75,6 @@ class TestExecuteMany:
 
         cursor.execute(f"SELECT COUNT(*) FROM {empty_table};")
         assert cursor.fetchone()[0] == 1
-
-    @staticmethod
-    def test_rejects_rows_with_wrong_column_count(cursor, empty_table):
-        with pytest.raises(DatabaseError):
-            cursor.executemany(
-                f"INSERT INTO {empty_table} VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-                [(1, 2)],
-            )
 
 
 class TestRowCount:

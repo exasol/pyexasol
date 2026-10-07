@@ -6,11 +6,19 @@ from test.data_type_cases import (
 
 import pytest
 
-from exasol.driver.websocket._cursor import Cursor
+from exasol.driver.websocket._cursor import (
+    Cursor,
+    _dbapi2pyexasol,
+)
 from pyexasol.data_types import WebSocketDataType
 
 
 class TestAdaptToRequestedDbTypes:
+    @staticmethod
+    def adapt_parameters(parameters, db_response):
+        converted_parameters = [_dbapi2pyexasol(value) for value in parameters]
+        return Cursor._adapt_to_requested_db_types(converted_parameters, db_response)
+
     @staticmethod
     def test_adapts_data_type_case(data_type_case):
         if data_type_case.websocket_data_type is WebSocketDataType.IntervalDayToSecond:
@@ -19,7 +27,7 @@ class TestAdaptToRequestedDbTypes:
                 "https://github.com/exasol/pyexasol/issues/428"
             )
 
-        adapted_values = Cursor._adapt_to_requested_db_types(
+        adapted_values = TestAdaptToRequestedDbTypes.adapt_parameters(
             [data_type_case.python_value],
             {
                 "columns": [
@@ -49,7 +57,7 @@ class TestAdaptToRequestedDbTypes:
             ]
         }
 
-        adapted_values = Cursor._adapt_to_requested_db_types(
+        adapted_values = TestAdaptToRequestedDbTypes.adapt_parameters(
             [data_type_case.python_value], db_response
         )
 
@@ -64,7 +72,7 @@ class TestAdaptToRequestedDbTypes:
             True,
         ]
 
-        adapted_values = Cursor._adapt_to_requested_db_types(
+        adapted_values = TestAdaptToRequestedDbTypes.adapt_parameters(
             parameters,
             {
                 "columns": [
@@ -77,3 +85,19 @@ class TestAdaptToRequestedDbTypes:
         )
 
         assert adapted_values == ["2026-09-11", 1.25, "123", True]
+
+    @staticmethod
+    def test_rejects_too_many_columns():
+        with pytest.raises(ValueError):
+            Cursor._adapt_to_requested_db_types(
+                [1, 2],
+                {"columns": [{"dataType": {"type": "DECIMAL"}}] * 13},
+            )
+
+    @staticmethod
+    def test_rejects_too_many_parameters():
+        with pytest.raises(ValueError):
+            Cursor._adapt_to_requested_db_types(
+                list(range(14)),
+                {"columns": [{"dataType": {"type": "DECIMAL"}}] * 13},
+            )

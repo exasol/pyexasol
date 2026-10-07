@@ -276,11 +276,10 @@ class Cursor:
         converters = defaultdict(
             lambda: _identity, {"VARCHAR": varchar, "DOUBLE": double}
         )
-        parameters = [_dbapi2pyexasol(value) for value in parameters]
         selected_converters = (
             converters[column["dataType"]["type"]] for column in db_response["columns"]
         )
-        parameters = zip(selected_converters, parameters)
+        parameters = zip(selected_converters, parameters, strict=True)
         parameters = [converter(value) for converter, value in parameters]
         return parameters
 
@@ -288,6 +287,10 @@ class Cursor:
     def executemany(self, operation, seq_of_parameters):
         """See also :py:meth: `Cursor.executemany`"""
         try:
+            parameters = [
+                [_dbapi2pyexasol(value) for value in params]
+                for params in seq_of_parameters
+            ]
             self._connection.validate_session_datetime_formats(operation)
             self._cursor = self._connection.connection.cls_statement(
                 self._connection.connection, operation, prepare=True
@@ -296,7 +299,7 @@ class Cursor:
             parameter_data = self._cursor.parameter_data
             parameters = [
                 Cursor._adapt_to_requested_db_types(params, parameter_data)
-                for params in seq_of_parameters
+                for params in parameters
             ]
             self._cursor.execute_prepared(parameters)
         except pyexasol.exceptions.ExaError as ex:
