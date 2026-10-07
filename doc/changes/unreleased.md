@@ -22,6 +22,11 @@ In this major release, the following changes were made:
 * The deprecated ``pyexasol.db2`` compatibility layer was removed; the
   maintained ``exasol.driver.websocket.dbapi2`` interface remains available.
 
+## Features
+
+* #116: Added conversion support for ``TIMESTAMP WITH LOCAL TIME ZONE`` values
+  in ``convert_websocket_to_python``.
+
 ## Bugfixes
 
 * #353: Fixed documentation inconsistencies in type hints and docstrings
