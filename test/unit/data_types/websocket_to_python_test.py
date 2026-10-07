@@ -1,16 +1,17 @@
 import datetime
 import decimal
+import subprocess
+import sys
 
 import pytest
 
 from pyexasol.data_types import WebSocketDataType
-from pyexasol.data_types.converters import ExaTimeDelta
 from pyexasol.data_types.websocket_to_python import (
     SUPPORTED_TIMESTAMP_FORMATS,
     convert_date,
     convert_decimal,
     convert_timestamp,
-    exasol_mapper,
+    convert_websocket_to_python,
 )
 
 
@@ -84,60 +85,53 @@ def test_convert_timestamp_truncates_nanoseconds(fractional_value):
     assert convert_timestamp(value).time() == datetime.time(12, 34, 56, 123456)
 
 
-MAPPER_CASES = [
-    ("DECIMAL", "123", 0, 123),
-    ("DECIMAL", "123.45", 2, decimal.Decimal("123.45")),
-    (
-        "DATE",
-        "2026-09-11",
-        0,
-        datetime.date(2026, 9, 11),
-    ),
-    (
-        "TIMESTAMP",
-        "2026-09-11 12:34:56",
-        0,
-        datetime.datetime(2026, 9, 11, 12, 34, 56),
-    ),
-    (
-        "INTERVAL DAY TO SECOND",
-        "+000000003 10:59:59.123000000",
-        0,
-        ExaTimeDelta(days=3, hours=10, minutes=59, seconds=59, microseconds=123000),
-    ),
-    ("DOUBLE", 1.25, 0, 1.25),
-    ("BOOLEAN", True, 0, True),
-    ("VARCHAR", "text", 0, "text"),
-    ("CHAR", "text", 0, "text"),
-    ("HASHTYPE", "hash", 0, "hash"),
-    ("GEOMETRY", "POINT (10 20)", 0, "POINT (10 20)"),
-    ("INTERVAL YEAR TO MONTH", "+000000001-02", 0, "+000000001-02"),
-    (
-        "TIMESTAMP WITH LOCAL TIME ZONE",
-        "2026-09-11 12:34:56",
-        0,
-        "2026-09-11 12:34:56",
-    ),
-]
+class TestConvertWebsocketToPython:
+    @staticmethod
+    def test_maps_types(data_type_case):
+        data_type = {
+            "type": data_type_case.websocket_data_type.value,
+            "scale": data_type_case.scale,
+        }
+        assert (
+            convert_websocket_to_python(data_type_case.websocket_value, data_type)
+            == data_type_case.python_value
+        )
 
-
-class TestExasolMapper:
     @staticmethod
     @pytest.mark.parametrize(
-        "type_name,value,scale,expected",
-        MAPPER_CASES,
+        "data_type",
+        WebSocketDataType,
+        ids=lambda data_type: data_type.value,
     )
-    def test_maps_types(type_name, value, scale, expected):
-        data_type = {"type": type_name, "scale": scale}
-        assert exasol_mapper(value, data_type) == expected
+    def test_maps_none(data_type):
+        result = convert_websocket_to_python(
+            None, {"type": data_type.value, "scale": 0}
+        )
+        assert result is None
 
-    @staticmethod
-    def test_maps_all_type_codes():
-        tested_type_names = {type_name for type_name, _, _, _ in MAPPER_CASES}
-        expected_type_names = {data_type.value for data_type in WebSocketDataType}
 
-        assert tested_type_names == expected_type_names
+def test_exasol_mapper_emits_one_deprecation_warning():
+    import_script = """
+import warnings
 
-    @staticmethod
-    def test_maps_none():
-        assert exasol_mapper(None, {"type": "DECIMAL", "scale": 0}) is None
+from pyexasol.data_types.websocket_to_python import exasol_mapper
+from pyexasol.warnings import PyexasolDeprecationWarning
+
+with warnings.catch_warnings(record=True) as caught:
+    warnings.simplefilter("always")
+    assert exasol_mapper(
+        val="123", data_type={"type": "DECIMAL", "scale": 0}
+    ) == 123
+    assert exasol_mapper(
+        val="456", data_type={"type": "DECIMAL", "scale": 0}
+    ) == 456
+
+assert len(caught) == 1
+assert issubclass(caught[0].category, PyexasolDeprecationWarning)
+"""
+    subprocess.run(
+        [sys.executable, "-c", import_script],
+        check=True,
+        capture_output=True,
+        text=True,
+    )

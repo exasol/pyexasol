@@ -14,9 +14,11 @@ In this major release, the following changes were made:
 * WebSocket result metadata types are now exposed as
   ``pyexasol.data_types.WebSocketDataType``; the public ``TypeCode`` alias
   remains available but displays using the canonical name.
-* ``exasol_mapper`` and ``ExaTimeDelta`` are available from
-  ``pyexasol.data_types``; the old ``pyexasol.mapper`` compatibility module
-  emits a deprecation warning on import.
+* ``convert_websocket_to_python`` is the preferred name for converting
+  WebSocket values to Python types; ``exasol_mapper`` remains available as a
+  deprecated compatibility alias. ``ExaTimeDelta`` is also available from
+  ``pyexasol.data_types``, while the old ``pyexasol.mapper`` compatibility
+  module emits a deprecation warning on import.
 * The deprecated ``pyexasol.db2`` compatibility layer was removed; the
   maintained ``exasol.driver.websocket.dbapi2`` interface remains available.
 
@@ -27,6 +29,8 @@ In this major release, the following changes were made:
 * #415: Fixed a ``KeyError`` when accessing ``cursor.description`` for result
   sets containing ``HASHTYPE`` columns by adding ``HASHTYPE`` to ``TypeCode``
 * #419: Fixed exact negative-day intervals in ``ExaTimeDelta`` being formatted with a day count one too low
+* #429: Fixed ``Cursor.executemany`` silently accepting rows with more parameters
+  than the prepared statement columns
 
 ## Refactorings
 
@@ -39,4 +43,6 @@ In this major release, the following changes were made:
   ``pyexasol.data_types.to_python`` and improved unit test coverage
 * #238: Moved DSN parsing and connection tests from integration tests to unit tests, so they no longer require a running Docker database
 * #419: Centralized WebSocket metadata types and moved mapper implementations
-  into ``pyexasol.data_types``, retaining compatibility exports.
+  into ``pyexasol.data_types``.
+* #429: Centralized data-type test cases across unit and integration tests and
+  renamed ``exasol_mapper`` to ``convert_websocket_to_python``

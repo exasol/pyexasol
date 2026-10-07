@@ -18,6 +18,7 @@ import pyexasol.exceptions
 from exasol.driver.websocket._errors import (
     InterfaceError,
     NotSupportedError,
+    ProgrammingError,
     translate_exception,
 )
 from pyexasol.data_types.websocket_types import WebSocketDataType
@@ -127,12 +128,34 @@ def _pyexasol2dbapi(value, metadata):
 
 
 def _dbapi2pyexasol(value):
-    converters = defaultdict(
-        lambda: _identity,
-        {decimal.Decimal: str, float: str, datetime.date: str, datetime.datetime: str},
-    )
-    converter = converters[type(value)]
+    converter = _DBAPI_TO_PYEXASOL_CONVERTERS.get(type(value), _identity)
     return converter(value)
+
+
+_DBAPI_TO_PYEXASOL_CONVERTERS = {
+    decimal.Decimal: str,
+    float: str,
+    datetime.date: str,
+    datetime.datetime: str,
+}
+
+
+def _varchar(value):
+    if value is None:
+        return None
+    return str(value)
+
+
+def _double(value):
+    if value is None:
+        return None
+    return float(value)
+
+
+_REQUESTED_DB_TYPE_CONVERTERS = {
+    "VARCHAR": _varchar,
+    "DOUBLE": _double,
+}
 
 
 class Cursor:
@@ -262,35 +285,31 @@ class Cursor:
                 message  => getString: JSON value is not a string. (...)
                 ...
         """
-
-        def varchar(value):
-            if value is None:
-                return None
-            return str(value)
-
-        def double(value):
-            if value is None:
-                return None
-            return float(value)
-
-        converters = defaultdict(
-            lambda: _identity, {"VARCHAR": varchar, "DOUBLE": double}
-        )
+        columns = db_response["columns"]
         selected_converters = (
-            converters[column["dataType"]["type"]] for column in db_response["columns"]
+            _REQUESTED_DB_TYPE_CONVERTERS.get(column["dataType"]["type"], _identity)
+            for column in columns
         )
-        parameters = zip(selected_converters, parameters)
-        parameters = [converter(value) for converter, value in parameters]
+
+        try:
+            parameter_pairs = list(zip(selected_converters, parameters, strict=True))
+        except ValueError as ex:
+            raise ProgrammingError(
+                "Input shape mismatch: received "
+                f"{len(parameters)} parameters, {len(columns)} columns"
+            ) from ex
+
+        parameters = [converter(value) for converter, value in parameter_pairs]
         return parameters
 
     @_is_not_closed
     def executemany(self, operation, seq_of_parameters):
         """See also :py:meth: `Cursor.executemany`"""
-        parameters = [
-            [_dbapi2pyexasol(p) for p in params] for params in seq_of_parameters
-        ]
-
         try:
+            parameters = [
+                [_dbapi2pyexasol(value) for value in params]
+                for params in seq_of_parameters
+            ]
             self._connection.validate_session_datetime_formats(operation)
             self._cursor = self._connection.connection.cls_statement(
                 self._connection.connection, operation, prepare=True
