@@ -1,5 +1,7 @@
 import datetime
 import decimal
+import subprocess
+import sys
 
 import pytest
 
@@ -106,3 +108,30 @@ class TestConvertWebsocketToPython:
             None, {"type": data_type.value, "scale": 0}
         )
         assert result is None
+
+
+def test_exasol_mapper_emits_one_deprecation_warning():
+    import_script = """
+import warnings
+
+from pyexasol.data_types.websocket_to_python import exasol_mapper
+from pyexasol.warnings import PyexasolDeprecationWarning
+
+with warnings.catch_warnings(record=True) as caught:
+    warnings.simplefilter("always")
+    assert exasol_mapper(
+        val="123", data_type={"type": "DECIMAL", "scale": 0}
+    ) == 123
+    assert exasol_mapper(
+        val="456", data_type={"type": "DECIMAL", "scale": 0}
+    ) == 456
+
+assert len(caught) == 1
+assert issubclass(caught[0].category, PyexasolDeprecationWarning)
+"""
+    subprocess.run(
+        [sys.executable, "-c", import_script],
+        check=True,
+        capture_output=True,
+        text=True,
+    )

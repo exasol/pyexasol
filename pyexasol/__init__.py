@@ -30,11 +30,6 @@ __all__ = [
     "PROTOCOL_V3",
 ]
 
-from warnings import (
-    catch_warnings,
-    simplefilter,
-)
-
 from ._metadata import __version__
 from .connection import ExaConnection
 from .constant import (
@@ -43,6 +38,7 @@ from .constant import (
     PROTOCOL_V3,
 )
 from .data_types.converters import ExaTimeDelta
+from .data_types.websocket_to_python import exasol_mapper
 from .exceptions import (
     ExaAuthError,
     ExaCommunicationError,
@@ -64,11 +60,6 @@ from .local_config import ExaLocalConfig
 from .logger import ExaLogger
 from .meta import ExaMetaData
 from .statement import ExaStatement
-from .warnings import PyexasolDeprecationWarning
-
-with catch_warnings():
-    simplefilter("ignore", PyexasolDeprecationWarning)
-    from .mapper import exasol_mapper
 
 
 def connect(**kwargs) -> ExaConnection:

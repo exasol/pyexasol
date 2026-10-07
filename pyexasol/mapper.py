@@ -9,7 +9,7 @@ from warnings import warn
 # Compatibility exports
 from pyexasol.data_types.converters import ExaTimeDelta  # noqa: F401
 from pyexasol.data_types.websocket_to_python import (  # noqa: F401
-    convert_websocket_to_python,
+    exasol_mapper,
 )
 from pyexasol.warnings import PyexasolDeprecationWarning
 
@@ -21,11 +21,3 @@ warn(
 )
 
 __all__ = ["ExaTimeDelta", "exasol_mapper"]
-
-
-def exasol_mapper(val, data_type):
-    """Deprecated compatibility alias for ``convert_websocket_to_python``.
-
-    Use ``convert_websocket_to_python`` from ``pyexasol.data_types`` instead.
-    """
-    return convert_websocket_to_python(val, data_type)
