@@ -30,6 +30,8 @@ __all__ = [
     "PROTOCOL_V3",
 ]
 
+from exasol.telemetry import client as telemetry
+
 from ._metadata import __version__
 from .connection import ExaConnection
 from .constant import (
@@ -60,7 +62,6 @@ from .local_config import ExaLocalConfig
 from .logger import ExaLogger
 from .meta import ExaMetaData
 from .statement import ExaStatement
-from exasol.telemetry import client as telemetry
 
 
 def connect(**kwargs) -> ExaConnection:
