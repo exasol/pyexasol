@@ -135,7 +135,7 @@ class DataTypeCases:
 
     @property
     def interval_day_to_second(self) -> SqlDataTypeCase:
-        shared_value = "+000000003 10:59:59.123000000"
+        shared_value = "+000000003 10:59:59.123000"
         return SqlDataTypeCase(
             id="interval_day_to_second",
             websocket_data_type=WebSocketDataType.IntervalDayToSecond,
@@ -148,19 +148,19 @@ class DataTypeCases:
                 microseconds=123000,
             ),
             sql_value=shared_value,
-            sql_template="SELECT INTERVAL {value} DAY(9) TO SECOND(9);",
+            sql_template="SELECT INTERVAL {value} DAY(9) TO SECOND(6);",
         )
 
     @property
     def interval_year_to_month(self) -> SqlDataTypeCase:
-        shared_value = "+000000001-02"
+        shared_value = "+0001-02"
         return SqlDataTypeCase(
             id="interval_year_to_month",
             websocket_data_type=WebSocketDataType.IntervalYearToMonth,
             websocket_value=shared_value,
             python_value=shared_value,
             sql_value=shared_value,
-            sql_template="SELECT INTERVAL {value} YEAR(9) TO MONTH;",
+            sql_template="SELECT INTERVAL {value} YEAR(4) TO MONTH;",
         )
 
     @property

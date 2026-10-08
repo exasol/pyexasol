@@ -83,12 +83,13 @@ def rows():
             # This will change with:
             # https://github.com/exasol/pyexasol/issues/116
             DATA_TYPE_CASES.timestamp_with_local_time_zone.python_value,
-            # Prepared interval values must match the target column precision;
-            # the raw WebSocket values use wider year and fractional-second fields.
-            # This will be changed in:
+            # Prepared interval values must fit the target column's declared precision.
+            # Values whose year or fractional-second precision exceeds that precision
+            # are not handled by the driver; the database rejects them. This is tracked
+            # in:
             # https://github.com/exasol/pyexasol/issues/428
-            "+0001-02",
-            "+000000003 10:59:59.123000",
+            DATA_TYPE_CASES.interval_year_to_month.websocket_value,
+            DATA_TYPE_CASES.interval_day_to_second.websocket_value,
             DATA_TYPE_CASES.boolean.python_value,
             DATA_TYPE_CASES.geometry.python_value,
             DATA_TYPE_CASES.hashtype.python_value,
