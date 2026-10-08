@@ -10,9 +10,11 @@ additional conversion to preserve their appropriate Python representation.
 import datetime
 import decimal
 from typing import Final
+from warnings import warn
 
 from pyexasol.data_types.converters import ExaTimeDelta
 from pyexasol.data_types.websocket_types import WebSocketDataType
+from pyexasol.warnings import PyexasolDeprecationWarning
 
 # These formats are strictly enforced by the WebSocket DBAPI. They also describe
 # the ISO-only values that are parsed through these helpers. Keep them next to the
@@ -32,6 +34,7 @@ SUPPORTED_TIMESTAMP_FORMATS: Final[tuple[str, ...]] = (
     "YYYY-MM-DD HH24:MI:SS.FF9",
 )
 # End: supported session date/time formats included in the DBAPI documentation.
+_exasol_mapper_warning_emitted = False
 
 
 def convert_decimal(value: str, scale: int) -> int | decimal.Decimal:
@@ -80,30 +83,55 @@ def convert_timestamp(value: str) -> datetime.datetime:
     return datetime.datetime.fromisoformat(timestamp_value)
 
 
-def exasol_mapper(val, data_type):
+def convert_websocket_to_python(value, data_type):
     """
-    Convert into Python data types according to the Exasol manual
+    Convert a value returned by the WebSocket API to the appropriate
+    Python type based on the Exasol manual.
 
+    Converted types:
+
+    DATE                   -> datetime.date
     DECIMAL(p,0)           -> int
     DECIMAL(p,s)           -> decimal.Decimal
-    DOUBLE                 -> float
-    DATE                   -> datetime.date
-    TIMESTAMP              -> datetime.datetime
-    BOOLEAN                -> bool
-    VARCHAR                -> str
-    CHAR                   -> str
     INTERVAL DAY TO SECOND -> datetime.timedelta
+    TIMESTAMP              -> datetime.datetime
+
+    Passed through unchanged:
+
+    BOOLEAN                -> bool
+    CHAR                   -> str
+    DOUBLE                 -> float
+    VARCHAR                -> str
     <others>               -> str
     """
 
-    if val is None:
+    if value is None:
         return None
     elif data_type["type"] == WebSocketDataType.Decimal.value:
-        return convert_decimal(val, data_type["scale"])
+        return convert_decimal(value, data_type["scale"])
     elif data_type["type"] == WebSocketDataType.Date.value:
-        return convert_date(val)
+        return convert_date(value)
     elif data_type["type"] == WebSocketDataType.Timestamp.value:
-        return convert_timestamp(val)
+        return convert_timestamp(value)
     elif data_type["type"] == WebSocketDataType.IntervalDayToSecond.value:
-        return ExaTimeDelta.from_interval(val)
-    return val
+        return ExaTimeDelta.from_interval(value)
+    return value
+
+
+def exasol_mapper(val, data_type):
+    """Deprecated compatibility alias for ``convert_websocket_to_python``.
+
+    Use ``convert_websocket_to_python`` from ``pyexasol.data_types`` instead.
+    """
+    global _exasol_mapper_warning_emitted
+
+    if not _exasol_mapper_warning_emitted:
+        warn(
+            "exasol_mapper is deprecated and will be removed in the future. "
+            "Use pyexasol.data_types.convert_websocket_to_python instead.",
+            PyexasolDeprecationWarning,
+            stacklevel=2,
+        )
+        _exasol_mapper_warning_emitted = True
+
+    return convert_websocket_to_python(val, data_type)

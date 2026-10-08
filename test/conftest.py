@@ -1,4 +1,9 @@
 import os
+from test.data_type_cases import (
+    DataTypeCase,
+    DataTypeCases,
+    to_pytest_params,
+)
 
 import pytest
 
@@ -52,3 +57,19 @@ def connection(connection_factory):
     con = connection_factory()
     yield con
     con.close()
+
+
+ALL_CASES = DataTypeCases().all_cases()
+
+
+@pytest.fixture(scope="session")
+def data_type_cases() -> tuple[DataTypeCase, ...]:
+    return ALL_CASES
+
+
+@pytest.fixture(
+    scope="session",
+    params=to_pytest_params(ALL_CASES),
+)
+def data_type_case(request) -> DataTypeCase:
+    return request.param
