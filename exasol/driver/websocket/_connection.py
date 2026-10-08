@@ -15,6 +15,7 @@ from exasol.driver.websocket._errors import (
     InterfaceError,
     translate_exception,
 )
+from pyexasol.data_types import convert_websocket_to_python
 from pyexasol.data_types.websocket_to_python import (
     SUPPORTED_DATE_FORMATS,
     SUPPORTED_TIMESTAMP_FORMATS,
@@ -142,7 +143,7 @@ class Connection:
             "compression": False,
             "encryption": tls,
             "fetch_dict": False,
-            "fetch_mapper": None,
+            "fetch_mapper": convert_websocket_to_python,
             "fetch_size_bytes": 5 * 1024 * 1024,
             "lower_ident": False,
             "quote_ident": False,
