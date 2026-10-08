@@ -21,7 +21,7 @@ class DataTypeRow(NamedTuple):
     timestamp_value: datetime.datetime | str
     timestamp_local_value: str
     interval_year_month: str
-    interval_day_second: str | ExaTimeDelta
+    interval_day_second: str | datetime.timedelta | ExaTimeDelta
     boolean_value: bool
     geometry_value: str
     hashtype_value: str
@@ -99,10 +99,12 @@ def rows():
             # Prepared interval values must fit the target column's declared precision.
             # Values whose year or fractional-second precision exceeds that precision
             # are not handled by the driver; the database rejects them. ExaTimeDelta
-            # values are not handled by the driver either. This is tracked in:
+            # values are not handled by the driver either. The values below are
+            # converted to fixed-width WebSocket interval strings where necessary.
+            # This is tracked in:
             # https://github.com/exasol/pyexasol/issues/428
             DATA_TYPE_CASES.interval_year_to_month.python_value,
-            DATA_TYPE_CASES.interval_day_to_second.websocket_value,
+            DATA_TYPE_CASES.interval_day_to_second.python_value.to_interval()[:-3],
             DATA_TYPE_CASES.boolean.python_value,
             DATA_TYPE_CASES.geometry.python_value,
             DATA_TYPE_CASES.hashtype.python_value,
@@ -113,11 +115,21 @@ def rows():
             decimal.Decimal("-2.25"),
             "xy   ",
             "world",
-            datetime.date(2021, 3, 4),
+            "2021-03-04",
             "2021-03-04 05:06:07.654000",
             "2021-03-04 05:06:07.654000",
             "+0001-11",
-            "+000000003 04:05:06.654000",
+            # Serialize timedelta until interval adapter support is addressed:
+            # https://github.com/exasol/pyexasol/issues/428
+            ExaTimeDelta.from_timedelta(
+                datetime.timedelta(
+                    days=3,
+                    hours=4,
+                    minutes=5,
+                    seconds=6,
+                    microseconds=654000,
+                )
+            ).to_interval()[:-3],
             False,
             "LINESTRING (10 20, 30 40)",
             "6ba7b8109dad11d180b400c04fd430c8",
@@ -128,7 +140,7 @@ def rows():
             "0.0",
             "z    ",
             "Exasol",
-            datetime.date(2022, 12, 31),
+            "2022-12-31",
             "2022-12-31 23:59:59.000000",
             "2022-12-31 23:59:59.000000",
             "+0000-00",
