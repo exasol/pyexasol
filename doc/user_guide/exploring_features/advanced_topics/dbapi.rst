@@ -74,6 +74,27 @@ Usage Notes
 
 See the :ref:`Using DB-API 2.0 <using_dbapi2_example>` example for a longer usage example.
 
+Result Value Types
+^^^^^^^^^^^^^^^^^^
+
+The WebSocket DBAPI always applies ``convert_websocket_to_python`` when fetching
+rows. This fixed mapper brings the returned values closer to the Python types
+described by PEP 249 and is not configurable through the DBAPI connection.
+
+The returned types are:
+
+* ``BOOLEAN``, ``CHAR``, ``VARCHAR``, and ``DOUBLE`` retain their native Python
+  types (``bool``, ``str``, and ``float``).
+* ``DECIMAL(p, 0)`` is returned as ``int``.
+* ``DECIMAL(p, s)`` where ``s > 0`` is returned as ``decimal.Decimal``.
+* ``DATE`` is returned as ``datetime.date``.
+* ``TIMESTAMP`` is returned as ``datetime.datetime``. Nanosecond precision is
+  truncated to Python's microsecond precision.
+* ``INTERVAL DAY TO SECOND`` is returned as ``ExaTimeDelta``.
+* ``INTERVAL YEAR TO MONTH``, ``TIMESTAMP WITH LOCAL TIME ZONE``, ``GEOMETRY``,
+  and ``HASHTYPE`` remain strings.
+* ``NULL`` values are returned as ``None`` for all types.
+
 Session Date/Time Formats
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 

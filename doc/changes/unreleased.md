@@ -4,6 +4,19 @@
 
 In this major release, the following changes were made:
 
+* The WebSocket DBAPI now hard-codes ``fetch_mapper`` to
+  ``convert_websocket_to_python`` to align result values more closely with the
+  Python types described by PEP 249:
+  * ``BOOLEAN``, ``CHAR``, ``VARCHAR``, ``DOUBLE``, ``DECIMAL(p, 0)``,
+    ``DATE``, ``INTERVAL YEAR TO MONTH``, ``TIMESTAMP WITH LOCAL TIME ZONE``,
+    ``GEOMETRY``, and ``HASHTYPE`` retain their existing Python types.
+  * ``DECIMAL(p, s)`` where ``s > 0`` is returned as ``decimal.Decimal``
+    instead of ``str``.
+  * ``TIMESTAMP`` is returned as ``datetime.datetime`` instead of ``str``;
+    nanosecond precision is truncated to Python microsecond precision.
+  * ``INTERVAL DAY TO SECOND`` is returned as ``ExaTimeDelta`` instead of
+    ``str``.
+  * ``NULL`` values remain ``None`` for all types.
 * WebSocket DBAPI executions now validate the ``NLS_DATE_FORMAT`` and
   ``NLS_TIMESTAMP_FORMAT`` EXA_PARAMETERS against the ISO-compatible formats
   supported by PyExasol, reporting all invalid parameters together with
@@ -31,6 +44,8 @@ In this major release, the following changes were made:
 * #419: Fixed exact negative-day intervals in ``ExaTimeDelta`` being formatted with a day count one too low
 * #429: Fixed ``Cursor.executemany`` silently accepting rows with more parameters
   than the prepared statement columns
+* #436: Fixed WebSocket DBAPI result conversion by hard-coding
+  ``fetch_mapper`` to ``convert_websocket_to_python``
 
 ## Refactorings
 
