@@ -43,7 +43,7 @@ class DataTypeCases:
             websocket_data_type=WebSocketDataType.Bool,
             websocket_value=shared_value,
             python_value=shared_value,
-            sql_value="TRUE",
+            sql_value=shared_value,
             sql_template="SELECT CAST({value} AS BOOLEAN);",
         )
 
