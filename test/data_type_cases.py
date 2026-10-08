@@ -41,7 +41,7 @@ class DataTypeCases:
             websocket_data_type=WebSocketDataType.Bool,
             websocket_value=True,
             python_value=True,
-            sql_template="SELECT CAST({} AS BOOLEAN);",
+            sql_template="SELECT CAST({value} AS BOOLEAN);",
         )
 
     @property
@@ -51,7 +51,7 @@ class DataTypeCases:
             websocket_data_type=WebSocketDataType.Char,
             websocket_value="text",
             python_value="text",
-            sql_template="SELECT CAST('{}' AS CHAR(4));",
+            sql_template="SELECT CAST({value} AS CHAR(4));",
         )
 
     @property
@@ -61,7 +61,7 @@ class DataTypeCases:
             websocket_data_type=WebSocketDataType.Date,
             websocket_value="2026-09-11",
             python_value=datetime.date(2026, 9, 11),
-            sql_template="SELECT DATE '{}';",
+            sql_template="SELECT DATE {value};",
         )
 
     @property
@@ -72,7 +72,7 @@ class DataTypeCases:
             websocket_value=123,
             python_value=123,
             scale=0,
-            sql_template="SELECT CAST({} AS DECIMAL(18, 0));",
+            sql_template="SELECT CAST({value} AS DECIMAL(18, 0));",
         )
 
     @property
@@ -83,7 +83,7 @@ class DataTypeCases:
             websocket_value="123.45",
             python_value=decimal.Decimal("123.45"),
             scale=2,
-            sql_template="SELECT CAST('{}' AS DECIMAL(18, 2));",
+            sql_template="SELECT CAST({value} AS DECIMAL(18, 2));",
         )
 
     @property
@@ -93,7 +93,7 @@ class DataTypeCases:
             websocket_data_type=WebSocketDataType.Double,
             websocket_value=1.25,
             python_value=1.25,
-            sql_template="SELECT CAST({} AS DOUBLE);",
+            sql_template="SELECT CAST({value} AS DOUBLE);",
         )
 
     @property
@@ -103,7 +103,7 @@ class DataTypeCases:
             websocket_data_type=WebSocketDataType.Geometry,
             websocket_value="POINT (10 20)",
             python_value="POINT (10 20)",
-            sql_template="SELECT CAST('{}' AS GEOMETRY);",
+            sql_template="SELECT CAST({value} AS GEOMETRY);",
         )
 
     @property
@@ -113,7 +113,7 @@ class DataTypeCases:
             websocket_data_type=WebSocketDataType.Hashtype,
             websocket_value="550e8400e29b11d4a716446655440000",
             python_value="550e8400e29b11d4a716446655440000",
-            sql_template="SELECT CAST('{}' AS HASHTYPE(16 BYTE));",
+            sql_template="SELECT CAST({value} AS HASHTYPE(16 BYTE));",
         )
 
     @property
@@ -129,7 +129,7 @@ class DataTypeCases:
                 seconds=59,
                 microseconds=123000,
             ),
-            sql_template="SELECT INTERVAL '{}' DAY(9) TO SECOND(9);",
+            sql_template="SELECT INTERVAL {value} DAY(9) TO SECOND(9);",
         )
 
     @property
@@ -139,7 +139,7 @@ class DataTypeCases:
             websocket_data_type=WebSocketDataType.IntervalYearToMonth,
             websocket_value="+000000001-02",
             python_value="+000000001-02",
-            sql_template="SELECT INTERVAL '{}' YEAR(9) TO MONTH;",
+            sql_template="SELECT INTERVAL {value} YEAR(9) TO MONTH;",
         )
 
     @property
@@ -149,7 +149,7 @@ class DataTypeCases:
             websocket_data_type=WebSocketDataType.Timestamp,
             websocket_value="2026-09-11 12:34:56.000001",
             python_value=datetime.datetime(2026, 9, 11, 12, 34, 56, 1),
-            sql_template="SELECT TIMESTAMP '{}';",
+            sql_template="SELECT TIMESTAMP {value};",
         )
 
     @property
@@ -162,7 +162,7 @@ class DataTypeCases:
             # passed through as a string. This will change with:
             # https://github.com/exasol/pyexasol/issues/116
             python_value="2026-09-11 12:34:56.000000",
-            sql_template=("SELECT CAST('{}' AS TIMESTAMP WITH LOCAL TIME ZONE);"),
+            sql_template=("SELECT CAST({value} AS TIMESTAMP WITH LOCAL TIME ZONE);"),
         )
 
     @property
@@ -172,7 +172,7 @@ class DataTypeCases:
             websocket_data_type=WebSocketDataType.String,
             websocket_value="text",
             python_value="text",
-            sql_template="SELECT CAST('{}' AS VARCHAR(4));",
+            sql_template="SELECT CAST({value} AS VARCHAR(4));",
         )
 
     def all_cases(self) -> tuple[SqlDataTypeCase, ...]:
