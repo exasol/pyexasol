@@ -37,7 +37,7 @@ class TestAdaptToRequestedDbTypes:
             },
         )
 
-        assert adapted_values == [data_type_case.websocket_value]
+        assert adapted_values == [data_type_case.sql_value]
 
     @staticmethod
     @pytest.mark.parametrize(

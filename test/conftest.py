@@ -1,7 +1,7 @@
 import os
 from test.data_type_cases import (
-    DataTypeCase,
-    DataTypeCases,
+    DATA_TYPE_CASES,
+    SqlDataTypeCase,
     to_pytest_params,
 )
 
@@ -59,11 +59,11 @@ def connection(connection_factory):
     con.close()
 
 
-ALL_CASES = DataTypeCases().all_cases()
+ALL_CASES = DATA_TYPE_CASES.all_cases()
 
 
 @pytest.fixture(scope="session")
-def data_type_cases() -> tuple[DataTypeCase, ...]:
+def data_type_cases() -> tuple[SqlDataTypeCase, ...]:
     return ALL_CASES
 
 
@@ -71,5 +71,5 @@ def data_type_cases() -> tuple[DataTypeCase, ...]:
     scope="session",
     params=to_pytest_params(ALL_CASES),
 )
-def data_type_case(request) -> DataTypeCase:
+def data_type_case(request) -> SqlDataTypeCase:
     return request.param
