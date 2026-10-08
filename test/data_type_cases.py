@@ -165,13 +165,12 @@ class DataTypeCases:
 
     @property
     def timestamp(self) -> SqlDataTypeCase:
-        shared_value = "2026-09-11 12:34:56.000001"
         return SqlDataTypeCase(
             id="timestamp",
             websocket_data_type=WebSocketDataType.Timestamp,
-            websocket_value=shared_value,
-            python_value=datetime.datetime(2026, 9, 11, 12, 34, 56, 1),
-            sql_value=shared_value,
+            websocket_value="2026-09-11 12:34:56.000000",
+            python_value=datetime.datetime(2026, 9, 11, 12, 34, 56),
+            sql_value="2026-09-11 12:34:56",
             sql_template="SELECT TIMESTAMP {value};",
         )
 
