@@ -187,7 +187,7 @@ class DataTypeCases:
             # https://github.com/exasol/pyexasol/issues/116
             python_value=shared_value,
             sql_value=shared_value,
-            sql_template=("SELECT CAST({value} AS TIMESTAMP WITH LOCAL TIME ZONE);"),
+            sql_template="SELECT CAST({value} AS TIMESTAMP WITH LOCAL TIME ZONE);",
         )
 
     @property
