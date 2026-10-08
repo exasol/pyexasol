@@ -12,9 +12,9 @@ from pyexasol.data_types import ExaTimeDelta
 class DataTypeRow(NamedTuple):
     """Input and fetched values for one row of the all-types test table."""
 
-    decimal_integer: int
-    decimal_fraction: decimal.Decimal | str
-    double_value: float
+    decimal_integer: decimal.Decimal | int | str
+    decimal_fraction: decimal.Decimal | float | str
+    double_value: decimal.Decimal | float | str
     char_value: str
     varchar_value: str
     date_value: datetime.date | str
@@ -108,9 +108,9 @@ def rows():
             DATA_TYPE_CASES.hashtype.python_value,
         ),
         DataTypeRow(
-            -7,
-            "-7.5",
-            -2.25,
+            decimal.Decimal("-7"),
+            -7.5,
+            decimal.Decimal("-2.25"),
             "xy   ",
             "world",
             datetime.date(2021, 3, 4),
@@ -123,9 +123,9 @@ def rows():
             "6ba7b8109dad11d180b400c04fd430c8",
         ),
         DataTypeRow(
-            0,
+            "0",
             "0.001",
-            0.0,
+            "0.0",
             "z    ",
             "Exasol",
             datetime.date(2022, 12, 31),
@@ -161,7 +161,9 @@ def expected_rows(rows):
             ),
         ),
         rows[1]._replace(
+            decimal_integer=-7,
             decimal_fraction=decimal.Decimal("-7.5"),
+            double_value=-2.25,
             char_value="xy   ",
             date_value=datetime.date(2021, 3, 4),
             timestamp_value=datetime.datetime(2021, 3, 4, 5, 6, 7, 654000),
@@ -173,7 +175,9 @@ def expected_rows(rows):
             ),
         ),
         rows[2]._replace(
+            decimal_integer=0,
             decimal_fraction=decimal.Decimal("0.001"),
+            double_value=0.0,
             char_value="z    ",
             date_value=datetime.date(2022, 12, 31),
             timestamp_value=datetime.datetime(2022, 12, 31, 23, 59, 59),
