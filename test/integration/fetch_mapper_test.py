@@ -17,7 +17,7 @@ def test_fetch_mapper_with_convert_websocket_to_python(
 ):
     result = fetch_mapper_connection.execute(
         data_type_case.sql_template,
-        {"value": data_type_case.websocket_value},
+        {"value": data_type_case.sql_value},
     )
     actual = result.fetchval()
     assert actual == data_type_case.python_value
@@ -28,7 +28,7 @@ def test_fetch_mapper_with_convert_websocket_to_python(
 def test_without_fetch_mapper(connection, data_type_case):
     result = connection.execute(
         data_type_case.sql_template,
-        {"value": data_type_case.websocket_value},
+        {"value": data_type_case.sql_value},
     )
     actual = result.fetchval()
     assert actual == data_type_case.websocket_value
