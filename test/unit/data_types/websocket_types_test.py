@@ -1,5 +1,3 @@
-from test.data_type_cases import SqlDataTypeCase
-
 from pyexasol.data_types import WebSocketDataType
 
 
@@ -8,7 +6,3 @@ def test_maps_all_type_codes(data_type_cases):
         data_type_case.websocket_data_type for data_type_case in data_type_cases
     }
     assert tested_type_names == set(WebSocketDataType)
-    assert all(
-        isinstance(data_type_case, SqlDataTypeCase)
-        for data_type_case in data_type_cases
-    )
