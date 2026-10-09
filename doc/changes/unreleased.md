@@ -4,7 +4,7 @@
 
 In this major release, the following changes were made:
 
-* This release adds the exasol telemetry tracking -- anonymized usage tracking of the pyexasol library.
+* This release adds the Exasol telemetry tracking -- anonymized usage tracking of the PyExasol library.
 * WebSocket DBAPI executions now validate the ``NLS_DATE_FORMAT`` and
   ``NLS_TIMESTAMP_FORMAT`` EXA_PARAMETERS against the ISO-compatible formats
   supported by PyExasol, reporting all invalid parameters together with
