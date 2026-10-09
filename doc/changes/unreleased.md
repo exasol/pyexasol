@@ -47,6 +47,8 @@ In this major release, the following changes were made:
   into ``pyexasol.data_types``.
 * #429: Centralized data-type test cases across unit and integration tests and
   renamed ``exasol_mapper`` to ``convert_websocket_to_python``
+* #434: Refactored data-type test cases to share SQL templates and expected
+  values across fetch-mapper and cursor integration tests
 
 ## Features
 
