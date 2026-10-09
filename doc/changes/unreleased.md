@@ -4,6 +4,7 @@
 
 In this major release, the following changes were made:
 
+* This release adds the Exasol telemetry tracking -- anonymized usage tracking of the PyExasol library.
 * WebSocket DBAPI executions now validate the ``NLS_DATE_FORMAT`` and
   ``NLS_TIMESTAMP_FORMAT`` EXA_PARAMETERS against the ISO-compatible formats
   supported by PyExasol, reporting all invalid parameters together with
@@ -48,3 +49,7 @@ In this major release, the following changes were made:
   renamed ``exasol_mapper`` to ``convert_websocket_to_python``
 * #434: Refactored data-type test cases to share SQL templates and expected
   values across fetch-mapper and cursor integration tests
+
+## Features
+
+* #375: Integrate telemetry

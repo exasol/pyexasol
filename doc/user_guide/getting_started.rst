@@ -97,6 +97,19 @@ Using polars
    :language: python3
    :caption: examples/getting_started/export_to_polars.py
 
+Telemetry
+---------
+
+Exasol software includes services that allow installations to check for available
+updates and to provide anonymized usage information. These services help ensure that
+software remains up to date and enable Exasol to better understand how its publicly
+available software is used in practice, improve product quality, prioritize features,
+and estimate the size of its active user base. For more information, please refer to
+Exasol's Privacy Policy: https://www.exasol.com/privacy-policy/.
+
+To disable telemetry, you can set the environment variable `EXASOL_TELEMETRY_DISABLE`
+(any value will work).
+
 Diving Deeper
 -------------
 
