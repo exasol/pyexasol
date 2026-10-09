@@ -30,8 +30,6 @@ __all__ = [
     "PROTOCOL_V3",
 ]
 
-from exasol.telemetry import client as telemetry
-
 from ._metadata import __version__
 from .connection import ExaConnection
 from .constant import (
@@ -140,6 +138,3 @@ def http_transport(
         The final solution depends on your hardware, network configuration, cloud provider and container orchestration software.
     """
     return ExaHTTPTransportWrapper(ipaddr, port, compression, encryption)
-
-
-telemetry.track("PYEXA", __version__, "imported")
