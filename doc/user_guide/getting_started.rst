@@ -107,7 +107,7 @@ available software is used in practice, improve product quality, prioritize feat
 and estimate the size of its active user base. For more information, please refer to
 `Exasol's Privacy Policy <https://www.exasol.com/privacy-policy/>`_.
 
-To disable telemetry, you can set the environment variable `EXASOL_TELEMETRY_DISABLE`
+To disable telemetry, you can set the environment variable ``EXASOL_TELEMETRY_DISABLE``
 (any value will work).
 
 Diving Deeper
