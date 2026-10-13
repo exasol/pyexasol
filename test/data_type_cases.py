@@ -176,13 +176,12 @@ class DataTypeCases:
 
     @property
     def timestamp_with_local_time_zone(self) -> SqlDataTypeCase:
-        shared_value = "2026-09-11 12:34:56.000000"
         return SqlDataTypeCase(
             id="timestamp_with_local_time_zone",
             websocket_data_type=WebSocketDataType.TimestampTz,
-            websocket_value=shared_value,
+            websocket_value="2026-09-11 12:34:56.000000",
             python_value=datetime.datetime(2026, 9, 11, 12, 34, 56),
-            sql_value=shared_value,
+            sql_value="2026-09-11 12:34:56",
             sql_template="SELECT CAST({value} AS TIMESTAMP WITH LOCAL TIME ZONE);",
         )
 

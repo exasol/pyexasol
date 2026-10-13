@@ -81,8 +81,8 @@ def rows():
             DATA_TYPE_CASES.timestamp.websocket_value,
             # TIMESTAMP WITH LOCAL TIME ZONE is currently not supported.
             # This will change with:
-            # https://github.com/exasol/pyexasol/issues/116
-            DATA_TYPE_CASES.timestamp_with_local_time_zone.python_value,
+            # https://github.com/exasol/pyexasol/issues/361
+            DATA_TYPE_CASES.timestamp_with_local_time_zone.websocket_value,
             # Prepared interval values must fit the target column's declared precision.
             # Values whose year or fractional-second precision exceeds that precision
             # are not handled by the driver; the database rejects them. This is tracked
