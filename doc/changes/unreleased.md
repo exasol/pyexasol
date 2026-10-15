@@ -52,7 +52,7 @@ In this major release, the following changes were made:
 
 * #116: Added conversion support for ``TIMESTAMP WITH LOCAL TIME ZONE`` values
   in ``convert_websocket_to_python``.
-* #375: Integrate telemetry
+* #375: Integrated telemetry
 
 ## Bugfixes
 
