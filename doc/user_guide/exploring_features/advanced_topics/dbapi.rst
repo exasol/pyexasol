@@ -74,6 +74,64 @@ Usage Notes
 
 See the :ref:`Using DB-API 2.0 <using_dbapi2_example>` example for a longer usage example.
 
+Result Value Types
+^^^^^^^^^^^^^^^^^^
+
+To align more closely with PEP-249, the WebSocket DBAPI returns values as Python
+types by default whenever possible. Some values were already returned as Python
+types before version 3.0; version 3.0 made this behavior more consistent.
+
+.. note::
+    * ``NULL`` values are returned as ``None`` for all types.
+    * Nanosecond precision in ``TIMESTAMP`` values is truncated to Python's
+      microsecond precision.
+
+.. list-table:: WebSocket DBAPI result value types
+   :header-rows: 1
+
+   * - Exasol type
+     - Version < 3.0
+     - Version >= 3.0
+   * - ``BOOLEAN``
+     - ``bool``
+     - ``bool``
+   * - ``CHAR``
+     - ``str``
+     - ``str``
+   * - ``DATE``
+     - ``datetime.date``
+     - ``datetime.date``
+   * - ``DECIMAL(p, 0)``
+     - ``str``
+     - ``int``
+   * - ``DECIMAL(p, s)`` where ``s > 0``
+     - ``str``
+     - ``decimal.Decimal``
+   * - ``DOUBLE``
+     - ``float``
+     - ``float``
+   * - ``GEOMETRY``
+     - ``str``
+     - ``str``
+   * - ``HASHTYPE``
+     - ``str``
+     - ``str``
+   * - ``INTERVAL DAY TO SECOND``
+     - ``str``
+     - ``ExaTimeDelta``
+   * - ``INTERVAL YEAR TO MONTH``
+     - ``str``
+     - ``str``
+   * - ``TIMESTAMP``
+     - ``str``
+     - ``datetime.datetime``
+   * - ``TIMESTAMP WITH LOCAL TIME ZONE``
+     - ``str``
+     - ``datetime.datetime``
+   * - ``VARCHAR``
+     - ``str``
+     - ``str``
+
 Session Date/Time Formats
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
