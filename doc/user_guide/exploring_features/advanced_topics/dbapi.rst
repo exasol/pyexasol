@@ -102,7 +102,7 @@ types before version 3.0; version 3.0 made this behavior more consistent.
      - ``datetime.date``
      - ``datetime.date``
    * - ``DECIMAL(p, 0)``
-     - ``str``
+     - ``int``
      - ``int``
    * - ``DECIMAL(p, s)`` where ``s > 0``
      - ``str``

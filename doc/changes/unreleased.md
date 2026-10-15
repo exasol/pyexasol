@@ -16,7 +16,7 @@ In this major release, the following changes were made:
   | ``BOOLEAN``                        | ``bool``          | ``bool``              |
   | ``CHAR``                           | ``str``           | ``str``               |
   | ``DATE``                           | ``datetime.date`` | ``datetime.date``     |
-  | ``DECIMAL(p, 0)``                  | ``str``           | ``int``               |
+  | ``DECIMAL(p, 0)``                  | ``int``           | ``int``               |
   | ``DECIMAL(p, s)`` where ``s > 0``  | ``str``           | ``decimal.Decimal``   |
   | ``DOUBLE``                         | ``float``         | ``float``             |
   | ``GEOMETRY``                       | ``str``           | ``str``               |
