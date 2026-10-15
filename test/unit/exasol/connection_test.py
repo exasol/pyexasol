@@ -141,6 +141,15 @@ class TestValidateSessionDatetimeFormats:
         connection._connection.execute.assert_not_called()
         connection._connection = None
 
+    def test_skips_validation_for_custom_fetch_mapper(self):
+        connection = Connection(fetch_mapper=lambda value, data_type: value)
+        connection._connection = Mock()
+
+        connection.validate_session_datetime_formats("SELECT 1")
+
+        connection._connection.execute.assert_not_called()
+        connection._connection = None
+
 
 class TestValidateSessionDatetimeFormatsHelper:
     @staticmethod

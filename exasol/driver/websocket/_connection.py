@@ -190,8 +190,15 @@ class Connection:
         Operations containing ``ALTER SESSION`` are ignored so that an
         application can change or restore session settings while bypassing the validation.
         The following operation will validate the new date/time formats.
+
+        Custom fetch mappers are responsible for handling the session date/time
+        formats they support, so validation is only performed for the default
+        mapper.
         """
-        if _is_alter_session(operation):
+        if (
+            _is_alter_session(operation)
+            or self._options["fetch_mapper"] is not convert_websocket_to_python
+        ):
             return
 
         session_datetime_format_query = """

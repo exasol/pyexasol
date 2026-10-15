@@ -4,6 +4,7 @@ from exasol.driver.websocket.dbapi2 import (
     InterfaceError,
     ProgrammingError,
     TypeCode,
+    connect,
 )
 from pyexasol.data_types.websocket_to_python import (
     SUPPORTED_DATE_FORMATS,
@@ -12,6 +13,37 @@ from pyexasol.data_types.websocket_to_python import (
 
 
 class TestSessionDatetimeFormats:
+    @staticmethod
+    def test_custom_mapper_does_not_affect_validation(dsn, user, password, schema):
+        def lowercase_strings(value, data_type):
+            if isinstance(value, str):
+                return value.lower()
+            return value
+
+        connection = connect(
+            dsn=dsn,
+            username=user,
+            password=password,
+            schema=schema,
+            certificate_validation=False,
+            fetch_mapper=lowercase_strings,
+        )
+        try:
+            cursor = connection.cursor()
+            cursor.execute(
+                f"ALTER SESSION SET NLS_DATE_FORMAT = '{SUPPORTED_DATE_FORMATS[0]}'"
+            )
+            cursor.execute(
+                "ALTER SESSION SET NLS_TIMESTAMP_FORMAT = "
+                f"'{SUPPORTED_TIMESTAMP_FORMATS[0]}'"
+            )
+
+            cursor.execute("SELECT 1")
+
+            assert cursor.fetchone() == (1,)
+        finally:
+            connection.close()
+
     @staticmethod
     def test_accepts_supported_formats(cursor):
         cursor.execute(

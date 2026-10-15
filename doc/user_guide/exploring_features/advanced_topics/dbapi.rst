@@ -154,12 +154,17 @@ value to determine how to convert the value.
             return float(value)
         return value
 
+.. note::
+    When using a custom ``fetch_mapper``, the application is responsible for
+    supporting the session date/time formats required by that mapper. The DBAPI
+    only validates the session formats when the default mapper is active.
+
 Session Date/Time Formats
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Before executing a user statement, the WebSocket DBAPI checks the active session
 values for ``NLS_DATE_FORMAT`` and ``NLS_TIMESTAMP_FORMAT`` in
-``EXA_PARAMETERS``. The DBAPI
+``EXA_PARAMETERS`` when the default ``fetch_mapper`` is active. The DBAPI
 currently supports only the exact formats listed below. Format-model matching is
 case-sensitive.
 
