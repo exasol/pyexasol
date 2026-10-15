@@ -40,7 +40,7 @@ DBAPI2-compatible driver. For further details, please refer to the
 Rationale
 ---------
 
-PEP-249 was originally created for general purpose OLTP row store databases running on a
+PEP 249 was originally created for general purpose OLTP row store databases running on a
 single server: SQLite, MySQL, PostgreSQL, MSSQL, Oracle, etc.
 
 It does not work very well for OLAP columnar databases (like Exasol) running on multiple
@@ -77,7 +77,7 @@ See the :ref:`Using DB-API 2.0 <using_dbapi2_example>` example for a longer usag
 Result Value Types
 ^^^^^^^^^^^^^^^^^^
 
-To align more closely with PEP-249, the WebSocket DBAPI returns values as Python
+To align more closely with PEP 249, the WebSocket DBAPI returns values as Python
 types by default whenever possible. Some values were already returned as Python
 types before version 3.0; version 3.0 made this behavior more consistent.
 
@@ -131,6 +131,28 @@ types before version 3.0; version 3.0 made this behavior more consistent.
    * - ``VARCHAR``
      - ``str``
      - ``str``
+
+Custom Result Value Mappers
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The default ``fetch_mapper`` is
+:func:`pyexasol.data_types.convert_websocket_to_python`. It converts values to
+Python types according to the result column's WebSocket metadata.
+
+Applications can provide a custom mapper through the ``fetch_mapper`` connection
+option. The mapper receives two positional arguments: the raw scalar value and
+the column's WebSocket ``dataType`` metadata. See the `WebSocket API data type
+definition <https://github.com/exasol/websocket-api/blob/master/docs/WebsocketAPIV3.md#data-types-type-names-and-properties>`__. Use the metadata's ``type``
+value to determine how to convert the value.
+
+.. code-block:: python
+
+    from pyexasol.data_types import WebSocketDataType
+
+    def fetch_mapper(value, data_type):
+        if data_type["type"] == WebSocketDataType.Decimal.value:
+            return float(value)
+        return value
 
 Session Date/Time Formats
 ^^^^^^^^^^^^^^^^^^^^^^^^^

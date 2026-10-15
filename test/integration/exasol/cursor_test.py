@@ -137,52 +137,54 @@ class TestRowCount:
 class TestFetchAll:
     @staticmethod
     @pytest.mark.dbapi_type_conversion
-    def test_fetches_all_rows(cursor, filled_table, rows):
+    def test_fetches_all_rows(cursor, filled_table, expected_rows):
         """Verify DBAPI fetching and Python conversion for every supported type."""
         cursor.execute(f"SELECT * FROM {filled_table};")
         result = cursor.fetchall()
 
-        assert result == rows
+        assert result == expected_rows
 
 
 class TestFetchMany:
     @staticmethod
     @pytest.mark.dbapi_type_conversion
-    def test_fetches_rows_in_batches(cursor, filled_table, rows):
+    def test_fetches_rows_in_batches(cursor, filled_table, expected_rows):
         size = 2
-        assert size < len(rows)
+        assert size < len(expected_rows)
         cursor.execute(f"SELECT * FROM {filled_table};")
 
-        assert cursor.fetchmany(size) == rows[:size]
-        assert cursor.fetchmany(size) == rows[size:]
+        assert cursor.fetchmany(size) == expected_rows[:size]
+        assert cursor.fetchmany(size) == expected_rows[size:]
         assert cursor.fetchmany(size) == ()
 
     @staticmethod
-    def test_fetches_rows_using_arraysize(cursor, filled_table, rows):
+    def test_fetches_rows_using_arraysize(cursor, filled_table, expected_rows):
         cursor.execute(f"SELECT * FROM {filled_table};")
 
-        for expected_row in rows:
+        for expected_row in expected_rows:
             assert cursor.fetchmany() == (expected_row,)
 
         assert cursor.fetchmany() == ()
 
     @staticmethod
-    def test_fetches_all_rows_when_size_exceeds_result(cursor, filled_table, rows):
+    def test_fetches_all_rows_when_size_exceeds_result(
+        cursor, filled_table, expected_rows
+    ):
         size = 4
-        assert size > len(rows)
+        assert size > len(expected_rows)
         cursor.execute(f"SELECT * FROM {filled_table};")
 
-        assert cursor.fetchmany(size) == rows
+        assert cursor.fetchmany(size) == expected_rows
         assert cursor.fetchmany(size) == ()
 
 
 class TestFetchOne:
     @staticmethod
     @pytest.mark.dbapi_type_conversion
-    def test_fetches_rows_one_at_a_time(cursor, filled_table, rows):
+    def test_fetches_rows_one_at_a_time(cursor, filled_table, expected_rows):
         cursor.execute(f"SELECT * FROM {filled_table};")
 
-        for expected_row in rows:
+        for expected_row in expected_rows:
             assert cursor.fetchone() == expected_row
 
         assert cursor.fetchone() is None
