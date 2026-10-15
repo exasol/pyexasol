@@ -4,7 +4,32 @@
 
 In this major release, the following changes were made:
 
-* This release adds the Exasol telemetry tracking -- anonymized usage tracking of the PyExasol library.
+* The Exasol telemetry tracking -- anonymized usage tracking of the PyExasol library --
+  was added.
+* To align more closely with PEP 249, the WebSocket DBAPI now returns values as
+  Python types by default whenever possible. Some values were already returned
+  as Python types before version 3.0; version 3.0 made this behavior more
+  consistent:
+
+  | Exasol type                        | Version < 3.0     | Version >= 3.0        |
+  |------------------------------------|-------------------|-----------------------|
+  | ``BOOLEAN``                        | ``bool``          | ``bool``              |
+  | ``CHAR``                           | ``str``           | ``str``               |
+  | ``DATE``                           | ``datetime.date`` | ``datetime.date``     |
+  | ``DECIMAL(p, 0)``                  | ``str``           | ``int``               |
+  | ``DECIMAL(p, s)`` where ``s > 0``  | ``str``           | ``decimal.Decimal``   |
+  | ``DOUBLE``                         | ``float``         | ``float``             |
+  | ``GEOMETRY``                       | ``str``           | ``str``               |
+  | ``HASHTYPE``                       | ``str``           | ``str``               |
+  | ``INTERVAL DAY TO SECOND``         | ``str``           | ``ExaTimeDelta``      |
+  | ``INTERVAL YEAR TO MONTH``         | ``str``           | ``str``               |
+  | ``TIMESTAMP``                      | ``str``           | ``datetime.datetime`` |
+  | ``TIMESTAMP WITH LOCAL TIME ZONE`` | ``str``           | ``datetime.datetime`` |
+  | ``VARCHAR``                        | ``str``           | ``str``               |
+
+    * Nanosecond precision in ``TIMESTAMP`` values is truncated to Python
+      microsecond precision.
+    * ``NULL`` values continue to be returned as ``None`` for all types.
 * WebSocket DBAPI executions now validate the ``NLS_DATE_FORMAT`` and
   ``NLS_TIMESTAMP_FORMAT`` EXA_PARAMETERS against the ISO-compatible formats
   supported by PyExasol, reporting all invalid parameters together with
@@ -27,6 +52,7 @@ In this major release, the following changes were made:
 
 * #116: Added conversion support for ``TIMESTAMP WITH LOCAL TIME ZONE`` values
   in ``convert_websocket_to_python``.
+* #375: Integrate telemetry
 
 ## Bugfixes
 
@@ -34,9 +60,12 @@ In this major release, the following changes were made:
 * #409: Restricted allowed formats for TIMESTAMP and DATE to ISO-formats
 * #415: Fixed a ``KeyError`` when accessing ``cursor.description`` for result
   sets containing ``HASHTYPE`` columns by adding ``HASHTYPE`` to ``TypeCode``
-* #419: Fixed exact negative-day intervals in ``ExaTimeDelta`` being formatted with a day count one too low
+* #419: Fixed exact negative-day intervals in ``ExaTimeDelta`` being formatted with a
+  day count one too low
 * #429: Fixed ``Cursor.executemany`` silently accepting rows with more parameters
   than the prepared statement columns
+* #436: Fixed WebSocket DBAPI result conversion by setting the default
+  ``fetch_mapper`` to ``convert_websocket_to_python``
 
 ## Refactorings
 
@@ -47,14 +76,11 @@ In this major release, the following changes were made:
   [deprecated in July 2024](https://github.com/exasol/pyexasol/commit/8e3b361)
 * #417: Moved DECIMAL, DATE, and TIMESTAMP conversion helpers into
   ``pyexasol.data_types.to_python`` and improved unit test coverage
-* #238: Moved DSN parsing and connection tests from integration tests to unit tests, so they no longer require a running Docker database
+* #238: Moved DSN parsing and connection tests from integration tests to unit tests, so
+  they no longer require a running Docker database
 * #419: Centralized WebSocket metadata types and moved mapper implementations
   into ``pyexasol.data_types``.
 * #429: Centralized data-type test cases across unit and integration tests and
   renamed ``exasol_mapper`` to ``convert_websocket_to_python``
 * #434: Refactored data-type test cases to share SQL templates and expected
   values across fetch-mapper and cursor integration tests
-
-## Features
-
-* #375: Integrate telemetry
