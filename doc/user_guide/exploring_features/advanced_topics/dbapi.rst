@@ -40,7 +40,7 @@ DBAPI2-compatible driver. For further details, please refer to the
 Rationale
 ---------
 
-PEP-249 was originally created for general purpose OLTP row store databases running on a
+PEP 249 was originally created for general purpose OLTP row store databases running on a
 single server: SQLite, MySQL, PostgreSQL, MSSQL, Oracle, etc.
 
 It does not work very well for OLAP columnar databases (like Exasol) running on multiple
@@ -74,12 +74,97 @@ Usage Notes
 
 See the :ref:`Using DB-API 2.0 <using_dbapi2_example>` example for a longer usage example.
 
+Result Value Types
+^^^^^^^^^^^^^^^^^^
+
+To align more closely with PEP 249, the WebSocket DBAPI returns values as Python
+types by default whenever possible. Some values were already returned as Python
+types before version 3.0; version 3.0 made this behavior more consistent.
+
+.. note::
+    * ``NULL`` values are returned as ``None`` for all types.
+    * Nanosecond precision in ``TIMESTAMP`` values is truncated to Python's
+      microsecond precision.
+
+.. list-table:: WebSocket DBAPI result value types
+   :header-rows: 1
+
+   * - Exasol type
+     - Version < 3.0
+     - Version >= 3.0
+   * - ``BOOLEAN``
+     - ``bool``
+     - ``bool``
+   * - ``CHAR``
+     - ``str``
+     - ``str``
+   * - ``DATE``
+     - ``datetime.date``
+     - ``datetime.date``
+   * - ``DECIMAL(p, 0)``
+     - ``int``
+     - ``int``
+   * - ``DECIMAL(p, s)`` where ``s > 0``
+     - ``str``
+     - ``decimal.Decimal``
+   * - ``DOUBLE``
+     - ``float``
+     - ``float``
+   * - ``GEOMETRY``
+     - ``str``
+     - ``str``
+   * - ``HASHTYPE``
+     - ``str``
+     - ``str``
+   * - ``INTERVAL DAY TO SECOND``
+     - ``str``
+     - ``ExaTimeDelta``
+   * - ``INTERVAL YEAR TO MONTH``
+     - ``str``
+     - ``str``
+   * - ``TIMESTAMP``
+     - ``str``
+     - ``datetime.datetime``
+   * - ``TIMESTAMP WITH LOCAL TIME ZONE``
+     - ``str``
+     - ``datetime.datetime``
+   * - ``VARCHAR``
+     - ``str``
+     - ``str``
+
+Custom Result Value Mappers
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The default ``fetch_mapper`` is
+:func:`pyexasol.data_types.convert_websocket_to_python`. It converts values to
+Python types according to the result column's WebSocket metadata.
+
+Applications can provide a custom mapper through the ``fetch_mapper`` connection
+option. The mapper receives two positional arguments: the raw scalar value and
+the column's WebSocket ``dataType`` metadata. See the `WebSocket API data type
+definition <https://github.com/exasol/websocket-api/blob/master/docs/WebsocketAPIV3.md#data-types-type-names-and-properties>`__. Use the metadata's ``type``
+value to determine how to convert the value.
+
+.. code-block:: python
+
+    from pyexasol.data_types import WebSocketDataType
+
+    def fetch_mapper(value, data_type):
+        if data_type["type"] == WebSocketDataType.Decimal.value:
+            return float(value)
+        return value
+
+.. note::
+    When using a custom ``fetch_mapper``, the application is responsible for
+    supporting the session date/time formats required by that mapper. The DBAPI
+    only validates the session formats when the default mapper is active.
+
 Session Date/Time Formats
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Before executing a user statement, the WebSocket DBAPI checks the active session
 values for ``NLS_DATE_FORMAT`` and ``NLS_TIMESTAMP_FORMAT`` in
-``EXA_PARAMETERS``. The DBAPI
+``EXA_PARAMETERS`` when the default ``fetch_mapper`` is active. The DBAPI
 currently supports only the exact formats listed below. Format-model matching is
 case-sensitive.
 

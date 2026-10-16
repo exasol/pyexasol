@@ -7,6 +7,7 @@ This module provides `PEP-249`_ DBAPI compliant connection implementation.
 
 import re
 import ssl
+from collections.abc import Callable
 from functools import wraps
 
 import pyexasol
@@ -15,6 +16,7 @@ from exasol.driver.websocket._errors import (
     InterfaceError,
     translate_exception,
 )
+from pyexasol.data_types import convert_websocket_to_python
 from pyexasol.data_types.websocket_to_python import (
     SUPPORTED_DATE_FORMATS,
     SUPPORTED_TIMESTAMP_FORMATS,
@@ -112,6 +114,7 @@ class Connection:
         certificate_validation: bool = True,
         client_name: str = "EXASOL:DBAPI2:WS",
         client_version: str = "unknown",
+        fetch_mapper: Callable = convert_websocket_to_python,
     ):
         """
         Create a Connection object.
@@ -142,7 +145,7 @@ class Connection:
             "compression": False,
             "encryption": tls,
             "fetch_dict": False,
-            "fetch_mapper": None,
+            "fetch_mapper": fetch_mapper,
             "fetch_size_bytes": 5 * 1024 * 1024,
             "lower_ident": False,
             "quote_ident": False,
@@ -187,8 +190,15 @@ class Connection:
         Operations containing ``ALTER SESSION`` are ignored so that an
         application can change or restore session settings while bypassing the validation.
         The following operation will validate the new date/time formats.
+
+        Custom fetch mappers are responsible for handling the session date/time
+        formats they support, so validation is only performed for the default
+        mapper.
         """
-        if _is_alter_session(operation):
+        if (
+            _is_alter_session(operation)
+            or self._options["fetch_mapper"] is not convert_websocket_to_python
+        ):
             return
 
         session_datetime_format_query = """

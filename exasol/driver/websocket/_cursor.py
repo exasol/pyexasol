@@ -94,39 +94,6 @@ def _identity(value):
     return value
 
 
-def _pyexasol2dbapi(value, metadata):
-    members = (
-        "name",
-        "type_code",
-        "display_size",
-        "internal_size",
-        "precision",
-        "scale",
-        "null_ok",
-    )
-    metadata = MetaData(**{k: v for k, v in zip(members, metadata)})
-
-    def to_date(v):
-        if not isinstance(v, str):
-            return v
-        return datetime.date.fromisoformat(v)
-
-    def to_float(v):
-        if not isinstance(v, str):
-            return v
-        return float(v)
-
-    converters = defaultdict(
-        lambda: _identity,
-        {
-            WebSocketDataType.Date: to_date,
-            WebSocketDataType.Double: to_float,
-        },
-    )
-    converter = converters[metadata.type_code]
-    return converter(value)
-
-
 def _dbapi2pyexasol(value):
     converter = _DBAPI_TO_PYEXASOL_CONVERTERS.get(type(value), _identity)
     return converter(value)
@@ -333,11 +300,7 @@ class Cursor:
     def _convert_row(self, row):
         if row is None:
             return row
-
-        return tuple(
-            _pyexasol2dbapi(value, metadata)
-            for value, metadata in zip(row, self.description)
-        )
+        return tuple(row)
 
     @_requires_result
     @_is_not_closed
