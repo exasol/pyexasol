@@ -10,7 +10,7 @@ from pyexasol.data_types import ExaTimeDelta
 
 
 class DataTypeRow(NamedTuple):
-    """Input and fetched values for one row of the all-types test table."""
+    """Values for one row, used as input or expected fetched values."""
 
     decimal_integer: decimal.Decimal | int | str
     decimal_fraction: decimal.Decimal | float | str
