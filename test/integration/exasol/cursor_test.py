@@ -87,14 +87,14 @@ class TestExecuteMany:
     @pytest.mark.dbapi_type_conversion
     @pytest.mark.parametrize("parameter_count", (12, 14))
     def test_rejects_rows_with_mismatched_parameter_and_column_shape(
-        empty_table, rows, cursor, parameter_count
+        empty_table, input_rows, cursor, parameter_count
     ):
         statement = (
             f"INSERT INTO {empty_table} VALUES "
             "(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);"
         )
-        invalid_row = rows[0][:parameter_count]
-        if parameter_count > len(rows[0]):
+        invalid_row = input_rows[0][:parameter_count]
+        if parameter_count > len(input_rows[0]):
             invalid_row += (None,)
 
         with pytest.raises(
@@ -108,25 +108,25 @@ class TestExecuteMany:
 
     @staticmethod
     @pytest.mark.dbapi_type_conversion
-    def test_inserts_multiple_rows(empty_table, rows, cursor):
+    def test_inserts_multiple_rows(empty_table, input_rows, cursor):
         cursor.execute(f"SELECT COUNT(*) FROM {empty_table};")
         assert cursor.fetchone()[0] == 0
 
         cursor.executemany(
             f"INSERT INTO {empty_table} VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);",
-            rows,
+            input_rows,
         )
 
         cursor.execute(f"SELECT COUNT(*) FROM {empty_table};")
-        assert cursor.fetchone()[0] == len(rows)
+        assert cursor.fetchone()[0] == len(input_rows)
 
     @staticmethod
     @pytest.mark.dbapi_type_conversion
-    def test_execute_with_parameters_inserts_row(empty_table, rows, cursor):
+    def test_execute_with_parameters_inserts_row(empty_table, input_rows, cursor):
         """Verify execute(parameters) adapts and inserts one all-types fixture row."""
         cursor.execute(
             f"INSERT INTO {empty_table} VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);",
-            rows[0],
+            input_rows[0],
         )
 
         cursor.execute(f"SELECT COUNT(*) FROM {empty_table};")
@@ -155,11 +155,11 @@ class TestRowCount:
         assert cursor.rowcount == expected
 
     @staticmethod
-    def test_after_fetchall(cursor, filled_table, rows):
+    def test_after_fetchall(cursor, filled_table, input_rows):
         cursor.execute(f"SELECT decimal_integer FROM {filled_table};")
         cursor.fetchall()
 
-        assert cursor.rowcount == len(rows)
+        assert cursor.rowcount == len(input_rows)
 
     @staticmethod
     def test_before_execute(cursor):
@@ -169,55 +169,55 @@ class TestRowCount:
 class TestFetchAll:
     @staticmethod
     @pytest.mark.dbapi_type_conversion
-    def test_fetches_all_rows(cursor, filled_table, expected_rows):
+    def test_fetches_all_rows(cursor, filled_table, fetched_rows):
         """Verify DBAPI fetching and Python conversion for every supported type."""
         cursor.execute(f"SELECT * FROM {filled_table};")
         result = cursor.fetchall()
 
-        assert result == expected_rows
+        assert result == fetched_rows
 
 
 class TestFetchMany:
     @staticmethod
     @pytest.mark.dbapi_type_conversion
-    def test_fetches_rows_in_batches(cursor, filled_table, expected_rows):
+    def test_fetches_rows_in_batches(cursor, filled_table, fetched_rows):
         size = 2
-        assert size < len(expected_rows)
+        assert size < len(fetched_rows)
         cursor.execute(f"SELECT * FROM {filled_table};")
 
-        assert cursor.fetchmany(size) == expected_rows[:size]
-        assert cursor.fetchmany(size) == expected_rows[size:]
+        assert cursor.fetchmany(size) == fetched_rows[:size]
+        assert cursor.fetchmany(size) == fetched_rows[size:]
         assert cursor.fetchmany(size) == ()
 
     @staticmethod
-    def test_fetches_rows_using_arraysize(cursor, filled_table, expected_rows):
+    def test_fetches_rows_using_arraysize(cursor, filled_table, fetched_rows):
         cursor.execute(f"SELECT * FROM {filled_table};")
 
-        for expected_row in expected_rows:
-            assert cursor.fetchmany() == (expected_row,)
+        for fetched_row in fetched_rows:
+            assert cursor.fetchmany() == (fetched_row,)
 
         assert cursor.fetchmany() == ()
 
     @staticmethod
     def test_fetches_all_rows_when_size_exceeds_result(
-        cursor, filled_table, expected_rows
+        cursor, filled_table, fetched_rows
     ):
         size = 4
-        assert size > len(expected_rows)
+        assert size > len(fetched_rows)
         cursor.execute(f"SELECT * FROM {filled_table};")
 
-        assert cursor.fetchmany(size) == expected_rows
+        assert cursor.fetchmany(size) == fetched_rows
         assert cursor.fetchmany(size) == ()
 
 
 class TestFetchOne:
     @staticmethod
     @pytest.mark.dbapi_type_conversion
-    def test_fetches_rows_one_at_a_time(cursor, filled_table, expected_rows):
+    def test_fetches_rows_one_at_a_time(cursor, filled_table, fetched_rows):
         cursor.execute(f"SELECT * FROM {filled_table};")
 
-        for expected_row in expected_rows:
-            assert cursor.fetchone() == expected_row
+        for fetched_row in fetched_rows:
+            assert cursor.fetchone() == fetched_row
 
         assert cursor.fetchone() is None
 
@@ -228,7 +228,7 @@ class TestDescription:
         assert cursor.description is None
 
     @staticmethod
-    def test_table_description(cursor, filled_table, rows):
+    def test_table_description(cursor, filled_table, input_rows):
         cursor.execute(f"SELECT * FROM {filled_table};")
         cursor.fetchone()
 
