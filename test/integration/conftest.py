@@ -181,7 +181,7 @@ def prepare_database(dsn_resolved, user, password, container_name):
 
 
 @pytest.fixture
-def edge_case_ddl():
+def edge_case_ddl(connection):
     table_name = "edge_case"
     ddl = cleandoc(f"""CREATE OR REPLACE TABLE {table_name}
         (
@@ -195,7 +195,14 @@ def edge_case_ddl():
             var2000000      VARCHAR(2000000)
         )
         """)
-    yield table_name, ddl
+    connection.execute(ddl)
+    connection.commit()
+
+    yield table_name
+
+    delete_stmt = f"DROP TABLE IF EXISTS {table_name};"
+    connection.execute(delete_stmt)
+    connection.commit()
 
 
 @pytest.fixture

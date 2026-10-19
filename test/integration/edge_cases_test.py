@@ -2,20 +2,7 @@ import pytest
 
 
 @pytest.fixture
-def empty_table(connection, edge_case_ddl):
-    table_name, ddl = edge_case_ddl
-    connection.execute(ddl)
-    connection.commit()
-
-    yield table_name
-
-    delete_stmt = f"DROP TABLE IF EXISTS {table_name};"
-    connection.execute(delete_stmt)
-    connection.commit()
-
-
-@pytest.fixture
-def populate_edge_case_table(connection, empty_table, edge_cases):
+def populate_edge_case_table(connection, edge_case_ddl, edge_cases):
     table = "edge_case"
     stmt = (
         f"INSERT INTO {table} VALUES ({{DEC36_0!d}}, {{DEC36_36!d}}, {{DBL!f}}, "
@@ -30,16 +17,16 @@ def populate_edge_case_table(connection, empty_table, edge_cases):
 
 
 @pytest.mark.edge_cases
-def test_insert(connection, empty_table, edge_cases):
+def test_insert(connection, edge_case_ddl, edge_cases):
     stmt = (
-        f"INSERT INTO {empty_table} VALUES ({{DEC36_0!d}}, {{DEC36_36!d}}, {{DBL!f}}, "
+        f"INSERT INTO {edge_case_ddl} VALUES ({{DEC36_0!d}}, {{DEC36_36!d}}, {{DBL!f}}, "
         "{BL}, {DT}, {TS}, {VAR100}, {VAR2000000})"
     )
     for case in edge_cases.values():
         connection.execute(stmt, dict(case))
 
     expected = len(edge_cases)
-    actual = connection.execute(f"SELECT COUNT(*) FROM {empty_table};").fetchval()
+    actual = connection.execute(f"SELECT COUNT(*) FROM {edge_case_ddl};").fetchval()
 
     assert actual == expected
 
