@@ -40,7 +40,7 @@ def disable_snapshots(connection):
 @pytest.fixture
 def query():
     # fmt: off
-    yield cleandoc(
+    return cleandoc(
         """
         SELECT u.user_id, sum(p.gross_amt) AS total_gross_amt
         FROM users u
