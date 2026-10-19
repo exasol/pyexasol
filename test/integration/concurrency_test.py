@@ -36,8 +36,9 @@ def test_concurrency_error(connection):
     q1 = QueryThread(connection, timeout=query_time_in_seconds)
     q2 = QueryThread(connection, timeout=query_time_in_seconds)
 
+    q1.start()
+    q2.start()
+    q1.join()
+
     with pytest.raises(ExaConcurrencyError):
-        q1.start()
-        q2.start()
-        q1.join()
         q2.join()
