@@ -12,7 +12,7 @@ def populate_edge_case_table(connection, edge_case_ddl, edge_cases):
 
     connection.commit()
 
-    yield edge_case_ddl
+    return edge_case_ddl
 
 
 @pytest.mark.edge_cases
