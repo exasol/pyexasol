@@ -6,11 +6,9 @@ import pytest
     "connection", ["connection", "connection_with_compression"], indirect=True
 )
 @pytest.mark.polars
-def test_export_table_to_polars(connection, table):
-    table_name, values = table
-
-    expected = pl.from_records(values)
-    actual = connection.export_to_polars(table_name)
+def test_export_table_to_polars(connection, fill_table, data_dict):
+    expected = pl.from_records(data_dict)
+    actual = connection.export_to_polars(fill_table)
 
     assert actual.equals(expected)
 
@@ -19,21 +17,14 @@ def test_export_table_to_polars(connection, table):
     "connection", ["connection", "connection_with_compression"], indirect=True
 )
 @pytest.mark.polars
-def test_export_sql_result_to_polars(connection):
+def test_export_sql_result_to_polars(connection, fill_table, all_data):
 
-    query = "SELECT USER_NAME, USER_ID FROM USERS ORDER BY USER_ID ASC LIMIT 5;"
-
-    expected = pl.from_records(
-        data=[
-            ("Jessica Mccoy", 0),
-            ("Beth James", 1),
-            ("Mrs. Teresa Ryan", 2),
-            ("Tommy Henderson", 3),
-            ("Jessica Christian", 4),
-        ],
-        schema=["USER_NAME", "USER_ID"],
-        orient="row",
+    query = (
+        f"SELECT {', '.join(all_data.columns)} FROM {fill_table} "
+        "ORDER BY FIRST_NAME ASC LIMIT 5;"
     )
+
+    expected = pl.from_records(all_data.list_dict[:5], orient="row")
     actual = connection.export_to_polars(query)
 
     assert actual.equals(expected)
@@ -43,18 +34,23 @@ def test_export_sql_result_to_polars(connection):
     "connection", ["connection", "connection_with_compression"], indirect=True
 )
 @pytest.mark.polars
-def test_import_from_polars(connection, empty_table, names):
+def test_import_from_polars(connection, empty_table, data_dict, all_data):
     table_name = empty_table
 
-    df = pl.from_records(names)
-    connection.import_from_polars(df, table_name)
+    df = pl.from_records(data_dict)
+    connection.import_from_polars(
+        df,
+        table_name,
+        callback_params={"datetime_format": "%Y-%m-%d %H:%M:%S.%f"},
+    )
     connection.commit()
 
     result = connection.execute(
-        f"SELECT FIRST_NAME, LAST_NAME FROM {table_name} ORDER BY FIRST_NAME ASC;"
+        f"SELECT {', '.join(all_data.columns)} FROM {table_name} "
+        "ORDER BY FIRST_NAME ASC;"
     )
     actual = result.fetchall()
-    expected = df.sort(pl.nth(0)).rows()
+    expected = all_data.list_tuple()
 
     assert actual == expected
 
@@ -63,17 +59,22 @@ def test_import_from_polars(connection, empty_table, names):
     "connection", ["connection", "connection_with_compression"], indirect=True
 )
 @pytest.mark.polars
-def test_import_from_polars_lazy(connection, empty_table, names):
+def test_import_from_polars_lazy(connection, empty_table, data_dict, all_data):
     table_name = empty_table
 
-    lf = pl.from_records(names).lazy()
-    connection.import_from_polars(lf, table_name)
+    lf = pl.from_records(data_dict).lazy()
+    connection.import_from_polars(
+        lf,
+        table_name,
+        callback_params={"datetime_format": "%Y-%m-%d %H:%M:%S.%f"},
+    )
     connection.commit()
 
     result = connection.execute(
-        f"SELECT FIRST_NAME, LAST_NAME FROM {table_name} ORDER BY FIRST_NAME ASC;"
+        f"SELECT {', '.join(all_data.columns)} FROM {table_name} "
+        "ORDER BY FIRST_NAME ASC;"
     )
     actual = result.fetchall()
-    expected = lf.sort(pl.nth(0)).collect().rows()
+    expected = all_data.list_tuple()
 
     assert actual == expected

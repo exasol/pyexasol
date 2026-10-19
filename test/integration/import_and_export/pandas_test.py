@@ -1,5 +1,3 @@
-from operator import itemgetter
-
 import pandas as pd
 import pytest
 
@@ -8,31 +6,33 @@ import pytest
     "connection", ["connection", "connection_with_compression"], indirect=True
 )
 @pytest.mark.pandas
-def test_export_table_to_pandas(connection, table):
-    table_name, values = table
+def test_export_table_to_pandas(connection, fill_table, data_dict):
+    expected = pd.DataFrame.from_records(data_dict).assign(
+        LAST_VISIT_TS=lambda frame: frame["LAST_VISIT_TS"].dt.strftime(
+            "%Y-%m-%d %H:%M:%S.%f"
+        ),
+        IS_GRADUATING=lambda frame: frame["IS_GRADUATING"].astype(int),
+    )
+    actual = connection.export_to_pandas(fill_table)
 
-    expected = pd.DataFrame.from_records(values)
-    actual = connection.export_to_pandas(table_name)
-
-    assert actual.equals(expected)
+    pd.testing.assert_frame_equal(actual, expected)
 
 
 @pytest.mark.parametrize(
     "connection", ["connection", "connection_with_compression"], indirect=True
 )
 @pytest.mark.pandas
-def test_export_sql_result_to_pandas(connection):
-    query = "SELECT USER_NAME, USER_ID FROM USERS ORDER BY USER_ID ASC LIMIT 5;"
+def test_export_sql_result_to_pandas(connection, fill_table, all_data):
+    query = (
+        f"SELECT {', '.join(all_data.columns)} FROM {fill_table} "
+        "ORDER BY FIRST_NAME ASC LIMIT 5;"
+    )
 
-    expected = pd.DataFrame.from_records(
-        data=[
-            ("Jessica Mccoy", 0),
-            ("Beth James", 1),
-            ("Mrs. Teresa Ryan", 2),
-            ("Tommy Henderson", 3),
-            ("Jessica Christian", 4),
-        ],
-        columns=["USER_NAME", "USER_ID"],
+    expected = pd.DataFrame.from_records(all_data.list_dict[:5]).assign(
+        LAST_VISIT_TS=lambda frame: frame["LAST_VISIT_TS"].dt.strftime(
+            "%Y-%m-%d %H:%M:%S.%f"
+        ),
+        IS_GRADUATING=lambda frame: frame["IS_GRADUATING"].astype(int),
     )
     actual = connection.export_to_pandas(query)
 
@@ -43,20 +43,22 @@ def test_export_sql_result_to_pandas(connection):
     "connection", ["connection", "connection_with_compression"], indirect=True
 )
 @pytest.mark.pandas
-def test_import_from_pandas(connection, empty_table, names):
+def test_import_from_pandas(connection, empty_table, data_dict, all_data):
     table_name = empty_table
 
-    df = pd.DataFrame.from_records(names)
-    connection.import_from_pandas(df, table_name)
+    df = pd.DataFrame.from_records(data_dict)
+    connection.import_from_pandas(
+        df,
+        table_name,
+        callback_params={"date_format": "%Y-%m-%d %H:%M:%S.%f"},
+    )
     connection.commit()
 
     result = connection.execute(
-        f"SELECT FIRST_NAME, LAST_NAME FROM {table_name} ORDER BY FIRST_NAME ASC;"
+        f"SELECT {', '.join(all_data.columns)} FROM {table_name} "
+        "ORDER BY FIRST_NAME ASC;"
     )
     actual = result.fetchall()
-    expected = sorted(
-        [(first_name, last_name) for first_name, last_name in df.values],
-        key=itemgetter(0),
-    )
+    expected = all_data.list_tuple()
 
     assert actual == expected
