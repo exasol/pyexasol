@@ -33,7 +33,7 @@ def fingerprint(request, dsn):
     return request.param
 
 
-@pytest.fixture()
+@pytest.fixture
 def dsn_builder(certificate_type, default_ipaddr, default_port, fingerprint):
 
     def build_dsn(custom_fingerprint: str | None = None):
