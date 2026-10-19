@@ -1,4 +1,3 @@
-from inspect import cleandoc
 from test.integration.import_and_export.helper import select_result
 
 import pytest
@@ -8,16 +7,6 @@ import pytest
 def connection(connection_factory):
     with connection_factory(compression=True) as con:
         yield con
-
-
-@pytest.fixture
-def export_file(tmp_path):
-    yield tmp_path / "export"
-
-
-@pytest.fixture
-def table(connection):
-    yield "USERS"
 
 
 @pytest.mark.etl
@@ -41,65 +30,45 @@ class TestImportFromFile:
         assert select_result(connection) == all_data.list_tuple()
 
 
-@pytest.fixture
-def import_table(connection, table):
-    name = f"{table}_IMPORT"
-    ddl = cleandoc(f"""
-    CREATE TABLE IF NOT EXISTS {name}
-    (
-        user_id         DECIMAL(18,0),
-        user_name       VARCHAR(255),
-        register_dt     DATE,
-        last_visit_ts   TIMESTAMP,
-        is_female       BOOLEAN,
-        user_rating     DECIMAL(10,5),
-        user_score      DOUBLE,
-        status          VARCHAR(50)
-    );
-    """)
-    connection.execute(ddl)
-    connection.commit()
-
-    yield name
-
-    ddl = f"DROP TABLE IF EXISTS {name};"
-    connection.execute(ddl)
-    connection.commit()
-
-
 @pytest.mark.etl
 @pytest.mark.parametrize(
     "params",
     [
-        {},
-        {"format": "gz"},
-        {"encoding": "WINDOWS-1251"},
-        {"columns": ["register_dt", "user_id", "status", "user_name"]},
-        {
-            "csv_cols": [
-                "1",
-                "2",
-                "3 FORMAT='DD-MM-YYYY'",
-                "4..6",
-                "7 FORMAT='999.99999'",
-                "8",
-            ]
-        },
+        pytest.param({}, id="default"),
+        pytest.param({"format": "gz"}, id="gzip-compression"),
+        pytest.param({"encoding": "WINDOWS-1251"}, id="windows-1251-encoding"),
+        pytest.param(
+            {"columns": ["REGISTER_DT", "FIRST_NAME", "SCORE", "LAST_NAME"]},
+            id="selected-columns",
+        ),
+        pytest.param(
+            {
+                "csv_cols": [
+                    "1",
+                    "2",
+                    "3 FORMAT='DD-MM-YYYY'",
+                    "4..6",
+                    "7 FORMAT='999.99999'",
+                ]
+            },
+            id="custom-csv-columns",
+        ),
     ],
 )
 def test_export_import_round_trip_to_and_from_file(
-    connection, export_file, table, import_table, params
+    connection, fill_table, empty_table, tmp_path, all_data, params
 ):
-    connection.export_to_file(export_file, table, export_params=params)
-    connection.import_from_file(export_file, import_table, import_params=params)
+    export_file = tmp_path / "export"
+    connection.export_to_file(export_file, fill_table, export_params=params)
+    connection.import_from_file(export_file, empty_table, import_params=params)
 
-    query = cleandoc(f"""
-        SELECT * FROM {table}
-        WHERE USER_ID NOT IN (SELECT USER_ID from {import_table});
-        """)
+    columns = params.get("columns", all_data.columns)
+    query = (
+        f"SELECT {', '.join(columns)} FROM {fill_table} "
+        f"EXCEPT SELECT {', '.join(columns)} FROM {empty_table};"
+    )
     result = connection.execute(query)
 
-    expected = []
     actual = result.fetchall()
 
-    assert actual == expected
+    assert actual == []
