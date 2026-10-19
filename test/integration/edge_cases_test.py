@@ -3,9 +3,8 @@ import pytest
 
 @pytest.fixture
 def populate_edge_case_table(connection, edge_case_ddl, edge_cases):
-    table = "edge_case"
     stmt = (
-        f"INSERT INTO {table} VALUES ({{DEC36_0!d}}, {{DEC36_36!d}}, {{DBL!f}}, "
+        f"INSERT INTO {edge_case_ddl} VALUES ({{DEC36_0!d}}, {{DEC36_36!d}}, {{DBL!f}}, "
         "{BL}, {DT}, {TS}, {VAR100}, {VAR2000000})"
     )
     for case in edge_cases.values():
@@ -13,7 +12,7 @@ def populate_edge_case_table(connection, edge_case_ddl, edge_cases):
 
     connection.commit()
 
-    yield table
+    yield edge_case_ddl
 
 
 @pytest.mark.edge_cases
