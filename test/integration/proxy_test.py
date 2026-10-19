@@ -59,12 +59,11 @@ def _pproxy_command(proxy_port, proxy_auth=None):
     if proxy_auth is not None:
         proxy_url = f"{proxy_url}#{proxy_auth}"
 
+    command = ["pproxy", "-l", proxy_url]
     if sys.version_info >= (3, 14):
         # Python 3.14 no longer creates a default asyncio event loop implicitly.
         # pproxy still expects that legacy behavior, so bootstrap it explicitly here.
         command = [sys.executable, "-c", PPROXY_COMPAT_BOOTSTRAP, "-l", proxy_url]
-    else:
-        command = ["pproxy", "-l", proxy_url]
 
     if platform.system() == "Linux":
         command.append("--reuse")
@@ -84,17 +83,10 @@ def proxy(proxy_port):
 
 
 @pytest.fixture
-def proxy_user():
-    yield "johndoe"
+def proxy_with_auth(proxy_port):
+    proxy_user = "johndoe"
+    proxy_password = "JohndoesPassword"
 
-
-@pytest.fixture
-def proxy_password():
-    yield "JohndoesPassword"
-
-
-@pytest.fixture
-def proxy_with_auth(proxy_port, proxy_user, proxy_password):
     command = _pproxy_command(proxy_port, f"{proxy_user}:{proxy_password}")
     pproxy = _start_proxy(command, proxy_port)
 
@@ -108,9 +100,8 @@ def proxy_with_auth(proxy_port, proxy_user, proxy_password):
 def test_connect_through_proxy(connection_factory, proxy):
     with connection_factory(http_proxy=proxy) as con:
         result = con.execute("SELECT 1;")
-        expected = 1
         actual = result.fetchval()
-        assert expected == actual
+    assert actual == 1
 
 
 def test_connect_through_proxy_without_resolving_host_names(
@@ -127,15 +118,15 @@ def test_connect_through_proxy_without_resolving_host_names(
         resolve_hostnames=False,
     ) as con:
         result = con.execute("SELECT 1;")
-        expected = 1
         actual = result.fetchval()
-        assert expected == actual
+
+    assert actual == 1
 
 
 @pytest.mark.configuration
 def test_connect_through_proxy_with_authentication(connection_factory, proxy_with_auth):
     with connection_factory(http_proxy=proxy_with_auth) as con:
         result = con.execute("SELECT 1;")
-        expected = 1
         actual = result.fetchval()
-        assert expected == actual
+
+    assert actual == 1
