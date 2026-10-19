@@ -20,7 +20,7 @@ PPROXY_COMPAT_BOOTSTRAP = (
 
 @pytest.fixture
 def proxy_port():
-    yield 8562
+    return 8562
 
 
 def _start_proxy(command, proxy_port):
