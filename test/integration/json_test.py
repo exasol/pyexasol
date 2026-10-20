@@ -16,22 +16,9 @@ def multiple_connection_factory(connection_factory):
         c.close()
 
 
-@pytest.fixture
-def empty_table(connection, edge_case_ddl):
-    table_name, ddl = edge_case_ddl
-    connection.execute(ddl)
-    connection.commit()
-
-    yield table_name
-
-    delete_stmt = f"DROP TABLE IF EXISTS {table_name};"
-    connection.execute(delete_stmt)
-    connection.commit()
-
-
 @pytest.mark.json
 @pytest.mark.parametrize("json_lib", ["orjson", "ujson", "rapidjson"])
-def test_insert(empty_table, multiple_connection_factory, edge_cases, json_lib):
+def test_insert(edge_case_ddl, multiple_connection_factory, edge_cases, json_lib):
     connection = multiple_connection_factory(json_lib)
     insert_stmt = (
         "INSERT INTO edge_case VALUES"
@@ -41,14 +28,14 @@ def test_insert(empty_table, multiple_connection_factory, edge_cases, json_lib):
         connection.execute(insert_stmt, edge_case)
 
     expected = len(edge_cases)
-    actual = connection.execute(f"SELECT COUNT(*) FROM {empty_table};").fetchval()
+    actual = connection.execute(f"SELECT COUNT(*) FROM {edge_case_ddl};").fetchval()
 
     assert actual == expected
 
 
 @pytest.mark.json
 @pytest.mark.parametrize("json_lib", ["orjson", "ujson", "rapidjson"])
-def test_select(empty_table, multiple_connection_factory, edge_cases, json_lib):
+def test_select(edge_case_ddl, multiple_connection_factory, edge_cases, json_lib):
     connection = multiple_connection_factory(json_lib)
 
     insert_stmt = (
