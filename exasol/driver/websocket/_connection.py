@@ -5,7 +5,9 @@ This module provides `PEP-249`_ DBAPI compliant connection implementation.
 .. _PEP-249-connection: https://peps.python.org/pep-0249/#connection-objects
 """
 
+import re
 import ssl
+from collections.abc import Callable
 from functools import wraps
 
 import pyexasol
@@ -13,6 +15,11 @@ from exasol.driver.websocket._cursor import Cursor as DefaultCursor
 from exasol.driver.websocket._errors import (
     InterfaceError,
     translate_exception,
+)
+from pyexasol.data_types import convert_websocket_to_python
+from pyexasol.data_types.websocket_to_python import (
+    SUPPORTED_DATE_FORMATS,
+    SUPPORTED_TIMESTAMP_FORMATS,
 )
 
 
@@ -22,15 +29,71 @@ def _requires_connection(method):
 
     Raises:
         InterfaceError if the connection object has no active connection.
+        A DBAPI error translated from an ``ExaError`` raised by the method.
     """
 
     @wraps(method)
     def wrapper(self, *args, **kwargs):
         if not self._connection:
             raise InterfaceError("No active connection available")
-        return method(self, *args, **kwargs)
+        try:
+            return method(self, *args, **kwargs)
+        except pyexasol.exceptions.ExaError as ex:
+            raise translate_exception(ex) from ex
 
     return wrapper
+
+
+def _remove_leading_sql_comment(operation: str) -> str | None:
+    """Remove a leading SQL comment and surrounding whitespace from a SQL statement."""
+    operation = operation.lstrip()
+    if operation.startswith("/*"):
+        comment_end = operation.find("*/", 2)
+        if comment_end == -1:
+            return None
+        return operation[comment_end + 2 :].lstrip()
+    elif operation.startswith("--"):
+        line_end = re.search(r"\r\n|\r|\n", operation)
+        if line_end is None:
+            return None
+        return operation[line_end.end() :].lstrip()
+
+    return operation
+
+
+def _is_alter_session(operation) -> bool:
+    if not isinstance(operation, str):
+        return False
+
+    operation = _remove_leading_sql_comment(operation)
+    if operation is None:
+        return False
+
+    result = re.search(r"^ALTER\s+SESSION\b", operation, re.IGNORECASE)
+    return result is not None
+
+
+def _validate_session_datetime_formats(session_formats):
+    """Raise one interface error for all unsupported session formats."""
+    errors = []
+    for parameter_name, supported_formats in (
+        ("NLS_DATE_FORMAT", SUPPORTED_DATE_FORMATS),
+        ("NLS_TIMESTAMP_FORMAT", SUPPORTED_TIMESTAMP_FORMATS),
+    ):
+        actual_format = session_formats.get(parameter_name)
+        if actual_format in supported_formats:
+            continue
+
+        supported_values = ", ".join(repr(value) for value in supported_formats)
+        errors.append(
+            f"Unsupported {parameter_name} {actual_format!r}.\n"
+            f"- Supported formats: {supported_values}.\n"
+            f"- Fix with: ALTER SESSION SET {parameter_name} = "
+            "'<supported-format>';"
+        )
+
+    if errors:
+        raise InterfaceError("\n\n".join(errors))
 
 
 class Connection:
@@ -51,6 +114,7 @@ class Connection:
         certificate_validation: bool = True,
         client_name: str = "EXASOL:DBAPI2:WS",
         client_version: str = "unknown",
+        fetch_mapper: Callable = convert_websocket_to_python,
     ):
         """
         Create a Connection object.
@@ -81,7 +145,7 @@ class Connection:
             "compression": False,
             "encryption": tls,
             "fetch_dict": False,
-            "fetch_mapper": None,
+            "fetch_mapper": fetch_mapper,
             "fetch_size_bytes": 5 * 1024 * 1024,
             "lower_ident": False,
             "quote_ident": False,
@@ -119,6 +183,34 @@ class Connection:
         """Underlying connection used by this Connection"""
         return self._connection
 
+    @_requires_connection
+    def validate_session_datetime_formats(self, operation):
+        """Validate the active session date/time format models.
+
+        Operations containing ``ALTER SESSION`` are ignored so that an
+        application can change or restore session settings while bypassing the validation.
+        The following operation will validate the new date/time formats.
+
+        Custom fetch mappers are responsible for handling the session date/time
+        formats they support, so validation is only performed for the default
+        mapper.
+        """
+        if (
+            _is_alter_session(operation)
+            or self._options["fetch_mapper"] is not convert_websocket_to_python
+        ):
+            return
+
+        session_datetime_format_query = """
+        SELECT parameter_name, session_value
+        FROM EXA_PARAMETERS
+        WHERE parameter_name IN ('NLS_DATE_FORMAT', 'NLS_TIMESTAMP_FORMAT')
+        """
+        result = self._connection.execute(session_datetime_format_query)
+        session_formats = dict(result.fetchall())
+
+        _validate_session_datetime_formats(session_formats)
+
     def close(self):
         """See also :py:meth: `Connection.close`"""
         connection_to_close = self._connection
@@ -133,18 +225,12 @@ class Connection:
     @_requires_connection
     def commit(self):
         """See also :py:meth: `Connection.commit`"""
-        try:
-            self._connection.commit()
-        except pyexasol.exceptions.ExaError as ex:
-            raise translate_exception(ex) from ex
+        self._connection.commit()
 
     @_requires_connection
     def rollback(self):
         """See also :py:meth: `Connection.rollback`"""
-        try:
-            self._connection.rollback()
-        except pyexasol.exceptions.ExaError as ex:
-            raise translate_exception(ex) from ex
+        self._connection.rollback()
 
     @_requires_connection
     def cursor(self):

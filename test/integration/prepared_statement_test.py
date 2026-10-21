@@ -9,12 +9,9 @@ from pyexasol.exceptions import (
 
 
 @pytest.fixture
-def table_name():
-    yield "PREPARED_STMT_USERS"
+def seeded_table(connection):
+    table_name = "PREPARED_STMT_USERS"
 
-
-@pytest.fixture
-def seeded_table(connection, table_name):
     ddl = cleandoc(f"""
         CREATE TABLE IF NOT EXISTS {table_name}
         (

@@ -205,4 +205,4 @@ def filled_camel_case_table(connection, empty_camel_case_table):
     connection.execute(ddl)
     connection.commit()
 
-    yield table_name, column_name
+    return table_name, column_name

@@ -2,6 +2,10 @@
 
 ## Summary
 
+## Refactorings
+
+* #439: Resolved Sonar warnings for various tests
+
 ## Bugfixes
 
 * #353: Fixed documentation inconsistencies in type hints and docstrings

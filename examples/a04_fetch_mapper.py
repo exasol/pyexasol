@@ -17,6 +17,7 @@ import pprint
 
 import examples._config as config
 import pyexasol
+from pyexasol.data_types import convert_websocket_to_python
 
 printer = pprint.PrettyPrinter(indent=4, width=180)
 
@@ -26,7 +27,7 @@ C = pyexasol.connect(
     user=config.user,
     password=config.password,
     schema=config.schema,
-    fetch_mapper=pyexasol.exasol_mapper,
+    fetch_mapper=convert_websocket_to_python,
     websocket_sslopt=config.websocket_sslopt,
 )
 

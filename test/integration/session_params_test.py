@@ -7,12 +7,12 @@ import pyexasol
 
 @pytest.fixture
 def pyexasol_version():
-    yield version("pyexasol")
+    return version("pyexasol")
 
 
 @pytest.fixture
 def session_info_query():
-    yield "SELECT * FROM EXA_DBA_SESSIONS WHERE session_id=CURRENT_SESSION"
+    return "SELECT * FROM EXA_DBA_SESSIONS WHERE session_id=CURRENT_SESSION"
 
 
 @pytest.mark.configuration

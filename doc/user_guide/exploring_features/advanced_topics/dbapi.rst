@@ -1,7 +1,14 @@
-Compatibility with DB-API 2.0
-=============================
+Using DB-API 2.0
+================
 
-`PyExasol <https://github.com/exasol/pyexasol/blob/master/exasol/driver/websocket/dbapi2.py>`__ is similar to `PEP-249 DB-API 2.0 <https://peps.python.org/pep-0249/>`__ specification, but it does not strictly follow it. This page explains the reasons behind this decision and your alternative(s) if you need or want to use a DBAPI2 compatible driver.
+PyExasol provides a `PEP 249-compatible DB-API 2.0
+<https://peps.python.org/pep-0249/>`__ adapter in the ``exasol.driver.websocket.dbapi2``
+module. The adapter does not strictly follow the specification. This page
+introduces the adapter, explains the reasons for its intentional differences,
+and describes alternative drivers when they are a better fit for your application.
+
+The `SQLAlchemy-Exasol dialect <https://github.com/exasol/sqlalchemy-exasol>`__
+uses this adapter to connect SQLAlchemy applications to Exasol.
 
 Alternatives
 ------------
@@ -9,9 +16,52 @@ Alternatives
 Exasol WebSocket Driver
 ^^^^^^^^^^^^^^^^^^^^^^^
 
-The ``pyexasol`` package includes a DBAPI2 compatible driver facade, located in the ``exasol.driver`` package. However, using ``pyexasol`` directly will generally yield better performance when utilizing Exasol in an OLAP manner, which is likely the typical use case.
+The ``pyexasol`` package includes this DB-API 2.0 adapter in the
+``exasol.driver.websocket.dbapi2`` module. However, using ``pyexasol``
+directly will generally yield better performance when utilizing Exasol in an
+OLAP manner, which is likely the typical use case.
 
-That said, in specific scenarios, the DBAPI2 API can be advantageous or even necessary. This is particularly true when integrating with "DB-Agnostic" frameworks. In such cases, you can just import and use the DBAPI2 compliant facade as illustrated in the example below.
+In specific scenarios, the DB-API 2.0 interface can be advantageous or even
+necessary, particularly when integrating with database-agnostic frameworks.
+
+TurboODBC
+^^^^^^^^^
+
+`TurboODBC <https://github.com/blue-yonder/turbodbc>`__ offers an alternative
+ODBC-based, DBAPI2-compatible driver, which supports the Exasol database.
+
+Pyodbc
+^^^^^^
+
+`Pyodbc <https://github.com/mkleehammer/pyodbc>`__ provides an ODBC-based,
+DBAPI2-compatible driver. For further details, please refer to the
+`wiki <https://github.com/mkleehammer/pyodbc/wiki>`__.
+
+Rationale
+---------
+
+PEP 249 was originally created for general purpose OLTP row store databases running on a
+single server: SQLite, MySQL, PostgreSQL, MSSQL, Oracle, etc.
+
+It does not work very well for OLAP columnar databases (like Exasol) running on multiple
+servers because it was never designed for this purpose. Despite both OLTP DBMS and OLAP
+DBMS using SQL for communication, the foundation and usage patterns are completely
+different.
+
+When people use DB-API 2.0 drivers, they tend to skip manuals and automatically apply
+OLTP usage patterns without even realizing how much they lose in terms of performance
+and efficiency.
+
+A good example is `TurboODBC <https://github.com/blue-yonder/turbodbc>`__. Very few
+know that it is possible to fetch data as
+`NumPy arrays <https://turbodbc.readthedocs.io/en/latest/pages/advanced_usage.html#numpy-support>`__
+and as `Apache Arrow <https://turbodbc.readthedocs.io/en/latest/pages/advanced_usage.html#apache-arrow-support>`__.
+
+Minor intentional incompatibilities with DB-API 2.0 force users to look through the
+manual and to learn about :ref:`Best Practices` of getting the job done.
+
+Usage Notes
+-----------
 
 .. code-block:: python
 
@@ -22,28 +72,115 @@ That said, in specific scenarios, the DBAPI2 API can be advantageous or even nec
     with connection.cursor() as cursor:
         cursor.execute("SELECT 1;")
 
-TurboODBC
-^^^^^^^^^
+See the :ref:`Using DB-API 2.0 <using_dbapi2_example>` example for a longer usage example.
 
-`TurboODBC <https://github.com/blue-yonder/turbodbc>`__ offers an alternative ODBC-based, DBAPI2-compatible driver, which supports the Exasol database.
+Result Value Types
+^^^^^^^^^^^^^^^^^^
 
-Pyodbc
-^^^^^^
+To align more closely with PEP 249, the WebSocket DBAPI returns values as Python
+types by default whenever possible. Some values were already returned as Python
+types before version 3.0; version 3.0 made this behavior more consistent.
 
-`Pyodbc <https://github.com/mkleehammer/pyodbc>`__ provides an ODBC-based, DBAPI2-compatible driver. For further details, please refer to our `wiki <https://github.com/mkleehammer/pyodbc/wiki>`__.
+.. note::
+    * ``NULL`` values are returned as ``None`` for all types.
+    * Nanosecond precision in ``TIMESTAMP`` values is truncated to Python's
+      microsecond precision.
 
-Rationale
----------
+.. list-table:: WebSocket DBAPI result value types
+   :header-rows: 1
 
-PEP-249 was originally created for general purpose OLTP row store databases running on a single server: SQLite, MySQL, PostgreSQL, MSSQL, Oracle, etc.
+   * - Exasol type
+     - Version < 3.0
+     - Version >= 3.0
+   * - ``BOOLEAN``
+     - ``bool``
+     - ``bool``
+   * - ``CHAR``
+     - ``str``
+     - ``str``
+   * - ``DATE``
+     - ``datetime.date``
+     - ``datetime.date``
+   * - ``DECIMAL(p, 0)``
+     - ``int``
+     - ``int``
+   * - ``DECIMAL(p, s)`` where ``s > 0``
+     - ``str``
+     - ``decimal.Decimal``
+   * - ``DOUBLE``
+     - ``float``
+     - ``float``
+   * - ``GEOMETRY``
+     - ``str``
+     - ``str``
+   * - ``HASHTYPE``
+     - ``str``
+     - ``str``
+   * - ``INTERVAL DAY TO SECOND``
+     - ``str``
+     - ``ExaTimeDelta``
+   * - ``INTERVAL YEAR TO MONTH``
+     - ``str``
+     - ``str``
+   * - ``TIMESTAMP``
+     - ``str``
+     - ``datetime.datetime``
+   * - ``TIMESTAMP WITH LOCAL TIME ZONE``
+     - ``str``
+     - ``datetime.datetime``
+   * - ``VARCHAR``
+     - ``str``
+     - ``str``
 
-It does not work very well for OLAP columnar databases (like Exasol) running on multiple servers because it was never designed for this purpose. Despite both OLTP DBMS and OLAP DBMS using SQL for communication, the foundation and usage patterns are completely different.
+Custom Result Value Mappers
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-When people use DB-API 2.0 drivers, they tend to skip manuals and automatically apply OLTP usage patterns without even realizing how much they lose in terms of performance and efficiency.
+The default ``fetch_mapper`` is
+:func:`pyexasol.data_types.convert_websocket_to_python`. It converts values to
+Python types according to the result column's WebSocket metadata.
 
-A good example is `TurboODBC <https://github.com/blue-yonder/turbodbc>`__. Very few know that it is possible to fetch data as `NumPy arrays <https://turbodbc.readthedocs.io/en/latest/pages/advanced_usage.html#numpy-support>`__ and as `Apache Arrow <https://turbodbc.readthedocs.io/en/latest/pages/advanced_usage.html#apache-arrow-support>`__.
+Applications can provide a custom mapper through the ``fetch_mapper`` connection
+option. The mapper receives two positional arguments: the raw scalar value and
+the column's WebSocket ``dataType`` metadata. See the `WebSocket API data type
+definition <https://github.com/exasol/websocket-api/blob/master/docs/WebsocketAPIV3.md#data-types-type-names-and-properties>`__. Use the metadata's ``type``
+value to determine how to convert the value.
 
-Minor intentional incompatibilities with DB-API 2.0 force users to look through the manual and to learn about :ref:`Best Practices` of getting the job done.
+.. code-block:: python
+
+    from pyexasol.data_types import WebSocketDataType
+
+    def fetch_mapper(value, data_type):
+        if data_type["type"] == WebSocketDataType.Decimal.value:
+            return float(value)
+        return value
+
+.. note::
+    When using a custom ``fetch_mapper``, the application is responsible for
+    supporting the session date/time formats required by that mapper. The DBAPI
+    only validates the session formats when the default mapper is active.
+
+Session Date/Time Formats
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Before executing a user statement, the WebSocket DBAPI checks the active session
+values for ``NLS_DATE_FORMAT`` and ``NLS_TIMESTAMP_FORMAT`` in
+``EXA_PARAMETERS`` when the default ``fetch_mapper`` is active. The DBAPI
+currently supports only the exact formats listed below. Format-model matching is
+case-sensitive.
+
+The supported values are represented by the following definitions in the
+WebSocket-to-Python conversion module:
+
+.. literalinclude:: ../../../../pyexasol/data_types/websocket_to_python.py
+   :language: python
+   :start-after: # Start: supported session date/time formats included in the DBAPI documentation.
+   :end-before: # End: supported session date/time formats included in the DBAPI documentation.
+
+Statements containing ``ALTER SESSION`` are allowed so applications can change
+these settings. If either format is unsupported, execution raises one
+``InterfaceError`` containing all invalid parameters, their supported formats,
+and an example ``ALTER SESSION`` statement showing where to insert a supported
+format.
 
 Exasol Specific Problems with DB-API 2.0
 ----------------------------------------
@@ -103,5 +240,3 @@ Replace with:
 .. code-block:: python
 
     C.export_to_pandas('SELECT * FROM table')
-
-...etc.
