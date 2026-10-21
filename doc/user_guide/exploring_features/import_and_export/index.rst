@@ -77,7 +77,9 @@ See :meth:`pyexasol.ExaConnection.import_from_file`. This method supports import
 data from a file, path object, file-like object opened in binary mode, or from a process
 ``STDIN`` using ``sys.stdin.buffer``.
 
-Note: Files opened in text-mode will not work and cause an error.
+.. note::
+
+     Files opened in text mode are not supported and will raise an error.
 
 .. code-block:: python
 

@@ -21,6 +21,7 @@ Import callback arguments:
 import csv
 import glob
 import io
+import os
 import shutil
 from collections.abc import Iterable
 from pathlib import Path
@@ -300,6 +301,27 @@ def import_from_polars(
         raise ValueError("Data source is not polars.DataFrame or polars.LazyFrame")
 
     return src.write_csv(pipe, include_header=False, **kwargs)
+
+
+def check_import_from_file_source(src) -> None:
+    """Validate the source accepted by :func:`import_from_file`.
+
+    File paths are opened in binary mode by the callback. File-like sources
+    must therefore be binary streams; text streams cannot be copied to the
+    binary import pipe. File paths must exist before the import starts.
+
+    Raises:
+        TypeError: If ``src`` is a text stream.
+        FileNotFoundError: If ``src`` is a path that does not exist.
+    """
+    if isinstance(src, io.TextIOBase):
+        raise TypeError(
+            "Source must be either a file path or a binary stream "
+            "(a file opened in binary mode)."
+        )
+
+    if isinstance(src, (str, bytes, os.PathLike)) and not os.path.exists(src):
+        raise FileNotFoundError(f"Source file does not exist: {src!r}")
 
 
 def import_from_file(pipe, src):

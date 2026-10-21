@@ -1,7 +1,13 @@
-import io
+from test.import_from_file_test_helpers import (
+    BINARY_SOURCE_FACTORIES,
+    MISSING_PATH_FACTORIES,
+    TEXT_SOURCE_FACTORIES,
+)
 from test.integration.import_and_export.helper import select_result
 
 import pytest
+
+from pyexasol.callback import check_import_from_file_source
 
 
 @pytest.mark.etl
@@ -25,51 +31,46 @@ class TestImportFromFile:
         assert select_result(connection) == all_data.list_tuple()
 
 
-def make_files(which_file: str, tmp_path, all_data):
-    all_data_tuple = all_data.list_tuple()
-    if which_file == "StringIO":
-        return (
-            io.StringIO("a,b\n"),
-            "Source must be either a file path, or a binary stream , i.e. a file opened in binary mode",
-        )
-    elif which_file == "BytesIO":
-        return (
-            io.BytesIO(
-                b"Anna,Thompson,1993-08-18,1993-08-18 12:00:00.900000,False,29,80.94"
-            ),
-            all_data_tuple[0:1],
-        )
-    filepath = all_data.write_csv(directory=tmp_path)
-    if which_file == "openCsv":
-        return (
-            open(filepath),
-            "Source must be either a file path, or a binary stream , i.e. a file opened in binary mode",
-        )
-    elif which_file == "openBinaryCsv":
-        return open(filepath, "rb"), all_data_tuple
-    elif which_file == "CsvPath":
-        return filepath, all_data_tuple
-    else:
-        return None, ""
-
-
-@pytest.mark.etl
-@pytest.mark.parametrize(
-    "which_file", ["StringIO", "BytesIO", "openCsv", "openBinaryCsv", "CsvPath"]
-)
-class TestImportFromFileError:
+class TestCheckImportFromFileSource:
     @staticmethod
-    def test_import_from_non_binary_gives_correct_error(
-        which_file, connection, empty_table, table_name, tmp_path, all_data
-    ):
-        scr, expected = make_files(
-            which_file=which_file, tmp_path=tmp_path, all_data=all_data
+    @pytest.mark.parametrize(
+        "source_factory",
+        BINARY_SOURCE_FACTORIES,
+    )
+    def test_binary_sources_are_accepted(source_factory, tmp_path):
+        filepath = tmp_path / "data.csv"
+        filepath.write_text("col a, col b")
+
+        with source_factory(filepath) as src:
+            check_import_from_file_source(src)
+
+    @staticmethod
+    @pytest.mark.parametrize(
+        "source_factory",
+        TEXT_SOURCE_FACTORIES,
+    )
+    def test_text_sources_are_rejected(source_factory, tmp_path):
+        filepath = tmp_path / "data.csv"
+        filepath.write_text("col a, col b")
+
+        with source_factory(filepath) as src:
+            with pytest.raises(TypeError) as exception_info:
+                check_import_from_file_source(src)
+        assert str(exception_info.value) == (
+            "Source must be either a file path or a binary stream "
+            "(a file opened in binary mode)."
         )
 
-        if isinstance(expected, list):
-            connection.import_from_file(src=scr, table=table_name)
-            assert select_result(connection) == expected
-        else:
-            with pytest.raises(TypeError) as e:
-                connection.import_from_file(src=scr, table=table_name)
-                assert e.value == expected
+    @staticmethod
+    @pytest.mark.parametrize(
+        "path_factory",
+        MISSING_PATH_FACTORIES,
+    )
+    def test_missing_paths_are_rejected(path_factory, tmp_path):
+        filepath = path_factory(tmp_path / "missing.csv")
+
+        with pytest.raises(
+            FileNotFoundError,
+            match=r"Source file does not exist:",
+        ):
+            check_import_from_file_source(filepath)

@@ -59,7 +59,7 @@ def mock_exaconnection_factory():
     return _exaconnection_fixture
 
 
-@pytest.fixture()
+@pytest.fixture
 def mock_http_thread():
     """Patch ExaHttpThread where ExaConnection looks it up."""
     with patch("pyexasol.connection.ExaHttpThread") as mock_cls:
@@ -78,7 +78,7 @@ def mock_http_thread():
         yield mock_cls
 
 
-@pytest.fixture()
+@pytest.fixture
 def mock_sql_import_thread():
     """Mock ExaSQLThread instances used by import callbacks."""
     with patch("pyexasol.connection.ExaSQLThread") as mock_cls:
