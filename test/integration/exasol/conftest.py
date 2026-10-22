@@ -78,7 +78,7 @@ def empty_table(cursor, schema_table):
             -- https://docs.exasol.com/db/latest/changelogs/13409.htm
             timestamp_local_value TIMESTAMP WITH LOCAL TIME ZONE,
             interval_year_month INTERVAL YEAR(4) TO MONTH,
-            interval_day_second INTERVAL DAY(9) TO SECOND(6),
+            interval_day_second INTERVAL DAY(4) TO SECOND(5),
             boolean_value BOOLEAN,
             geometry_value GEOMETRY,
             hashtype_value HASHTYPE(16 BYTE)
@@ -128,9 +128,7 @@ def data_type_rows():
         # This is tracked in:
         # https://github.com/exasol/pyexasol/issues/428
         interval_year_month=DATA_TYPE_CASES.interval_year_to_month.python_value,
-        interval_day_second=(
-            DATA_TYPE_CASES.interval_day_to_second.python_value.to_interval()[:-3]
-        ),
+        interval_day_second=DATA_TYPE_CASES.interval_day_to_second.websocket_value,
         boolean_value=DATA_TYPE_CASES.boolean.python_value,
         geometry_value=DATA_TYPE_CASES.geometry.python_value,
         hashtype_value=DATA_TYPE_CASES.hashtype.python_value,
@@ -158,7 +156,7 @@ def data_type_rows():
         timestamp_value="2022-12-31 23:59:59.000000",
         timestamp_local_value="2022-12-31 23:59:59.000000",
         interval_year_month="+0000-00",
-        interval_day_second="+000000000 00:00:00.000000",
+        interval_day_second="+00 00:00:00.000",
         boolean_value=True,
         geometry_value="POLYGON ((10 20, 30 40, 50 20, 10 20))",
         hashtype_value="00000000000000000000000000000000",
@@ -187,17 +185,7 @@ def data_type_rows():
         timestamp_value="2021-03-04 05:06:07.654000",
         timestamp_local_value="2021-03-04 05:06:07.654000",
         interval_year_month="+0001-11",
-        # Serialize timedelta until interval adapter support is addressed:
-        # https://github.com/exasol/pyexasol/issues/428
-        interval_day_second=ExaTimeDelta.from_timedelta(
-            datetime.timedelta(
-                days=3,
-                hours=4,
-                minutes=5,
-                seconds=6,
-                microseconds=654000,
-            )
-        ).to_interval()[:-3],
+        interval_day_second="+02 03:04:05.500",
         boolean_value=False,
         geometry_value="LINESTRING (10 20, 30 40)",
         hashtype_value="6ba7b8109dad11d180b400c04fd430c8",
@@ -213,9 +201,9 @@ def data_type_rows():
             timestamp_value=datetime.datetime(2021, 3, 4, 5, 6, 7, 654000),
             timestamp_local_value=datetime.datetime(2021, 3, 4, 5, 6, 7, 654000),
             interval_day_second=ExaTimeDelta(
-                days=3,
-                seconds=14706,
-                microseconds=654000,
+                days=2,
+                seconds=11045,
+                microseconds=500000,
             ),
         ),
     )
