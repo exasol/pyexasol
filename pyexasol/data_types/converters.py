@@ -39,7 +39,7 @@ class ExaTimeDelta(datetime.timedelta):
         """
         Convert an Exasol ``INTERVAL DAY TO SECOND`` string to an ExaTimeDelta.
 
-        The expected format is ``[+-]D...D HH:MM:SS.N...N``.
+        The expected format is ``[+-]D...D HH:MM:SS.[N...N]``.
         Fractional seconds are rounded to Python's microsecond precision.
         """
         day_part, time_part = val.split(" ", maxsplit=1)
