@@ -39,24 +39,27 @@ class ExaTimeDelta(datetime.timedelta):
         """
         Convert an Exasol ``INTERVAL DAY TO SECOND`` string to an ExaTimeDelta.
 
-        The expected format is ``[+-]DDDDDDDDD HH:MM:SS.NNNNNNNNN``.
-        Nanoseconds are rounded to Python's microsecond precision.
+        The expected format is ``[+-]D...D HH:MM:SS.[N...N]``.
+        Fractional seconds are rounded to Python's microsecond precision.
         """
+        day_part, time_part = val.split(" ", maxsplit=1)
+        hour_part, minute_part, second_part = time_part.split(":")
+        second_part, _, fractional_part = second_part.partition(".")
+
         # Exasol supports nanosecond precision; round to Python's microseconds.
         microseconds = 0
-        if len(val) > 20:
-            fractional_seconds = val[20:29]
-            fractional_nanoseconds = float(fractional_seconds.ljust(9, "0"))
-            microseconds = int(round(fractional_nanoseconds / 1000))
+        if fractional_part:
+            nanoseconds = int(fractional_part.ljust(9, "0"))
+            microseconds = int(round(nanoseconds / 1000))
 
         td = cls(
-            days=int(val[0:10]),
-            hours=int(val[11:13]),
-            minutes=int(val[14:16]),
-            seconds=int(val[17:19]),
+            days=int(day_part),
+            hours=int(hour_part),
+            minutes=int(minute_part),
+            seconds=int(second_part),
             microseconds=microseconds,
         )
-        if val[0] != "-":
+        if day_part[0] != "-":
             return td
 
         # Negative numbers are normalized according to Python's timedelta rules
