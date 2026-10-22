@@ -54,6 +54,21 @@ FROM_INTERVAL_CASES = [
         "-000000003 00:00:00",
         id="without-fractional-part",
     ),
+    pytest.param(
+        ExaTimeDelta(days=2, seconds=11045, microseconds=500000),
+        "+02 03:04:05.500",
+        id="default-day-precision",
+    ),
+    pytest.param(
+        ExaTimeDelta(days=2, seconds=11045, microseconds=500000),
+        "+0002 03:04:05.50",
+        id="four-digit-day-precision",
+    ),
+    pytest.param(
+        ExaTimeDelta(days=-3, seconds=86154, microseconds=500000),
+        "-02 00:04:05.5",
+        id="negative-default-day-precision",
+    ),
 ]
 
 
