@@ -778,6 +778,7 @@ class ExaConnection:
         Args:
             src:
                 Source file or file-like object.
+                Must be either a file-path, or a binary stream , i.e. a file opened in binary mode
             table:
                 Destination table for IMPORT. Can be one of:
 
@@ -790,6 +791,8 @@ class ExaConnection:
         Note:
             File must be opened in binary mode.
         """
+        cb.check_import_from_file_source(src)
+
         return self.import_from_callback(
             cb.import_from_file, src, table, None, import_params
         )
