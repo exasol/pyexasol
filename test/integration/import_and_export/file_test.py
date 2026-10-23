@@ -114,6 +114,7 @@ def test_import_from_non_binary_gives_correct_error(
                 "(a file opened in binary mode)."
             )
 
+
 @pytest.mark.etl
 @pytest.mark.parametrize(
     "path_factory",
