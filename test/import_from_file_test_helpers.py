@@ -46,7 +46,7 @@ def source_custom_path(filepath: Path):
     return nullcontext(CustomPath(filepath))
 
 
-BINARY_SOURCE_FACTORIES = [
+ACCEPTED_SOURCE_FACTORIES = [
     pytest.param(source_bytes_io, id="BytesIO"),
     pytest.param(source_binary_file, id="binary-file"),
     pytest.param(source_path, id="Path"),
@@ -65,4 +65,10 @@ MISSING_PATH_FACTORIES = [
     pytest.param(os.fsencode, id="bytes-path"),
     pytest.param(Path, id="Path"),
     pytest.param(CustomPath, id="custom-PathLike"),
+]
+
+NO_PATH_NO_STREAM_FACTORIES = [
+    pytest.param(None, id="none"),
+    pytest.param(object(), id="object"),
+    pytest.param([], id="list"),
 ]

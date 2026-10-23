@@ -314,14 +314,16 @@ def check_import_from_file_source(src) -> None:
         TypeError: If ``src`` is a text stream.
         FileNotFoundError: If ``src`` is a path that does not exist.
     """
-    if isinstance(src, io.TextIOBase):
+    if isinstance(src, (str, bytes, os.PathLike)):
+        if not os.path.exists(src):
+            raise FileNotFoundError(f"Source file does not exist: {src!r}")
+        return
+
+    if not isinstance(src, io.IOBase) or isinstance(src, io.TextIOBase):
         raise TypeError(
             "Source must be either a file path or a binary stream "
             "(a file opened in binary mode)."
         )
-
-    if isinstance(src, (str, bytes, os.PathLike)) and not os.path.exists(src):
-        raise FileNotFoundError(f"Source file does not exist: {src!r}")
 
 
 def import_from_file(pipe, src):
