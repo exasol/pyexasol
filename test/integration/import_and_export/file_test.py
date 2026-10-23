@@ -80,7 +80,7 @@ def test_export_import_round_trip_to_and_from_file(
     assert actual == []
 
 
-@staticmethod
+@pytest.mark.etl
 @pytest.mark.parametrize(
     "source_factory",
     ACCEPTED_SOURCE_FACTORIES,
@@ -95,7 +95,7 @@ def test_sources_are_accepted(
         connection.import_from_file(src=src, table=table_name)
 
 
-@staticmethod
+@pytest.mark.etl
 @pytest.mark.parametrize(
     "source_factory",
     NO_PATH_NO_STREAM_FACTORIES + TEXT_SOURCE_FACTORIES,
@@ -106,15 +106,15 @@ def test_import_from_non_binary_gives_correct_error(
     filepath = tmp_path / "data.csv"
     filepath.write_text("col a, col b")
 
-    with pytest.raises(TypeError) as e:
-        with source_factory(filepath) as src:
+    with source_factory(filepath) as src:
+        with pytest.raises(TypeError) as e:
             connection.import_from_file(src, table=table_name)
             assert e.value == (
                 "Source must be either a file path or a binary stream "
                 "(a file opened in binary mode)."
             )
 
-
+@pytest.mark.etl
 @pytest.mark.parametrize(
     "path_factory",
     MISSING_PATH_FACTORIES,
