@@ -1,5 +1,4 @@
 # Generated and maintained by the exasol-toolbox.
-# Last generated with exasol-toolbox version 11.0.0.
 name: Periodic-Validation
 
 on:
@@ -11,7 +10,7 @@ on:
 jobs:
   restrict-to-default-branch:
     name: Restrict to Default Branch
-    runs-on: "ubuntu-24.04"
+    runs-on: "ubuntu-26.04"
     permissions:
       contents: read
 

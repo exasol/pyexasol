@@ -1,5 +1,4 @@
 # Generated and maintained by the exasol-toolbox.
-# Last generated with exasol-toolbox version 11.0.0.
 name: Status Report
 
 on:
@@ -11,7 +10,7 @@ on:
 jobs:
 
   report:
-    runs-on: "ubuntu-24.04"
+    runs-on: "ubuntu-26.04"
     permissions:
       contents: read
     steps:
@@ -24,9 +23,9 @@ jobs:
 
       - name: Set up Python & Poetry Environment
         id: set-up-python-and-poetry-environment
-        uses: exasol/python-toolbox/.github/actions/python-environment@v11
+        uses: exasol/python-toolbox/.github/actions/python-environment@v12
         with:
-          python-version: "3.10"
+          python-version: "3.11"
           poetry-version: "2.3.0"
 
       - name: Download Artifacts

@@ -1,5 +1,4 @@
 # Generated and maintained by the exasol-toolbox.
-# Last generated with exasol-toolbox version 11.0.0.
 name: Merge-Gate
 
 on:
@@ -34,7 +33,7 @@ jobs:
 
   approve-run-slow-tests:
     name: Approve Running Slow Tests?
-    runs-on: "ubuntu-24.04"
+    runs-on: "ubuntu-26.04"
     permissions:
       contents: read
     # Even though the environment "manual-approval" will be created automatically,
@@ -63,7 +62,7 @@ jobs:
   allow-merge:
     name: Allow Merge
     if: ${{ !cancelled() }}
-    runs-on: "ubuntu-24.04"
+    runs-on: "ubuntu-26.04"
     permissions:
       contents: read
     # If you need additional jobs to be part of the merge gate, add them below
