@@ -17,7 +17,7 @@ jobs:
     needs: [ build-matrix ]
     # For all containers with versions 7.1.x and older versions 8.y.z of docker-db,
     # there will be a crash if UDFs (User Defined Functions) are utilized.
-    runs-on:  ubuntu-24.04
+    runs-on:  "ubuntu-26.04"
     timeout-minutes: 15
     strategy:
       fail-fast: false

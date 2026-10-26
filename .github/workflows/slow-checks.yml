@@ -16,7 +16,7 @@ jobs:
     name: Run Integration Tests (Python-${{ matrix.python_versions }}, Exasol-${{ matrix.exasol_versions}})
     needs:
       - build-matrix
-    runs-on: "ubuntu-24.04"
+    runs-on: "ubuntu-26.04"
     permissions:
       contents: read
     env:
