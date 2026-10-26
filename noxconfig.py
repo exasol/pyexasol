@@ -100,6 +100,6 @@ PROJECT_CONFIG = Config(
     root_path=Path(__file__).parent,
     project_name="pyexasol",
     plugins_for_nox_sessions=(StartDB, StopDB),
-    python_versions=("3.10", "3.11", "3.12", "3.13", "3.14"),
+    python_versions=("3.11", "3.12", "3.13", "3.14"),
     exasol_versions=("8.29.13", "2025.1.11", DEFAULT_DB_VERSION),
 )
