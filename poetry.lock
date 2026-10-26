@@ -1386,14 +1386,14 @@ urllib3 = ">=2.6.3,<3"
 
 [[package]]
 name = "exasol-toolbox"
-version = "11.0.0"
+version = "12.0.0"
 description = "Your one-stop solution for managing all standard tasks and core workflows of your Python project."
 optional = false
-python-versions = "<4.0,>=3.10"
+python-versions = "<4.0,>=3.11"
 groups = ["dev"]
 files = [
-    {file = "exasol_toolbox-11.0.0-py3-none-any.whl", hash = "sha256:d4be9a0b3b74d7fb55936d7fe79f25a6f197488b17ecf2d1d8320b98f0403226"},
-    {file = "exasol_toolbox-11.0.0.tar.gz", hash = "sha256:d7b527a013819086e2cf4013b85c4bf04bf1c707345e114ee02dc0eb1add3105"},
+    {file = "exasol_toolbox-12.0.0-py3-none-any.whl", hash = "sha256:d92911a810f137f0bf6b893e235a26c59ee6ffb0f9fd649aa4221f088c5bbe0b"},
+    {file = "exasol_toolbox-12.0.0.tar.gz", hash = "sha256:82ace0500fa033755ac8350ba58862d25f511307a3b5a819fc6f49f3af0bf627"},
 ]
 
 [package.dependencies]
@@ -6492,4 +6492,4 @@ ujson = ["ujson"]
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.11,<3.15"
-content-hash = "ffb697922abdc99589bc1459a4bc2a62326d8e8df16c81aaa77b7f3eee324031"
+content-hash = "7703ed08d8322a8aad2af423eaf372613826317bc1849af35c53f58247e186c3"
