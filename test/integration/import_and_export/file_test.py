@@ -1,6 +1,6 @@
-from test.integration.import_and_export.helper import select_result
-
 import pytest
+
+from test.integration.import_and_export.helper import select_result
 
 
 @pytest.fixture

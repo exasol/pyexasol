@@ -57,7 +57,7 @@ def test_fetch_tuples_using_fetchone(connection):
             "SUSPENDED",
         ),
     ]
-    actual = [row for row in iter(result.fetchone, None)]
+    actual = [*iter(result.fetchone, None)]
     assert expected == actual
 
 

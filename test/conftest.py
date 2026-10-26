@@ -1,14 +1,14 @@
 import os
-from test.data_type_cases import (
-    DATA_TYPE_CASES,
-    SqlDataTypeCase,
-    to_pytest_params,
-)
 
 import pytest
 
 import pyexasol
 from pyexasol import ExaConnection
+from test.data_type_cases import (
+    DATA_TYPE_CASES,
+    SqlDataTypeCase,
+    to_pytest_params,
+)
 
 
 @pytest.fixture(scope="session")

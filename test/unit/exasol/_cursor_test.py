@@ -1,8 +1,4 @@
 import datetime
-from test.data_type_cases import (
-    DataTypeCase,
-    to_pytest_params,
-)
 
 import pytest
 
@@ -12,6 +8,10 @@ from exasol.driver.websocket._cursor import (
 )
 from exasol.driver.websocket.dbapi2 import ProgrammingError
 from pyexasol.data_types import WebSocketDataType
+from test.data_type_cases import (
+    DataTypeCase,
+    to_pytest_params,
+)
 
 
 class TestAdaptToRequestedDbTypes:

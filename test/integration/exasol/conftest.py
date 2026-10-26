@@ -1,12 +1,12 @@
 import datetime
 import decimal
-from test.data_type_cases import DATA_TYPE_CASES
 from typing import NamedTuple
 
 import pytest
 
 from exasol.driver.websocket.dbapi2 import connect
 from pyexasol.data_types import ExaTimeDelta
+from test.data_type_cases import DATA_TYPE_CASES
 
 
 class DataTypeRow(NamedTuple):
