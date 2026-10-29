@@ -2,15 +2,15 @@ import copy
 from contextlib import contextmanager
 from datetime import datetime
 from inspect import cleandoc
-from test.integration.import_and_export.data_sample import (
-    DATETIME_STR_FORMAT,
-    DataSample,
-)
 from unittest.mock import patch
 
 import pytest
 
 from pyexasol.http_transport import ExaHttpThread
+from test.integration.import_and_export.data_sample import (
+    DATETIME_STR_FORMAT,
+    DataSample,
+)
 
 ALL_COLUMNS = [
     "FIRST_NAME",

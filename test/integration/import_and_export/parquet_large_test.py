@@ -1,10 +1,6 @@
 import copy
 from datetime import datetime
 from inspect import cleandoc
-from test.integration.import_and_export.data_sample import (
-    DATETIME_STR_FORMAT,
-    DataSample,
-)
 from unittest import mock
 
 import pyarrow as pa
@@ -15,6 +11,10 @@ from pyexasol.connection import cb
 from pyexasol.exceptions import (
     ExaExportError,
     ExaQueryError,
+)
+from test.integration.import_and_export.data_sample import (
+    DATETIME_STR_FORMAT,
+    DataSample,
 )
 
 ALL_COLUMNS = [

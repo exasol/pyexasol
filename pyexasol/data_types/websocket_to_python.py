@@ -76,18 +76,7 @@ def convert_timestamp(value: str) -> datetime.datetime:
     resulting ``datetime.datetime`` is therefore naive and represents the
     timestamp as rendered in the Exasol session timezone.
     """
-    # Python 3.10 is stricter about the fractional-second portion accepted by
-    # datetime.fromisoformat(), while Exasol can return between 1 and 9 digits.
-    # Normalize shorter values to six digits and truncate nanoseconds because
-    # Python datetime only supports microsecond precision.
-    timestamp_value = value
-    if len(timestamp_value) > 19:
-        date_and_time = timestamp_value[:19]
-        fractional_seconds = timestamp_value[20:]
-        microseconds = fractional_seconds[:6].ljust(6, "0")
-        timestamp_value = f"{date_and_time}.{microseconds}"
-
-    return datetime.datetime.fromisoformat(timestamp_value)
+    return datetime.datetime.fromisoformat(value)
 
 
 def convert_websocket_to_python(value, data_type):
