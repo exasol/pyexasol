@@ -86,8 +86,9 @@ def test_export_import_round_trip_to_and_from_file(
     ACCEPTED_SOURCE_FACTORIES,
 )
 def test_sources_are_accepted(
-    source_factory, connection, empty_table, table_name, tmp_path, all_data
+    source_factory, connection, empty_file_import_table, tmp_path, all_data
 ):
+    table_name = empty_file_import_table
     filepath = tmp_path / "data.csv"
     filepath.write_text("col a, col b")
 
@@ -101,8 +102,9 @@ def test_sources_are_accepted(
     NO_PATH_NO_STREAM_FACTORIES + TEXT_SOURCE_FACTORIES,
 )
 def test_import_from_non_binary_gives_correct_error(
-    source_factory, connection, empty_table, table_name, tmp_path, all_data
+    source_factory, connection, empty_file_import_table, tmp_path, all_data
 ):
+    table_name = empty_file_import_table
     filepath = tmp_path / "data.csv"
     filepath.write_text("col a, col b")
 
@@ -121,8 +123,9 @@ def test_import_from_non_binary_gives_correct_error(
     MISSING_PATH_FACTORIES,
 )
 def test_missing_paths_are_rejected(
-    path_factory, connection, empty_table, table_name, tmp_path, all_data
+    path_factory, connection, empty_file_import_table, tmp_path, all_data
 ):
+    table_name = empty_file_import_table
     filepath = path_factory(tmp_path / "missing.csv")
 
     with pytest.raises(
