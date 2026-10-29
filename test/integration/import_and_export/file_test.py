@@ -119,21 +119,20 @@ def test_import_from_text_source_gives_correct_error(
 
 @pytest.mark.etl
 @pytest.mark.parametrize(
-    "source_factory",
+    "source",
     NO_PATH_NO_STREAM_FACTORIES,
 )
 def test_import_from_wrong_types_gives_correct_error(
-    source_factory, connection, empty_file_import_table, tmp_path
+    source, connection, empty_file_import_table, tmp_path
 ):
     table_name = empty_file_import_table
 
-    with source_factory as src:
-        with pytest.raises(TypeError) as e:
-            connection.import_from_file(src, table=table_name)
-            assert e.value == (
-                "Source must be either a file path or a binary stream "
-                "(a file opened in binary mode)."
-            )
+    with pytest.raises(TypeError) as e:
+        connection.import_from_file(source, table=table_name)
+        assert e.value == (
+            "Source must be either a file path or a binary stream "
+            "(a file opened in binary mode)."
+        )
 
 
 @pytest.mark.etl
