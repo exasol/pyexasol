@@ -99,16 +99,35 @@ def test_sources_are_accepted(
 @pytest.mark.etl
 @pytest.mark.parametrize(
     "source_factory",
-    NO_PATH_NO_STREAM_FACTORIES + TEXT_SOURCE_FACTORIES,
+    TEXT_SOURCE_FACTORIES,
 )
-def test_import_from_non_binary_gives_correct_error(
-    source_factory, connection, empty_file_import_table, tmp_path, all_data
+def test_import_from_text_source_gives_correct_error(
+    source_factory, connection, empty_file_import_table, tmp_path
 ):
     table_name = empty_file_import_table
     filepath = tmp_path / "data.csv"
     filepath.write_text("col a, col b")
 
     with source_factory(filepath) as src:
+        with pytest.raises(TypeError) as e:
+            connection.import_from_file(src, table=table_name)
+            assert e.value == (
+                "Source must be either a file path or a binary stream "
+                "(a file opened in binary mode)."
+            )
+
+
+@pytest.mark.etl
+@pytest.mark.parametrize(
+    "source_factory",
+    NO_PATH_NO_STREAM_FACTORIES,
+)
+def test_import_from_wrong_types_gives_correct_error(
+    source_factory, connection, empty_file_import_table, tmp_path
+):
+    table_name = empty_file_import_table
+
+    with source_factory as src:
         with pytest.raises(TypeError) as e:
             connection.import_from_file(src, table=table_name)
             assert e.value == (
