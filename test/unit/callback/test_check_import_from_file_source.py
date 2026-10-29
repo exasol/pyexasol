@@ -1,13 +1,12 @@
+import pytest
+
+from pyexasol.callback import check_import_from_file_source
 from test.import_from_file_test_helpers import (
     ACCEPTED_SOURCE_FACTORIES,
     MISSING_PATH_FACTORIES,
     NO_PATH_NO_STREAM_FACTORIES,
     TEXT_SOURCE_FACTORIES,
 )
-
-import pytest
-
-from pyexasol.callback import check_import_from_file_source
 
 
 class TestCheckImportFromFileSource:

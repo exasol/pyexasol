@@ -197,7 +197,7 @@ def empty_camel_case_table(connection):
 
 @pytest.fixture
 def empty_file_import_table(connection):
-    table_name = "file_import_table"
+    table_name = "FILE_IMPORT_TABLE"
     ddl = cleandoc(f"""
         CREATE OR REPLACE TABLE "{table_name}"
         (

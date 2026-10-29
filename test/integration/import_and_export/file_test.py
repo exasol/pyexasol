@@ -1,3 +1,4 @@
+import pytest
 
 from test.import_from_file_test_helpers import (
     ACCEPTED_SOURCE_FACTORIES,
@@ -5,10 +6,6 @@ from test.import_from_file_test_helpers import (
     NO_PATH_NO_STREAM_FACTORIES,
     TEXT_SOURCE_FACTORIES,
 )
-from test.integration.import_and_export.helper import select_result
-
-import pytest
-
 from test.integration.import_and_export.helper import select_result
 
 
