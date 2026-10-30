@@ -1,5 +1,11 @@
 import pytest
 
+from test.import_from_file_test_helpers import (
+    ACCEPTED_SOURCE_FACTORIES,
+    MISSING_PATH_FACTORIES,
+    NO_PATH_NO_STREAM_FACTORIES,
+    TEXT_SOURCE_FACTORIES,
+)
 from test.integration.import_and_export.helper import select_result
 
 
@@ -72,3 +78,76 @@ def test_export_import_round_trip_to_and_from_file(
     actual = result.fetchall()
 
     assert actual == []
+
+
+@pytest.mark.etl
+@pytest.mark.parametrize(
+    "source_factory",
+    ACCEPTED_SOURCE_FACTORIES,
+)
+def test_sources_are_accepted(
+    source_factory, connection, empty_file_import_table, tmp_path, all_data
+):
+    table_name = empty_file_import_table
+    filepath = tmp_path / "data.csv"
+    filepath.write_text("col a, col b")
+
+    with source_factory(filepath) as src:
+        connection.import_from_file(src=src, table=table_name)
+
+
+@pytest.mark.etl
+@pytest.mark.parametrize(
+    "source_factory",
+    TEXT_SOURCE_FACTORIES,
+)
+def test_import_from_text_source_gives_correct_error(
+    source_factory, connection, empty_file_import_table, tmp_path
+):
+    table_name = empty_file_import_table
+    filepath = tmp_path / "data.csv"
+    filepath.write_text("col a, col b")
+
+    with source_factory(filepath) as src:
+        with pytest.raises(TypeError) as e:
+            connection.import_from_file(src, table=table_name)
+            assert e.value == (
+                "Source must be either a file path or a binary stream "
+                "(a file opened in binary mode)."
+            )
+
+
+@pytest.mark.etl
+@pytest.mark.parametrize(
+    "source",
+    NO_PATH_NO_STREAM_FACTORIES,
+)
+def test_import_from_wrong_types_gives_correct_error(
+    source, connection, empty_file_import_table, tmp_path
+):
+    table_name = empty_file_import_table
+
+    with pytest.raises(TypeError) as e:
+        connection.import_from_file(source, table=table_name)
+        assert e.value == (
+            "Source must be either a file path or a binary stream "
+            "(a file opened in binary mode)."
+        )
+
+
+@pytest.mark.etl
+@pytest.mark.parametrize(
+    "path_factory",
+    MISSING_PATH_FACTORIES,
+)
+def test_missing_paths_are_rejected(
+    path_factory, connection, empty_file_import_table, tmp_path, all_data
+):
+    table_name = empty_file_import_table
+    filepath = path_factory(tmp_path / "missing.csv")
+
+    with pytest.raises(
+        FileNotFoundError,
+        match=r"Source file does not exist:",
+    ):
+        connection.import_from_file(src=filepath, table=table_name)

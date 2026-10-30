@@ -196,6 +196,27 @@ def empty_camel_case_table(connection):
 
 
 @pytest.fixture
+def empty_file_import_table(connection):
+    table_name = "FILE_IMPORT_TABLE"
+    ddl = cleandoc(f"""
+        CREATE OR REPLACE TABLE "{table_name}"
+        (
+            A VARCHAR(200),
+            B VARCHAR(200)
+        )
+        """)
+
+    connection.execute(ddl)
+    connection.commit()
+
+    yield table_name
+
+    ddl = f'DROP TABLE IF EXISTS "{table_name}" CASCADE;'
+    connection.execute(ddl)
+    connection.commit()
+
+
+@pytest.fixture
 def filled_camel_case_table(connection, empty_camel_case_table):
     table_name, column_name = empty_camel_case_table
     ddl = cleandoc(f"""
