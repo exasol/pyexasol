@@ -6,6 +6,7 @@ database accepts them, how it stores them, and which inputs it rejects.
 """
 
 import pytest
+from packaging.version import Version
 
 from pyexasol import ExaRequestError
 
@@ -38,10 +39,11 @@ class SingleColumnTable:
 
 
 @pytest.fixture
-def timestamp_table(connection, db_major_version):
-    # Exasol 8 defaults TIMESTAMP to 3 fractional digits and does not support a declared
-    # precision. Other versions do support explicit declaration.
-    column_type = "TIMESTAMP" if db_major_version == 8 else "TIMESTAMP(3)"
+def timestamp_table(connection, db_version):
+    # Exasol 8 versions before 8.32.0 only support TIMESTAMP with the default of 3
+    # fractional digits and do not accept a declared precision. Other versions do
+    # support explicit declaration.
+    column_type = "TIMESTAMP(3)" if db_version >= Version("8.32.0") else "TIMESTAMP"
     table = SingleColumnTable.create_empty(
         connection, "WS_TIMESTAMP_INPUT", column_type
     )
