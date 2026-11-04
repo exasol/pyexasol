@@ -94,3 +94,12 @@ class TestConvertTimestamp:
 
         value = datetime.datetime(2026, 9, 11, 12, 34, 56, tzinfo=NoOffsetTz())
         assert convert_timestamp(value) == "2026-09-11 12:34:56"
+
+    @staticmethod
+    def test_ignores_str_override_of_datetime_subclass():
+        class IsoStrDatetime(datetime.datetime):
+            def __str__(self):
+                return self.isoformat()
+
+        value = IsoStrDatetime(2026, 9, 11, 12, 34, 56, 123456)
+        assert convert_timestamp(value) == "2026-09-11 12:34:56.123456"

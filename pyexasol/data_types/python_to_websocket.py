@@ -39,4 +39,4 @@ def convert_timestamp(value: datetime.datetime | str | None) -> str | None:
 
     if value.utcoffset() is not None:
         value = value.astimezone(datetime.UTC).replace(tzinfo=None)
-    return str(value)
+    return value.isoformat(sep=" ")
