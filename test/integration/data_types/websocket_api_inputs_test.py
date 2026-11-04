@@ -53,9 +53,10 @@ def timestamp_table(connection, db_version):
 @pytest.fixture
 def session_timestamp_format(connection):
     result = connection.execute(
-        "SELECT * FROM EXA_PARAMETERS WHERE PARAMETER_NAME = 'NLS_TIMESTAMP_FORMAT';"
+        "SELECT SESSION_VALUE FROM EXA_PARAMETERS "
+        "WHERE PARAMETER_NAME = 'NLS_TIMESTAMP_FORMAT';"
     )
-    original_format = result.fetchone()[1]
+    original_format = result.fetchval()
     connection.execute(
         "ALTER SESSION SET NLS_TIMESTAMP_FORMAT='DD/MM/YYYY HH24:MI:SS.FF4';"
     )
