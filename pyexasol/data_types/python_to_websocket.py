@@ -13,6 +13,9 @@ def convert_timestamp(value: datetime.datetime | str | None) -> str | None:
     The stored value is governed by the target column's ``TIMESTAMP(p)`` precision.
     If the string has more fractional digits than ``p``, the database truncates the
     extra digits silently. If it has fewer, the database pads the value with zeros.
+    This function does not truncate or validate precision on the Python side; any
+    truncation is left to the database. A string with more than 9 fractional digits
+    is not truncated but rejected by the database with an error.
 
     Passed through unchanged:
      * None -> None
