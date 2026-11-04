@@ -19,8 +19,9 @@ class TestConvertTimestamp:
 
     @staticmethod
     def test_raises_type_error_for_other_types():
+        date_value = datetime.date(2026, 9, 11)
         with pytest.raises(TypeError, match="Expected datetime.datetime"):
-            convert_timestamp(datetime.date(2026, 9, 11))
+            convert_timestamp(date_value)
 
     @staticmethod
     @pytest.mark.parametrize(
