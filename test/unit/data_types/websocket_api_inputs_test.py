@@ -3,6 +3,7 @@ from unittest.mock import patch
 
 import pytest
 
+from pyexasol.data_types import ExaTimeDelta
 from pyexasol.statement import ExaStatement
 
 
@@ -10,6 +11,8 @@ from pyexasol.statement import ExaStatement
     "value",
     [
         pytest.param(datetime.datetime(2026, 9, 11, 12, 34), id="python-datetime"),
+        pytest.param(datetime.timedelta(days=1, hours=2), id="python-timedelta"),
+        pytest.param(ExaTimeDelta(days=1, hours=2), id="exa-timedelta"),
     ],
 )
 def test_unserializable_parameter_raises_type_error(mock_exaconnection_factory, value):
