@@ -1,5 +1,7 @@
 import datetime
 
+from pyexasol.data_types.converters import ExaTimeDelta
+
 
 def timestamp_to_websocket(value: datetime.datetime | str | None) -> str | None:
     """
@@ -40,3 +42,36 @@ def timestamp_to_websocket(value: datetime.datetime | str | None) -> str | None:
     if value.utcoffset() is not None:
         value = value.astimezone(datetime.UTC).replace(tzinfo=None)
     return value.isoformat(sep=" ")
+
+
+def interval_day_to_second_to_websocket(
+    value: datetime.timedelta | ExaTimeDelta | str | None,
+) -> str | None:
+    """
+    Convert a Python value to a type that the WebSocket API allows for an
+    INTERVAL DAY TO SECOND.
+
+    The value is converted with ``ExaTimeDelta.to_interval_unpadded()`` to the
+    format ``[+-]D HH:MM:SS[.f..f]``. This function otherwise does not round, truncate
+    or check the column's precision; whether the value fits is left to the database.
+
+    Passed through unchanged:
+     * None -> None
+     * str  -> str. The database rejects strings in an unsupported format.
+
+    Converted types:
+    * datetime.timedelta  -> str in the format ``[+-]D HH:MM:SS[.f..f]``
+    * ExaTimeDelta        -> str in the same format.
+
+    Raises:
+    * TypeError -> any other type
+    """
+    if value is None or isinstance(value, str):
+        return value
+    if isinstance(value, ExaTimeDelta):
+        return value.to_interval_unpadded()
+    if not isinstance(value, datetime.timedelta):
+        raise TypeError(
+            f"Expected datetime.timedelta, str, ExaTimeDelta, or None, got {type(value).__name__}."
+        )
+    return ExaTimeDelta.from_timedelta(value).to_interval_unpadded()
