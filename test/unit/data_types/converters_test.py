@@ -150,6 +150,33 @@ class TestExaTimeDelta:
         assert value.to_interval() == interval
 
     @staticmethod
+    @pytest.mark.parametrize(
+        "value, interval",
+        [
+            pytest.param(ExaTimeDelta(0), "+0 00:00:00", id="zero"),
+            pytest.param(
+                ExaTimeDelta(days=1, hours=2, minutes=3, seconds=4),
+                "+1 02:03:04",
+                id="whole-seconds",
+            ),
+            pytest.param(
+                ExaTimeDelta(seconds=1, microseconds=1),
+                "+0 00:00:01.000001",
+                id="leading-zeros-kept",
+            ),
+            pytest.param(
+                ExaTimeDelta(
+                    days=-1, hours=-2, minutes=-3, seconds=-4, milliseconds=-345
+                ),
+                "-1 02:03:04.345",
+                id="negative-day",
+            ),
+        ],
+    )
+    def test_to_interval_unpadded(value, interval):
+        assert value.to_interval_unpadded() == interval
+
+    @staticmethod
     def test_str_returns_interval_representation():
         value = ExaTimeDelta(days=1, seconds=2)
         assert str(value) == "+000000001 00:00:02.000000000"

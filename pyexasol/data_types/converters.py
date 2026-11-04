@@ -75,6 +75,24 @@ class ExaTimeDelta(datetime.timedelta):
         """Create an ExaTimeDelta from a datetime.timedelta."""
         return cls(days=td.days, seconds=td.seconds, microseconds=td.microseconds)
 
+    def _interval_parts(self) -> tuple[str, int, int, int, int, int]:
+        """Return the sign, days, hours, minutes, seconds and microseconds."""
+        sign = "+"
+        days = self.days
+        seconds = self.seconds
+        microseconds = self.microseconds
+        if self.days < 0:
+            # Python's timedelta normalizes hours and minutes into seconds.
+            sign = "-"
+            seconds, microseconds = self.reverse_seconds()
+            days = abs(self.days)
+            if seconds or microseconds:
+                days -= 1
+
+        minutes, seconds = divmod(seconds, 60)
+        hours, minutes = divmod(minutes, 60)
+        return sign, days, hours, minutes, seconds, microseconds
+
     def to_interval(self) -> str:
         """
         Convert this duration to an Exasol ``INTERVAL DAY TO SECOND`` string.
@@ -83,22 +101,29 @@ class ExaTimeDelta(datetime.timedelta):
         Python microseconds are represented with nanosecond precision by appending
         three zeros.
         """
-        if self.days < 0:
-            # Python's timedelta normalizes hours and minutes into seconds.
-            seconds, microseconds = self.reverse_seconds()
-            if seconds or microseconds:
-                s = "-%09d " % (abs(self.days) - 1,)
-            else:
-                s = "-%09d " % abs(self.days)
-        else:
-            seconds = self.seconds
-            microseconds = self.microseconds
-            s = "+%09d " % (self.days,)
+        sign, days, hours, minutes, seconds, microseconds = self._interval_parts()
+        day_string = f"{sign}{days:09d}"
+        time_string = f"{hours:02d}:{minutes:02d}:{seconds:02d}"
+        fractional_string = f"{microseconds * 1000:09d}"
+        return f"{day_string} {time_string}.{fractional_string}"
 
-        mm, ss = divmod(seconds, 60)
-        hh, mm = divmod(mm, 60)
-        s = s + "%02d:%02d:%02d.%09d" % (hh, mm, ss, microseconds * 1000)
-        return s
+    def to_interval_unpadded(self) -> str:
+        """
+        Convert this duration to an Exasol ``INTERVAL DAY TO SECOND`` string
+        without zero-padding.
+
+        The result uses the format ``[+-]D HH:MM:SS[.f..f]``. Unlike ``to_interval``,
+        the result is not wider than necessary, so it fits narrower
+        ``INTERVAL DAY(p) TO SECOND(s)`` columns.
+        """
+        sign, days, hours, minutes, seconds, microseconds = self._interval_parts()
+        day_string = f"{sign}{days}"
+        time_string = f"{hours:02d}:{minutes:02d}:{seconds:02d}"
+        interval = f"{day_string} {time_string}"
+        if microseconds:
+            fractional_string = f"{microseconds:06d}".rstrip("0")
+            interval += f".{fractional_string}"
+        return interval
 
     def __str__(self) -> str:
         return self.to_interval()
