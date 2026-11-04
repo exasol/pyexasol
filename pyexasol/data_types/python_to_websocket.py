@@ -1,7 +1,7 @@
 import datetime
 
 
-def convert_timestamp(value: datetime.datetime | str | None) -> str | None:
+def timestamp_to_websocket(value: datetime.datetime | str | None) -> str | None:
     """
     Convert a Python value to a type that the WebSocket API allows for a TIMESTAMP.
 

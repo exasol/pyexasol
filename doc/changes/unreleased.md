@@ -9,7 +9,7 @@
 
 ## Features
 
-* #448: Added default `convert_timestamp` to convert Python values for Websocket insertion
+* #448: Added default `timestamp_to_websocket` to convert Python values for Websocket insertion
 
 ## Refactorings
 
