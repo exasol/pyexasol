@@ -178,7 +178,7 @@ class ExaStatement:
             ``list`` of ``tuples`` or ``list`` of ``dict``.
             Empty `list` if all rows were fetched previously.
         """
-        return [row for row in itertools.islice(self, size)]
+        return list(itertools.islice(self, size))
 
     def fetchall(self):
         """
@@ -191,7 +191,7 @@ class ExaStatement:
         Warning:
             This function may exhaust available memory.
         """
-        return [row for row in self]
+        return list(self)
 
     def fetchcol(self):
         """
