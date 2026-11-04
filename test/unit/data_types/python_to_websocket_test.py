@@ -82,3 +82,15 @@ class TestConvertTimestamp:
     )
     def test_converts_timezone_aware_datetime_to_utc(value, expected):
         assert convert_timestamp(value) == expected
+
+    @staticmethod
+    def test_treats_tzinfo_without_utcoffset_as_naive():
+        class NoOffsetTz(datetime.tzinfo):
+            def utcoffset(self, dt):
+                return None
+
+            def dst(self, dt):
+                return None
+
+        value = datetime.datetime(2026, 9, 11, 12, 34, 56, tzinfo=NoOffsetTz())
+        assert convert_timestamp(value) == "2026-09-11 12:34:56"

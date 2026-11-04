@@ -37,6 +37,6 @@ def convert_timestamp(value: datetime.datetime | str | None) -> str | None:
             f"Expected datetime.datetime, str, or None, got {type(value).__name__}."
         )
 
-    if value.tzinfo is not None:
+    if value.utcoffset() is not None:
         value = value.astimezone(datetime.UTC).replace(tzinfo=None)
     return str(value)
