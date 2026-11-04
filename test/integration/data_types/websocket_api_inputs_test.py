@@ -20,8 +20,7 @@ class SingleColumnTable:
 
     @classmethod
     def create_empty(cls, connection, name, column_type):
-        connection.execute(f"CREATE TABLE IF NOT EXISTS {name} (V {column_type});")
-        connection.execute(f"TRUNCATE TABLE {name};")
+        connection.execute(f"CREATE OR REPLACE TABLE {name} (V {column_type});")
         return cls(connection, name)
 
     def drop(self):
