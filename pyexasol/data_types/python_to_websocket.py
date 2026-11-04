@@ -3,12 +3,12 @@ import datetime
 
 def convert_timestamp(value: datetime.datetime | str | None) -> str | None:
     """
-    Convert a Python value to the string the WebSocket API expects for a TIMESTAMP.
+    Convert a Python value to a type that the WebSocket API allows for a TIMESTAMP.
 
     The WebSocket API parses TIMESTAMP input with the session's ``NLS_TIMESTAMP_FORMAT``
-    EXA_PARAMETERS value. The ISO format used here, ``YYYY-MM-DD HH24:MI:SS.FF``, is
-    the Exasol default. Exasol supports optional fractional seconds with nanosecond
-    precision; Python datetime values have microsecond precision.
+    EXA_PARAMETERS value. The ISO format used here, ``YYYY-MM-DD HH24:MI:SS.FF[1..9]``,
+    is based on the Exasol default. Exasol supports optional fractional seconds with
+    nanosecond precision; Python datetime values have microsecond precision.
 
     The stored value is governed by the target column's ``TIMESTAMP(p)`` precision.
     If the string has more fractional digits than ``p``, the database truncates the
