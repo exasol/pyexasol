@@ -13,6 +13,9 @@ from __future__ import annotations
 import datetime
 from warnings import warn
 
+from exasol.telemetry import client as telemetry
+
+from pyexasol._metadata import __version__
 from pyexasol.warnings import PyexasolDeprecationWarning
 
 SECONDS_PER_DAY = 24 * 60 * 60
@@ -110,6 +113,8 @@ class ExaTimeDelta(datetime.timedelta):
         three zeros.
         """
         global _to_interval_warning_emitted
+
+        telemetry.track("PYEXA", __version__, "ExaTimeDelta.to_interval")
 
         if not _to_interval_warning_emitted:
             warn(
