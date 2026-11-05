@@ -80,8 +80,8 @@ def date_to_websocket(value: datetime.date | str | None) -> str | None:
 
     Converted types:
     * datetime.date      -> str in the format ``YYYY-MM-DD``
-    * datetime.datetime  -> str in the format ``YYYY-MM-DD``. Only the date part is sent;
-                            the time part is discarded. Only naive values are
+    * datetime.datetime  -> str in the format ``YYYY-MM-DD``. Only the date part is
+                            sent; the time part is discarded. Only naive values are
                             supported, see Raises.
 
     Raises:
@@ -138,6 +138,7 @@ def interval_day_to_second_to_websocket(
         return value.to_interval_unpadded()
     if not isinstance(value, datetime.timedelta):
         raise TypeError(
-            f"Expected datetime.timedelta, str, ExaTimeDelta, or None, got {type(value).__name__}."
+            "Expected datetime.timedelta, ExaTimeDelta, str, or None, "
+            f"got {type(value).__name__}."
         )
     return ExaTimeDelta.from_timedelta(value).to_interval_unpadded()
