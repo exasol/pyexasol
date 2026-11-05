@@ -51,25 +51,26 @@ class TestDateToWebsocket:
         [
             pytest.param(
                 datetime.datetime(2026, 9, 11, 12, 34, 56, 123456),
-                "2026-09-11 12:34:56.123456",
+                "2026-09-11",
                 id="naive",
-            ),
-            pytest.param(
-                datetime.datetime(
-                    2026,
-                    9,
-                    11,
-                    14,
-                    34,
-                    tzinfo=datetime.timezone(datetime.timedelta(hours=2)),
-                ),
-                "2026-09-11 12:34:00",
-                id="aware-converted-to-utc",
             ),
         ],
     )
-    def test_formats_datetime_as_timestamp(value, expected):
+    def test_formats_datetime_as_its_own_date(value, expected):
         assert date_to_websocket(value) == expected
+
+    @staticmethod
+    @pytest.mark.parametrize(
+        "tz",
+        [
+            pytest.param(datetime.UTC, id="utc"),
+            pytest.param(datetime.timezone(datetime.timedelta(hours=-5)), id="offset"),
+        ],
+    )
+    def test_raises_value_error_for_aware_datetime(tz):
+        value = datetime.datetime(2026, 1, 1, 23, 0, tzinfo=tz)
+        with pytest.raises(ValueError, match="not supported for DATE"):
+            date_to_websocket(value)
 
     @staticmethod
     def test_ignores_str_override_of_date_subclass():
@@ -119,44 +120,19 @@ class TestTimestampToWebsocket:
 
     @staticmethod
     @pytest.mark.parametrize(
-        "value, expected",
+        "tz",
         [
+            pytest.param(datetime.UTC, id="utc"),
+            pytest.param(datetime.timezone(datetime.timedelta(hours=2)), id="positive"),
             pytest.param(
-                datetime.datetime(2026, 9, 11, 12, 34, 56, 123456, tzinfo=datetime.UTC),
-                "2026-09-11 12:34:56.123456",
-                id="utc-offset-dropped",
-            ),
-            pytest.param(
-                datetime.datetime(
-                    2026,
-                    9,
-                    11,
-                    14,
-                    34,
-                    56,
-                    123000,
-                    tzinfo=datetime.timezone(datetime.timedelta(hours=2)),
-                ),
-                "2026-09-11 12:34:56.123000",
-                id="positive-offset-converted-to-utc",
-            ),
-            pytest.param(
-                datetime.datetime(
-                    2026,
-                    9,
-                    11,
-                    8,
-                    34,
-                    56,
-                    tzinfo=datetime.timezone(datetime.timedelta(hours=-4)),
-                ),
-                "2026-09-11 12:34:56",
-                id="negative-offset-converted-to-utc",
+                datetime.timezone(datetime.timedelta(hours=-4)), id="negative"
             ),
         ],
     )
-    def test_converts_timezone_aware_datetime_to_utc(value, expected):
-        assert timestamp_to_websocket(value) == expected
+    def test_raises_value_error_for_aware_datetime(tz):
+        value = datetime.datetime(2026, 9, 11, 12, 34, 56, tzinfo=tz)
+        with pytest.raises(ValueError, match="not supported for TIMESTAMP"):
+            timestamp_to_websocket(value)
 
     @staticmethod
     def test_treats_tzinfo_without_utcoffset_as_naive():
