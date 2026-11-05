@@ -44,6 +44,43 @@ def timestamp_to_websocket(value: datetime.datetime | str | None) -> str | None:
     return value.isoformat(sep=" ")
 
 
+def date_to_websocket(value: datetime.date | str | None) -> str | None:
+    """
+    Convert a Python value to a type that the WebSocket API allows for a DATE.
+
+    The WebSocket API parses DATE input with the session's ``NLS_DATE_FORMAT``
+    EXA_PARAMETERS value. The ISO format used here, ``YYYY-MM-DD``, is the Exasol
+    default. If the session format was changed, pass a string in that format instead.
+
+    The stored and rejected values are determined by the database. The database rejects
+    incorrect dates such as 2026-02-30. It accepts a string with a trailing time part
+    and silently drops that part, so a ``datetime.datetime`` can be sent as a timestamp
+    string and the database discards the time.
+
+    Passed through unchanged:
+     * None -> None
+     * str  -> str. The database rejects strings in an unsupported format.
+
+    Converted types:
+    * datetime.date      -> str in the format ``YYYY-MM-DD``
+    * datetime.datetime  -> str in the format ``YYYY-MM-DD HH:MM:SS[.ffffff]``
+                            (timezone-aware values are converted to UTC first);
+                            the database truncates this to the date
+
+    Raises:
+    * TypeError -> any other type
+    """
+    if value is None or isinstance(value, str):
+        return value
+    if isinstance(value, datetime.datetime):
+        return timestamp_to_websocket(value)
+    if not isinstance(value, datetime.date):
+        raise TypeError(
+            f"Expected datetime.date, str, or None, got {type(value).__name__}."
+        )
+    return value.isoformat()
+
+
 def interval_day_to_second_to_websocket(
     value: datetime.timedelta | ExaTimeDelta | str | None,
 ) -> str | None:
