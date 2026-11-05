@@ -65,6 +65,25 @@ def session_timestamp_format(connection):
 
 
 @pytest.fixture
+def date_table(connection):
+    table = SingleColumnTable.create_empty(connection, "WS_DATE_INPUT", "DATE")
+    yield table
+    table.drop()
+
+
+@pytest.fixture
+def session_date_format(connection):
+    result = connection.execute(
+        "SELECT SESSION_VALUE FROM EXA_PARAMETERS "
+        "WHERE PARAMETER_NAME = 'NLS_DATE_FORMAT';"
+    )
+    original_format = result.fetchval()
+    connection.execute("ALTER SESSION SET NLS_DATE_FORMAT='DD/MM/YYYY';")
+    yield
+    connection.execute(f"ALTER SESSION SET NLS_DATE_FORMAT='{original_format}';")
+
+
+@pytest.fixture
 def interval_table(connection):
     table = SingleColumnTable.create_empty(
         connection, "WS_INTERVAL_INPUT", "INTERVAL DAY(9) TO SECOND(9)"
@@ -134,6 +153,48 @@ class TestTimestampInputs:
 
         # The column keeps 3 fractional digits; the session format pads them to 4.
         assert timestamp_table.read() == "11/09/2026 12:34:56.1230"
+
+
+class TestDateInputs:
+    @staticmethod
+    @pytest.mark.parametrize(
+        "value, expected_stored",
+        [
+            pytest.param("2026-09-11", "2026-09-11", id="iso-format"),
+            pytest.param("2026-9-1", "2026-09-01", id="unpadded-fields"),
+            # A trailing time part is accepted and discarded by the database.
+            pytest.param(
+                "2026-09-11 12:34:56", "2026-09-11", id="string-has-time-part"
+            ),
+            pytest.param("", None, id="empty-string"),
+            pytest.param(None, None, id="none"),
+        ],
+    )
+    def test_accepts_and_stores_expected_value(date_table, value, expected_stored):
+        date_table.insert(value)
+
+        assert date_table.read() == expected_stored
+
+    @staticmethod
+    @pytest.mark.parametrize(
+        "value",
+        [
+            pytest.param("2026-09-11T12:34:56", id="string-has-T"),
+            pytest.param("2026-02-30", id="day-out-of-range"),
+            pytest.param("2026-13-01", id="month-out-of-range"),
+            pytest.param("2023-02-29", id="leap-day-in-non-leap-year"),
+            pytest.param("11/09/2026", id="string-has-unsupported-format"),
+        ],
+    )
+    def test_rejects_string(date_table, value):
+        with pytest.raises(ExaRequestError):
+            date_table.insert(value)
+
+    @staticmethod
+    def test_accepts_session_nls_date_format(date_table, session_date_format):
+        date_table.insert("11/09/2026")
+
+        assert date_table.read() == "11/09/2026"
 
 
 class TestIntervalDayToSecondInputs:
