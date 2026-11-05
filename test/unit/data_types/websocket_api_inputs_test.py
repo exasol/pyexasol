@@ -1,4 +1,5 @@
 import datetime
+import decimal
 from unittest.mock import patch
 
 import pytest
@@ -13,6 +14,7 @@ from pyexasol.statement import ExaStatement
         pytest.param(datetime.datetime(2026, 9, 11, 12, 34), id="python-datetime"),
         pytest.param(datetime.timedelta(days=1, hours=2), id="python-timedelta"),
         pytest.param(ExaTimeDelta(days=1, hours=2), id="exa-timedelta"),
+        pytest.param(decimal.Decimal("1.50"), id="python-decimal"),
     ],
 )
 def test_unserializable_parameter_raises_type_error(mock_exaconnection_factory, value):
