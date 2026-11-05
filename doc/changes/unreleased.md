@@ -5,7 +5,7 @@
 
 ## Bugfixes
 
-* #371: Fixed import_from_file returning misleading error message if wrong object type was passed.
+* #371: Fixed import_from_file returning misleading error message if wrong object type was passed
 
 ## Features
 
@@ -15,4 +15,5 @@
 ## Refactorings
 
 * #444: Removed support for Python 3.10 and updated to exasol-toolbox version 12.0.0
-* #451: Resolved Sonar findings by using literals instead of `list()` and `dict()` calls, and `list()` instead of list comprehensions in `fetchmany` and `fetchall`.
+* #451: Resolved Sonar findings by using literals instead of `list()` and `dict()` calls, and `list()` instead of list comprehensions in `fetchmany` and `fetchall`
+* #452: Deprecated `ExaTimeDelta.to_interval`; use `ExaTimeDelta.to_interval_unpadded` instead

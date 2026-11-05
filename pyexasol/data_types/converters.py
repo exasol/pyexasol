@@ -11,16 +11,21 @@ back into the formats expected by Exasol.
 from __future__ import annotations
 
 import datetime
+from warnings import warn
+
+from pyexasol.warnings import PyexasolDeprecationWarning
 
 SECONDS_PER_DAY = 24 * 60 * 60
 MICROSECONDS_PER_SECOND = 1_000_000
+
+_to_interval_warning_emitted = False
 
 
 class ExaTimeDelta(datetime.timedelta):
     """Represent Exasol intervals and convert them in both directions.
 
     ``from_interval`` converts WebSocket values to Python, while
-    ``to_interval`` converts Python values back to Exasol's format.
+    ``to_interval_unpadded`` converts Python values back to Exasol's format.
     """
 
     def reverse_seconds(self) -> tuple[int, int]:
@@ -97,10 +102,24 @@ class ExaTimeDelta(datetime.timedelta):
         """
         Convert this duration to an Exasol ``INTERVAL DAY TO SECOND`` string.
 
+        .. deprecated::
+            Use ``to_interval_unpadded`` instead.
+
         The result uses the format ``[+-]DDDDDDDDD HH:MM:SS.NNNNNNNNN``.
         Python microseconds are represented with nanosecond precision by appending
         three zeros.
         """
+        global _to_interval_warning_emitted
+
+        if not _to_interval_warning_emitted:
+            warn(
+                "ExaTimeDelta.to_interval is deprecated and will be removed in the future. "
+                "Use ExaTimeDelta.to_interval_unpadded instead.",
+                PyexasolDeprecationWarning,
+                stacklevel=2,
+            )
+            _to_interval_warning_emitted = True
+
         sign, days, hours, minutes, seconds, microseconds = self._interval_parts()
         day_string = f"{sign}{days:09d}"
         time_string = f"{hours:02d}:{minutes:02d}:{seconds:02d}"
@@ -114,7 +133,7 @@ class ExaTimeDelta(datetime.timedelta):
 
         The result uses the format ``[+-]D HH:MM:SS[.f..f]``. Unlike ``to_interval``,
         the result is not wider than necessary, so it fits narrower
-        ``INTERVAL DAY(p) TO SECOND(s)`` columns.
+        ``INTERVAL DAY(p) TO SECOND(f)`` columns.
         """
         sign, days, hours, minutes, seconds, microseconds = self._interval_parts()
         day_string = f"{sign}{days}"
