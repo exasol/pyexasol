@@ -55,6 +55,11 @@ def interval_day_to_second_to_websocket(
     format ``[+-]D HH:MM:SS[.f..f]``. This function otherwise does not round, truncate
     or check the column's precision; whether the value fits is left to the database.
 
+    The database truncates INTERVAL DAY TO SECOND values to milliseconds, even if the
+    column is declared with a higher fractional-second precision. For example,
+    ``1 02:03:04.1234567`` is stored as ``+000000001 02:03:04.123000000``. See
+    https://docs.exasol.com/db/latest/sql_references/data_types/datatypedetails.htm#Intervaldatatypes
+
     Passed through unchanged:
      * None -> None
      * str  -> str. The database rejects strings in an unsupported format.
