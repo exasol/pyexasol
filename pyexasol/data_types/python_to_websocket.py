@@ -1,4 +1,5 @@
 import datetime
+import decimal
 
 from pyexasol.data_types.converters import ExaTimeDelta
 
@@ -83,3 +84,50 @@ def interval_day_to_second_to_websocket(
             f"Expected datetime.timedelta, str, ExaTimeDelta, or None, got {type(value).__name__}."
         )
     return ExaTimeDelta.from_timedelta(value).to_interval_unpadded()
+
+
+def decimal_to_websocket(
+    value: decimal.Decimal | int | float | str | None,
+) -> str | None:
+    """
+    Convert a Python value to a type that the WebSocket API allows for a DECIMAL.
+
+    We send numbers as strings in plain fixed-point notation because the server
+    truncates a JSON number with many digits while handling it (for instance, a
+    35-digit ``int`` keeps only 17 significant digits), but keeps every digit of
+    a string.
+
+    The stored value is governed by the target column's ``DECIMAL(p,s)``. If the
+    value has more fractional digits than ``s``, the database truncates the extra
+    digits silently. A value whose integer part does not fit ``p - s`` digits
+    (precision minus scale) is rejected by the database with an error. Furthermore,
+    the default database rejects strings like ``"abc"``, ``"1,5"``, ``"1_000"``,
+    ``"NaN"`` and ``"Infinity"``.  The session's ``NLS_NUMERIC_CHARACTERS``
+    EXA_PARAMETERS may change which decimal and group separators are accepted.
+
+    Passed through unchanged:
+     * None -> None
+     * str  -> str
+
+    Converted types:
+    * decimal.Decimal  -> str
+    * int              -> str
+    * float            -> str
+
+    Raises:
+    * TypeError -> any other type
+    """
+    if value is None or isinstance(value, str):
+        return value
+    if isinstance(value, decimal.Decimal):
+        return f"{value:f}"
+    if isinstance(value, int) and not isinstance(value, bool):
+        return str(int(value))
+    if isinstance(value, float):
+        # float.__repr__ also works for float subclasses such as numpy.float64,
+        # whose own repr() is "np.float64(0.1)" and cannot be parsed by Decimal.
+        return f"{decimal.Decimal(float.__repr__(value)):f}"
+    raise TypeError(
+        "Expected decimal.Decimal, int, float, str, or None, "
+        f"got {type(value).__name__}."
+    )

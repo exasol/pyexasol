@@ -1,9 +1,11 @@
 import datetime
+import decimal
 
 import pytest
 
 from pyexasol.data_types import ExaTimeDelta
 from pyexasol.data_types.python_to_websocket import (
+    decimal_to_websocket,
     interval_day_to_second_to_websocket,
     timestamp_to_websocket,
 )
@@ -158,3 +160,109 @@ class TestIntervalDayToSecondToWebsocket:
         value = ExaTimeDelta(days=1, hours=2, microseconds=123456)
 
         assert interval_day_to_second_to_websocket(value) == "+1 02:00:00.123456"
+
+
+class TestDecimalToWebsocket:
+    @staticmethod
+    @pytest.mark.parametrize(
+        "value",
+        [
+            pytest.param(None, id="none"),
+            pytest.param("12.5", id="string"),
+        ],
+    )
+    def test_pass_through_values_unchanged(value):
+        assert decimal_to_websocket(value) is value
+
+    @staticmethod
+    @pytest.mark.parametrize(
+        "value, expected",
+        [
+            pytest.param(decimal.Decimal("12.5"), "12.5", id="regular"),
+            pytest.param(decimal.Decimal("-12.50"), "-12.50", id="negative"),
+            pytest.param(decimal.Decimal("0.000001"), "0.000001", id="small"),
+            pytest.param(decimal.Decimal("1E+3"), "1000", id="exponent"),
+        ],
+    )
+    def test_formats_decimal(value, expected):
+        assert decimal_to_websocket(value) == expected
+
+    @staticmethod
+    def test_ignores_str_override_of_decimal_subclass():
+        class LabelStrDecimal(decimal.Decimal):
+            def __str__(self):
+                return "value=" + super().__str__()
+
+        assert decimal_to_websocket(LabelStrDecimal("12.5")) == "12.5"
+
+    @staticmethod
+    @pytest.mark.parametrize(
+        "value, expected",
+        [
+            pytest.param(0, "0", id="zero"),
+            pytest.param(-3, "-3", id="negative"),
+            pytest.param(
+                12345678901234567890123456789012345,
+                "12345678901234567890123456789012345",
+                id="35-digits",
+            ),
+        ],
+    )
+    def test_formats_int(value, expected):
+        assert decimal_to_websocket(value) == expected
+
+    @staticmethod
+    def test_ignores_str_override_of_int_subclass():
+        class LabelStrInt(int):
+            def __str__(self):
+                return "value=" + super().__str__()
+
+        assert decimal_to_websocket(LabelStrInt(12)) == "12"
+
+    @staticmethod
+    @pytest.mark.parametrize(
+        "value, expected",
+        [
+            pytest.param(-0.25, "-0.25", id="negative"),
+            pytest.param(2.675, "2.675", id="positive"),
+            pytest.param(1e-7, "0.0000001", id="exponent"),
+        ],
+    )
+    def test_formats_float(value, expected):
+        assert decimal_to_websocket(value) == expected
+
+    @staticmethod
+    def test_ignores_repr_override_of_float_subclass():
+        class LabelReprFloat(float):
+            def __repr__(self):
+                return "value=" + super().__repr__()
+
+        assert decimal_to_websocket(LabelReprFloat(1.5)) == "1.5"
+
+    @staticmethod
+    @pytest.mark.parametrize(
+        "value, expected",
+        [
+            pytest.param(decimal.Decimal("NaN"), "NaN", id="nan"),
+            pytest.param(decimal.Decimal("Infinity"), "Infinity", id="infinity"),
+            pytest.param(decimal.Decimal("-Infinity"), "-Infinity", id="negative"),
+            pytest.param(float("nan"), "NaN", id="nan"),
+            pytest.param(float("inf"), "Infinity", id="infinity"),
+            pytest.param(float("-inf"), "-Infinity", id="negative-infinity"),
+        ],
+    )
+    def test_leaves_special_values_for_database_to_reject(value, expected):
+        assert decimal_to_websocket(value) == expected
+
+    @staticmethod
+    @pytest.mark.parametrize(
+        "value",
+        [
+            pytest.param(True, id="bool-true"),
+            pytest.param(datetime.date(2026, 9, 11), id="date"),
+            pytest.param(b"1", id="bytes"),
+        ],
+    )
+    def test_raises_type_error_for_other_types(value):
+        with pytest.raises(TypeError, match="Expected decimal.Decimal"):
+            decimal_to_websocket(value)
