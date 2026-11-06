@@ -150,4 +150,4 @@ class ExaTimeDelta(datetime.timedelta):
         return interval
 
     def __str__(self) -> str:
-        return self.to_interval()
+        return self.to_interval_unpadded()
