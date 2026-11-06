@@ -92,6 +92,13 @@ def wide_decimal_table(connection):
 
 
 @pytest.fixture
+def double_table(connection):
+    table = SingleColumnTable.create_empty(connection, "WS_DOUBLE_INPUT", "DOUBLE")
+    yield table
+    table.drop()
+
+
+@pytest.fixture
 def session_numeric_characters(connection):
     result = connection.execute(
         "SELECT SESSION_VALUE FROM EXA_PARAMETERS "
@@ -322,3 +329,68 @@ class TestWideDecimalInputs:
     def test_rejects_string_precision_overflow(wide_decimal_table):
         with pytest.raises(ExaRequestError):
             wide_decimal_table.insert(str(10**36))
+
+
+class TestDoubleInputs:
+    # These cases mirror the DECIMAL ones. The column is DOUBLE, which accepts only
+    # a JSON float (or None / empty string). The database returns DOUBLE values as
+    # floats.
+    @staticmethod
+    @pytest.mark.parametrize(
+        "value, expected_stored",
+        [
+            pytest.param(None, None, id="none"),
+            pytest.param(1.555, 1.555, id="greater-scale-kept"),
+            # Only empty string works. See the later test for rejected numeric strings.
+            pytest.param("", None, id="string-empty"),
+            # A large int is accepted, but only its first 17 significant digits
+            # arrive, as for DECIMAL. Converting it to a float in Python first
+            # avoids this (see the case below).
+            pytest.param(
+                12345678901234567890123456789012345,
+                1.2345678901234567e34,
+                id="int-35-digits-loses-precision-server-side",
+            ),
+            # The same value converted to a float in Python is stored exactly.
+            pytest.param(
+                float(12345678901234567890123456789012345),
+                float(12345678901234567890123456789012345),
+                id="int-35-digits-as-float-stays-exact",
+            ),
+            # DOUBLE-specific cases.
+            pytest.param(1e308, 1e308, id="large-exponent"),
+            pytest.param(1e-320, 1e-320, id="subnormal"),
+        ],
+    )
+    def test_accepts_and_stores_expected_value(double_table, value, expected_stored):
+        double_table.insert(value)
+
+        assert double_table.read() == expected_stored
+
+    @staticmethod
+    @pytest.mark.parametrize(
+        "value",
+        [
+            # Every non-empty string is rejected, even a plain number.
+            pytest.param("1", id="numeric-string"),
+            # A small int is rejected as well, even though a large one is accepted.
+            pytest.param(-3, id="int"),
+            pytest.param(True, id="bool-true"),
+            # DOUBLE-specific cases.
+            pytest.param(float("nan"), id="float-nan"),
+            pytest.param(float("inf"), id="float-inf"),
+        ],
+    )
+    def test_rejects_value(double_table, value):
+        with pytest.raises(ExaRequestError):
+            double_table.insert(value)
+
+    @staticmethod
+    def test_accepts_float_with_session_nls_numeric_characters(
+        double_table, session_numeric_characters
+    ):
+        # Unlike DECIMAL, a float is a JSON number and does not depend on the
+        # session's decimal separator.
+        double_table.insert(1.5)
+
+        assert double_table.read() == 1.5
