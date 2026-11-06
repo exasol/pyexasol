@@ -358,6 +358,22 @@ class TestDecimalInputs:
         # The value is also returned with the session's decimal separator.
         assert decimal_table.read() == "1,5"
 
+    @staticmethod
+    @pytest.mark.parametrize(
+        "value",
+        [
+            # decimal_to_websocket always formats with "." as the decimal separator.
+            # Under ',.' it is a group separator, so the database rejects the value.
+            pytest.param("1.5", id="converted-decimal-with-fraction"),
+            pytest.param("12.25", id="converted-decimal-with-fraction-two-digits"),
+        ],
+    )
+    def test_rejects_converted_fraction_with_session_nls_numeric_characters(
+        decimal_table, session_numeric_characters, value
+    ):
+        with pytest.raises(ExaRequestError):
+            decimal_table.insert(value)
+
 
 class TestWideDecimalInputs:
     @staticmethod
