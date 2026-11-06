@@ -166,6 +166,11 @@ class TestDateInputs:
             pytest.param(
                 "2026-09-11 12:34:56", "2026-09-11", id="string-has-time-part"
             ),
+            pytest.param(
+                "2026-09-11 12:34:56.123456",
+                "2026-09-11",
+                id="string-has-time-part-with-fraction",
+            ),
             pytest.param("", None, id="empty-string"),
             pytest.param(None, None, id="none"),
         ],

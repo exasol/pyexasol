@@ -80,8 +80,8 @@ def date_to_websocket(value: datetime.date | str | None) -> str | None:
 
     Converted types:
     * datetime.date      -> str in the format ``YYYY-MM-DD``
-    * datetime.datetime  -> str in the format ``YYYY-MM-DD``. Only the date part is
-                            sent; the time part is discarded. Only naive values are
+    * datetime.datetime  -> str in the format ``YYYY-MM-DD HH:MM:SS[.ffffff]``. The
+                            database drops the time part. Only naive values are
                             supported, see Raises.
 
     Raises:
@@ -94,7 +94,7 @@ def date_to_websocket(value: datetime.date | str | None) -> str | None:
         return value
     if isinstance(value, datetime.datetime):
         _reject_timezone_aware(value, "DATE")
-        return value.date().isoformat()
+        return value.isoformat(sep=" ")
     if not isinstance(value, datetime.date):
         raise TypeError(
             f"Expected datetime.date, str, or None, got {type(value).__name__}."

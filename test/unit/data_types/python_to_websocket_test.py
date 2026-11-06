@@ -51,12 +51,17 @@ class TestDateToWebsocket:
         [
             pytest.param(
                 datetime.datetime(2026, 9, 11, 12, 34, 56, 123456),
-                "2026-09-11",
-                id="naive",
+                "2026-09-11 12:34:56.123456",
+                id="naive-with-microseconds",
+            ),
+            pytest.param(
+                datetime.datetime(2026, 9, 11, 23, 59, 59),
+                "2026-09-11 23:59:59",
+                id="naive-without-microseconds",
             ),
         ],
     )
-    def test_formats_datetime_as_its_own_date(value, expected):
+    def test_formats_datetime_as_timestamp_string(value, expected):
         assert date_to_websocket(value) == expected
 
     @staticmethod
