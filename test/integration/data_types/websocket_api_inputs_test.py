@@ -5,6 +5,8 @@ These tests bind raw strings through the WebSocket API and check whether the
 database accepts them, how it stores them, and which inputs it rejects.
 """
 
+from contextlib import contextmanager
+
 import pytest
 from packaging.version import Version
 
@@ -37,6 +39,19 @@ class SingleColumnTable:
         return result.fetchone()[0]
 
 
+@contextmanager
+def override_session_parameter(connection, name, value):
+    """Set a session parameter such as NLS_DATE_FORMAT and restore it afterwards."""
+    original_value = connection.execute(
+        f"SELECT SESSION_VALUE FROM EXA_PARAMETERS WHERE PARAMETER_NAME = '{name}';"
+    ).fetchval()
+    connection.execute(f"ALTER SESSION SET {name}='{value}';")
+    try:
+        yield
+    finally:
+        connection.execute(f"ALTER SESSION SET {name}='{original_value}';")
+
+
 @pytest.fixture
 def timestamp_table(connection, db_version):
     # Exasol 8 versions before 8.32.0 only support TIMESTAMP with the default of 3
@@ -52,16 +67,10 @@ def timestamp_table(connection, db_version):
 
 @pytest.fixture
 def session_timestamp_format(connection):
-    result = connection.execute(
-        "SELECT SESSION_VALUE FROM EXA_PARAMETERS "
-        "WHERE PARAMETER_NAME = 'NLS_TIMESTAMP_FORMAT';"
-    )
-    original_format = result.fetchval()
-    connection.execute(
-        "ALTER SESSION SET NLS_TIMESTAMP_FORMAT='DD/MM/YYYY HH24:MI:SS.FF4';"
-    )
-    yield
-    connection.execute(f"ALTER SESSION SET NLS_TIMESTAMP_FORMAT='{original_format}';")
+    with override_session_parameter(
+        connection, "NLS_TIMESTAMP_FORMAT", "DD/MM/YYYY HH24:MI:SS.FF4"
+    ):
+        yield
 
 
 @pytest.fixture
@@ -73,14 +82,8 @@ def date_table(connection):
 
 @pytest.fixture
 def session_date_format(connection):
-    result = connection.execute(
-        "SELECT SESSION_VALUE FROM EXA_PARAMETERS "
-        "WHERE PARAMETER_NAME = 'NLS_DATE_FORMAT';"
-    )
-    original_format = result.fetchval()
-    connection.execute("ALTER SESSION SET NLS_DATE_FORMAT='DD/MM/YYYY';")
-    yield
-    connection.execute(f"ALTER SESSION SET NLS_DATE_FORMAT='{original_format}';")
+    with override_session_parameter(connection, "NLS_DATE_FORMAT", "DD/MM/YYYY"):
+        yield
 
 
 @pytest.fixture
