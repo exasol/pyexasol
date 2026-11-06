@@ -186,7 +186,8 @@ def decimal_to_websocket(
     (precision minus scale) is rejected by the database with an error. Furthermore,
     the default database rejects strings like ``"abc"``, ``"1,5"``, ``"1_000"``,
     ``"NaN"`` and ``"Infinity"``. The session's ``NLS_NUMERIC_CHARACTERS``
-    EXA_PARAMETERS may change which decimal and group separators are accepted.
+    EXA_PARAMETERS may change which decimal and group separators are accepted. This
+    converter is only written for the default ``.,``.
 
     Passed through unchanged:
      * None -> None
@@ -229,6 +230,9 @@ def double_to_websocket(
     a DOUBLE, even one such as ``"1.5"``. An ``int`` or ``decimal.Decimal`` is
     converted to a ``float`` first. Otherwise, the database keeps only the first 17
     significant digits of a large ``int``.
+
+    A ``decimal.Decimal`` too small for a double, such as ``Decimal("1E-400")``,
+    silently becomes ``0.0``, as with any float conversion.
 
     Unlike DECIMAL, the session's ``NLS_NUMERIC_CHARACTERS`` has no effect.
 
