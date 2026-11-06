@@ -3,20 +3,19 @@ import datetime
 from pyexasol.data_types.converters import ExaTimeDelta
 
 
-def _reject_timezone_aware(value: datetime.datetime, target: str) -> None:
+def _reject_timezone_aware(value: datetime.datetime, target: str, hint: str) -> None:
     """
     Raise ValueError if ``value`` is timezone-aware.
 
     TIMESTAMP and DATE have no timezone and the WebSocket string can't carry an
     offset. Which instant or calendar date is meant depends on the timezone, so the
-    caller must choose the conversion explicitly.
+    caller must choose the conversion explicitly. ``hint`` is the target-specific
+    expression suggested in the error message.
     """
     if value.utcoffset() is not None:
         raise ValueError(
             f"Timezone-aware datetime.datetime is not supported for {target}. "
-            "Convert it explicitly first, e.g. with "
-            "value.astimezone(datetime.UTC).replace(tzinfo=None) for the UTC "
-            "value."
+            f"Convert it explicitly first, e.g. with {hint} for the UTC value."
         )
 
 
@@ -58,7 +57,9 @@ def timestamp_to_websocket(value: datetime.datetime | str | None) -> str | None:
             f"Expected datetime.datetime, str, or None, got {type(value).__name__}."
         )
 
-    _reject_timezone_aware(value, "TIMESTAMP")
+    _reject_timezone_aware(
+        value, "TIMESTAMP", "value.astimezone(datetime.UTC).replace(tzinfo=None)"
+    )
     return value.isoformat(sep=" ")
 
 
@@ -93,7 +94,7 @@ def date_to_websocket(value: datetime.date | str | None) -> str | None:
     if value is None or isinstance(value, str):
         return value
     if isinstance(value, datetime.datetime):
-        _reject_timezone_aware(value, "DATE")
+        _reject_timezone_aware(value, "DATE", "value.astimezone(datetime.UTC).date()")
         return value.isoformat(sep=" ")
     if not isinstance(value, datetime.date):
         raise TypeError(

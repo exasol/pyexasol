@@ -74,7 +74,7 @@ class TestDateToWebsocket:
     )
     def test_raises_value_error_for_aware_datetime(tz):
         value = datetime.datetime(2026, 1, 1, 23, 0, tzinfo=tz)
-        with pytest.raises(ValueError, match="not supported for DATE"):
+        with pytest.raises(ValueError, match=r"not supported for DATE.*\.date\(\)"):
             date_to_websocket(value)
 
     @staticmethod
@@ -136,7 +136,9 @@ class TestTimestampToWebsocket:
     )
     def test_raises_value_error_for_aware_datetime(tz):
         value = datetime.datetime(2026, 9, 11, 12, 34, 56, tzinfo=tz)
-        with pytest.raises(ValueError, match="not supported for TIMESTAMP"):
+        with pytest.raises(
+            ValueError, match=r"not supported for TIMESTAMP.*replace\(tzinfo=None\)"
+        ):
             timestamp_to_websocket(value)
 
     @staticmethod
