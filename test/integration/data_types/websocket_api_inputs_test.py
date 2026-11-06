@@ -95,6 +95,45 @@ def interval_table(connection):
     table.drop()
 
 
+@pytest.fixture
+def decimal_table(connection):
+    table = SingleColumnTable.create_empty(
+        connection, "WS_DECIMAL_INPUT", "DECIMAL(10,2)"
+    )
+    yield table
+    table.drop()
+
+
+@pytest.fixture
+def wide_decimal_table(connection):
+    table = SingleColumnTable.create_empty(
+        connection, "WS_WIDE_DECIMAL_INPUT", "DECIMAL(36,0)"
+    )
+    yield table
+    table.drop()
+
+
+@pytest.fixture
+def double_table(connection):
+    table = SingleColumnTable.create_empty(connection, "WS_DOUBLE_INPUT", "DOUBLE")
+    yield table
+    table.drop()
+
+
+@pytest.fixture
+def session_numeric_characters(connection):
+    result = connection.execute(
+        "SELECT SESSION_VALUE FROM EXA_PARAMETERS "
+        "WHERE PARAMETER_NAME = 'NLS_NUMERIC_CHARACTERS';"
+    )
+    original_characters = result.fetchval()
+    connection.execute("ALTER SESSION SET NLS_NUMERIC_CHARACTERS=',.';")
+    yield
+    connection.execute(
+        f"ALTER SESSION SET NLS_NUMERIC_CHARACTERS='{original_characters}';"
+    )
+
+
 class TestTimestampInputs:
     # These cases rely on the default session NLS_TIMESTAMP_FORMAT,
     # 'YYYY-MM-DD HH24:MI:SS.FF6'. The session format test changes it temporarily
@@ -251,3 +290,192 @@ class TestIntervalDayToSecondInputs:
     def test_rejects_string(interval_table, value):
         with pytest.raises(ExaRequestError):
             interval_table.insert(value)
+
+
+class TestDecimalInputs:
+    # The column is DECIMAL(10,2). The database returns DECIMAL values as strings
+    # without trailing zeros.
+    @staticmethod
+    @pytest.mark.parametrize(
+        "value, expected_stored",
+        [
+            pytest.param(None, None, id="none"),
+            pytest.param(-3, "-3", id="int"),
+            pytest.param(1.51, "1.51", id="float"),
+            # Scale beyond the column's is truncated, not rounded.
+            pytest.param(1.555, "1.55", id="greater-scale-truncated"),
+            pytest.param("1", "1", id="string"),
+            pytest.param("", None, id="string-empty"),
+            pytest.param("-1.5", "-1.5", id="string-negative"),
+            pytest.param("+1.5", "1.5", id="string-positive-sign"),
+            pytest.param(".5", "0.5", id="string-no-padding"),
+            pytest.param("  1.5 ", "1.5", id="string-surrounding-whitespace"),
+            pytest.param("1E+3", "1000", id="string-exponent-upper"),
+            pytest.param("1e3", "1000", id="string-exponent-lower"),
+            # Only the numeric value must fit the column, not the string length.
+            pytest.param(
+                "0" * 50 + "1.5",
+                "1.5",
+                id="string-leading-zeros-beyond-precision",
+            ),
+            pytest.param(
+                "1." + "5" * 50,
+                "1.55",
+                id="string-fraction-digits-beyond-scale",
+            ),
+        ],
+    )
+    def test_accepts_and_stores_expected_value(decimal_table, value, expected_stored):
+        decimal_table.insert(value)
+
+        assert decimal_table.read() == expected_stored
+
+    @staticmethod
+    @pytest.mark.parametrize(
+        "value",
+        [
+            pytest.param("1,5", id="string-comma-separator"),
+            pytest.param("abc", id="string-not-a-number"),
+            pytest.param("NaN", id="string-nan"),
+            pytest.param("Infinity", id="string-infinity"),
+            pytest.param("1_000", id="string-underscore"),
+            # DECIMAL(10,2) leaves 8 digits for the integer part, so a 9-digit int
+            # does not fit. The value is rejected even though it is a valid number.
+            pytest.param(123456789, id="int-precision-overflow"),
+            pytest.param(True, id="bool-true"),
+        ],
+    )
+    def test_rejects_value(decimal_table, value):
+        with pytest.raises(ExaRequestError):
+            decimal_table.insert(value)
+
+    @staticmethod
+    def test_accepts_session_nls_numeric_characters(
+        decimal_table, session_numeric_characters
+    ):
+        decimal_table.insert("1,5")
+
+        # The value is also returned with the session's decimal separator.
+        assert decimal_table.read() == "1,5"
+
+    @staticmethod
+    @pytest.mark.parametrize(
+        "value",
+        [
+            # decimal_to_websocket always formats with "." as the decimal separator.
+            # Under ',.' it is a group separator, so the database rejects the value.
+            pytest.param("1.5", id="converted-decimal-with-fraction"),
+            pytest.param("12.25", id="converted-decimal-with-fraction-two-digits"),
+        ],
+    )
+    def test_rejects_converted_fraction_with_session_nls_numeric_characters(
+        decimal_table, session_numeric_characters, value
+    ):
+        with pytest.raises(ExaRequestError):
+            decimal_table.insert(value)
+
+
+class TestWideDecimalInputs:
+    @staticmethod
+    @pytest.mark.parametrize(
+        "value, expected_stored",
+        [
+            # Still exact as JSON numbers: 2**53 + 1 has 16 digits, and 10**35 is a
+            # one followed by zeros. These show the loss is not simply "any int
+            # above 2**53", but depends on how many significant digits it has.
+            pytest.param(2**53 + 1, str(2**53 + 1), id="int-above-2-53"),
+            pytest.param(str(10**36 - 1), str(10**36 - 1), id="string-max-precision"),
+            # A large int bound as a JSON number loses precision on its way to
+            # the column. This is not a database storage issue, as when sent as a
+            # SQL literals and strings with the same value are stored exactly. The
+            # loss happens in between, while the server handles the JSON number.
+            # This is why a Decimal converter should send a string, not a number.
+            pytest.param(
+                12345678901234567890123456789012345,
+                "12345678901234567000000000000000000",
+                id="int-loses-precision-server-side",
+            ),
+            # The same value sent as a string is stored exactly.
+            pytest.param(
+                "12345678901234567890123456789012345",
+                "12345678901234567890123456789012345",
+                id="string-same-value-stays-exact",
+            ),
+        ],
+    )
+    def test_accepts_and_stores_expected_value(
+        wide_decimal_table, value, expected_stored
+    ):
+        wide_decimal_table.insert(value)
+
+        assert wide_decimal_table.read() == expected_stored
+
+    @staticmethod
+    def test_rejects_string_precision_overflow(wide_decimal_table):
+        with pytest.raises(ExaRequestError):
+            wide_decimal_table.insert(str(10**36))
+
+
+class TestDoubleInputs:
+    # These cases mirror the DECIMAL ones. The column is DOUBLE, which accepts only
+    # a JSON float (or None / empty string). The database returns DOUBLE values as
+    # floats.
+    @staticmethod
+    @pytest.mark.parametrize(
+        "value, expected_stored",
+        [
+            pytest.param(None, None, id="none"),
+            pytest.param(1.555, 1.555, id="greater-scale-kept"),
+            # Only empty string works. See the later test for rejected numeric strings.
+            pytest.param("", None, id="string-empty"),
+            # A large int is accepted, but only its first 17 significant digits
+            # arrive, as for DECIMAL. Converting it to a float in Python first
+            # avoids this (see the case below).
+            pytest.param(
+                12345678901234567890123456789012345,
+                1.2345678901234567e34,
+                id="int-35-digits-loses-precision-server-side",
+            ),
+            # The same value converted to a float in Python is stored exactly.
+            pytest.param(
+                float(12345678901234567890123456789012345),
+                float(12345678901234567890123456789012345),
+                id="int-35-digits-as-float-stays-exact",
+            ),
+            # DOUBLE-specific cases.
+            pytest.param(1e308, 1e308, id="large-exponent"),
+            pytest.param(1e-320, 1e-320, id="subnormal"),
+        ],
+    )
+    def test_accepts_and_stores_expected_value(double_table, value, expected_stored):
+        double_table.insert(value)
+
+        assert double_table.read() == expected_stored
+
+    @staticmethod
+    @pytest.mark.parametrize(
+        "value",
+        [
+            # Every non-empty string is rejected, even a plain number.
+            pytest.param("1", id="numeric-string"),
+            # A small int is rejected as well, even though a large one is accepted.
+            pytest.param(-3, id="int"),
+            pytest.param(True, id="bool-true"),
+            # DOUBLE-specific cases.
+            pytest.param(float("nan"), id="float-nan"),
+            pytest.param(float("inf"), id="float-inf"),
+        ],
+    )
+    def test_rejects_value(double_table, value):
+        with pytest.raises(ExaRequestError):
+            double_table.insert(value)
+
+    @staticmethod
+    def test_accepts_float_with_session_nls_numeric_characters(
+        double_table, session_numeric_characters
+    ):
+        # Unlike DECIMAL, a float is a JSON number and does not depend on the
+        # session's decimal separator.
+        double_table.insert(1.5)
+
+        assert double_table.read() == 1.5
