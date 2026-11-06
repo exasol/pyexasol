@@ -263,3 +263,51 @@ def double_to_websocket(
     raise TypeError(
         f"Expected float, int, decimal.Decimal, or None, got {type(value).__name__}."
     )
+
+
+_BOOLEAN_STRINGS = {
+    "1": True,
+    "t": True,
+    "true": True,
+    "0": False,
+    "f": False,
+    "false": False,
+}
+
+
+def boolean_to_websocket(value: bool | int | str | None) -> bool | None:
+    """
+    Convert a Python value to a type that the WebSocket API allows for a BOOLEAN.
+
+    The WebSocket API accepts only a JSON boolean or None. We convert the other boolean
+    literals the database lists to the appropriate boolean values:
+    https://docs.exasol.com/db/latest/sql_references/data_types/datatypedetails.htm#BooleanDataType
+
+    Passed through unchanged:
+    * None -> None
+    * bool -> bool
+
+    Converted types:
+    * int  -> bool. Only ``1`` (True) and ``0`` (False).
+    * str  -> bool. ``'1'``, ``'T'`` and ``'TRUE'`` (True), and ``'0'``, ``'F'`` and
+              ``'FALSE'`` (False), case-insensitive.
+
+    Raises:
+    * ValueError -> an int other than 0 or 1, a str that is not listed above, or
+                    any other type
+    """
+    if value is None or isinstance(value, bool):
+        return value
+    if isinstance(value, int):
+        if value in (0, 1):
+            return bool(value)
+    elif isinstance(value, str):
+        # str.lower() on a subclass could be overridden, so convert it first.
+        converted = _BOOLEAN_STRINGS.get(str.lower(value))
+        if converted is not None:
+            return converted
+    allowed_strings = ", ".join(repr(string) for string in _BOOLEAN_STRINGS)
+    raise ValueError(
+        f"{value!r} is not supported for BOOLEAN. Use bool, None, the int 0 or 1, or "
+        f"one of the strings {allowed_strings} (case-insensitive)."
+    )
