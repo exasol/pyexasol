@@ -1,11 +1,13 @@
 import datetime
 import decimal
+import math
 
 import pytest
 
 from pyexasol.data_types import ExaTimeDelta
 from pyexasol.data_types.python_to_websocket import (
     decimal_to_websocket,
+    double_to_websocket,
     interval_day_to_second_to_websocket,
     timestamp_to_websocket,
 )
@@ -266,3 +268,90 @@ class TestDecimalToWebsocket:
     def test_raises_type_error_for_other_types(value):
         with pytest.raises(TypeError, match="Expected decimal.Decimal"):
             decimal_to_websocket(value)
+
+
+class TestDoubleToWebsocket:
+    @staticmethod
+    def test_passes_through_none():
+        assert double_to_websocket(None) is None
+
+    @staticmethod
+    @pytest.mark.parametrize(
+        "value",
+        [
+            pytest.param(1.5, id="regular"),
+            pytest.param(-0.25, id="negative"),
+            pytest.param(5e-324, id="smallest-subnormal"),
+        ],
+    )
+    def test_keeps_float(value):
+        result = double_to_websocket(value)
+
+        assert type(result) is float
+        assert result == value
+
+    @staticmethod
+    def test_keeps_infinity():
+        result = double_to_websocket(float("inf"))
+
+        assert type(result) is float
+        assert result == float("inf")
+
+    @staticmethod
+    def test_keeps_nan():
+        result = double_to_websocket(float("nan"))
+
+        assert type(result) is float
+        assert math.isnan(result)
+
+    @staticmethod
+    def test_raises_overflow_error_for_huge_int():
+        with pytest.raises(OverflowError):
+            double_to_websocket(10**400)
+
+    @staticmethod
+    @pytest.mark.parametrize(
+        "value, expected",
+        [
+            pytest.param(0, 0.0, id="zero"),
+            pytest.param(-3, -3.0, id="negative"),
+            # Sent as a float, so the database does not truncate the digits.
+            pytest.param(
+                12345678901234567890123456789012345,
+                float(12345678901234567890123456789012345),
+                id="35-digits",
+            ),
+        ],
+    )
+    def test_converts_int_to_float(value, expected):
+        result = double_to_websocket(value)
+
+        assert type(result) is float
+        assert result == expected
+
+    @staticmethod
+    @pytest.mark.parametrize(
+        "value, expected",
+        [
+            pytest.param(decimal.Decimal("1.5"), 1.5, id="regular"),
+            pytest.param(decimal.Decimal("-12.50"), -12.5, id="negative"),
+        ],
+    )
+    def test_converts_decimal_to_float(value, expected):
+        result = double_to_websocket(value)
+
+        assert type(result) is float
+        assert result == expected
+
+    @staticmethod
+    @pytest.mark.parametrize(
+        "value",
+        [
+            pytest.param("1.5", id="string"),
+            pytest.param(True, id="bool-true"),
+            pytest.param(b"1", id="bytes"),
+        ],
+    )
+    def test_raises_type_error_for_other_types(value):
+        with pytest.raises(TypeError, match="Expected float"):
+            double_to_websocket(value)

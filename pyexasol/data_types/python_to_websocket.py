@@ -131,3 +131,39 @@ def decimal_to_websocket(
         "Expected decimal.Decimal, int, float, str, or None, "
         f"got {type(value).__name__}."
     )
+
+
+def double_to_websocket(
+    value: float | int | decimal.Decimal | None,
+) -> float | None:
+    """
+    Convert a Python value to a type that the WebSocket API allows for a DOUBLE.
+
+    We send a JSON number, because the database rejects every non-empty string for
+    a DOUBLE, even one such as ``"1.5"``. An ``int`` or ``decimal.Decimal`` is
+    converted to a ``float`` first. Otherwise, the database keeps only the first 17
+    significant digits of a large ``int``.
+
+    Unlike DECIMAL, the session's ``NLS_NUMERIC_CHARACTERS`` has no effect.
+    ``NaN`` and ``Infinity`` are passed through unchanged.
+
+    Passed through unchanged:
+    * None -> None
+
+    Converted types:
+    * float            -> float
+    * int              -> float
+    * decimal.Decimal  -> float
+
+    Raises:
+    * TypeError      -> any other type
+    * OverflowError  -> an int too large for a double, such as ``10**400``
+    """
+    if value is None:
+        return None
+    if not isinstance(value, bool):
+        if isinstance(value, (float, int, decimal.Decimal)):
+            return float(value)
+    raise TypeError(
+        f"Expected float, int, decimal.Decimal, or None, got {type(value).__name__}."
+    )

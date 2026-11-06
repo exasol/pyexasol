@@ -11,7 +11,7 @@
 
 * #448: Added default `timestamp_to_websocket` to convert Python values for Websocket insertion
 * #452: Added default `interval_day_to_second_to_websocket` to convert Python `timedelta` and `ExaTimeDelta` values for Websocket insertion, and `ExaTimeDelta.to_interval_unpadded` to format intervals without zero-padding
-* #457: Added default `decimal_to_websocket` to convert Python values for Websocket insertion
+* #457: Added default `decimal_to_websocket` and `double_to_websocket` to convert Python values for Websocket insertion
 
 ## Refactorings
 
