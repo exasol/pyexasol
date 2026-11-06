@@ -2,7 +2,11 @@ import datetime
 
 import pytest
 
-from pyexasol.data_types.python_to_websocket import timestamp_to_websocket
+from pyexasol.data_types import ExaTimeDelta
+from pyexasol.data_types.python_to_websocket import (
+    interval_day_to_second_to_websocket,
+    timestamp_to_websocket,
+)
 
 
 class TestTimestampToWebsocket:
@@ -103,3 +107,54 @@ class TestTimestampToWebsocket:
 
         value = IsoStrDatetime(2026, 9, 11, 12, 34, 56, 123456)
         assert timestamp_to_websocket(value) == "2026-09-11 12:34:56.123456"
+
+
+class TestIntervalDayToSecondToWebsocket:
+    @staticmethod
+    @pytest.mark.parametrize(
+        "value",
+        [
+            pytest.param(None, id="none"),
+            pytest.param("+1 02:03:04.5", id="string"),
+        ],
+    )
+    def test_pass_through_values_unchanged(value):
+        assert interval_day_to_second_to_websocket(value) is value
+
+    @staticmethod
+    @pytest.mark.parametrize(
+        "value",
+        [
+            pytest.param(datetime.datetime(2026, 9, 11), id="datetime"),
+            pytest.param(1, id="int"),
+        ],
+    )
+    def test_raises_type_error_for_other_types(value):
+        with pytest.raises(TypeError, match="Expected datetime.timedelta"):
+            interval_day_to_second_to_websocket(value)
+
+    @staticmethod
+    @pytest.mark.parametrize(
+        "value, expected",
+        [
+            pytest.param(datetime.timedelta(0), "+0 00:00:00", id="zero"),
+            pytest.param(
+                datetime.timedelta(days=1, seconds=4, microseconds=123456),
+                "+1 00:00:04.123456",
+                id="positive-fraction",
+            ),
+            pytest.param(
+                datetime.timedelta(seconds=-1.5),
+                "-0 00:00:01.5",
+                id="negative-fraction",
+            ),
+        ],
+    )
+    def test_formats_timedelta(value, expected):
+        assert interval_day_to_second_to_websocket(value) == expected
+
+    @staticmethod
+    def test_formats_exa_timedelta():
+        value = ExaTimeDelta(days=1, hours=2, microseconds=123456)
+
+        assert interval_day_to_second_to_websocket(value) == "+1 02:00:00.123456"

@@ -1,5 +1,7 @@
 import datetime
 
+from pyexasol.data_types.converters import ExaTimeDelta
+
 
 def timestamp_to_websocket(value: datetime.datetime | str | None) -> str | None:
     """
@@ -40,3 +42,44 @@ def timestamp_to_websocket(value: datetime.datetime | str | None) -> str | None:
     if value.utcoffset() is not None:
         value = value.astimezone(datetime.UTC).replace(tzinfo=None)
     return value.isoformat(sep=" ")
+
+
+def interval_day_to_second_to_websocket(
+    value: datetime.timedelta | ExaTimeDelta | str | None,
+) -> str | None:
+    """
+    Convert a Python value to a type that the WebSocket API allows for an
+    INTERVAL DAY TO SECOND.
+
+    The value is converted with ``ExaTimeDelta.to_interval_unpadded()`` to the
+    format ``[+-]D HH:MM:SS[.f..f]``.
+
+    The database accepts the value only if it fits the ``INTERVAL DAY(p) TO SECOND(f)``
+    column. Here, ``p`` is the number of digits in the day part and ``f`` the number
+    of fractional digits. The total length of the string is ``p + f + 11`` characters
+    with fractional seconds and ``p + 10`` characters without. The database also
+    truncates INTERVAL DAY TO SECOND values to milliseconds, even if the column is
+    declared with a higher fractional-second precision. For example,
+    ``1 02:03:04.1234567`` is stored as ``+000000001 02:03:04.123000000``. See
+    https://docs.exasol.com/db/latest/sql_references/data_types/datatypedetails.htm#Intervaldatatypes
+
+    Passed through unchanged:
+     * None -> None
+     * str  -> str. The database rejects strings in an unsupported format.
+
+    Converted types:
+    * datetime.timedelta  -> str in the format ``[+-]D HH:MM:SS[.f..f]``
+    * ExaTimeDelta        -> str in the same format.
+
+    Raises:
+    * TypeError -> any other type
+    """
+    if value is None or isinstance(value, str):
+        return value
+    if isinstance(value, ExaTimeDelta):
+        return value.to_interval_unpadded()
+    if not isinstance(value, datetime.timedelta):
+        raise TypeError(
+            f"Expected datetime.timedelta, str, ExaTimeDelta, or None, got {type(value).__name__}."
+        )
+    return ExaTimeDelta.from_timedelta(value).to_interval_unpadded()
