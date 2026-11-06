@@ -54,7 +54,8 @@ def timestamp_to_websocket(value: datetime.datetime | str | None) -> str | None:
         return value
     if not isinstance(value, datetime.datetime):
         raise TypeError(
-            f"Expected datetime.datetime, str, or None, got {type(value).__name__}."
+            "Expected datetime.datetime (if not timezone-aware), str, or None, "
+            f"got {type(value).__name__}."
         )
 
     _reject_timezone_aware(
@@ -98,8 +99,8 @@ def date_to_websocket(value: datetime.date | str | None) -> str | None:
         return value.isoformat(sep=" ")
     if not isinstance(value, datetime.date):
         raise TypeError(
-            "Expected datetime.date, datetime.datetime, str, or None, "
-            f"got {type(value).__name__}."
+            "Expected datetime.date, datetime.datetime (if not timezone-aware), "
+            f"str, or None, got {type(value).__name__}."
         )
     return value.isoformat()
 
