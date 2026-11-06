@@ -1,6 +1,5 @@
 import datetime
 import decimal
-import math
 
 import pytest
 
@@ -12,6 +11,16 @@ from pyexasol.data_types.python_to_websocket import (
     interval_day_to_second_to_websocket,
     timestamp_to_websocket,
 )
+
+NON_FINITE_VALUES = [
+    pytest.param(decimal.Decimal("NaN"), id="decimal-nan"),
+    pytest.param(decimal.Decimal("sNaN"), id="decimal-snan"),
+    pytest.param(decimal.Decimal("Infinity"), id="decimal-infinity"),
+    pytest.param(decimal.Decimal("-Infinity"), id="decimal-negative-infinity"),
+    pytest.param(float("nan"), id="float-nan"),
+    pytest.param(float("inf"), id="float-infinity"),
+    pytest.param(float("-inf"), id="float-negative-infinity"),
+]
 
 
 class TestDateToWebsocket:
@@ -296,19 +305,15 @@ class TestDecimalToWebsocket:
         assert decimal_to_websocket(LabelReprFloat(1.5)) == "1.5"
 
     @staticmethod
-    @pytest.mark.parametrize(
-        "value, expected",
-        [
-            pytest.param(decimal.Decimal("NaN"), "NaN", id="nan"),
-            pytest.param(decimal.Decimal("Infinity"), "Infinity", id="infinity"),
-            pytest.param(decimal.Decimal("-Infinity"), "-Infinity", id="negative"),
-            pytest.param(float("nan"), "NaN", id="nan"),
-            pytest.param(float("inf"), "Infinity", id="infinity"),
-            pytest.param(float("-inf"), "-Infinity", id="negative-infinity"),
-        ],
-    )
-    def test_leaves_special_values_for_database_to_reject(value, expected):
-        assert decimal_to_websocket(value) == expected
+    @pytest.mark.parametrize("value", NON_FINITE_VALUES)
+    def test_raises_value_error_for_non_finite(value):
+        with pytest.raises(ValueError, match="not supported for DECIMAL"):
+            decimal_to_websocket(value)
+
+    @staticmethod
+    @pytest.mark.parametrize("value", ["NaN", "Infinity"])
+    def test_passes_through_non_finite_string(value):
+        assert decimal_to_websocket(value) == value
 
     @staticmethod
     @pytest.mark.parametrize(
@@ -345,18 +350,16 @@ class TestDoubleToWebsocket:
         assert result == value
 
     @staticmethod
-    def test_keeps_infinity():
-        result = double_to_websocket(float("inf"))
-
-        assert type(result) is float
-        assert result == float("inf")
-
-    @staticmethod
-    def test_keeps_nan():
-        result = double_to_websocket(float("nan"))
-
-        assert type(result) is float
-        assert math.isnan(result)
+    @pytest.mark.parametrize(
+        "value",
+        [
+            *NON_FINITE_VALUES,
+            pytest.param(decimal.Decimal("1E+400"), id="decimal-overflow"),
+        ],
+    )
+    def test_raises_value_error_for_non_finite(value):
+        with pytest.raises(ValueError, match="not supported for DOUBLE"):
+            double_to_websocket(value)
 
     @staticmethod
     def test_raises_overflow_error_for_huge_int():
