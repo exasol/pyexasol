@@ -11,6 +11,7 @@ from pyexasol.statement import ExaStatement
 @pytest.mark.parametrize(
     "value",
     [
+        pytest.param(datetime.date(2026, 9, 11), id="python-date"),
         pytest.param(datetime.datetime(2026, 9, 11, 12, 34), id="python-datetime"),
         pytest.param(datetime.timedelta(days=1, hours=2), id="python-timedelta"),
         pytest.param(ExaTimeDelta(days=1, hours=2), id="exa-timedelta"),

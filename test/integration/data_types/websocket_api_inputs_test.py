@@ -5,6 +5,8 @@ These tests bind raw strings through the WebSocket API and check whether the
 database accepts them, how it stores them, and which inputs it rejects.
 """
 
+from contextlib import contextmanager
+
 import pytest
 from packaging.version import Version
 
@@ -37,6 +39,19 @@ class SingleColumnTable:
         return result.fetchone()[0]
 
 
+@contextmanager
+def override_session_parameter(connection, name, value):
+    """Set a session parameter such as NLS_DATE_FORMAT and restore it afterwards."""
+    original_value = connection.execute(
+        f"SELECT SESSION_VALUE FROM EXA_PARAMETERS WHERE PARAMETER_NAME = '{name}';"
+    ).fetchval()
+    connection.execute(f"ALTER SESSION SET {name}='{value}';")
+    try:
+        yield
+    finally:
+        connection.execute(f"ALTER SESSION SET {name}='{original_value}';")
+
+
 @pytest.fixture
 def timestamp_table(connection, db_version):
     # Exasol 8 versions before 8.32.0 only support TIMESTAMP with the default of 3
@@ -52,16 +67,23 @@ def timestamp_table(connection, db_version):
 
 @pytest.fixture
 def session_timestamp_format(connection):
-    result = connection.execute(
-        "SELECT SESSION_VALUE FROM EXA_PARAMETERS "
-        "WHERE PARAMETER_NAME = 'NLS_TIMESTAMP_FORMAT';"
-    )
-    original_format = result.fetchval()
-    connection.execute(
-        "ALTER SESSION SET NLS_TIMESTAMP_FORMAT='DD/MM/YYYY HH24:MI:SS.FF4';"
-    )
-    yield
-    connection.execute(f"ALTER SESSION SET NLS_TIMESTAMP_FORMAT='{original_format}';")
+    with override_session_parameter(
+        connection, "NLS_TIMESTAMP_FORMAT", "DD/MM/YYYY HH24:MI:SS.FF4"
+    ):
+        yield
+
+
+@pytest.fixture
+def date_table(connection):
+    table = SingleColumnTable.create_empty(connection, "WS_DATE_INPUT", "DATE")
+    yield table
+    table.drop()
+
+
+@pytest.fixture
+def session_date_format(connection):
+    with override_session_parameter(connection, "NLS_DATE_FORMAT", "DD/MM/YYYY"):
+        yield
 
 
 @pytest.fixture
@@ -173,6 +195,53 @@ class TestTimestampInputs:
 
         # The column keeps 3 fractional digits; the session format pads them to 4.
         assert timestamp_table.read() == "11/09/2026 12:34:56.1230"
+
+
+class TestDateInputs:
+    @staticmethod
+    @pytest.mark.parametrize(
+        "value, expected_stored",
+        [
+            pytest.param("2026-09-11", "2026-09-11", id="iso-format"),
+            pytest.param("2026-9-1", "2026-09-01", id="unpadded-fields"),
+            # A trailing time part is accepted and discarded by the database.
+            pytest.param(
+                "2026-09-11 12:34:56", "2026-09-11", id="string-has-time-part"
+            ),
+            pytest.param(
+                "2026-09-11 12:34:56.123456",
+                "2026-09-11",
+                id="string-has-time-part-with-fraction",
+            ),
+            pytest.param("", None, id="empty-string"),
+            pytest.param(None, None, id="none"),
+        ],
+    )
+    def test_accepts_and_stores_expected_value(date_table, value, expected_stored):
+        date_table.insert(value)
+
+        assert date_table.read() == expected_stored
+
+    @staticmethod
+    @pytest.mark.parametrize(
+        "value",
+        [
+            pytest.param("2026-09-11T12:34:56", id="string-has-T"),
+            pytest.param("2026-02-30", id="day-out-of-range"),
+            pytest.param("2026-13-01", id="month-out-of-range"),
+            pytest.param("2023-02-29", id="leap-day-in-non-leap-year"),
+            pytest.param("11/09/2026", id="string-has-unsupported-format"),
+        ],
+    )
+    def test_rejects_string(date_table, value):
+        with pytest.raises(ExaRequestError):
+            date_table.insert(value)
+
+    @staticmethod
+    def test_accepts_session_nls_date_format(date_table, session_date_format):
+        date_table.insert("11/09/2026")
+
+        assert date_table.read() == "11/09/2026"
 
 
 class TestIntervalDayToSecondInputs:
