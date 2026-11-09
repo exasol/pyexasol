@@ -466,6 +466,7 @@ class TestBooleanToWebsocket:
             pytest.param(2, id="int-two"),
             pytest.param(-1, id="int-negative"),
             pytest.param("01", id="string-padded"),
+            pytest.param("", id="string-empty"),
             pytest.param(1.0, id="float"),
             pytest.param(b"1", id="bytes"),
         ],
