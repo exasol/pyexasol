@@ -196,6 +196,15 @@ def geometry_table(connection):
 
 
 @pytest.fixture
+def interval_year_to_month_table(connection):
+    table = SingleColumnTable.create_empty(
+        connection, "WS_INTERVAL_YM_INPUT", "INTERVAL YEAR(2) TO MONTH"
+    )
+    yield table
+    table.drop()
+
+
+@pytest.fixture
 def session_numeric_characters(connection):
     result = connection.execute(
         "SELECT SESSION_VALUE FROM EXA_PARAMETERS "
@@ -721,3 +730,45 @@ class TestGeometryInputs:
     def test_rejects_value(geometry_table, value):
         with pytest.raises(ExaRequestError):
             geometry_table.insert(value)
+
+
+class TestIntervalYearToMonthInputs:
+    # The column is INTERVAL YEAR(2) TO MONTH. The database returns '[+-]YY-MM'.
+    @staticmethod
+    @pytest.mark.parametrize(
+        "value, expected_stored",
+        [
+            pytest.param("1-2", "+01-02", id="unpadded-fields"),
+            pytest.param("01-02", "+01-02", id="padded-fields"),
+            pytest.param("+1-2", "+01-02", id="positive-sign"),
+            pytest.param("-1-2", "-01-02", id="negative-sign"),
+            pytest.param(" 1-2 ", "+01-02", id="surrounding-whitespace"),
+            pytest.param(None, None, id="none"),
+            pytest.param("", None, id="empty-string"),
+        ],
+    )
+    def test_accepts_string_and_stores_expected_value(
+        interval_year_to_month_table, value, expected_stored
+    ):
+        interval_year_to_month_table.insert(value)
+
+        assert interval_year_to_month_table.read() == expected_stored
+
+    @staticmethod
+    @pytest.mark.parametrize(
+        "value",
+        [
+            # The month part is 0 to 11, and the year part has at most 2 digits.
+            pytest.param("1-12", id="string-month-too-large"),
+            pytest.param("100-0", id="string-year-too-large"),
+            pytest.param("1", id="string-without-month"),
+            pytest.param("1 2", id="string-wrong-separator"),
+            pytest.param("P1Y2M", id="string-iso-8601"),
+            pytest.param("abc", id="string-not-an-interval"),
+            # A number of months is rejected as well.
+            pytest.param(14, id="int"),
+        ],
+    )
+    def test_rejects_value(interval_year_to_month_table, value):
+        with pytest.raises(ExaRequestError):
+            interval_year_to_month_table.insert(value)
