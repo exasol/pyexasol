@@ -632,8 +632,10 @@ class TestHashtypeInputs:
             pytest.param(UUID_HEX.replace("1", "g"), id="string-not-hex"),
             pytest.param(f" {UUID_HEX} ", id="string-with-whitespace"),
             pytest.param(f"urn:uuid:{UUID_HEX}", id="string-with-urn-prefix"),
-            # An int is rejected, even one with the value of the UUID.
+            # No non-string is accepted, even an int with the value of the UUID.
             pytest.param(int(UUID_HEX, 16), id="int"),
+            pytest.param(1.5, id="float"),
+            pytest.param(True, id="bool"),
         ],
     )
     def test_rejects_value(hashtype_table, value):
