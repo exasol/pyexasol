@@ -52,6 +52,36 @@ def override_session_parameter(connection, name, value):
         connection.execute(f"ALTER SESSION SET {name}='{original_value}';")
 
 
+# Shared by the TIMESTAMP and TIMESTAMP WITH LOCAL TIME ZONE tests. They rely on the
+# default session NLS_TIMESTAMP_FORMAT, 'YYYY-MM-DD HH24:MI:SS.FF6'.
+TIMESTAMP_ACCEPTED_STRINGS = [
+    pytest.param(
+        "2026-09-11 12:34:56",
+        "2026-09-11 12:34:56.000000",
+        id="number-is-less-precise",
+    ),
+    pytest.param(
+        "2026-09-11 12:34:56.123",
+        "2026-09-11 12:34:56.123000",
+        id="same-as-precision",
+    ),
+    pytest.param(
+        "2026-09-11 12:34:56.123456789",
+        "2026-09-11 12:34:56.123000",
+        id="greater-precision",
+    ),
+    pytest.param(
+        "2026-9-1 1:2:3",
+        "2026-09-01 01:02:03.000000",
+        id="unpadded-fields",
+    ),
+]
+TIMESTAMP_REJECTED_STRINGS = [
+    pytest.param("2026-09-11 12:34:56.1234567890", id="precision-higher-than-db"),
+    pytest.param("2026-09-11 12:34:56+00:00", id="string-has-unsupported-format"),
+]
+
+
 @pytest.fixture
 def timestamp_table(connection, db_version):
     # Exasol 8 versions before 8.32.0 only support TIMESTAMP with the default of 3
@@ -135,35 +165,10 @@ def session_numeric_characters(connection):
 
 
 class TestTimestampInputs:
-    # These cases rely on the default session NLS_TIMESTAMP_FORMAT,
-    # 'YYYY-MM-DD HH24:MI:SS.FF6'. The session format test changes it temporarily
-    # through the session_timestamp_format fixture and restores it afterwards.
+    # The session format test changes NLS_TIMESTAMP_FORMAT temporarily through the
+    # session_timestamp_format fixture and restores it afterwards.
     @staticmethod
-    @pytest.mark.parametrize(
-        "value, expected_stored",
-        [
-            pytest.param(
-                "2026-09-11 12:34:56",
-                "2026-09-11 12:34:56.000000",
-                id="number-is-less-precise",
-            ),
-            pytest.param(
-                "2026-09-11 12:34:56.123",
-                "2026-09-11 12:34:56.123000",
-                id="same-as-precision",
-            ),
-            pytest.param(
-                "2026-09-11 12:34:56.123456789",
-                "2026-09-11 12:34:56.123000",
-                id="greater-precision",
-            ),
-            pytest.param(
-                "2026-9-1 1:2:3",
-                "2026-09-01 01:02:03.000000",
-                id="unpadded-fields",
-            ),
-        ],
-    )
+    @pytest.mark.parametrize("value, expected_stored", TIMESTAMP_ACCEPTED_STRINGS)
     def test_accepts_string_and_stores_expected_value(
         timestamp_table, value, expected_stored
     ):
@@ -172,17 +177,7 @@ class TestTimestampInputs:
         assert timestamp_table.read() == expected_stored
 
     @staticmethod
-    @pytest.mark.parametrize(
-        "value",
-        [
-            pytest.param(
-                "2026-09-11 12:34:56.1234567890", id="precision-higher-than-db"
-            ),
-            pytest.param(
-                "2026-09-11 12:34:56+00:00", id="string-has-unsupported-format"
-            ),
-        ],
-    )
+    @pytest.mark.parametrize("value", TIMESTAMP_REJECTED_STRINGS)
     def test_rejects_string(timestamp_table, value):
         with pytest.raises(ExaRequestError):
             timestamp_table.insert(value)
