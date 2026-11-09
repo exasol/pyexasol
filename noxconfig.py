@@ -11,7 +11,6 @@ from pydantic import (
 )
 
 DEFAULT_PORT = 8563
-DEFAULT_DB_VERSION = "2026.1.0"
 CONTAINER_SUFFIX = "test"
 CONTAINER_NAME = f"db_container_{CONTAINER_SUFFIX}"
 
@@ -19,9 +18,12 @@ CONTAINER_NAME = f"db_container_{CONTAINER_SUFFIX}"
 def start_test_db(
     session: Session,
     port: int = DEFAULT_PORT,
-    db_version: str = DEFAULT_DB_VERSION,
+    db_version: str | None = None,
     with_certificate: bool = True,
 ) -> None:
+    if db_version is None:
+        db_version = DEFAULT_DB_VERSION
+
     # For Docker in a VM setup, refer to the ``doc/user_guide/developer_guide.rst``
     command = [
         "itde",
@@ -100,6 +102,6 @@ PROJECT_CONFIG = Config(
     root_path=Path(__file__).parent,
     project_name="pyexasol",
     plugins_for_nox_sessions=(StartDB, StopDB),
-    python_versions=("3.10", "3.11", "3.12", "3.13", "3.14"),
-    exasol_versions=("8.29.13", "2025.1.11", DEFAULT_DB_VERSION),
 )
+
+DEFAULT_DB_VERSION = PROJECT_CONFIG.exasol_versions[-1]

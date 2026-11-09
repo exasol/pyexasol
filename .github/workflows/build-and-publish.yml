@@ -1,5 +1,4 @@
 # Generated and maintained by the exasol-toolbox.
-# Last generated with exasol-toolbox version 10.4.0.
 name: Build & Publish
 
 on:
@@ -11,7 +10,7 @@ on:
 jobs:
   build-and-publish:
     name: Build & Publish
-    runs-on: "ubuntu-24.04"
+    runs-on: "ubuntu-26.04"
     permissions:
       contents: write
     steps:
@@ -23,9 +22,9 @@ jobs:
 
       - name: Set up Python & Poetry Environment
         id: set-up-python-and-poetry-environment
-        uses: exasol/python-toolbox/.github/actions/python-environment@v10
+        uses: exasol/python-toolbox/.github/actions/python-environment@v12
         with:
-          python-version: "3.10"
+          python-version: "3.11"
           poetry-version: "2.3.0"
 
       - name: Build Artifacts
@@ -34,7 +33,9 @@ jobs:
 
       - name: Generate SBOM
         id: generate-sbom
-        run: poetry run -- nox -s dependency:sbom
+        run: |
+          SBOM_NAME="$(poetry run -- nox -s dependency:sbom)"
+          echo "SBOM_NAME=$SBOM_NAME" >> "$GITHUB_OUTPUT"
 
       - name: Publish Release to PyPi
         id: publish-release-to-pypi
@@ -47,9 +48,10 @@ jobs:
         id: publish-release-to-github
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SBOM_NAME: ${{ steps.generate-sbom.outputs.SBOM_NAME }}
         run: >-
           gh release create ${GITHUB_REF_NAME}
           --title ${GITHUB_REF_NAME}
           --notes-file ./doc/changes/changes_${GITHUB_REF_NAME}.md
           dist/*
-          bom.spdx.json
+          "$SBOM_NAME"

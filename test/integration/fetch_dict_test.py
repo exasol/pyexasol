@@ -65,7 +65,7 @@ def test_fetch_dict_using_fetchone(connection):
             "STATUS": "SUSPENDED",
         },
     ]
-    actual = [row for row in iter(result.fetchone, None)]
+    actual = [*iter(result.fetchone, None)]
     assert expected == actual
 
 

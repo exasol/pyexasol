@@ -29,16 +29,11 @@ def test_context_manager_for_statements(connection):
 @pytest.mark.exceptions
 @pytest.mark.context_managers
 def test_context_manger_closes_everything_on_exception(connection_factory):
-    with pytest.raises(ExaQueryError):
-        with connection_factory() as con:
-            statement = "SELECT * FROM unkown_table_so_query_will_fail LIMIT 5;"
-            with con.execute(statement) as stmt:
-                stmt.fetchall()
+    with connection_factory() as con:
+        statement = "SELECT * FROM unkown_table_so_query_will_fail LIMIT 5;"
+        with pytest.raises(ExaQueryError):
+            con.execute(statement)
 
-            expected = True
-            actual = stmt.is_closed
-            assert actual == expected
-
-        expected = True
-        actual = con.is_closed
-        assert actual == expected
+    expected = True
+    actual = con.is_closed
+    assert actual == expected

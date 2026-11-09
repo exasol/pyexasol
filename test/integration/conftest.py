@@ -125,44 +125,6 @@ def view(connection, faker):
 
 
 @pytest.fixture
-def empty_table(connection):
-    name = "USER_NAMES"
-    ddl = cleandoc(f"""
-        CREATE OR REPLACE TABLE {name}
-        (
-            FIRST_NAME VARCHAR(200),
-            LAST_NAME VARCHAR(200)
-        );
-        """)
-    connection.execute(ddl)
-    connection.commit()
-
-    yield name
-
-    ddl = f"DROP TABLE IF EXISTS {name};"
-    connection.execute(ddl)
-    connection.commit()
-
-
-@pytest.fixture
-def names(faker):
-    yield tuple(
-        {"FIRST_NAME": faker.first_name(), "LAST_NAME": faker.last_name()}
-        for _ in range(0, 10)
-    )
-
-
-@pytest.fixture
-def table(connection, empty_table, names):
-    insert = "INSERT INTO {table} VALUES({{FIRST_NAME}}, {{LAST_NAME}});"
-    for name in names:
-        stmt = insert.format(table=empty_table)
-        connection.execute(stmt, name)
-
-    yield empty_table, names
-
-
-@pytest.fixture
 def flush_statistics(connection):
     connection.execute("FLUSH STATISTICS TASKS;")
     connection.commit()
@@ -181,7 +143,7 @@ def prepare_database(dsn_resolved, user, password, container_name):
 
 
 @pytest.fixture
-def edge_case_ddl():
+def edge_case_ddl(connection):
     table_name = "edge_case"
     ddl = cleandoc(f"""CREATE OR REPLACE TABLE {table_name}
         (
@@ -195,7 +157,14 @@ def edge_case_ddl():
             var2000000      VARCHAR(2000000)
         )
         """)
-    yield table_name, ddl
+    connection.execute(ddl)
+    connection.commit()
+
+    yield table_name
+
+    delete_stmt = f"DROP TABLE IF EXISTS {table_name};"
+    connection.execute(delete_stmt)
+    connection.commit()
 
 
 @pytest.fixture

@@ -1,5 +1,4 @@
 # Generated and maintained by the exasol-toolbox.
-# Last generated with exasol-toolbox version 10.4.0.
 name: Merge-Gate
 
 on:
@@ -11,13 +10,13 @@ on:
 jobs:
   run-fast-checks:
     name: Fast Checks
-    uses: ./.github/workflows/checks.yml
+    uses: $/.github/workflows/checks.yml
     permissions:
       contents: read
 
   run-fast-tests:
     name: Fast Tests
-    uses: ./.github/workflows/fast-tests.yml
+    uses: $/.github/workflows/fast-tests.yml
     permissions:
       contents: read
 
@@ -26,7 +25,7 @@ jobs:
     needs:
       - run-fast-checks
       - run-fast-tests
-    uses: ./.github/workflows/report.yml
+    uses: $/.github/workflows/report.yml
     secrets:
       SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
     permissions:
@@ -34,7 +33,7 @@ jobs:
 
   approve-run-slow-tests:
     name: Approve Running Slow Tests?
-    runs-on: "ubuntu-24.04"
+    runs-on: "ubuntu-26.04"
     permissions:
       contents: read
     # Even though the environment "manual-approval" will be created automatically,
@@ -49,13 +48,13 @@ jobs:
     name: Slow Checks
     needs:
       - approve-run-slow-tests
-    uses: ./.github/workflows/slow-checks.yml
+    uses: $/.github/workflows/slow-checks.yml
     permissions:
       contents: read
 
   merge-gate-extension:
     name: Extension
-    uses: ./.github/workflows/merge-gate-extension.yml
+    uses: $/.github/workflows/merge-gate-extension.yml
     permissions:
       contents: read
 
@@ -63,7 +62,7 @@ jobs:
   allow-merge:
     name: Allow Merge
     if: ${{ !cancelled() }}
-    runs-on: "ubuntu-24.04"
+    runs-on: "ubuntu-26.04"
     permissions:
       contents: read
     # If you need additional jobs to be part of the merge gate, add them below

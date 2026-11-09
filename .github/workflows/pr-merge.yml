@@ -1,5 +1,4 @@
 # Generated and maintained by the exasol-toolbox.
-# Last generated with exasol-toolbox version 10.4.0.
 name: PR-Merge
 
 on:
@@ -11,7 +10,7 @@ on:
 jobs:
   publish-docs:
     name: Publish Documentation
-    uses: ./.github/workflows/gh-pages.yml
+    uses: $/.github/workflows/gh-pages.yml
     permissions:
       contents: read
       pages: write

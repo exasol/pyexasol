@@ -1,4 +1,3 @@
-import os
 from io import BytesIO
 from pathlib import Path
 
@@ -154,8 +153,9 @@ class TestGetParquetFiles:
 
     @staticmethod
     def test_list_path_not_valid_files():
+        invalid_path = Path("not_a_valid_path_file")
         with pytest.raises(ValueError, match="contained entries which were not `Path`"):
-            get_parquet_files([Path("not_a_valid_path_file")])
+            get_parquet_files([invalid_path])
 
     @staticmethod
     def test_not_a_valid_source_type():
@@ -167,8 +167,9 @@ class TestGetParquetFiles:
 class TestImportFromParquetExceptions:
     @staticmethod
     def test_matches_no_files():
+        pipe = BytesIO()
         with pytest.raises(ValueError, match="does not match any files"):
-            import_from_parquet(os.pipe()[0], "not_a_valid_path")
+            import_from_parquet(pipe, "not_a_valid_path")
 
     @staticmethod
     def test_hierarchical_data_is_not_supported(tmp_path):
@@ -176,5 +177,6 @@ class TestImportFromParquetExceptions:
         table = pa.Table.from_pydict({"list": [[1]]})
         pq.write_table(table, filepath)
 
+        pipe = BytesIO()
         with pytest.raises(ValueError, match="is hierarchical which is not supported"):
-            import_from_parquet(os.pipe()[0], filepath)
+            import_from_parquet(pipe, filepath)

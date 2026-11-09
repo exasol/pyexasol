@@ -5,6 +5,14 @@ This module provides `PEP-249`_ compliant DBAPI exceptions.
 .. _PEP-249-exceptions: https://peps.python.org/pep-0249/#exceptions
 """
 
+from pyexasol.exceptions import (
+    ExaCommunicationError,
+    ExaConcurrencyError,
+    ExaConnectionError,
+    ExaError,
+    ExaQueryError,
+)
+
 
 class Warning(Exception):  # Required by spec. pylint: disable=W0622
     """
@@ -74,3 +82,19 @@ class NotSupportedError(DatabaseError):
     by the database, e.g. requesting a .rollback() on a connection that does not
     support transaction or has transactions turned off.
     """
+
+
+def translate_exception(exception: ExaError) -> Error:
+    """Translate a PyExasol exception into a PEP-249 DBAPI exception.
+
+    The complete string representation is copied so the translated exception
+    remains useful even when the original cause is not inspected.
+    """
+    exception_message = str(exception)
+    if isinstance(exception, ExaQueryError):
+        return ProgrammingError(exception_message)
+    elif isinstance(exception, (ExaConnectionError, ExaCommunicationError)):
+        return OperationalError(exception_message)
+    elif isinstance(exception, ExaConcurrencyError):
+        return InterfaceError(exception_message)
+    return DatabaseError(exception_message)

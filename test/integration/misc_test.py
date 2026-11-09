@@ -40,7 +40,7 @@ def disable_snapshots(connection):
 @pytest.fixture
 def query():
     # fmt: off
-    yield cleandoc(
+    return cleandoc(
         """
         SELECT u.user_id, sum(p.gross_amt) AS total_gross_amt
         FROM users u
@@ -63,18 +63,12 @@ def test_snapshot_mode(disable_snapshots, connection_factory):
     with connection_factory() as con:
         mode = con.execute(query).fetchval()
 
-    expected = "OFF"
-    actual = mode
-
-    assert actual == expected
+    assert mode == "OFF"
 
     with connection_factory(snapshot_transactions=True) as con:
         mode = con.execute(query).fetchval()
 
-    expected = "SYSTEM TABLES"
-    actual = mode
-
-    assert actual == expected
+    assert mode == "SYSTEM TABLES"
 
 
 @pytest.mark.misc

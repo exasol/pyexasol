@@ -10,8 +10,11 @@ from datetime import (
     datetime,
     time,
 )
-from enum import Enum
 from time import localtime
+
+from pyexasol.data_types.websocket_types import WebSocketDataType
+
+TypeCode = WebSocketDataType
 
 Date = date
 Time = time
@@ -46,26 +49,6 @@ def TimestampFromTicks(ticks: int) -> datetime:  # pylint: disable=C0103
     """
     year, month, day, hour, minute, second = localtime(ticks)[:6]
     return Timestamp(year, month, day, hour, minute, second)
-
-
-class TypeCode(Enum):
-    """
-    Type codes for Exasol DB column types.
-
-    See: https://github.com/exasol/websocket-api/blob/master/docs/WebsocketAPIV3.md#data-types-type-names-and-properties
-    """
-
-    Bool = "BOOLEAN"
-    Char = "CHAR"
-    Date = "DATE"
-    Decimal = "DECIMAL"
-    Double = "DOUBLE"
-    Geometry = "GEOMETRY"
-    IntervalDayToSecond = "INTERVAL DAY TO SECOND"
-    IntervalYearToMonth = "INTERVAL YEAR TO MONTH"
-    Timestamp = "TIMESTAMP"
-    TimestampTz = "TIMESTAMP WITH LOCAL TIME ZONE"
-    String = "VARCHAR"
 
 
 class _DBAPITypeObject:

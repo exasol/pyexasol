@@ -33,7 +33,7 @@ def fingerprint(request, dsn):
     return request.param
 
 
-@pytest.fixture()
+@pytest.fixture
 def dsn_builder(certificate_type, default_ipaddr, default_port, fingerprint):
 
     def build_dsn(custom_fingerprint: str | None = None):
@@ -64,5 +64,6 @@ def test_connection_fails_with_incorrect_fingerpint(
     dsn_builder, user, password, certificate_type, default_ipaddr, default_port
 ):
 
+    invalid_dsn = dsn_builder("invalid")
     with pytest.raises(ExaConnectionDsnError):
-        _ = ExaConnection(dsn=dsn_builder("invalid"), user=user, password=password)
+        ExaConnection(dsn=invalid_dsn, user=user, password=password)

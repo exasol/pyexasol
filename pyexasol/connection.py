@@ -31,10 +31,14 @@ from warnings import warn
 import websocket
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import padding
+from exasol.telemetry import client as telemetry
 from packaging.version import Version
 
 from . import callback as cb
-from . import constant
+from . import (
+    constant,
+    database_versions,
+)
 from ._metadata import __version__
 from ._sql_splitter import split_sql_script
 from .database_versions import MIN_VERSION_FOR_NATIVE_PARQUET_IMPORT
@@ -261,6 +265,7 @@ class ExaConnection:
             refresh_token:
                 OpenID refresh token to use for the login process
         """
+        telemetry.track("PYEXA", __version__, "connect")
 
         # convert all arguments to a dict[argument_name, argument_value]
         sig = get_exaconnection_signature()
@@ -777,6 +782,7 @@ class ExaConnection:
         Args:
             src:
                 Source file or file-like object.
+                Must be either a file-path, or a binary stream , i.e. a file opened in binary mode
             table:
                 Destination table for IMPORT. Can be one of:
 
@@ -789,6 +795,8 @@ class ExaConnection:
         Note:
             File must be opened in binary mode.
         """
+        cb.check_import_from_file_source(src)
+
         return self.import_from_callback(
             cb.import_from_file, src, table, None, import_params
         )
@@ -885,7 +893,7 @@ class ExaConnection:
         import_params: dict | None = None,
     ):
         """
-        Import a large amount of data from :class:`pyarrow.parquet.Table`.
+        Import a large amount of data from local parquet file(s).
 
         Args:
             source: Local filepath specification(s) to process. Can be one of:
@@ -1328,7 +1336,7 @@ class ExaConnection:
         and calls this "releaseVersion".
         """
         if release_version := self.login_info.get("releaseVersion"):
-            return Version(release_version)
+            return database_versions.parse(release_version)
         return None
 
     def last_statement(self) -> ExaStatement:
@@ -1765,9 +1773,12 @@ class ExaConnection:
         result = []
 
         dsn_re = re.compile(
-            r"^(?P<hostname_prefix>.+?)"
+            # Hostname must not contain the ":" and "/" separators, otherwise a
+            # misplaced fingerprint (e.g. localhost:8563/1234) is silently parsed
+            # as part of the hostname instead of being rejected.
+            r"^(?P<hostname_prefix>[^:/]+?)"
             # Optional range (e.g. myxasol1..4.com)
-            r"(?:(?P<range_start>\d+)\.\.(?P<range_end>\d+)(?P<hostname_suffix>.*?))?"
+            r"(?:(?P<range_start>\d+)\.\.(?P<range_end>\d+)(?P<hostname_suffix>[^:/]*?))?"
             # Optional fingerprint (e.g. myexasol1..4.com/135a1d2dce102de866f58267521f4232153545a075dc85f8f7596f57e588a181)
             r"(?:/(?P<fingerprint>[0-9A-Fa-f]+|nocertcheck))?"
             # Optional port (e.g. myexasol1..4.com:8564)

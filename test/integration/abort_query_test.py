@@ -48,9 +48,9 @@ def test_abort_query(connection):
 
     # Give the blocking query some time to start the query
     time.sleep(test_delay_in_seconds)
+    connection.abort_query()
 
     with pytest.raises(ExaQueryAbortError):
-        connection.abort_query()
         blocking_query.join(
             # make sure test don't get stuck
             timeout=join_timeout_in_seconds

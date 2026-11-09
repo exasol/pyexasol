@@ -39,7 +39,10 @@ class ExaExtension:
         Get columns of SQL query without executing it.
 
         Args:
-            object_name: Object name may be passed as tuple to specify custom schema.
+            query:
+                SQL query string to get columns for.
+            query_params:
+                Optional query parameters.
 
         Caution:
             **DEPRECATED**, please use ``.meta.sql_columns`` instead.
@@ -143,7 +146,7 @@ class ExaExtension:
         """
 
         st = self._execute(sql, {"schema": schema, "object_name": object_name})
-        res = list()
+        res = []
 
         for r in st:
             res.append(
@@ -196,7 +199,7 @@ class ExaExtension:
         st = self._execute(
             sql, {"schema": schema, "table_name_prefix": table_name_prefix}
         )
-        res = list()
+        res = []
 
         for r in st:
             res.append(
@@ -253,7 +256,7 @@ class ExaExtension:
         st = self._execute(
             sql, {"schema": schema, "view_name_prefix": view_name_prefix}
         )
-        res = list()
+        res = []
 
         for r in st:
             res.append(
@@ -304,7 +307,7 @@ class ExaExtension:
         """
 
         st = self._execute(sql, {"schema_name_prefix": schema_name_prefix})
-        res = list()
+        res = []
 
         for r in st:
             res.append(
@@ -449,10 +452,10 @@ class ExaExtension:
             columns = self.get_columns_sql(query_or_table)
 
         params = {
-            "names": list(),
-            "dtype": dict(),
-            "parse_dates": list(),
-            "na_values": dict(),
+            "names": [],
+            "dtype": {},
+            "parse_dates": [],
+            "na_values": {},
             "infer_datetime_format": True,
             "engine": "c",
             "skip_blank_lines": False,

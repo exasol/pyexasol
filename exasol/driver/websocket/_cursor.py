@@ -16,10 +16,12 @@ from functools import wraps
 
 import pyexasol.exceptions
 from exasol.driver.websocket._errors import (
-    Error,
+    InterfaceError,
     NotSupportedError,
+    ProgrammingError,
+    translate_exception,
 )
-from exasol.driver.websocket._types import TypeCode
+from pyexasol.data_types.websocket_types import WebSocketDataType
 
 
 @dataclass
@@ -27,7 +29,7 @@ class MetaData:
     """Metadata describing a result column"""
 
     name: str
-    type_code: TypeCode
+    type_code: WebSocketDataType
     display_size: int | None = None
     internal_size: int | None = None
     precision: int | None = None
@@ -36,7 +38,7 @@ class MetaData:
 
 
 def _pyexasol2dbapi_metadata(name, metadata) -> MetaData:
-    type_mapping = {t.value: t for t in TypeCode}
+    type_mapping = {t.value: t for t in WebSocketDataType}
     key_mapping = {
         "name": "name",
         "type_code": "type",
@@ -57,13 +59,13 @@ def _is_not_closed(method):
     Mark a function to require an open connection.
 
     Raises:
-        An Error if the marked function is called without an open connection.
+        InterfaceError if the marked function is called without an open connection.
     """
 
     @wraps(method)
     def wrapper(self, *args, **kwargs):
         if self._is_closed:
-            raise Error(
+            raise InterfaceError(
                 f"Unable to execute operation <{method.__name__}>, because cursor was already closed."
             )
         return method(self, *args, **kwargs)
@@ -76,13 +78,13 @@ def _requires_result(method):
     Decorator requires the object to have a result.
 
     Raises:
-        Error if the cursor object has not produced a result yet.
+        InterfaceError if the cursor object has not produced a result yet.
     """
 
     @wraps(method)
     def wrapper(self, *args, **kwargs):
         if not self._cursor:
-            raise Error("No result has been produced.")
+            raise InterfaceError("No result has been produced.")
         return method(self, *args, **kwargs)
 
     return wrapper
@@ -92,46 +94,35 @@ def _identity(value):
     return value
 
 
-def _pyexasol2dbapi(value, metadata):
-    members = (
-        "name",
-        "type_code",
-        "display_size",
-        "internal_size",
-        "precision",
-        "scale",
-        "null_ok",
-    )
-    metadata = MetaData(**{k: v for k, v in zip(members, metadata)})
-
-    def to_date(v):
-        if not isinstance(v, str):
-            return v
-        return datetime.date.fromisoformat(v)
-
-    def to_float(v):
-        if not isinstance(v, str):
-            return v
-        return float(v)
-
-    converters = defaultdict(
-        lambda: _identity,
-        {
-            TypeCode.Date: to_date,
-            TypeCode.Double: to_float,
-        },
-    )
-    converter = converters[metadata.type_code]
-    return converter(value)
-
-
 def _dbapi2pyexasol(value):
-    converters = defaultdict(
-        lambda: _identity,
-        {decimal.Decimal: str, float: str, datetime.date: str, datetime.datetime: str},
-    )
-    converter = converters[type(value)]
+    converter = _DBAPI_TO_PYEXASOL_CONVERTERS.get(type(value), _identity)
     return converter(value)
+
+
+_DBAPI_TO_PYEXASOL_CONVERTERS = {
+    decimal.Decimal: str,
+    float: str,
+    datetime.date: str,
+    datetime.datetime: str,
+}
+
+
+def _varchar(value):
+    if value is None:
+        return None
+    return str(value)
+
+
+def _double(value):
+    if value is None:
+        return None
+    return float(value)
+
+
+_REQUESTED_DB_TYPE_CONVERTERS = {
+    "VARCHAR": _varchar,
+    "DOUBLE": _double,
+}
 
 
 class Cursor:
@@ -223,11 +214,11 @@ class Cursor:
             self.executemany(operation, [parameters])
             return
 
-        connection = self._connection.connection
         try:
-            self._cursor = connection.execute(operation)
+            self._connection.validate_session_datetime_formats(operation)
+            self._cursor = self._connection.connection.execute(operation)
         except pyexasol.exceptions.ExaError as ex:
-            raise Error() from ex
+            raise translate_exception(ex) from ex
 
     @staticmethod
     def _adapt_to_requested_db_types(parameters, db_response):
@@ -261,45 +252,44 @@ class Cursor:
                 message  => getString: JSON value is not a string. (...)
                 ...
         """
-
-        def varchar(value):
-            if value is None:
-                return None
-            return str(value)
-
-        def double(value):
-            if value is None:
-                return None
-            return float(value)
-
-        converters = defaultdict(
-            lambda: _identity, {"VARCHAR": varchar, "DOUBLE": double}
-        )
+        columns = db_response["columns"]
         selected_converters = (
-            converters[column["dataType"]["type"]] for column in db_response["columns"]
+            _REQUESTED_DB_TYPE_CONVERTERS.get(column["dataType"]["type"], _identity)
+            for column in columns
         )
-        parameters = zip(selected_converters, parameters)
-        parameters = [converter(value) for converter, value in parameters]
+
+        try:
+            parameter_pairs = list(zip(selected_converters, parameters, strict=True))
+        except ValueError as ex:
+            raise ProgrammingError(
+                "Input shape mismatch: received "
+                f"{len(parameters)} parameters, {len(columns)} columns"
+            ) from ex
+
+        parameters = [converter(value) for converter, value in parameter_pairs]
         return parameters
 
     @_is_not_closed
     def executemany(self, operation, seq_of_parameters):
         """See also :py:meth: `Cursor.executemany`"""
-        parameters = [
-            [_dbapi2pyexasol(p) for p in params] for params in seq_of_parameters
-        ]
-        connection = self._connection.connection
-        self._cursor = connection.cls_statement(connection, operation, prepare=True)
-
-        parameter_data = self._cursor.parameter_data
-        parameters = [
-            Cursor._adapt_to_requested_db_types(params, parameter_data)
-            for params in parameters
-        ]
         try:
+            parameters = [
+                [_dbapi2pyexasol(value) for value in params]
+                for params in seq_of_parameters
+            ]
+            self._connection.validate_session_datetime_formats(operation)
+            self._cursor = self._connection.connection.cls_statement(
+                self._connection.connection, operation, prepare=True
+            )
+
+            parameter_data = self._cursor.parameter_data
+            parameters = [
+                Cursor._adapt_to_requested_db_types(params, parameter_data)
+                for params in parameters
+            ]
             self._cursor.execute_prepared(parameters)
         except pyexasol.exceptions.ExaError as ex:
-            raise Error() from ex
+            raise translate_exception(ex) from ex
 
     def _convert(self, rows):
         if rows is None:
@@ -310,11 +300,7 @@ class Cursor:
     def _convert_row(self, row):
         if row is None:
             return row
-
-        return tuple(
-            _pyexasol2dbapi(value, metadata)
-            for value, metadata in zip(row, self.description)
-        )
+        return tuple(row)
 
     @_requires_result
     @_is_not_closed

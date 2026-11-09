@@ -1,11 +1,12 @@
 from collections.abc import Callable
 from pathlib import Path
-from test.integration.import_and_export.helper import select_result
 from unittest import mock
 
 import pyarrow as pa
 import pytest
 from pyarrow import parquet as pq
+
+from test.integration.import_and_export.helper import select_result
 
 
 def prepare_parquet_table(list_dict: list[dict]) -> pa.Table:

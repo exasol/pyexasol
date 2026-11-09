@@ -7,7 +7,7 @@ import pyexasol
 
 @pytest.fixture
 def config(dsn, user, password, schema):
-    yield cleandoc(f"""
+    return cleandoc(f"""
     [pyexasol]
     dsn = {dsn}
     user = {user}
@@ -23,7 +23,7 @@ def config_file(tmpdir, config):
     path = tmpdir / "pyexasol.ini"
     with open(path, "w", encoding="utf-8") as f:
         f.write(config)
-    yield path
+    return path
 
 
 @pytest.mark.configuration

@@ -2,23 +2,20 @@
 
 ## Summary
 
-This update refactors CSV `IMPORT` and `EXPORT` query construction around dedicated
-builders and a shared clause formatter. Parameters are validated before data transfer
-starts, and the same construction path is now used by the callback and convenience
-APIs. This reduces duplicated formatting logic, makes generated queries more
-consistent, and provides clearer errors for invalid parameters while preserving the
-existing public `ImportQuery` and `ExportQuery` classes.
-
-## Refactorings
-
-* #380: Extracted four private methods from `SqlQuery` to `TransportEndpoint` for generating a common endpoint clause
-* #382: Refactored CSV import and export query construction into `ImportBuilder` and `ExportBuilder` with early Pydantic parameter validation. Moved Exasol API clause formatting into `ClauseFormatter` while preserving the existing public `ImportQuery` and `ExportQuery` classes.
-* #384: Switched `export_to_callback` and `import_from_callback` to directly use `ImportBuilder` and `ExportBuilder`
 
 ## Bugfixes
 
-* #353: Fixed EXPORT `query_or_table` and IMPORT `table` type annotations to include tuple table identifiers (`tuple[str, ...]`)
+* #371: Fixed import_from_file returning misleading error message if wrong object type was passed
 
-## Feature
+## Features
 
-* #393: Added `ImportBuilder` for native parquet import
+* #448: Added default `timestamp_to_websocket` to convert Python values for Websocket insertion
+* #452: Added default `interval_day_to_second_to_websocket` to convert Python `timedelta` and `ExaTimeDelta` values for Websocket insertion, and `ExaTimeDelta.to_interval_unpadded` to format intervals without zero-padding
+* #454: Added default `date_to_websocket` to convert Python `date` values for Websocket insertion
+* #457: Added default `decimal_to_websocket` and `double_to_websocket` to convert Python values for Websocket insertion
+
+## Refactorings
+
+* #444: Removed support for Python 3.10 and updated to exasol-toolbox version 12.0.0
+* #451: Resolved Sonar findings by using literals instead of `list()` and `dict()` calls, and `list()` instead of list comprehensions in `fetchmany` and `fetchall`
+* #452: Deprecated `ExaTimeDelta.to_interval`; use `ExaTimeDelta.to_interval_unpadded` instead. The string representation of `ExaTimeDelta` (`str()`) now uses `ExaTimeDelta.to_interval_unpadded` instead of the zero-padded format.

@@ -1,5 +1,4 @@
 # Generated and maintained by the exasol-toolbox.
-# Last generated with exasol-toolbox version 10.4.0.
 name: Dependency Update
 
 on:
@@ -11,7 +10,7 @@ on:
 jobs:
   dependency-update:
     name: Dependency Update
-    runs-on: "ubuntu-24.04"
+    runs-on: "ubuntu-26.04"
     permissions:
       contents: write
       pull-requests: write
@@ -35,9 +34,9 @@ jobs:
 
       - name: Set up Python & Poetry Environment
         id: set-up-python-and-poetry-environment
-        uses: exasol/python-toolbox/.github/actions/python-environment@v10
+        uses: exasol/python-toolbox/.github/actions/python-environment@v12
         with:
-          python-version: "3.10"
+          python-version: "3.11"
           poetry-version: "2.3.0"
 
       - name: Configure git
@@ -112,11 +111,14 @@ jobs:
       - name: Report New Pull Request to Slack Channel
         id: report-pr-slack
         if: ${{ steps.create-pr.outputs.pr_url }}
-        uses: ravsamhq/notify-slack-action@be814b201e233b2dc673608aa46e5447c8ab13f2 # 2.5.0
+        uses: slackapi/slack-github-action@dcb1066f776dd043e64d0e8ba94ca15cc7e1875d # v4.0.0
         with:
-          status: '${{ job.status }}'
-          token: '${{ secrets.GITHUB_TOKEN }}'
-          notification_title: 'Dependency update for {repo} created a Pull Request'
-          message_format: '{workflow} created Pull Request ${{ steps.create-pr.outputs.pr_url }}'
-        env:
-          SLACK_WEBHOOK_URL: '${{ secrets.INTEGRATION_TEAM_SECURITY_UPDATES_WEBHOOK }}'
+          webhook: ${{ secrets.INTEGRATION_TEAM_SECURITY_UPDATES_WEBHOOK }}
+          webhook-type: incoming-webhook
+          payload: |-
+            text: "Dependency update for ${{ github.repository }} created a Pull Request: ${{ steps.create-pr.outputs.pr_url }}"
+            blocks:
+              - type: section
+                text:
+                  type: mrkdwn
+                  text: "*Dependency update for `${{ github.repository }}` created a Pull Request*\n<${{ steps.create-pr.outputs.pr_url }}|View Pull Request>"

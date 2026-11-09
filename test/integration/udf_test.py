@@ -6,7 +6,7 @@ import pytest
 @pytest.fixture
 def logging_address():
     # 172.17.0.1 is an IP address of docker host in Linux
-    yield ("172.17.0.1", 8580)
+    return "172.17.0.1", 8580
 
 
 @pytest.fixture

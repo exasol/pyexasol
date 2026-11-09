@@ -12,7 +12,7 @@ Some basic preparation steps are required to see examples in action.
 2. Download the `PyExasol source code <https://github.com/exasol/pyexasol/>`__.
 3. Make sure you have installed or access to an Exasol database and have created a dedicated schema for testing. For **testing** purposes, you may use
 
-  - the free `Exasol Community Edition <https://www.exasol.com/free-signup-community-edition/>`__
+  - the free `Exasol Personal Edition <https://www.exasol.com/personal/>`__
   - `exasol/docker-db <https://hub.docker.com/r/exasol/docker-db/tags>`__, which can be easily accessed by using `poetry run -- nox -s db:start`
 
 4. Open the ``/examples/`` directory and edit the file ``_config.py``. Input your Exasol credentials.
@@ -217,12 +217,14 @@ Edge Cases
     :language: python
     :caption: storing and fetching biggest and smallest values for data types available in Exasol
 
-DB-API 2.0 Compatibility
+.. _using_dbapi2_example:
+
+Using DB-API 2.0
 ++++++++++++++++++++++++
 
-.. literalinclude:: ../../../examples/c03_db2_compat.py
+.. literalinclude:: ../../../examples/advanced_topics/use_dbapi2.py
     :language: python
-    :caption: DB-API 2.0 compatibility wrapper
+    :caption: using the DB-API 2.0 facade
 
 SSL Encryption
 ++++++++++++++

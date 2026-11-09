@@ -8,6 +8,7 @@ from typing import Any
 
 import examples._config as config
 import pyexasol
+from pyexasol.data_types import convert_websocket_to_python
 
 printer = pprint.PrettyPrinter(indent=4, width=140)
 
@@ -71,8 +72,8 @@ stmt = C.execute(select_q)
 printer.pprint(stmt.fetchall())
 
 
-# Same actions with "exasol_mapper"
-C.options["fetch_mapper"] = pyexasol.exasol_mapper
+# Same actions with "convert_websocket_to_python"
+C.options["fetch_mapper"] = convert_websocket_to_python
 C.execute("TRUNCATE TABLE edge_case")
 
 # Insert (test formatting)

@@ -1,4 +1,3 @@
-from test.integration.import_and_export.helper import select_result
 from unittest.mock import patch
 
 import pytest
@@ -14,6 +13,7 @@ from pyexasol.http_transport import (
     ExaSQLThread,
     ExaTCPServer,
 )
+from test.integration.import_and_export.helper import select_result
 
 
 @pytest.fixture
