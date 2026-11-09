@@ -174,6 +174,20 @@ def hashtype_table(connection):
     table.drop()
 
 
+@pytest.fixture(params=["VARCHAR(5)", "CHAR(5)"], ids=["varchar", "char"])
+def string_column_type(request):
+    return request.param
+
+
+@pytest.fixture
+def string_table(connection, string_column_type):
+    table = SingleColumnTable.create_empty(
+        connection, "WS_STRING_INPUT", string_column_type
+    )
+    yield table
+    table.drop()
+
+
 @pytest.fixture
 def session_numeric_characters(connection):
     result = connection.execute(
@@ -609,3 +623,54 @@ class TestHashtypeInputs:
     def test_rejects_value(hashtype_table, value):
         with pytest.raises(ExaRequestError):
             hashtype_table.insert(value)
+
+
+class TestStringInputs:
+    # The tests run for VARCHAR(5) and CHAR(5). CHAR pads the value with spaces.
+    @staticmethod
+    @pytest.mark.parametrize(
+        "value",
+        [
+            pytest.param("ab", id="shorter-than-column"),
+            pytest.param("abcde", id="same-length-as-column"),
+            # The length is counted in characters, not bytes.
+            pytest.param("äöüèé", id="multi-byte-characters"),
+            pytest.param("😀" * 5, id="four-byte-characters"),
+            pytest.param("a\x00b", id="embedded-nul"),
+            pytest.param("\n", id="newline"),
+        ],
+    )
+    def test_accepts_and_stores_expected_value(string_table, string_column_type, value):
+        string_table.insert(value)
+
+        is_char = string_column_type.startswith("CHAR")
+        assert string_table.read() == (value.ljust(5) if is_char else value)
+
+    @staticmethod
+    @pytest.mark.parametrize(
+        "value",
+        [
+            pytest.param(None, id="none"),
+            # The empty string is stored as NULL.
+            pytest.param("", id="string-empty"),
+        ],
+    )
+    def test_stores_null(string_table, value):
+        string_table.insert(value)
+
+        assert string_table.read() is None
+
+    @staticmethod
+    @pytest.mark.parametrize(
+        "value",
+        [
+            pytest.param("abcdef", id="longer-than-column"),
+            # No non-string is accepted, even one that is short enough.
+            pytest.param(12345, id="int"),
+            pytest.param(1.5, id="float"),
+            pytest.param(True, id="bool"),
+        ],
+    )
+    def test_rejects_value(string_table, value):
+        with pytest.raises(ExaRequestError):
+            string_table.insert(value)
