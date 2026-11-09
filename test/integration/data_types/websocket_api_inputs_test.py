@@ -189,6 +189,13 @@ def string_table(connection, string_column_type):
 
 
 @pytest.fixture
+def geometry_table(connection):
+    table = SingleColumnTable.create_empty(connection, "WS_GEOMETRY_INPUT", "GEOMETRY")
+    yield table
+    table.drop()
+
+
+@pytest.fixture
 def session_numeric_characters(connection):
     result = connection.execute(
         "SELECT SESSION_VALUE FROM EXA_PARAMETERS "
@@ -632,7 +639,7 @@ class TestStringInputs:
         "value",
         [
             pytest.param("ab", id="shorter-than-column"),
-            pytest.param("abcde", id="same-length-as-column"),
+            pytest.param("ab de", id="same-length-as-column"),
             # The length is counted in characters, not bytes.
             pytest.param("äöüèé", id="multi-byte-characters"),
             pytest.param("😀" * 5, id="four-byte-characters"),
@@ -651,7 +658,6 @@ class TestStringInputs:
         "value",
         [
             pytest.param(None, id="none"),
-            # The empty string is stored as NULL.
             pytest.param("", id="string-empty"),
         ],
     )
@@ -674,3 +680,44 @@ class TestStringInputs:
     def test_rejects_value(string_table, value):
         with pytest.raises(ExaRequestError):
             string_table.insert(value)
+
+
+class TestGeometryInputs:
+    # GEOMETRY takes WKT strings. The database returns them in a normalized form.
+    @staticmethod
+    @pytest.mark.parametrize(
+        "value, expected_stored",
+        [
+            pytest.param("POINT (1 2)", "POINT (1 2)", id="point"),
+            pytest.param("POINT(1 2)", "POINT (1 2)", id="point-without-space"),
+            pytest.param("point(1 2)", "POINT (1 2)", id="lower-case"),
+            pytest.param("POINT EMPTY", "POINT EMPTY", id="empty"),
+            pytest.param(" POINT(1 2) ", "POINT (1 2)", id="surrounding-whitespace"),
+            pytest.param(None, None, id="none"),
+            pytest.param("", None, id="string-empty"),
+        ],
+    )
+    def test_accepts_string_and_stores_expected_value(
+        geometry_table, value, expected_stored
+    ):
+        geometry_table.insert(value)
+
+        assert geometry_table.read() == expected_stored
+
+    @staticmethod
+    @pytest.mark.parametrize(
+        "value",
+        [
+            pytest.param("abc", id="string-not-wkt"),
+            pytest.param("POINT(1)", id="string-missing-coordinate"),
+            pytest.param("POLYGON((0 0, 1 0, 1 1))", id="string-polygon-not-closed"),
+            pytest.param("POINT(1 2 3)", id="string-three-coordinates"),
+            pytest.param("SRID=4326;POINT(1 2)", id="string-ewkt-srid"),
+            pytest.param(1, id="int"),
+            pytest.param(1.5, id="float"),
+            pytest.param(True, id="bool"),
+        ],
+    )
+    def test_rejects_value(geometry_table, value):
+        with pytest.raises(ExaRequestError):
+            geometry_table.insert(value)
