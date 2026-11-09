@@ -166,6 +166,15 @@ def double_table(connection):
 
 
 @pytest.fixture
+def hashtype_table(connection):
+    table = SingleColumnTable.create_empty(
+        connection, "WS_HASHTYPE_INPUT", "HASHTYPE(16 BYTE)"
+    )
+    yield table
+    table.drop()
+
+
+@pytest.fixture
 def session_numeric_characters(connection):
     result = connection.execute(
         "SELECT SESSION_VALUE FROM EXA_PARAMETERS "
@@ -542,3 +551,61 @@ class TestDoubleInputs:
         double_table.insert(1.5)
 
         assert double_table.read() == 1.5
+
+
+class TestHashtypeInputs:
+    # The column is HASHTYPE(16 BYTE), the size of a UUID. The database returns the
+    # value as lowercase hex digits without dashes.
+    UUID_HEX = "12345678123456781234567812345678"
+    # The same value as base64, from the Exasol docs.
+    BASE64_HEX = "550e8400e29b11d4a716446655440000"
+    # Its base64 characters are '+' and '/', which base64url writes as '-' and '_'.
+    URL_SAFE_HEX = "fbffbffbffbffbffbffbffbffbffbff9"
+
+    @staticmethod
+    @pytest.mark.parametrize(
+        "value, expected_stored",
+        [
+            pytest.param(None, None, id="none"),
+            pytest.param("", None, id="string-empty"),
+            pytest.param(UUID_HEX, UUID_HEX, id="string-hex"),
+            # The dashes are ignored wherever they are.
+            pytest.param(
+                "123456781234-5678-1234-567812345678",
+                UUID_HEX,
+                id="string-with-dashes-anywhere",
+            ),
+            pytest.param(
+                "{12345678-1234-5678-1234-567812345678}",
+                UUID_HEX,
+                id="string-with-braces",
+            ),
+            # Base64 and base64url strings are accepted too, with or without padding.
+            pytest.param("VQ6EAOKbEdSnFkRmVUQAAA", BASE64_HEX, id="string-base64"),
+            pytest.param(
+                "VQ6EAOKbEdSnFkRmVUQAAA==", BASE64_HEX, id="string-base64-padded"
+            ),
+            pytest.param("-_-_-_-_-_-_-_-_-_-_-Q", URL_SAFE_HEX, id="string-base64url"),
+        ],
+    )
+    def test_accepts_and_stores_expected_value(hashtype_table, value, expected_stored):
+        hashtype_table.insert(value)
+
+        assert hashtype_table.read() == expected_stored
+
+    @staticmethod
+    @pytest.mark.parametrize(
+        "value",
+        [
+            pytest.param(UUID_HEX[:-2], id="string-too-short"),
+            pytest.param(UUID_HEX + "00", id="string-too-long"),
+            pytest.param(UUID_HEX.replace("1", "g"), id="string-not-hex"),
+            pytest.param(f" {UUID_HEX} ", id="string-with-whitespace"),
+            pytest.param(f"urn:uuid:{UUID_HEX}", id="string-with-urn-prefix"),
+            # An int is rejected, even one with the value of the UUID.
+            pytest.param(int(UUID_HEX, 16), id="int"),
+        ],
+    )
+    def test_rejects_value(hashtype_table, value):
+        with pytest.raises(ExaRequestError):
+            hashtype_table.insert(value)
