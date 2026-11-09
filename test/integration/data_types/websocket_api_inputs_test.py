@@ -96,6 +96,21 @@ def timestamp_table(connection, db_version):
 
 
 @pytest.fixture
+def timestamp_ltz_table(connection, db_version):
+    # Mirrors timestamp_table: before Exasol 8.32.0 the precision cannot be declared.
+    column_type = (
+        "TIMESTAMP(3) WITH LOCAL TIME ZONE"
+        if db_version >= Version("8.32.0")
+        else "TIMESTAMP WITH LOCAL TIME ZONE"
+    )
+    table = SingleColumnTable.create_empty(
+        connection, "WS_TIMESTAMP_LTZ_INPUT", column_type
+    )
+    yield table
+    table.drop()
+
+
+@pytest.fixture
 def session_timestamp_format(connection):
     with override_session_parameter(
         connection, "NLS_TIMESTAMP_FORMAT", "DD/MM/YYYY HH24:MI:SS.FF4"
@@ -190,6 +205,59 @@ class TestTimestampInputs:
 
         # The column keeps 3 fractional digits; the session format pads them to 4.
         assert timestamp_table.read() == "11/09/2026 12:34:56.1230"
+
+
+class TestTimestampLocalTimeZoneInputs:
+    # The same string cases as for TIMESTAMP. The string has no time zone: the
+    # database reads it in the session's TIME_ZONE.
+    @staticmethod
+    @pytest.mark.parametrize("value, expected_stored", TIMESTAMP_ACCEPTED_STRINGS)
+    def test_accepts_string_and_stores_expected_value(
+        timestamp_ltz_table, value, expected_stored
+    ):
+        timestamp_ltz_table.insert(value)
+
+        assert timestamp_ltz_table.read() == expected_stored
+
+    @staticmethod
+    @pytest.mark.parametrize(
+        "value",
+        [
+            *TIMESTAMP_REJECTED_STRINGS,
+            # An offset or zone marker is rejected, as for TIMESTAMP.
+            pytest.param("2026-09-11 12:34:56 +02:00", id="string-has-offset"),
+            pytest.param("2026-09-11 12:34:56Z", id="string-has-zulu"),
+        ],
+    )
+    def test_rejects_string(timestamp_ltz_table, value):
+        with pytest.raises(ExaRequestError):
+            timestamp_ltz_table.insert(value)
+
+    @staticmethod
+    def test_accepts_session_nls_timestamp_format(
+        timestamp_ltz_table, session_timestamp_format
+    ):
+        timestamp_ltz_table.insert("11/09/2026 12:34:56.1234")
+
+        # The column keeps 3 fractional digits; the session format pads them to 4.
+        assert timestamp_ltz_table.read() == "11/09/2026 12:34:56.1230"
+
+    @staticmethod
+    def test_interprets_string_in_session_time_zone(connection, timestamp_ltz_table):
+        with override_session_parameter(connection, "TIME_ZONE", "UTC"):
+            timestamp_ltz_table.insert("2026-09-11 12:34:56")
+        with override_session_parameter(connection, "TIME_ZONE", "EUROPE/BERLIN"):
+            # Berlin is UTC+2 in September, so the same instant reads 2 hours later.
+            assert timestamp_ltz_table.read() == "2026-09-11 14:34:56.000000"
+
+    @staticmethod
+    def test_shifts_string_in_skipped_local_time(connection, timestamp_ltz_table):
+        # Clocks in Berlin jump from 02:00 to 03:00 on 2026-03-29, so 02:30 does not
+        # exist. The database does not reject it, but moves it one hour forward.
+        with override_session_parameter(connection, "TIME_ZONE", "EUROPE/BERLIN"):
+            timestamp_ltz_table.insert("2026-03-29 02:30:00")
+
+            assert timestamp_ltz_table.read() == "2026-03-29 03:30:00.000000"
 
 
 class TestDateInputs:
