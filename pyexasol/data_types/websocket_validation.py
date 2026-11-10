@@ -3,19 +3,16 @@ from __future__ import annotations
 from pyexasol.data_types.websocket_types import WebSocketDataType
 
 
-def _require_types(
-    value: object,
-    data_type: str,
-    *allowed: type,
-    is_unwanted_bool: bool = True,
-) -> None:
+def _require_types(value: object, data_type: str, *allowed: type) -> None:
     """
     Raise TypeError unless ``value`` is an instance of one of the ``allowed`` types.
 
-    ``bool`` is a subclass of ``int``, so it is rejected by default, even if ``int`` is
-    allowed. Only the BOOLEAN case sets ``is_unwanted_bool`` to False.
+    ``bool`` is a subclass of ``int``, so it is rejected unless ``bool`` itself is in
+    ``allowed``, even if ``int`` is allowed.
     """
-    if (is_unwanted_bool and isinstance(value, bool)) or not isinstance(value, allowed):
+    if (isinstance(value, bool) and bool not in allowed) or not isinstance(
+        value, allowed
+    ):
         names = ", ".join(t.__name__ for t in allowed)
         raise TypeError(
             f"Expected {names} or None for {data_type} got {type(value).__name__}."
@@ -71,7 +68,7 @@ def validate_value_for_websocket(value: object, data_type: str) -> None:
     if value is None or (isinstance(value, str) and value == ""):
         return
     elif data_type == WebSocketDataType.Bool.value:
-        _require_types(value, data_type, bool, is_unwanted_bool=False)
+        _require_types(value, data_type, bool)
     elif data_type == WebSocketDataType.Decimal.value:
         _require_types(value, data_type, str, int, float)
     elif data_type == WebSocketDataType.Double.value:
