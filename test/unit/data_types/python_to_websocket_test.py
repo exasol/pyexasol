@@ -5,6 +5,7 @@ import pytest
 
 from pyexasol.data_types import ExaTimeDelta
 from pyexasol.data_types.python_to_websocket import (
+    boolean_to_websocket,
     date_to_websocket,
     decimal_to_websocket,
     double_to_websocket,
@@ -412,3 +413,64 @@ class TestDoubleToWebsocket:
     def test_raises_type_error_for_other_types(value):
         with pytest.raises(TypeError, match="Expected float"):
             double_to_websocket(value)
+
+
+class TestBooleanToWebsocket:
+    @staticmethod
+    @pytest.mark.parametrize(
+        "value",
+        [
+            pytest.param(None, id="none"),
+            pytest.param(True, id="true"),
+            pytest.param(False, id="false"),
+        ],
+    )
+    def test_passes_through_values_unchanged(value):
+        assert boolean_to_websocket(value) is value
+
+    @staticmethod
+    @pytest.mark.parametrize(
+        "value, expected",
+        [
+            pytest.param(1, True, id="int-one"),
+            pytest.param(0, False, id="int-zero"),
+            pytest.param("1", True, id="string-one"),
+            pytest.param("T", True, id="string-t-upper"),
+            pytest.param("t", True, id="string-t-lower"),
+            pytest.param("TRUE", True, id="string-true-upper"),
+            pytest.param("true", True, id="string-true-lower"),
+            pytest.param("True", True, id="string-true-mixed"),
+            pytest.param("0", False, id="string-zero"),
+            pytest.param("F", False, id="string-f-upper"),
+            pytest.param("f", False, id="string-f-lower"),
+            pytest.param("FALSE", False, id="string-false-upper"),
+            pytest.param("false", False, id="string-false-lower"),
+            pytest.param("False", False, id="string-false-mixed"),
+        ],
+    )
+    def test_converts_to_bool(value, expected):
+        assert boolean_to_websocket(value) is expected
+
+    @staticmethod
+    def test_ignores_lower_override_of_str_subclass():
+        class LyingStr(str):
+            def lower(self):
+                return "false"
+
+        assert boolean_to_websocket(LyingStr("TRUE")) is True
+
+    @staticmethod
+    @pytest.mark.parametrize(
+        "value",
+        [
+            pytest.param(2, id="int-two"),
+            pytest.param(-1, id="int-negative"),
+            pytest.param("01", id="string-padded"),
+            pytest.param("", id="string-empty"),
+            pytest.param(1.0, id="float"),
+            pytest.param(b"1", id="bytes"),
+        ],
+    )
+    def test_raises_value_error_for_unsupported_value(value):
+        with pytest.raises(ValueError, match="is not supported for BOOLEAN"):
+            boolean_to_websocket(value)

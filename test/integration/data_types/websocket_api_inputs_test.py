@@ -166,6 +166,13 @@ def double_table(connection):
 
 
 @pytest.fixture
+def boolean_table(connection):
+    table = SingleColumnTable.create_empty(connection, "WS_BOOLEAN_INPUT", "BOOLEAN")
+    yield table
+    table.drop()
+
+
+@pytest.fixture
 def hashtype_table(connection):
     table = SingleColumnTable.create_empty(
         connection, "WS_HASHTYPE_INPUT", "HASHTYPE(16 BYTE)"
@@ -581,6 +588,40 @@ class TestDoubleInputs:
         double_table.insert(1.5)
 
         assert double_table.read() == 1.5
+
+
+class TestBooleanInputs:
+    @staticmethod
+    @pytest.mark.parametrize(
+        "value, expected_stored",
+        [
+            pytest.param(True, True, id="bool-true"),
+            pytest.param(False, False, id="bool-false"),
+            pytest.param(None, None, id="none"),
+            # Only the empty string works. See the later test for rejected strings.
+            pytest.param("", None, id="string-empty"),
+        ],
+    )
+    def test_accepts_and_stores_expected_value(boolean_table, value, expected_stored):
+        boolean_table.insert(value)
+
+        assert boolean_table.read() == expected_stored
+
+    @staticmethod
+    @pytest.mark.parametrize(
+        "value",
+        [
+            # Every non-empty string is rejected, even a boolean literal the Exasol
+            # docs list ('TRUE', 'T', '1', ...).
+            pytest.param("TRUE", id="string"),
+            # Likewise a number the docs list as a boolean literal (1, 0).
+            pytest.param(1, id="int"),
+            pytest.param(1.0, id="float"),
+        ],
+    )
+    def test_rejects_value(boolean_table, value):
+        with pytest.raises(ExaRequestError):
+            boolean_table.insert(value)
 
 
 class TestHashtypeInputs:
