@@ -336,6 +336,10 @@ class TestDoubleToWebsocket:
         assert double_to_websocket(None) is None
 
     @staticmethod
+    def test_converts_empty_string_to_none():
+        assert double_to_websocket("") is None
+
+    @staticmethod
     @pytest.mark.parametrize(
         "value",
         [
@@ -406,6 +410,7 @@ class TestDoubleToWebsocket:
         "value",
         [
             pytest.param("1.5", id="string"),
+            pytest.param(" ", id="string-whitespace"),
             pytest.param(True, id="bool-true"),
             pytest.param(b"1", id="bytes"),
         ],
@@ -427,6 +432,10 @@ class TestBooleanToWebsocket:
     )
     def test_passes_through_values_unchanged(value):
         assert boolean_to_websocket(value) is value
+
+    @staticmethod
+    def test_converts_empty_string_to_none():
+        assert boolean_to_websocket("") is None
 
     @staticmethod
     @pytest.mark.parametrize(
@@ -466,7 +475,7 @@ class TestBooleanToWebsocket:
             pytest.param(2, id="int-two"),
             pytest.param(-1, id="int-negative"),
             pytest.param("01", id="string-padded"),
-            pytest.param("", id="string-empty"),
+            pytest.param(" ", id="string-whitespace"),
             pytest.param(1.0, id="float"),
             pytest.param(b"1", id="bytes"),
         ],
