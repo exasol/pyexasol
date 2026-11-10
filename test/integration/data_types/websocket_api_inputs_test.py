@@ -52,6 +52,45 @@ def override_session_parameter(connection, name, value):
         connection.execute(f"ALTER SESSION SET {name}='{original_value}';")
 
 
+# Shared by the tests of the types that accept only strings. No non-string is
+# accepted, even a number that could stand for a value of the type.
+REJECTED_NON_STRINGS = [
+    pytest.param(1, id="int"),
+    pytest.param(1.5, id="float"),
+    pytest.param(True, id="bool"),
+]
+
+
+# Shared by the TIMESTAMP and TIMESTAMP WITH LOCAL TIME ZONE tests. They rely on the
+# default session NLS_TIMESTAMP_FORMAT, 'YYYY-MM-DD HH24:MI:SS.FF6'.
+TIMESTAMP_ACCEPTED_STRINGS = [
+    pytest.param(
+        "2026-09-11 12:34:56",
+        "2026-09-11 12:34:56.000000",
+        id="number-is-less-precise",
+    ),
+    pytest.param(
+        "2026-09-11 12:34:56.123",
+        "2026-09-11 12:34:56.123000",
+        id="same-as-precision",
+    ),
+    pytest.param(
+        "2026-09-11 12:34:56.123456789",
+        "2026-09-11 12:34:56.123000",
+        id="greater-precision",
+    ),
+    pytest.param(
+        "2026-9-1 1:2:3",
+        "2026-09-01 01:02:03.000000",
+        id="unpadded-fields",
+    ),
+]
+TIMESTAMP_REJECTED_STRINGS = [
+    pytest.param("2026-09-11 12:34:56.1234567890", id="precision-higher-than-db"),
+    pytest.param("2026-09-11 12:34:56+00:00", id="string-has-unsupported-format"),
+]
+
+
 @pytest.fixture
 def timestamp_table(connection, db_version):
     # Exasol 8 versions before 8.32.0 only support TIMESTAMP with the default of 3
@@ -60,6 +99,21 @@ def timestamp_table(connection, db_version):
     column_type = "TIMESTAMP(3)" if db_version >= Version("8.32.0") else "TIMESTAMP"
     table = SingleColumnTable.create_empty(
         connection, "WS_TIMESTAMP_INPUT", column_type
+    )
+    yield table
+    table.drop()
+
+
+@pytest.fixture
+def timestamp_ltz_table(connection, db_version):
+    # Mirrors timestamp_table: before Exasol 8.32.0 the precision cannot be declared.
+    column_type = (
+        "TIMESTAMP(3) WITH LOCAL TIME ZONE"
+        if db_version >= Version("8.32.0")
+        else "TIMESTAMP WITH LOCAL TIME ZONE"
+    )
+    table = SingleColumnTable.create_empty(
+        connection, "WS_TIMESTAMP_LTZ_INPUT", column_type
     )
     yield table
     table.drop()
@@ -128,6 +182,45 @@ def boolean_table(connection):
 
 
 @pytest.fixture
+def hashtype_table(connection):
+    table = SingleColumnTable.create_empty(
+        connection, "WS_HASHTYPE_INPUT", "HASHTYPE(16 BYTE)"
+    )
+    yield table
+    table.drop()
+
+
+@pytest.fixture(params=["VARCHAR(5)", "CHAR(5)"], ids=["varchar", "char"])
+def string_column_type(request):
+    return request.param
+
+
+@pytest.fixture
+def string_table(connection, string_column_type):
+    table = SingleColumnTable.create_empty(
+        connection, "WS_STRING_INPUT", string_column_type
+    )
+    yield table
+    table.drop()
+
+
+@pytest.fixture
+def geometry_table(connection):
+    table = SingleColumnTable.create_empty(connection, "WS_GEOMETRY_INPUT", "GEOMETRY")
+    yield table
+    table.drop()
+
+
+@pytest.fixture
+def interval_year_to_month_table(connection):
+    table = SingleColumnTable.create_empty(
+        connection, "WS_INTERVAL_YM_INPUT", "INTERVAL YEAR(2) TO MONTH"
+    )
+    yield table
+    table.drop()
+
+
+@pytest.fixture
 def session_numeric_characters(connection):
     result = connection.execute(
         "SELECT SESSION_VALUE FROM EXA_PARAMETERS "
@@ -142,35 +235,10 @@ def session_numeric_characters(connection):
 
 
 class TestTimestampInputs:
-    # These cases rely on the default session NLS_TIMESTAMP_FORMAT,
-    # 'YYYY-MM-DD HH24:MI:SS.FF6'. The session format test changes it temporarily
-    # through the session_timestamp_format fixture and restores it afterwards.
+    # The session format test changes NLS_TIMESTAMP_FORMAT temporarily through the
+    # session_timestamp_format fixture and restores it afterwards.
     @staticmethod
-    @pytest.mark.parametrize(
-        "value, expected_stored",
-        [
-            pytest.param(
-                "2026-09-11 12:34:56",
-                "2026-09-11 12:34:56.000000",
-                id="number-is-less-precise",
-            ),
-            pytest.param(
-                "2026-09-11 12:34:56.123",
-                "2026-09-11 12:34:56.123000",
-                id="same-as-precision",
-            ),
-            pytest.param(
-                "2026-09-11 12:34:56.123456789",
-                "2026-09-11 12:34:56.123000",
-                id="greater-precision",
-            ),
-            pytest.param(
-                "2026-9-1 1:2:3",
-                "2026-09-01 01:02:03.000000",
-                id="unpadded-fields",
-            ),
-        ],
-    )
+    @pytest.mark.parametrize("value, expected_stored", TIMESTAMP_ACCEPTED_STRINGS)
     def test_accepts_string_and_stores_expected_value(
         timestamp_table, value, expected_stored
     ):
@@ -180,17 +248,9 @@ class TestTimestampInputs:
 
     @staticmethod
     @pytest.mark.parametrize(
-        "value",
-        [
-            pytest.param(
-                "2026-09-11 12:34:56.1234567890", id="precision-higher-than-db"
-            ),
-            pytest.param(
-                "2026-09-11 12:34:56+00:00", id="string-has-unsupported-format"
-            ),
-        ],
+        "value", [*TIMESTAMP_REJECTED_STRINGS, *REJECTED_NON_STRINGS]
     )
-    def test_rejects_string(timestamp_table, value):
+    def test_rejects_value(timestamp_table, value):
         with pytest.raises(ExaRequestError):
             timestamp_table.insert(value)
 
@@ -202,6 +262,60 @@ class TestTimestampInputs:
 
         # The column keeps 3 fractional digits; the session format pads them to 4.
         assert timestamp_table.read() == "11/09/2026 12:34:56.1230"
+
+
+class TestTimestampLocalTimeZoneInputs:
+    # The same string cases as for TIMESTAMP. The string has no time zone: the
+    # database reads it in the session's TIME_ZONE.
+    @staticmethod
+    @pytest.mark.parametrize("value, expected_stored", TIMESTAMP_ACCEPTED_STRINGS)
+    def test_accepts_string_and_stores_expected_value(
+        timestamp_ltz_table, value, expected_stored
+    ):
+        timestamp_ltz_table.insert(value)
+
+        assert timestamp_ltz_table.read() == expected_stored
+
+    @staticmethod
+    @pytest.mark.parametrize(
+        "value",
+        [
+            *TIMESTAMP_REJECTED_STRINGS,
+            *REJECTED_NON_STRINGS,
+            # An offset or zone marker is rejected, as for TIMESTAMP.
+            pytest.param("2026-09-11 12:34:56 +02:00", id="string-has-offset"),
+            pytest.param("2026-09-11 12:34:56Z", id="string-has-zulu"),
+        ],
+    )
+    def test_rejects_value(timestamp_ltz_table, value):
+        with pytest.raises(ExaRequestError):
+            timestamp_ltz_table.insert(value)
+
+    @staticmethod
+    def test_accepts_session_nls_timestamp_format(
+        timestamp_ltz_table, session_timestamp_format
+    ):
+        timestamp_ltz_table.insert("11/09/2026 12:34:56.1234")
+
+        # The column keeps 3 fractional digits; the session format pads them to 4.
+        assert timestamp_ltz_table.read() == "11/09/2026 12:34:56.1230"
+
+    @staticmethod
+    def test_interprets_string_in_session_time_zone(connection, timestamp_ltz_table):
+        with override_session_parameter(connection, "TIME_ZONE", "UTC"):
+            timestamp_ltz_table.insert("2026-09-11 12:34:56")
+        with override_session_parameter(connection, "TIME_ZONE", "EUROPE/BERLIN"):
+            # Berlin is UTC+2 in September, so the same instant reads 2 hours later.
+            assert timestamp_ltz_table.read() == "2026-09-11 14:34:56.000000"
+
+    @staticmethod
+    def test_shifts_string_in_skipped_local_time(connection, timestamp_ltz_table):
+        # Clocks in Berlin jump from 02:00 to 03:00 on 2026-03-29, so 02:30 does not
+        # exist. The database does not reject it, but moves it one hour forward.
+        with override_session_parameter(connection, "TIME_ZONE", "EUROPE/BERLIN"):
+            timestamp_ltz_table.insert("2026-03-29 02:30:00")
+
+            assert timestamp_ltz_table.read() == "2026-03-29 03:30:00.000000"
 
 
 class TestDateInputs:
@@ -238,9 +352,10 @@ class TestDateInputs:
             pytest.param("2026-13-01", id="month-out-of-range"),
             pytest.param("2023-02-29", id="leap-day-in-non-leap-year"),
             pytest.param("11/09/2026", id="string-has-unsupported-format"),
+            *REJECTED_NON_STRINGS,
         ],
     )
-    def test_rejects_string(date_table, value):
+    def test_rejects_value(date_table, value):
         with pytest.raises(ExaRequestError):
             date_table.insert(value)
 
@@ -292,9 +407,10 @@ class TestIntervalDayToSecondInputs:
             pytest.param(
                 "0" * 20 + "1 02:03:04", id="string-longer-than-allowed-total-length"
             ),
+            *REJECTED_NON_STRINGS,
         ],
     )
-    def test_rejects_string(interval_table, value):
+    def test_rejects_value(interval_table, value):
         with pytest.raises(ExaRequestError):
             interval_table.insert(value)
 
@@ -520,3 +636,191 @@ class TestBooleanInputs:
     def test_rejects_value(boolean_table, value):
         with pytest.raises(ExaRequestError):
             boolean_table.insert(value)
+
+
+class TestHashtypeInputs:
+    # The column is HASHTYPE(16 BYTE), the size of a UUID. The database returns the
+    # value as lowercase hex digits without dashes.
+    UUID_HEX = "12345678123456781234567812345678"
+    # The same value as base64, from the Exasol docs.
+    BASE64_HEX = "550e8400e29b11d4a716446655440000"
+    # Its base64 characters are '+' and '/', which base64url writes as '-' and '_'.
+    URL_SAFE_HEX = "fbffbffbffbffbffbffbffbffbffbff9"
+
+    @staticmethod
+    @pytest.mark.parametrize(
+        "value, expected_stored",
+        [
+            pytest.param(None, None, id="none"),
+            pytest.param("", None, id="string-empty"),
+            pytest.param(UUID_HEX, UUID_HEX, id="string-hex"),
+            # The dashes are ignored wherever they are.
+            pytest.param(
+                "123456781234-5678-1234-567812345678",
+                UUID_HEX,
+                id="string-with-dashes-anywhere",
+            ),
+            pytest.param(
+                "{12345678-1234-5678-1234-567812345678}",
+                UUID_HEX,
+                id="string-with-braces",
+            ),
+            # Base64 and base64url strings are accepted too, with or without padding.
+            pytest.param("VQ6EAOKbEdSnFkRmVUQAAA", BASE64_HEX, id="string-base64"),
+            pytest.param(
+                "VQ6EAOKbEdSnFkRmVUQAAA==", BASE64_HEX, id="string-base64-padded"
+            ),
+            pytest.param("-_-_-_-_-_-_-_-_-_-_-Q", URL_SAFE_HEX, id="string-base64url"),
+        ],
+    )
+    def test_accepts_and_stores_expected_value(hashtype_table, value, expected_stored):
+        hashtype_table.insert(value)
+
+        assert hashtype_table.read() == expected_stored
+
+    @staticmethod
+    @pytest.mark.parametrize(
+        "value",
+        [
+            pytest.param(UUID_HEX[:-2], id="string-too-short"),
+            pytest.param(UUID_HEX + "00", id="string-too-long"),
+            pytest.param(UUID_HEX.replace("1", "g"), id="string-not-hex"),
+            pytest.param(f" {UUID_HEX} ", id="string-with-whitespace"),
+            pytest.param(f"urn:uuid:{UUID_HEX}", id="string-with-urn-prefix"),
+            *REJECTED_NON_STRINGS,
+            # Even an int with the value of the UUID is rejected.
+            pytest.param(int(UUID_HEX, 16), id="int-uuid-value"),
+        ],
+    )
+    def test_rejects_value(hashtype_table, value):
+        with pytest.raises(ExaRequestError):
+            hashtype_table.insert(value)
+
+
+class TestStringInputs:
+    # The tests run for VARCHAR(5) and CHAR(5). CHAR pads the value with spaces.
+    @staticmethod
+    @pytest.mark.parametrize(
+        "value",
+        [
+            pytest.param("ab", id="shorter-than-column"),
+            pytest.param("ab de", id="same-length-as-column"),
+            # The length is counted in characters, not bytes.
+            pytest.param("äöüèé", id="multi-byte-characters"),
+            pytest.param("😀" * 5, id="four-byte-characters"),
+            pytest.param("a\x00b", id="embedded-nul"),
+            pytest.param("\n", id="newline"),
+        ],
+    )
+    def test_accepts_and_stores_expected_value(string_table, string_column_type, value):
+        string_table.insert(value)
+
+        is_char = string_column_type.startswith("CHAR")
+        assert string_table.read() == (value.ljust(5) if is_char else value)
+
+    @staticmethod
+    @pytest.mark.parametrize(
+        "value",
+        [
+            pytest.param(None, id="none"),
+            pytest.param("", id="string-empty"),
+        ],
+    )
+    def test_stores_null(string_table, value):
+        string_table.insert(value)
+
+        assert string_table.read() is None
+
+    @staticmethod
+    @pytest.mark.parametrize(
+        "value",
+        [
+            pytest.param("abcdef", id="longer-than-column"),
+            # No non-string is accepted, even one that is short enough.
+            *REJECTED_NON_STRINGS,
+        ],
+    )
+    def test_rejects_value(string_table, value):
+        with pytest.raises(ExaRequestError):
+            string_table.insert(value)
+
+
+class TestGeometryInputs:
+    # GEOMETRY takes WKT strings. The database returns them in a normalized form.
+    @staticmethod
+    @pytest.mark.parametrize(
+        "value, expected_stored",
+        [
+            pytest.param("POINT (1 2)", "POINT (1 2)", id="point"),
+            pytest.param("POINT(1 2)", "POINT (1 2)", id="point-without-space"),
+            pytest.param("point(1 2)", "POINT (1 2)", id="lower-case"),
+            pytest.param("POINT EMPTY", "POINT EMPTY", id="empty"),
+            pytest.param(" POINT(1 2) ", "POINT (1 2)", id="surrounding-whitespace"),
+            pytest.param(None, None, id="none"),
+            pytest.param("", None, id="string-empty"),
+        ],
+    )
+    def test_accepts_string_and_stores_expected_value(
+        geometry_table, value, expected_stored
+    ):
+        geometry_table.insert(value)
+
+        assert geometry_table.read() == expected_stored
+
+    @staticmethod
+    @pytest.mark.parametrize(
+        "value",
+        [
+            pytest.param("abc", id="string-not-wkt"),
+            pytest.param("POINT(1)", id="string-missing-coordinate"),
+            pytest.param("POLYGON((0 0, 1 0, 1 1))", id="string-polygon-not-closed"),
+            pytest.param("POINT(1 2 3)", id="string-three-coordinates"),
+            pytest.param("SRID=4326;POINT(1 2)", id="string-ewkt-srid"),
+            *REJECTED_NON_STRINGS,
+        ],
+    )
+    def test_rejects_value(geometry_table, value):
+        with pytest.raises(ExaRequestError):
+            geometry_table.insert(value)
+
+
+class TestIntervalYearToMonthInputs:
+    # The column is INTERVAL YEAR(2) TO MONTH. The database returns '[+-]YY-MM'.
+    @staticmethod
+    @pytest.mark.parametrize(
+        "value, expected_stored",
+        [
+            pytest.param("1-2", "+01-02", id="unpadded-fields"),
+            pytest.param("01-02", "+01-02", id="padded-fields"),
+            pytest.param("+1-2", "+01-02", id="positive-sign"),
+            pytest.param("-1-2", "-01-02", id="negative-sign"),
+            pytest.param(" 1-2 ", "+01-02", id="surrounding-whitespace"),
+            pytest.param(None, None, id="none"),
+            pytest.param("", None, id="empty-string"),
+        ],
+    )
+    def test_accepts_string_and_stores_expected_value(
+        interval_year_to_month_table, value, expected_stored
+    ):
+        interval_year_to_month_table.insert(value)
+
+        assert interval_year_to_month_table.read() == expected_stored
+
+    @staticmethod
+    @pytest.mark.parametrize(
+        "value",
+        [
+            # The month part is 0 to 11, and the year part has at most 2 digits.
+            pytest.param("1-12", id="string-month-too-large"),
+            pytest.param("100-0", id="string-year-too-large"),
+            pytest.param("1", id="string-without-month"),
+            pytest.param("1 2", id="string-wrong-separator"),
+            pytest.param("P1Y2M", id="string-iso-8601"),
+            pytest.param("abc", id="string-not-an-interval"),
+            # A number of months is rejected as well.
+            *REJECTED_NON_STRINGS,
+        ],
+    )
+    def test_rejects_value(interval_year_to_month_table, value):
+        with pytest.raises(ExaRequestError):
+            interval_year_to_month_table.insert(value)

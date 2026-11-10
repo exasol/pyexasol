@@ -45,7 +45,7 @@ class TestDateToWebsocket:
         ],
     )
     def test_raises_type_error_for_other_types(value):
-        with pytest.raises(TypeError, match="Expected datetime.date"):
+        with pytest.raises(TypeError, match=r"Allowed types: datetime\.date,"):
             date_to_websocket(value)
 
     @staticmethod
@@ -115,7 +115,7 @@ class TestTimestampToWebsocket:
     @staticmethod
     def test_raises_type_error_for_other_types():
         date_value = datetime.date(2026, 9, 11)
-        with pytest.raises(TypeError, match="Expected datetime.datetime"):
+        with pytest.raises(TypeError, match=r"Allowed types: datetime\.datetime,"):
             timestamp_to_websocket(date_value)
 
     @staticmethod
@@ -198,7 +198,7 @@ class TestIntervalDayToSecondToWebsocket:
         ],
     )
     def test_raises_type_error_for_other_types(value):
-        with pytest.raises(TypeError, match="Expected datetime.timedelta"):
+        with pytest.raises(TypeError, match=r"Allowed types: datetime\.timedelta,"):
             interval_day_to_second_to_websocket(value)
 
     @staticmethod
@@ -326,7 +326,7 @@ class TestDecimalToWebsocket:
         ],
     )
     def test_raises_type_error_for_other_types(value):
-        with pytest.raises(TypeError, match="Expected decimal.Decimal"):
+        with pytest.raises(TypeError, match=r"Allowed types: decimal\.Decimal,"):
             decimal_to_websocket(value)
 
 
@@ -334,6 +334,10 @@ class TestDoubleToWebsocket:
     @staticmethod
     def test_passes_through_none():
         assert double_to_websocket(None) is None
+
+    @staticmethod
+    def test_converts_empty_string_to_none():
+        assert double_to_websocket("") is None
 
     @staticmethod
     @pytest.mark.parametrize(
@@ -406,12 +410,13 @@ class TestDoubleToWebsocket:
         "value",
         [
             pytest.param("1.5", id="string"),
+            pytest.param(" ", id="string-whitespace"),
             pytest.param(True, id="bool-true"),
             pytest.param(b"1", id="bytes"),
         ],
     )
     def test_raises_type_error_for_other_types(value):
-        with pytest.raises(TypeError, match="Expected float"):
+        with pytest.raises(TypeError, match=r"Allowed types: float,"):
             double_to_websocket(value)
 
 
@@ -427,6 +432,10 @@ class TestBooleanToWebsocket:
     )
     def test_passes_through_values_unchanged(value):
         assert boolean_to_websocket(value) is value
+
+    @staticmethod
+    def test_converts_empty_string_to_none():
+        assert boolean_to_websocket("") is None
 
     @staticmethod
     @pytest.mark.parametrize(
@@ -466,7 +475,7 @@ class TestBooleanToWebsocket:
             pytest.param(2, id="int-two"),
             pytest.param(-1, id="int-negative"),
             pytest.param("01", id="string-padded"),
-            pytest.param("", id="string-empty"),
+            pytest.param(" ", id="string-whitespace"),
             pytest.param(1.0, id="float"),
             pytest.param(b"1", id="bytes"),
         ],

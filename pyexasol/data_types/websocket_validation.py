@@ -1,0 +1,100 @@
+from __future__ import annotations
+
+from pyexasol.data_types.websocket_types import WebSocketDataType
+
+# The data types that accept only a str, besides None and the empty string.
+STRING_ONLY_TYPES = (
+    WebSocketDataType.Char,
+    WebSocketDataType.Date,
+    WebSocketDataType.Geometry,
+    WebSocketDataType.Hashtype,
+    WebSocketDataType.IntervalDayToSecond,
+    WebSocketDataType.IntervalYearToMonth,
+    WebSocketDataType.Timestamp,
+    WebSocketDataType.TimestampTz,
+    WebSocketDataType.String,
+)
+
+
+_WEBSOCKET_TYPE_NAMES = ", ".join(t.value for t in WebSocketDataType)
+
+
+def _require_types(value: object, column_type: str, *allowed: type) -> None:
+    """
+    Raise TypeError unless ``value`` is an instance of one of the ``allowed`` types.
+
+    ``bool`` is a subclass of ``int``, so it is rejected unless ``bool`` itself is in
+    ``allowed``, even if ``int`` is allowed.
+    """
+    if (isinstance(value, bool) and bool not in allowed) or not isinstance(
+        value, allowed
+    ):
+        names = ", ".join([*(t.__name__ for t in allowed), "None"])
+        raise TypeError(
+            f"Allowed types for {column_type}: {names}; got {type(value).__name__}."
+        )
+
+
+def validate_value_for_websocket(value: object, column_type: str) -> None:
+    """
+    Check that a value has a type the WebSocket API accepts as input for a column.
+
+    Only the Python type is checked. The content, such as the format, length or range,
+    is left to the database.
+
+    ``None`` and the empty string are accepted for every type, as the database stores
+    both as NULL. The list below shows the other accepted types. A ``bool`` is never
+    accepted, except for BOOLEAN.
+
+    BOOLEAN                          -> bool
+    CHAR                             -> str
+    DATE                             -> str
+    DECIMAL                          -> str, int, float
+    DOUBLE                           -> float
+    GEOMETRY                         -> str
+    HASHTYPE                         -> str
+    INTERVAL DAY TO SECOND           -> str
+    INTERVAL YEAR TO MONTH           -> str
+    TIMESTAMP                        -> str
+    TIMESTAMP WITH LOCAL TIME ZONE   -> str
+    VARCHAR                          -> str
+    <others>                         -> not validated
+
+    Note on DECIMAL: an ``int`` or ``float`` is accepted because the database takes a
+    JSON number, but the server keeps only about 17 significant digits of it. For
+    example, the 35-digit ``12345678901234567890123456789012345`` is stored as
+    ``12345678901234567000000000000000000``, without an error. A ``str`` keeps every
+    digit.
+
+    Args:
+        value: the value as it would be sent to the database.
+        column_type: the name of the column's data type as a ``str``, one of the
+                     ``WebSocketDataType`` values listed above, e.g. ``"VARCHAR"``. Any
+                     other string is passed through without validation, so a type that
+                     Exasol adds later keeps working.
+
+    Raises:
+        TypeError -> ``column_type`` is not a ``str``
+                  -> the value is neither ``None`` nor of an accepted type.
+    """
+    if not isinstance(column_type, str):
+        raise TypeError(
+            f"Allowed type for column_type: str, e.g. {_WEBSOCKET_TYPE_NAMES}; "
+            f"got {type(column_type).__name__}."
+        )
+    if value is None or (isinstance(value, str) and value == ""):
+        return
+
+    try:
+        websocket_type = WebSocketDataType(column_type)
+    except ValueError:
+        return
+
+    if websocket_type == WebSocketDataType.Bool:
+        _require_types(value, column_type, bool)
+    elif websocket_type == WebSocketDataType.Decimal:
+        _require_types(value, column_type, str, int, float)
+    elif websocket_type == WebSocketDataType.Double:
+        _require_types(value, column_type, float)
+    elif websocket_type in STRING_ONLY_TYPES:
+        _require_types(value, column_type, str)
