@@ -3,6 +3,20 @@ from __future__ import annotations
 from pyexasol.data_types.websocket_types import WebSocketDataType
 
 
+# The data types that accept only a str, besides None and the empty string.
+STRING_ONLY_TYPES = (
+    WebSocketDataType.Char,
+    WebSocketDataType.Date,
+    WebSocketDataType.Geometry,
+    WebSocketDataType.Hashtype,
+    WebSocketDataType.IntervalDayToSecond,
+    WebSocketDataType.IntervalYearToMonth,
+    WebSocketDataType.Timestamp,
+    WebSocketDataType.TimestampTz,
+    WebSocketDataType.String,
+)
+
+
 def _require_types(value: object, data_type: str, *allowed: type) -> None:
     """
     Raise TypeError unless ``value`` is an instance of one of the ``allowed`` types.
@@ -27,7 +41,8 @@ def validate_value_for_websocket(value: object, data_type: str) -> None:
     is left to the database.
 
     ``None`` and the empty string are accepted for every type, as the database stores
-    both as NULL. The list below shows the other accepted types.
+    both as NULL. The list below shows the other accepted types. A ``bool`` is never
+    accepted, except for BOOLEAN.
 
     BOOLEAN                          -> bool
     CHAR                             -> str
@@ -67,21 +82,17 @@ def validate_value_for_websocket(value: object, data_type: str) -> None:
         )
     if value is None or (isinstance(value, str) and value == ""):
         return
-    elif data_type == WebSocketDataType.Bool.value:
+
+    try:
+        websocket_type = WebSocketDataType(data_type)
+    except ValueError:
+        return
+
+    if websocket_type == WebSocketDataType.Bool:
         _require_types(value, data_type, bool)
-    elif data_type == WebSocketDataType.Decimal.value:
+    elif websocket_type == WebSocketDataType.Decimal:
         _require_types(value, data_type, str, int, float)
-    elif data_type == WebSocketDataType.Double.value:
+    elif websocket_type == WebSocketDataType.Double:
         _require_types(value, data_type, float)
-    elif data_type in (
-        WebSocketDataType.Char.value,
-        WebSocketDataType.Date.value,
-        WebSocketDataType.Geometry.value,
-        WebSocketDataType.Hashtype.value,
-        WebSocketDataType.IntervalDayToSecond.value,
-        WebSocketDataType.IntervalYearToMonth.value,
-        WebSocketDataType.Timestamp.value,
-        WebSocketDataType.TimestampTz.value,
-        WebSocketDataType.String.value,
-    ):
+    elif websocket_type in STRING_ONLY_TYPES:
         _require_types(value, data_type, str)

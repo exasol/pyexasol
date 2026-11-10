@@ -3,24 +3,14 @@ import decimal
 import pytest
 
 from pyexasol.data_types.websocket_types import WebSocketDataType
-from pyexasol.data_types.websocket_validation import validate_value_for_websocket
+from pyexasol.data_types.websocket_validation import (
+    STRING_ONLY_TYPES,
+    validate_value_for_websocket,
+)
 
 ALL_DB_TYPES = [pytest.param(t.value, id=t.value) for t in WebSocketDataType]
 
-STRING_DB_TYPES = [
-    pytest.param(t.value, id=t.value)
-    for t in (
-        WebSocketDataType.Char,
-        WebSocketDataType.Date,
-        WebSocketDataType.Geometry,
-        WebSocketDataType.Hashtype,
-        WebSocketDataType.IntervalDayToSecond,
-        WebSocketDataType.IntervalYearToMonth,
-        WebSocketDataType.Timestamp,
-        WebSocketDataType.TimestampTz,
-        WebSocketDataType.String,
-    )
-]
+STRING_DB_TYPES = [pytest.param(t.value, id=t.value) for t in STRING_ONLY_TYPES]
 
 NON_STRING_VALUES = [
     pytest.param(1, id="int"),
