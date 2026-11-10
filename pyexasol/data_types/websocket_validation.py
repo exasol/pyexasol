@@ -46,6 +46,12 @@ def validate_value_for_websocket(value: object, data_type: str) -> None:
     VARCHAR                          -> str
     <others>                         -> not validated
 
+    Note on DECIMAL: an ``int`` or ``float`` is accepted because the database takes a
+    JSON number, but the server keeps only about 17 significant digits of it. For
+    example, the 35-digit ``12345678901234567890123456789012345`` is stored as
+    ``12345678901234567000000000000000000``, without an error. A ``str`` keeps every
+    digit.
+
     Args:
         value: the value as it would be sent to the database.
         data_type: the ``dataType["type"]`` string the database reported for the
