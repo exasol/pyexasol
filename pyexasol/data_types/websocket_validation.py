@@ -27,9 +27,9 @@ def _require_types(value: object, data_type: str, *allowed: type) -> None:
     if (isinstance(value, bool) and bool not in allowed) or not isinstance(
         value, allowed
     ):
-        names = ", ".join(t.__name__ for t in allowed)
+        names = ", ".join([*(t.__name__ for t in allowed), "None"])
         raise TypeError(
-            f"Expected {names} or None for {data_type} got {type(value).__name__}."
+            f"Allowed types for {data_type}: {names}; got {type(value).__name__}."
         )
 
 
@@ -77,7 +77,7 @@ def validate_value_for_websocket(value: object, data_type: str) -> None:
     """
     if not isinstance(data_type, str):
         raise TypeError(
-            "Expected data_type to be a str, such as dataType['type'], "
+            "Expected data_type to be a str, such as dataType['type']; "
             f"got {type(data_type).__name__}."
         )
     if value is None or (isinstance(value, str) and value == ""):

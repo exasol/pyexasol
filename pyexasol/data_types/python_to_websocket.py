@@ -77,8 +77,7 @@ def timestamp_to_websocket(value: datetime.datetime | str | None) -> str | None:
         return value
     if not isinstance(value, datetime.datetime):
         raise TypeError(
-            "Expected datetime.datetime (if not timezone-aware), str, or None, "
-            f"got {type(value).__name__}."
+            f"Allowed types: datetime.datetime, str, None; got {type(value).__name__}."
         )
 
     _reject_timezone_aware(
@@ -122,8 +121,8 @@ def date_to_websocket(value: datetime.date | str | None) -> str | None:
         return value.isoformat(sep=" ")
     if not isinstance(value, datetime.date):
         raise TypeError(
-            "Expected datetime.date, datetime.datetime (if not timezone-aware), "
-            f"str, or None, got {type(value).__name__}."
+            "Allowed types: datetime.date, datetime.datetime, str, None; "
+            f"got {type(value).__name__}."
         )
     return value.isoformat()
 
@@ -164,7 +163,7 @@ def interval_day_to_second_to_websocket(
         return value.to_interval_unpadded()
     if not isinstance(value, datetime.timedelta):
         raise TypeError(
-            "Expected datetime.timedelta, ExaTimeDelta, str, or None, "
+            "Allowed types: datetime.timedelta, ExaTimeDelta, str, None; "
             f"got {type(value).__name__}."
         )
     return ExaTimeDelta.from_timedelta(value).to_interval_unpadded()
@@ -216,7 +215,7 @@ def decimal_to_websocket(
         _reject_non_finite(value, "DECIMAL")
         return f"{decimal.Decimal(float.__repr__(value)):f}"
     raise TypeError(
-        "Expected decimal.Decimal, int, float, str, or None, "
+        "Allowed types: decimal.Decimal, int, float, str, None; "
         f"got {type(value).__name__}."
     )
 
@@ -265,7 +264,7 @@ def double_to_websocket(
         _reject_non_finite(result, "DOUBLE")
         return result
     raise TypeError(
-        "Expected float, int, decimal.Decimal, an empty string, or None, "
+        "Allowed types: float, int, decimal.Decimal, empty string, None; "
         f"got {type(value).__name__}."
     )
 

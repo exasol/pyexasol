@@ -1,4 +1,5 @@
 import decimal
+import re
 
 import pytest
 
@@ -53,7 +54,9 @@ class TestValidateValueForWebsocket:
     def test_rejects_non_string(data_type, value):
         with pytest.raises(
             TypeError,
-            match=f"Expected str or None for {data_type} got {type(value).__name__}.",
+            match=re.escape(
+                f"Allowed types for {data_type}: str, None; got {type(value).__name__}."
+            ),
         ):
             validate_value_for_websocket(value, data_type)
 
@@ -74,7 +77,10 @@ class TestValidateValueForWebsocket:
     def test_rejects_other_types_for_decimal(value):
         with pytest.raises(
             TypeError,
-            match=f"Expected str, int, float or None for DECIMAL got {type(value).__name__}.",
+            match=re.escape(
+                "Allowed types for DECIMAL: str, int, float, None; "
+                f"got {type(value).__name__}."
+            ),
         ):
             validate_value_for_websocket(value, "DECIMAL")
 
@@ -95,7 +101,9 @@ class TestValidateValueForWebsocket:
     def test_rejects_other_types_for_double(value):
         with pytest.raises(
             TypeError,
-            match=f"Expected float or None for DOUBLE got {type(value).__name__}.",
+            match=re.escape(
+                f"Allowed types for DOUBLE: float, None; got {type(value).__name__}."
+            ),
         ):
             validate_value_for_websocket(value, "DOUBLE")
 
@@ -117,7 +125,9 @@ class TestValidateValueForWebsocket:
     def test_rejects_other_types_for_boolean(value):
         with pytest.raises(
             TypeError,
-            match=f"Expected bool or None for BOOLEAN got {type(value).__name__}.",
+            match=re.escape(
+                f"Allowed types for BOOLEAN: bool, None; got {type(value).__name__}."
+            ),
         ):
             validate_value_for_websocket(value, "BOOLEAN")
 

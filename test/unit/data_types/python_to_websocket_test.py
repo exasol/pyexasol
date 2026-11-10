@@ -45,7 +45,7 @@ class TestDateToWebsocket:
         ],
     )
     def test_raises_type_error_for_other_types(value):
-        with pytest.raises(TypeError, match="Expected datetime.date"):
+        with pytest.raises(TypeError, match=r"Allowed types: datetime\.date,"):
             date_to_websocket(value)
 
     @staticmethod
@@ -115,7 +115,7 @@ class TestTimestampToWebsocket:
     @staticmethod
     def test_raises_type_error_for_other_types():
         date_value = datetime.date(2026, 9, 11)
-        with pytest.raises(TypeError, match="Expected datetime.datetime"):
+        with pytest.raises(TypeError, match=r"Allowed types: datetime\.datetime,"):
             timestamp_to_websocket(date_value)
 
     @staticmethod
@@ -198,7 +198,7 @@ class TestIntervalDayToSecondToWebsocket:
         ],
     )
     def test_raises_type_error_for_other_types(value):
-        with pytest.raises(TypeError, match="Expected datetime.timedelta"):
+        with pytest.raises(TypeError, match=r"Allowed types: datetime\.timedelta,"):
             interval_day_to_second_to_websocket(value)
 
     @staticmethod
@@ -326,7 +326,7 @@ class TestDecimalToWebsocket:
         ],
     )
     def test_raises_type_error_for_other_types(value):
-        with pytest.raises(TypeError, match="Expected decimal.Decimal"):
+        with pytest.raises(TypeError, match=r"Allowed types: decimal\.Decimal,"):
             decimal_to_websocket(value)
 
 
@@ -416,7 +416,7 @@ class TestDoubleToWebsocket:
         ],
     )
     def test_raises_type_error_for_other_types(value):
-        with pytest.raises(TypeError, match="Expected float"):
+        with pytest.raises(TypeError, match=r"Allowed types: float,"):
             double_to_websocket(value)
 
 
