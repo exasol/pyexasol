@@ -47,6 +47,11 @@ class TestValidateValueForWebsocket:
         validate_value_for_websocket(None, data_type)
 
     @staticmethod
+    @pytest.mark.parametrize("data_type", ALL_DB_TYPES)
+    def test_accepts_empty_string(data_type):
+        validate_value_for_websocket("", data_type)
+
+    @staticmethod
     @pytest.mark.parametrize("data_type", STRING_DB_TYPES)
     @pytest.mark.parametrize("value", ["", "abc"])
     def test_accepts_string(data_type, value):
@@ -117,7 +122,6 @@ class TestValidateValueForWebsocket:
             pytest.param(0, id="int-zero"),
             pytest.param(1.0, id="float"),
             pytest.param("TRUE", id="string"),
-            pytest.param("", id="string-empty"),
         ],
     )
     def test_rejects_other_types_for_boolean(value):

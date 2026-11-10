@@ -27,20 +27,23 @@ def validate_value_for_websocket(value: object, data_type: str) -> None:
     Check that a value has a type the WebSocket API accepts as input for a column.
 
     Only the Python type is checked. The content, such as the format, length or range,
-    is left to the database. A ``bool`` is never accepted, except for BOOLEAN.
+    is left to the database.
 
-    BOOLEAN                          -> bool, None
-    CHAR                             -> str, None
-    DATE                             -> str, None
-    DECIMAL                          -> str, int, float, None
-    DOUBLE                           -> float, None
-    GEOMETRY                         -> str, None
-    HASHTYPE                         -> str, None
-    INTERVAL DAY TO SECOND           -> str, None
-    INTERVAL YEAR TO MONTH           -> str, None
-    TIMESTAMP                        -> str, None
-    TIMESTAMP WITH LOCAL TIME ZONE   -> str, None
-    VARCHAR                          -> str, None
+    ``None`` and the empty string are accepted for every type, as the database stores
+    both as NULL. The list below shows the other accepted types.
+
+    BOOLEAN                          -> bool
+    CHAR                             -> str
+    DATE                             -> str
+    DECIMAL                          -> str, int, float
+    DOUBLE                           -> float
+    GEOMETRY                         -> str
+    HASHTYPE                         -> str
+    INTERVAL DAY TO SECOND           -> str
+    INTERVAL YEAR TO MONTH           -> str
+    TIMESTAMP                        -> str
+    TIMESTAMP WITH LOCAL TIME ZONE   -> str
+    VARCHAR                          -> str
     <others>                         -> not validated
 
     Args:
@@ -59,7 +62,7 @@ def validate_value_for_websocket(value: object, data_type: str) -> None:
             "Expected data_type to be a str, such as dataType['type'], "
             f"got {type(data_type).__name__}."
         )
-    if value is None:
+    if value is None or (isinstance(value, str) and value == ""):
         return
     elif data_type == WebSocketDataType.Bool.value:
         _require_types(value, data_type, bool, is_unwanted_bool=False)
