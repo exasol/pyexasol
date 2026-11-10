@@ -422,10 +422,64 @@ class TestDoubleToWebsocket:
 
     @staticmethod
     @pytest.mark.parametrize(
+        "value, expected",
+        [
+            pytest.param("1.5", 1.5, id="regular"),
+            pytest.param("0.0", 0.0, id="zero"),
+            pytest.param("-2.25", -2.25, id="negative"),
+            pytest.param("+3", 3.0, id="plus-sign-integer"),
+            pytest.param(".5", 0.5, id="no-leading-digit"),
+            pytest.param("5.", 5.0, id="no-trailing-digit"),
+            pytest.param("1e-3", 0.001, id="exponent"),
+            pytest.param("1.5E+2", 150.0, id="upper-exponent-with-sign"),
+            pytest.param("1E-400", 0.0, id="underflow-becomes-zero"),
+            pytest.param(" 1.5 ", 1.5, id="surrounding-whitespace"),
+            pytest.param("1_000", 1000.0, id="underscore"),
+        ],
+    )
+    def test_converts_string_to_float(value, expected):
+        result = double_to_websocket(value)
+
+        assert type(result) is float
+        assert result == expected
+
+    @staticmethod
+    @pytest.mark.parametrize(
         "value",
         [
-            pytest.param("1.5", id="string"),
-            pytest.param(" ", id="string-whitespace"),
+            pytest.param(" ", id="whitespace"),
+            pytest.param("1,5", id="comma-decimal-separator"),
+            pytest.param("1,000.5", id="thousands-separator"),
+            pytest.param("abc", id="not-a-number"),
+            pytest.param("1e", id="incomplete-exponent"),
+        ],
+    )
+    def test_raises_value_error_for_invalid_string(value):
+        with pytest.raises(ValueError, match="must be a number") as exception_info:
+            double_to_websocket(value)
+
+        # The str may be sensitive, so the message must not repeat it.
+        assert repr(value) not in str(exception_info.value)
+
+    @staticmethod
+    @pytest.mark.parametrize(
+        "value",
+        [
+            pytest.param("1e400", id="too-large"),
+            pytest.param("-1e400", id="too-small"),
+            pytest.param("nan", id="nan"),
+            pytest.param("inf", id="infinity"),
+            pytest.param("-Infinity", id="negative-infinity"),
+        ],
+    )
+    def test_raises_value_error_for_non_finite_string(value):
+        with pytest.raises(ValueError, match="not supported for DOUBLE"):
+            double_to_websocket(value)
+
+    @staticmethod
+    @pytest.mark.parametrize(
+        "value",
+        [
             pytest.param(True, id="bool-true"),
             pytest.param(b"1", id="bytes"),
         ],

@@ -3,7 +3,6 @@ import decimal
 import math
 from typing import (
     Any,
-    Literal,
 )
 
 from pyexasol.data_types.converters import ExaTimeDelta
@@ -225,22 +224,28 @@ def decimal_to_websocket(
 
 
 def double_to_websocket(
-    value: float | int | decimal.Decimal | Literal[""] | None,
+    value: float | int | decimal.Decimal | str | None,
 ) -> float | None:
     """
     Convert a Python value to a type that the WebSocket API allows for a DOUBLE.
 
     We send a JSON number, because the database rejects every non-empty string for
-    a DOUBLE, even one such as ``"1.5"``. The empty string is the only string the
-    database accepts, and it stores it as NULL, so we convert it to None.
+    a DOUBLE, even one such as ``"1.5"``. A ``str`` is therefore parsed to a ``float``
+    here. The empty string is the one string the database accepts, and it stores it
+    as NULL, so we convert it to None.
+
+    A ``str`` is parsed with ``float()``, so it uses ``.`` as the decimal separator
+    and may have an optional sign and exponent, such as ``"1.5"``, ``"-.5"`` or
+    ``"1e-3"``. Like ``float()``, this also accepts surrounding whitespace and
+    underscores. Thousands separators and ``","`` as decimal separator are rejected,
+    and so are ``"nan"`` and ``"inf"``. The session's ``NLS_NUMERIC_CHARACTERS`` has
+    no effect.
 
     An ``int`` or ``decimal.Decimal`` is converted to a ``float`` first. Otherwise, the
     database keeps only the first 17 significant digits of a large ``int``.
 
-    A ``decimal.Decimal`` too small for a double, such as ``Decimal("1E-400")``,
-    silently becomes ``0.0``, as with any float conversion.
-
-    Unlike DECIMAL, the session's ``NLS_NUMERIC_CHARACTERS`` has no effect.
+    A ``decimal.Decimal`` or ``str`` too small for a double, such as
+    ``Decimal("1E-400")``, silently becomes ``0.0``, as with any float conversion.
 
     Passed through unchanged:
     * None -> None
@@ -249,26 +254,38 @@ def double_to_websocket(
     * float            -> float
     * int              -> float
     * decimal.Decimal  -> float
+    * str              -> float
     * ``""``           -> None
 
     Raises:
-    * TypeError      -> any other type, including every non-empty str
+    * TypeError      -> any other type
     * OverflowError  -> an int too large for a double, such as ``10**400``
-    * ValueError     -> NaN, sNaN or Infinity, including a decimal.Decimal too large
-                        for a double, such as ``Decimal("1E+400")``
+    * ValueError     -> NaN, sNaN or Infinity, including a decimal.Decimal or str too
+                        large for a double, such as ``Decimal("1E+400")``.
+                        A non-empty str that is not a number. The message does not
+                        repeat the str, which may be sensitive.
     """
     if value is None or (isinstance(value, str) and value == ""):
         return None
+    if isinstance(value, str):
+        try:
+            parsed = float(value)
+        except ValueError:
+            raise ValueError(
+                "A str for DOUBLE must be a number that Python's float() can parse, "
+                "such as '1.5' or '1e-3'; the given str cannot be parsed."
+            )
+        _reject_non_finite(parsed, "DOUBLE")
+        return parsed
     if isinstance(value, decimal.Decimal):
         # Checked before float(), which raises its own ValueError for sNaN.
         _reject_non_finite(value, "DOUBLE")
-
     if not isinstance(value, bool) and isinstance(value, (float, int, decimal.Decimal)):
         result = float(value)
         _reject_non_finite(result, "DOUBLE")
         return result
     raise TypeError(
-        "Allowed types: float, int, decimal.Decimal, empty string, None; "
+        "Allowed types: float, int, decimal.Decimal, str, None; "
         f"got {type(value).__name__}."
     )
 
