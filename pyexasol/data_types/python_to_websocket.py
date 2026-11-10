@@ -1,6 +1,7 @@
 import datetime
 import decimal
 import math
+from typing import Literal
 
 from pyexasol.data_types.converters import ExaTimeDelta
 
@@ -76,8 +77,7 @@ def timestamp_to_websocket(value: datetime.datetime | str | None) -> str | None:
         return value
     if not isinstance(value, datetime.datetime):
         raise TypeError(
-            "Expected datetime.datetime (if not timezone-aware), str, or None, "
-            f"got {type(value).__name__}."
+            f"Allowed types: datetime.datetime, str, None; got {type(value).__name__}."
         )
 
     _reject_timezone_aware(
@@ -121,8 +121,8 @@ def date_to_websocket(value: datetime.date | str | None) -> str | None:
         return value.isoformat(sep=" ")
     if not isinstance(value, datetime.date):
         raise TypeError(
-            "Expected datetime.date, datetime.datetime (if not timezone-aware), "
-            f"str, or None, got {type(value).__name__}."
+            "Allowed types: datetime.date, datetime.datetime, str, None; "
+            f"got {type(value).__name__}."
         )
     return value.isoformat()
 
@@ -163,7 +163,7 @@ def interval_day_to_second_to_websocket(
         return value.to_interval_unpadded()
     if not isinstance(value, datetime.timedelta):
         raise TypeError(
-            "Expected datetime.timedelta, ExaTimeDelta, str, or None, "
+            "Allowed types: datetime.timedelta, ExaTimeDelta, str, None; "
             f"got {type(value).__name__}."
         )
     return ExaTimeDelta.from_timedelta(value).to_interval_unpadded()
@@ -215,21 +215,23 @@ def decimal_to_websocket(
         _reject_non_finite(value, "DECIMAL")
         return f"{decimal.Decimal(float.__repr__(value)):f}"
     raise TypeError(
-        "Expected decimal.Decimal, int, float, str, or None, "
+        "Allowed types: decimal.Decimal, int, float, str, None; "
         f"got {type(value).__name__}."
     )
 
 
 def double_to_websocket(
-    value: float | int | decimal.Decimal | None,
+    value: float | int | decimal.Decimal | Literal[""] | None,
 ) -> float | None:
     """
     Convert a Python value to a type that the WebSocket API allows for a DOUBLE.
 
     We send a JSON number, because the database rejects every non-empty string for
-    a DOUBLE, even one such as ``"1.5"``. An ``int`` or ``decimal.Decimal`` is
-    converted to a ``float`` first. Otherwise, the database keeps only the first 17
-    significant digits of a large ``int``.
+    a DOUBLE, even one such as ``"1.5"``. The empty string is the only string the
+    database accepts, and it stores it as NULL, so we convert it to None.
+
+    An ``int`` or ``decimal.Decimal`` is converted to a ``float`` first. Otherwise, the
+    database keeps only the first 17 significant digits of a large ``int``.
 
     A ``decimal.Decimal`` too small for a double, such as ``Decimal("1E-400")``,
     silently becomes ``0.0``, as with any float conversion.
@@ -243,14 +245,15 @@ def double_to_websocket(
     * float            -> float
     * int              -> float
     * decimal.Decimal  -> float
+    * ``""``           -> None
 
     Raises:
-    * TypeError      -> any other type
+    * TypeError      -> any other type, including every non-empty str
     * OverflowError  -> an int too large for a double, such as ``10**400``
     * ValueError     -> NaN, sNaN or Infinity, including a decimal.Decimal too large
                         for a double, such as ``Decimal("1E+400")``
     """
-    if value is None:
+    if value is None or (isinstance(value, str) and value == ""):
         return None
     if isinstance(value, decimal.Decimal):
         # Checked before float(), which raises its own ValueError for sNaN.
@@ -261,7 +264,8 @@ def double_to_websocket(
         _reject_non_finite(result, "DOUBLE")
         return result
     raise TypeError(
-        f"Expected float, int, decimal.Decimal, or None, got {type(value).__name__}."
+        "Allowed types: float, int, decimal.Decimal, empty string, None; "
+        f"got {type(value).__name__}."
     )
 
 
@@ -279,8 +283,10 @@ def boolean_to_websocket(value: bool | int | str | None) -> bool | None:
     """
     Convert a Python value to a type that the WebSocket API allows for a BOOLEAN.
 
-    The WebSocket API accepts only a JSON boolean or None. We convert the other boolean
-    literals the database lists to the appropriate boolean values:
+    The WebSocket API accepts only a JSON boolean or None. The one exception is the
+    empty string, which the database stores as NULL, so we convert it to None. We
+    convert the other boolean literals the database lists to the appropriate boolean
+    values:
     https://docs.exasol.com/db/latest/sql_references/data_types/datatypedetails.htm#BooleanDataType
 
     Passed through unchanged:
@@ -291,13 +297,16 @@ def boolean_to_websocket(value: bool | int | str | None) -> bool | None:
     * int  -> bool. Only ``1`` (True) and ``0`` (False).
     * str  -> bool. ``'1'``, ``'T'`` and ``'TRUE'`` (True), and ``'0'``, ``'F'`` and
               ``'FALSE'`` (False), case-insensitive.
+    * ``""`` -> None
 
     Raises:
     * ValueError -> an int other than 0 or 1, a str that is not listed above, or
-                    any other type
+                   any other type
     """
     if value is None or isinstance(value, bool):
         return value
+    if isinstance(value, str) and value == "":
+        return None
     if isinstance(value, int):
         if value in (0, 1):
             return bool(value)

@@ -14,6 +14,7 @@
 * #454: Added default `date_to_websocket` to convert Python `date` values for Websocket insertion
 * #457: Added default `decimal_to_websocket` and `double_to_websocket` to convert Python values for Websocket insertion
 * #459: Added default `boolean_to_websocket` to convert Python values for Websocket insertion
+* #461: Added `validate_value_for_websocket` to check that Python values have a type the WebSocket API accepts for the target column before Websocket insertion
 
 ## Refactorings
 
