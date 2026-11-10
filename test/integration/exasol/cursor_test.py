@@ -100,7 +100,7 @@ class TestExecuteMany:
         with pytest.raises(
             ProgrammingError,
             match=(
-                "Input shape mismatch: "
+                "Input shape mismatch for row 1: "
                 f"received {parameter_count} parameters, 13 columns"
             ),
         ):

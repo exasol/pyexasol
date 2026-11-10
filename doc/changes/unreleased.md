@@ -15,7 +15,9 @@
 * #457: Added `decimal_to_websocket` and `double_to_websocket` to convert Python values for Websocket insertion
 * #459: Added `boolean_to_websocket` to convert Python values for Websocket insertion
 * #461: Added `validate_value_for_websocket` to check that Python values have a type the WebSocket API accepts for the target column before Websocket insertion
-* #464: Added `convert_python_to_websocket`, which converts Python values for Websocket insertion based on the target column type
+* #464:
+  * Added `convert_python_to_websocket`, which converts Python values for Websocket insertion based on the target column type.
+  * Added an `insert_mapper` parameter to the DB API `Connection` (defaulting to `convert_python_to_websocket`), which `executemany` uses to convert parameter values before insertion
 
 ## Refactorings
 
