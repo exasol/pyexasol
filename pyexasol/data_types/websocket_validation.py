@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from pyexasol.data_types.websocket_types import WebSocketDataType
 
-
 # The data types that accept only a str, besides None and the empty string.
 STRING_ONLY_TYPES = (
     WebSocketDataType.Char,
