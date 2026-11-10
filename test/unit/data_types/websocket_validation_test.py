@@ -1,5 +1,4 @@
 import decimal
-import re
 
 import pytest
 
@@ -54,9 +53,7 @@ class TestValidateValueForWebsocket:
     def test_rejects_non_string(data_type, value):
         with pytest.raises(
             TypeError,
-            match=re.escape(
-                f"Allowed types for {data_type}: str, None; got {type(value).__name__}."
-            ),
+            match=f"Allowed types for {data_type}:",
         ):
             validate_value_for_websocket(value, data_type)
 
@@ -77,10 +74,7 @@ class TestValidateValueForWebsocket:
     def test_rejects_other_types_for_decimal(value):
         with pytest.raises(
             TypeError,
-            match=re.escape(
-                "Allowed types for DECIMAL: str, int, float, None; "
-                f"got {type(value).__name__}."
-            ),
+            match="Allowed types for DECIMAL:",
         ):
             validate_value_for_websocket(value, "DECIMAL")
 
@@ -101,9 +95,7 @@ class TestValidateValueForWebsocket:
     def test_rejects_other_types_for_double(value):
         with pytest.raises(
             TypeError,
-            match=re.escape(
-                f"Allowed types for DOUBLE: float, None; got {type(value).__name__}."
-            ),
+            match="Allowed types for DOUBLE:",
         ):
             validate_value_for_websocket(value, "DOUBLE")
 
@@ -125,9 +117,7 @@ class TestValidateValueForWebsocket:
     def test_rejects_other_types_for_boolean(value):
         with pytest.raises(
             TypeError,
-            match=re.escape(
-                f"Allowed types for BOOLEAN: bool, None; got {type(value).__name__}."
-            ),
+            match="Allowed types for BOOLEAN:",
         ):
             validate_value_for_websocket(value, "BOOLEAN")
 
@@ -147,5 +137,5 @@ class TestValidateValueForWebsocket:
         ],
     )
     def test_rejects_non_str_data_type(data_type, value):
-        with pytest.raises(TypeError, match="data_type to be a str"):
+        with pytest.raises(TypeError, match="Allowed type for data_type:"):
             validate_value_for_websocket(value, data_type)

@@ -17,6 +17,9 @@ STRING_ONLY_TYPES = (
 )
 
 
+_WEBSOCKET_TYPE_NAMES = ", ".join(t.value for t in WebSocketDataType)
+
+
 def _require_types(value: object, data_type: str, *allowed: type) -> None:
     """
     Raise TypeError unless ``value`` is an instance of one of the ``allowed`` types.
@@ -66,10 +69,10 @@ def validate_value_for_websocket(value: object, data_type: str) -> None:
 
     Args:
         value: the value as it would be sent to the database.
-        data_type: the ``dataType["type"]`` string the database reported for the
-                   parameter, a ``WebSocketDataType`` value. A string that is not a
-                   ``WebSocketDataType`` value is not validated, so a type that Exasol
-                   adds later keeps working.
+        data_type: the name of the column's data type as a ``str``, one of the
+                   ``WebSocketDataType`` values listed above, e.g. ``"VARCHAR"``. Any
+                   other string is passed through without validation, so a type that
+                   Exasol adds later keeps working.
 
     Raises:
         TypeError -> ``data_type`` is not a ``str``
@@ -77,7 +80,7 @@ def validate_value_for_websocket(value: object, data_type: str) -> None:
     """
     if not isinstance(data_type, str):
         raise TypeError(
-            "Expected data_type to be a str, such as dataType['type']; "
+            f"Allowed type for data_type: str, e.g. {_WEBSOCKET_TYPE_NAMES}; "
             f"got {type(data_type).__name__}."
         )
     if value is None or (isinstance(value, str) and value == ""):
