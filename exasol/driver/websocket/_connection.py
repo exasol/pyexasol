@@ -17,6 +17,7 @@ from exasol.driver.websocket._errors import (
     translate_exception,
 )
 from pyexasol.data_types import convert_websocket_to_python
+from pyexasol.data_types.python_to_websocket import convert_python_to_websocket
 from pyexasol.data_types.websocket_to_python import (
     SUPPORTED_DATE_FORMATS,
     SUPPORTED_TIMESTAMP_FORMATS,
@@ -115,6 +116,7 @@ class Connection:
         client_name: str = "EXASOL:DBAPI2:WS",
         client_version: str = "unknown",
         fetch_mapper: Callable = convert_websocket_to_python,
+        insert_mapper: Callable = convert_python_to_websocket,
     ):
         """
         Create a Connection object.
@@ -129,6 +131,10 @@ class Connection:
             tls: enable tls.
             certificate_validation: disable certificate validation.
             client_name: which is communicated to the DB server.
+            fetch_mapper: converts fetched values. Must have the same signature as
+                the default, ``convert_websocket_to_python``.
+            insert_mapper: converts parameter values before insertion. Must have the
+                same signature as the default, ``convert_python_to_websocket``.
         """
 
         # for more details see pyexasol.connection.ExaConnection
@@ -168,6 +174,7 @@ class Connection:
             "access_token": None,
             "refresh_token": None,
         }
+        self.insert_mapper = insert_mapper
         self._connection = None
 
     def connect(self):
