@@ -67,7 +67,6 @@ from .http_transport import (
 )
 from .logger import ExaLogger
 from .meta import ExaMetaData
-from .query_builders.base_builder import QueryBuilder
 from .query_builders.csv.builders import (
     ExportBuilder,
     ImportBuilder,
@@ -915,39 +914,94 @@ class ExaConnection:
             import_params:
                 Custom parameters for IMPORT query.
         """
-        if MIN_VERSION_FOR_NATIVE_PARQUET_IMPORT.is_supported_by(
-            self.exasol_db_version
-        ):
+        parquet_files = self._select_native_parquet_files(
+            source, callback_params, import_params
+        )
+        if parquet_files:
             return self._import_from_native_parquet(
-                source, table, import_params=import_params
+                parquet_files, table, import_params=import_params
             )
 
         return self.import_from_callback(
             cb.import_from_parquet, source, table, callback_params, import_params
         )
 
-    def _import_from_native_parquet(
+    def _select_native_parquet_files(
         self,
         source: list[Path] | Path | str,
+        callback_params: dict | None,
+        import_params: dict | None,
+    ) -> list[Path]:
+        """
+        Return the files to import natively, or ``[]`` to use the callback import.
+
+        The native import understands only the parameters of the native
+        ``ImportBuilder``.
+        """
+        if not MIN_VERSION_FOR_NATIVE_PARQUET_IMPORT.is_supported_by(
+            self.exasol_db_version
+        ):
+            return []
+
+        reason = None
+        parquet_files = cb.get_parquet_files(source)
+        native_params = set(ParquetImportBuilder.model_fields) | {
+            field.alias
+            for field in ParquetImportBuilder.model_fields.values()
+            if field.alias
+        }
+        if not parquet_files:
+            reason = "no files matched"
+        elif callback_params:
+            reason = "callback_params are only supported by the callback import"
+        elif unsupported := set(import_params or {}) - native_params:
+            reason = f"unsupported import_params {sorted(unsupported)}"
+
+        if reason:
+            self.logger.debug(f"Using callback import for Parquet: {reason}")
+            return []
+        return parquet_files
+
+    def _import_from_native_parquet(
+        self,
+        parquet_files: list[Path],
         table: str | tuple[str, ...],
         import_params: dict | None = None,
     ):
-        parquet_files = cb.get_parquet_files(source)
-        if not parquet_files:
-            raise ValueError(f"source {source} does not match any files")
+        """
+        Import the files one after another, each with its own ``IMPORT`` statement.
 
+        The files are not imported atomically: if one fails, the files before it
+        stay imported (subject to the connection's ``autocommit``) and the
+        remaining files are not attempted.
+        """
+        import_builder = ParquetImportBuilder(
+            table=table, **(import_params if import_params is not None else {})
+        )
+        for index, parquet_file in enumerate(parquet_files):
+            try:
+                self._import_native_parquet_file(parquet_file, import_builder)
+            except ExaImportError:
+                self.logger.debug(
+                    f"Native Parquet import failed for {parquet_file} "
+                    f"(file {index + 1} of {len(parquet_files)}); "
+                    f"{index} file(s) were imported before it"
+                )
+                raise
+
+    def _import_native_parquet_file(
+        self, parquet_file: Path, import_builder: ParquetImportBuilder
+    ):
         http_thread = ExaParquetHttpThread(
             ipaddr=self.ws_ipaddr,
             port=self.ws_port,
-            parquet_files=parquet_files,
+            parquet_file=parquet_file,
             encryption=self.options["encryption"],
         )
         sql_thread = ExaSQLThread(
             connection=self,
             compression=False,
-            query_builder=ParquetImportBuilder(
-                table=table, **(import_params if import_params is not None else {})
-            ),
+            query_builder=import_builder,
         )
 
         try:
@@ -1153,24 +1207,6 @@ class ExaConnection:
             table=table,
             **import_params,
         )
-
-        return ExaConnection._import_from_callback(
-            self,
-            callback=callback,
-            src=src,
-            callback_params=callback_params,
-            import_builder=import_builder,
-            compression=compression,
-        )
-
-    def _import_from_callback(
-        self,
-        callback: Callable,
-        src,
-        callback_params: dict,
-        import_builder: QueryBuilder,
-        compression: bool,
-    ):
 
         # Set when either worker finishes, successfully or exceptionally. It
         # wakes the coordinator but does not terminate the other worker.

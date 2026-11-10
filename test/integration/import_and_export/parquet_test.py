@@ -84,18 +84,20 @@ class TestImportFromParquet:
     @staticmethod
     def _create_parquet_file(path: Path, data: list[dict]):
         table = pa.Table.from_pylist(data)
+        # The native import does not convert a Parquet DOUBLE into the table's
+        # DECIMAL(10,2) column, so the file must already use the matching type.
+        table = table.set_column(
+            table.schema.get_field_index("SCORE"),
+            "SCORE",
+            table["SCORE"].cast(pa.decimal128(10, 2)),
+        )
         pq.write_table(table, path)
 
     def test_load_single_file(
         self, tmp_path, empty_table, connection, table_name, all_data
     ):
         filepath = tmp_path / "single_file.parquet"
-        parquet_table = pa.Table.from_pylist(all_data.list_dict)
-        # so this is requiring a conversion -> switch Database schema
-        parquet_table = parquet_table.set_column(
-            6, "SCORE", parquet_table["SCORE"].cast(pa.decimal128(10, 2))
-        )
-        pq.write_table(parquet_table, filepath)
+        self._create_parquet_file(filepath, all_data.list_dict)
 
         connection.import_from_parquet(filepath, table_name)
 
