@@ -80,6 +80,12 @@ TIMESTAMP_REJECTED_STRINGS = [
     pytest.param("2026-09-11 12:34:56.1234567890", id="precision-higher-than-db"),
     pytest.param("2026-09-11 12:34:56+00:00", id="string-has-unsupported-format"),
 ]
+# No non-string is accepted, even a number that could stand for an epoch time.
+TIMESTAMP_REJECTED_NON_STRINGS = [
+    pytest.param(1789130096, id="int"),
+    pytest.param(1.5, id="float"),
+    pytest.param(True, id="bool"),
+]
 
 
 @pytest.fixture
@@ -238,8 +244,10 @@ class TestTimestampInputs:
         assert timestamp_table.read() == expected_stored
 
     @staticmethod
-    @pytest.mark.parametrize("value", TIMESTAMP_REJECTED_STRINGS)
-    def test_rejects_string(timestamp_table, value):
+    @pytest.mark.parametrize(
+        "value", [*TIMESTAMP_REJECTED_STRINGS, *TIMESTAMP_REJECTED_NON_STRINGS]
+    )
+    def test_rejects_value(timestamp_table, value):
         with pytest.raises(ExaRequestError):
             timestamp_table.insert(value)
 
@@ -270,12 +278,13 @@ class TestTimestampLocalTimeZoneInputs:
         "value",
         [
             *TIMESTAMP_REJECTED_STRINGS,
+            *TIMESTAMP_REJECTED_NON_STRINGS,
             # An offset or zone marker is rejected, as for TIMESTAMP.
             pytest.param("2026-09-11 12:34:56 +02:00", id="string-has-offset"),
             pytest.param("2026-09-11 12:34:56Z", id="string-has-zulu"),
         ],
     )
-    def test_rejects_string(timestamp_ltz_table, value):
+    def test_rejects_value(timestamp_ltz_table, value):
         with pytest.raises(ExaRequestError):
             timestamp_ltz_table.insert(value)
 
@@ -340,9 +349,13 @@ class TestDateInputs:
             pytest.param("2026-13-01", id="month-out-of-range"),
             pytest.param("2023-02-29", id="leap-day-in-non-leap-year"),
             pytest.param("11/09/2026", id="string-has-unsupported-format"),
+            # No non-string is accepted, even an int that looks like a date.
+            pytest.param(20260911, id="int"),
+            pytest.param(1.5, id="float"),
+            pytest.param(True, id="bool"),
         ],
     )
-    def test_rejects_string(date_table, value):
+    def test_rejects_value(date_table, value):
         with pytest.raises(ExaRequestError):
             date_table.insert(value)
 
@@ -394,9 +407,13 @@ class TestIntervalDayToSecondInputs:
             pytest.param(
                 "0" * 20 + "1 02:03:04", id="string-longer-than-allowed-total-length"
             ),
+            # No non-string is accepted, even a number of days.
+            pytest.param(1, id="int"),
+            pytest.param(1.5, id="float"),
+            pytest.param(True, id="bool"),
         ],
     )
-    def test_rejects_string(interval_table, value):
+    def test_rejects_value(interval_table, value):
         with pytest.raises(ExaRequestError):
             interval_table.insert(value)
 
