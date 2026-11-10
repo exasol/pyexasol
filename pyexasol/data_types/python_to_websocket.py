@@ -1,9 +1,13 @@
 import datetime
 import decimal
 import math
-from typing import Literal
+from typing import (
+    Any,
+    Literal,
+)
 
 from pyexasol.data_types.converters import ExaTimeDelta
+from pyexasol.data_types.websocket_types import WebSocketDataType
 
 
 def _reject_timezone_aware(value: datetime.datetime, target: str, hint: str) -> None:
@@ -320,3 +324,58 @@ def boolean_to_websocket(value: bool | int | str | None) -> bool | None:
         f"{value!r} is not supported for BOOLEAN. Use bool, None, the int 0 or 1, or "
         f"one of the strings {allowed_strings} (case-insensitive)."
     )
+
+
+def convert_python_to_websocket(value: Any, data_type: dict[str, Any]) -> Any:
+    """
+    Convert a Python value to a type that the WebSocket API allows for the column.
+
+    ``data_type`` is the ``dataType`` dict of the column, as returned by the
+    WebSocket API, for example ``{"type": "DECIMAL", "precision": 18, "scale": 0}``.
+    Only its ``"type"`` entry is used. It has the same form as the ``data_type``
+    argument of ``convert_websocket_to_python``.
+
+    Converted types:
+
+    BOOLEAN                -> bool, None
+    DATE                   -> str, None
+    DECIMAL                -> str, None
+    DOUBLE                 -> float, None
+    INTERVAL DAY TO SECOND -> str, None
+    TIMESTAMP              -> str, None
+    TIMESTAMP WITH LOCAL TIME ZONE -> str, None
+
+    Passed through unchanged:
+
+    CHAR
+    GEOMETRY
+    HASHTYPE
+    INTERVAL YEAR TO MONTH
+    VARCHAR
+    <others>, including an unknown type
+
+    Raises:
+    * TypeError     -> a type that the column type does not support. This applies to
+                      all converted types except BOOLEAN.
+    * ValueError    -> BOOLEAN: a value or type that is not supported.
+                      DATE and TIMESTAMP: a timezone-aware datetime.datetime.
+                      DECIMAL and DOUBLE: NaN or Infinity.
+    * OverflowError -> DOUBLE: an int too large for a double
+    """
+    column_type = data_type["type"]
+    if column_type == WebSocketDataType.Bool.value:
+        return boolean_to_websocket(value)
+    if column_type == WebSocketDataType.Date.value:
+        return date_to_websocket(value)
+    if column_type == WebSocketDataType.Decimal.value:
+        return decimal_to_websocket(value)
+    if column_type == WebSocketDataType.Double.value:
+        return double_to_websocket(value)
+    if column_type == WebSocketDataType.IntervalDayToSecond.value:
+        return interval_day_to_second_to_websocket(value)
+    if column_type in (
+        WebSocketDataType.Timestamp.value,
+        WebSocketDataType.TimestampTz.value,
+    ):
+        return timestamp_to_websocket(value)
+    return value

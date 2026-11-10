@@ -6,12 +6,27 @@ import pytest
 from pyexasol.data_types import ExaTimeDelta
 from pyexasol.data_types.python_to_websocket import (
     boolean_to_websocket,
+    convert_python_to_websocket,
     date_to_websocket,
     decimal_to_websocket,
     double_to_websocket,
     interval_day_to_second_to_websocket,
     timestamp_to_websocket,
 )
+from pyexasol.data_types.websocket_types import WebSocketDataType
+from pyexasol.data_types.websocket_validation import STRING_ONLY_TYPES
+
+PASS_THROUGH_STRING_TYPES = [
+    pytest.param(t.value, id=t.value)
+    for t in STRING_ONLY_TYPES
+    if t
+    not in (
+        WebSocketDataType.Date,
+        WebSocketDataType.IntervalDayToSecond,
+        WebSocketDataType.Timestamp,
+        WebSocketDataType.TimestampTz,
+    )
+]
 
 NON_FINITE_VALUES = [
     pytest.param(decimal.Decimal("NaN"), id="decimal-nan"),
@@ -483,3 +498,45 @@ class TestBooleanToWebsocket:
     def test_raises_value_error_for_unsupported_value(value):
         with pytest.raises(ValueError, match="is not supported for BOOLEAN"):
             boolean_to_websocket(value)
+
+
+class TestConvertPythonToWebsocket:
+    @staticmethod
+    @pytest.mark.parametrize(
+        "value, column_type, expected",
+        [
+            pytest.param(datetime.date(2026, 9, 11), "DATE", "2026-09-11", id="date"),
+            pytest.param(
+                datetime.datetime(2026, 9, 11, 1, 2, 3),
+                "TIMESTAMP",
+                "2026-09-11 01:02:03",
+                id="timestamp",
+            ),
+            pytest.param(
+                datetime.datetime(2026, 9, 11, 1, 2, 3),
+                "TIMESTAMP WITH LOCAL TIME ZONE",
+                "2026-09-11 01:02:03",
+                id="timestamp-with-local-time-zone",
+            ),
+            pytest.param(
+                datetime.timedelta(days=1, seconds=1),
+                "INTERVAL DAY TO SECOND",
+                "+1 00:00:01",
+                id="interval-day-to-second",
+            ),
+            pytest.param(decimal.Decimal("1.50"), "DECIMAL", "1.50", id="decimal"),
+            pytest.param(1, "DOUBLE", 1.0, id="double"),
+            pytest.param("true", "BOOLEAN", True, id="boolean"),
+        ],
+    )
+    def test_dispatches_to_converter(value, column_type, expected):
+        assert convert_python_to_websocket(value, {"type": column_type}) == expected
+
+    @staticmethod
+    @pytest.mark.parametrize(
+        "column_type",
+        [*PASS_THROUGH_STRING_TYPES, pytest.param("UNKNOWN TYPE", id="unknown")],
+    )
+    def test_passes_other_types_through_unchanged(column_type):
+        value = object()
+        assert convert_python_to_websocket(value, {"type": column_type}) is value

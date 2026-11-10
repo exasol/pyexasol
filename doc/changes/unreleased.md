@@ -9,12 +9,13 @@
 
 ## Features
 
-* #448: Added default `timestamp_to_websocket` to convert Python values for Websocket insertion
-* #452: Added default `interval_day_to_second_to_websocket` to convert Python `timedelta` and `ExaTimeDelta` values for Websocket insertion, and `ExaTimeDelta.to_interval_unpadded` to format intervals without zero-padding
-* #454: Added default `date_to_websocket` to convert Python `date` values for Websocket insertion
-* #457: Added default `decimal_to_websocket` and `double_to_websocket` to convert Python values for Websocket insertion
-* #459: Added default `boolean_to_websocket` to convert Python values for Websocket insertion
+* #448: Added `timestamp_to_websocket` to convert Python values for Websocket insertion
+* #452: Added `interval_day_to_second_to_websocket` to convert Python `timedelta` and `ExaTimeDelta` values for Websocket insertion, and `ExaTimeDelta.to_interval_unpadded` to format intervals without zero-padding
+* #454: Added `date_to_websocket` to convert Python `date` values for Websocket insertion
+* #457: Added `decimal_to_websocket` and `double_to_websocket` to convert Python values for Websocket insertion
+* #459: Added `boolean_to_websocket` to convert Python values for Websocket insertion
 * #461: Added `validate_value_for_websocket` to check that Python values have a type the WebSocket API accepts for the target column before Websocket insertion
+* #464: Added `convert_python_to_websocket`, which converts Python values for Websocket insertion based on the target column type
 
 ## Refactorings
 
