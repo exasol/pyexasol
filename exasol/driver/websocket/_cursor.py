@@ -5,8 +5,6 @@ This module provides `PEP-249`_ DBAPI compliant cursor implementation.
 .. _PEP-249-cursor: https://peps.python.org/pep-0249/#cursor-objects
 """
 
-import datetime
-import decimal
 from collections import defaultdict
 from dataclasses import (
     astuple,
@@ -96,37 +94,6 @@ def _requires_result(method):
 
 def _identity(value):
     return value
-
-
-def _dbapi2pyexasol(value):
-    converter = _DBAPI_TO_PYEXASOL_CONVERTERS.get(type(value), _identity)
-    return converter(value)
-
-
-_DBAPI_TO_PYEXASOL_CONVERTERS = {
-    decimal.Decimal: str,
-    float: str,
-    datetime.date: str,
-    datetime.datetime: str,
-}
-
-
-def _varchar(value):
-    if value is None:
-        return None
-    return str(value)
-
-
-def _double(value):
-    if value is None:
-        return None
-    return float(value)
-
-
-_REQUESTED_DB_TYPE_CONVERTERS = {
-    "VARCHAR": _varchar,
-    "DOUBLE": _double,
-}
 
 
 def _check_parameter_count(
@@ -261,55 +228,6 @@ class Cursor:
             self._cursor = self._connection.connection.execute(operation)
         except pyexasol.exceptions.ExaError as ex:
             raise translate_exception(ex) from ex
-
-    @staticmethod
-    def _adapt_to_requested_db_types(parameters, db_response):
-        """
-        Adapt parameter types to match the types requested by the DB in the
-        `createPreparedStatement <https://github.com/exasol/websocket-api/blob/master/docs/commands/createPreparedStatementV1.md>`_
-        response.
-
-        Args:
-
-            parameters: which will be passed/send to the database.
-            db_response: contains the DB response including the required types.
-
-
-        Attention:
-
-            This shim method currently only patches the following types:
-
-                * VARCHAR
-                * DOUBLE
-
-            therefore it the future it may be necessary to improve or extend this.
-
-            A hint that patching of a specific type is required, could be and
-            error message similar to this one:
-
-            .. code-block::
-
-                pyexasol.exceptions.ExaRequestError:
-                ...
-                message  => getString: JSON value is not a string. (...)
-                ...
-        """
-        columns = db_response["columns"]
-        selected_converters = (
-            _REQUESTED_DB_TYPE_CONVERTERS.get(column["dataType"]["type"], _identity)
-            for column in columns
-        )
-
-        try:
-            parameter_pairs = list(zip(selected_converters, parameters, strict=True))
-        except ValueError as ex:
-            raise ProgrammingError(
-                "Input shape mismatch: received "
-                f"{len(parameters)} parameters, {len(columns)} columns"
-            ) from ex
-
-        parameters = [converter(value) for converter, value in parameter_pairs]
-        return parameters
 
     @_is_not_closed
     def executemany(self, operation, seq_of_parameters):
