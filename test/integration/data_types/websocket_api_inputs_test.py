@@ -52,6 +52,15 @@ def override_session_parameter(connection, name, value):
         connection.execute(f"ALTER SESSION SET {name}='{original_value}';")
 
 
+# Shared by the tests of the types that accept only strings. No non-string is
+# accepted, even a number that could stand for a value of the type.
+REJECTED_NON_STRINGS = [
+    pytest.param(1, id="int"),
+    pytest.param(1.5, id="float"),
+    pytest.param(True, id="bool"),
+]
+
+
 # Shared by the TIMESTAMP and TIMESTAMP WITH LOCAL TIME ZONE tests. They rely on the
 # default session NLS_TIMESTAMP_FORMAT, 'YYYY-MM-DD HH24:MI:SS.FF6'.
 TIMESTAMP_ACCEPTED_STRINGS = [
@@ -79,12 +88,6 @@ TIMESTAMP_ACCEPTED_STRINGS = [
 TIMESTAMP_REJECTED_STRINGS = [
     pytest.param("2026-09-11 12:34:56.1234567890", id="precision-higher-than-db"),
     pytest.param("2026-09-11 12:34:56+00:00", id="string-has-unsupported-format"),
-]
-# No non-string is accepted, even a number that could stand for an epoch time.
-TIMESTAMP_REJECTED_NON_STRINGS = [
-    pytest.param(1789130096, id="int"),
-    pytest.param(1.5, id="float"),
-    pytest.param(True, id="bool"),
 ]
 
 
@@ -245,7 +248,7 @@ class TestTimestampInputs:
 
     @staticmethod
     @pytest.mark.parametrize(
-        "value", [*TIMESTAMP_REJECTED_STRINGS, *TIMESTAMP_REJECTED_NON_STRINGS]
+        "value", [*TIMESTAMP_REJECTED_STRINGS, *REJECTED_NON_STRINGS]
     )
     def test_rejects_value(timestamp_table, value):
         with pytest.raises(ExaRequestError):
@@ -278,7 +281,7 @@ class TestTimestampLocalTimeZoneInputs:
         "value",
         [
             *TIMESTAMP_REJECTED_STRINGS,
-            *TIMESTAMP_REJECTED_NON_STRINGS,
+            *REJECTED_NON_STRINGS,
             # An offset or zone marker is rejected, as for TIMESTAMP.
             pytest.param("2026-09-11 12:34:56 +02:00", id="string-has-offset"),
             pytest.param("2026-09-11 12:34:56Z", id="string-has-zulu"),
@@ -349,10 +352,7 @@ class TestDateInputs:
             pytest.param("2026-13-01", id="month-out-of-range"),
             pytest.param("2023-02-29", id="leap-day-in-non-leap-year"),
             pytest.param("11/09/2026", id="string-has-unsupported-format"),
-            # No non-string is accepted, even an int that looks like a date.
-            pytest.param(20260911, id="int"),
-            pytest.param(1.5, id="float"),
-            pytest.param(True, id="bool"),
+            *REJECTED_NON_STRINGS,
         ],
     )
     def test_rejects_value(date_table, value):
@@ -407,10 +407,7 @@ class TestIntervalDayToSecondInputs:
             pytest.param(
                 "0" * 20 + "1 02:03:04", id="string-longer-than-allowed-total-length"
             ),
-            # No non-string is accepted, even a number of days.
-            pytest.param(1, id="int"),
-            pytest.param(1.5, id="float"),
-            pytest.param(True, id="bool"),
+            *REJECTED_NON_STRINGS,
         ],
     )
     def test_rejects_value(interval_table, value):
@@ -690,10 +687,9 @@ class TestHashtypeInputs:
             pytest.param(UUID_HEX.replace("1", "g"), id="string-not-hex"),
             pytest.param(f" {UUID_HEX} ", id="string-with-whitespace"),
             pytest.param(f"urn:uuid:{UUID_HEX}", id="string-with-urn-prefix"),
-            # No non-string is accepted, even an int with the value of the UUID.
-            pytest.param(int(UUID_HEX, 16), id="int"),
-            pytest.param(1.5, id="float"),
-            pytest.param(True, id="bool"),
+            *REJECTED_NON_STRINGS,
+            # Even an int with the value of the UUID is rejected.
+            pytest.param(int(UUID_HEX, 16), id="int-uuid-value"),
         ],
     )
     def test_rejects_value(hashtype_table, value):
@@ -741,9 +737,7 @@ class TestStringInputs:
         [
             pytest.param("abcdef", id="longer-than-column"),
             # No non-string is accepted, even one that is short enough.
-            pytest.param(12345, id="int"),
-            pytest.param(1.5, id="float"),
-            pytest.param(True, id="bool"),
+            *REJECTED_NON_STRINGS,
         ],
     )
     def test_rejects_value(string_table, value):
@@ -782,9 +776,7 @@ class TestGeometryInputs:
             pytest.param("POLYGON((0 0, 1 0, 1 1))", id="string-polygon-not-closed"),
             pytest.param("POINT(1 2 3)", id="string-three-coordinates"),
             pytest.param("SRID=4326;POINT(1 2)", id="string-ewkt-srid"),
-            pytest.param(1, id="int"),
-            pytest.param(1.5, id="float"),
-            pytest.param(True, id="bool"),
+            *REJECTED_NON_STRINGS,
         ],
     )
     def test_rejects_value(geometry_table, value):
@@ -826,7 +818,7 @@ class TestIntervalYearToMonthInputs:
             pytest.param("P1Y2M", id="string-iso-8601"),
             pytest.param("abc", id="string-not-an-interval"),
             # A number of months is rejected as well.
-            pytest.param(14, id="int"),
+            *REJECTED_NON_STRINGS,
         ],
     )
     def test_rejects_value(interval_year_to_month_table, value):
