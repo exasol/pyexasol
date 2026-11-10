@@ -20,7 +20,7 @@ STRING_ONLY_TYPES = (
 _WEBSOCKET_TYPE_NAMES = ", ".join(t.value for t in WebSocketDataType)
 
 
-def _require_types(value: object, data_type: str, *allowed: type) -> None:
+def _require_types(value: object, column_type: str, *allowed: type) -> None:
     """
     Raise TypeError unless ``value`` is an instance of one of the ``allowed`` types.
 
@@ -32,11 +32,11 @@ def _require_types(value: object, data_type: str, *allowed: type) -> None:
     ):
         names = ", ".join([*(t.__name__ for t in allowed), "None"])
         raise TypeError(
-            f"Allowed types for {data_type}: {names}; got {type(value).__name__}."
+            f"Allowed types for {column_type}: {names}; got {type(value).__name__}."
         )
 
 
-def validate_value_for_websocket(value: object, data_type: str) -> None:
+def validate_value_for_websocket(value: object, column_type: str) -> None:
     """
     Check that a value has a type the WebSocket API accepts as input for a column.
 
@@ -69,33 +69,33 @@ def validate_value_for_websocket(value: object, data_type: str) -> None:
 
     Args:
         value: the value as it would be sent to the database.
-        data_type: the name of the column's data type as a ``str``, one of the
-                   ``WebSocketDataType`` values listed above, e.g. ``"VARCHAR"``. Any
-                   other string is passed through without validation, so a type that
-                   Exasol adds later keeps working.
+        column_type: the name of the column's data type as a ``str``, one of the
+                     ``WebSocketDataType`` values listed above, e.g. ``"VARCHAR"``. Any
+                     other string is passed through without validation, so a type that
+                     Exasol adds later keeps working.
 
     Raises:
-        TypeError -> ``data_type`` is not a ``str``
+        TypeError -> ``column_type`` is not a ``str``
                   -> the value is neither ``None`` nor of an accepted type.
     """
-    if not isinstance(data_type, str):
+    if not isinstance(column_type, str):
         raise TypeError(
-            f"Allowed type for data_type: str, e.g. {_WEBSOCKET_TYPE_NAMES}; "
-            f"got {type(data_type).__name__}."
+            f"Allowed type for column_type: str, e.g. {_WEBSOCKET_TYPE_NAMES}; "
+            f"got {type(column_type).__name__}."
         )
     if value is None or (isinstance(value, str) and value == ""):
         return
 
     try:
-        websocket_type = WebSocketDataType(data_type)
+        websocket_type = WebSocketDataType(column_type)
     except ValueError:
         return
 
     if websocket_type == WebSocketDataType.Bool:
-        _require_types(value, data_type, bool)
+        _require_types(value, column_type, bool)
     elif websocket_type == WebSocketDataType.Decimal:
-        _require_types(value, data_type, str, int, float)
+        _require_types(value, column_type, str, int, float)
     elif websocket_type == WebSocketDataType.Double:
-        _require_types(value, data_type, float)
+        _require_types(value, column_type, float)
     elif websocket_type in STRING_ONLY_TYPES:
-        _require_types(value, data_type, str)
+        _require_types(value, column_type, str)

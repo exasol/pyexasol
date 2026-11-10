@@ -25,37 +25,37 @@ NON_STRING_VALUES = [
 
 class TestValidateValueForWebsocket:
     @staticmethod
-    @pytest.mark.parametrize("data_type", ALL_DB_TYPES)
-    def test_validates_every_websocket_data_type(data_type):
+    @pytest.mark.parametrize("column_type", ALL_DB_TYPES)
+    def test_validates_every_websocket_data_type(column_type):
         # Fails for a new WebSocketDataType until validate_value_for_websocket handles it.
         with pytest.raises(TypeError):
-            validate_value_for_websocket(object(), data_type)
+            validate_value_for_websocket(object(), column_type)
 
     @staticmethod
-    @pytest.mark.parametrize("data_type", ALL_DB_TYPES)
-    def test_accepts_none(data_type):
-        validate_value_for_websocket(None, data_type)
+    @pytest.mark.parametrize("column_type", ALL_DB_TYPES)
+    def test_accepts_none(column_type):
+        validate_value_for_websocket(None, column_type)
 
     @staticmethod
-    @pytest.mark.parametrize("data_type", ALL_DB_TYPES)
-    def test_accepts_empty_string(data_type):
-        validate_value_for_websocket("", data_type)
+    @pytest.mark.parametrize("column_type", ALL_DB_TYPES)
+    def test_accepts_empty_string(column_type):
+        validate_value_for_websocket("", column_type)
 
     @staticmethod
-    @pytest.mark.parametrize("data_type", STRING_DB_TYPES)
+    @pytest.mark.parametrize("column_type", STRING_DB_TYPES)
     @pytest.mark.parametrize("value", ["", "abc"])
-    def test_accepts_string(data_type, value):
-        validate_value_for_websocket(value, data_type)
+    def test_accepts_string(column_type, value):
+        validate_value_for_websocket(value, column_type)
 
     @staticmethod
-    @pytest.mark.parametrize("data_type", STRING_DB_TYPES)
+    @pytest.mark.parametrize("column_type", STRING_DB_TYPES)
     @pytest.mark.parametrize("value", NON_STRING_VALUES)
-    def test_rejects_non_string(data_type, value):
+    def test_rejects_non_string(column_type, value):
         with pytest.raises(
             TypeError,
-            match=f"Allowed types for {data_type}:",
+            match=f"Allowed types for {column_type}:",
         ):
-            validate_value_for_websocket(value, data_type)
+            validate_value_for_websocket(value, column_type)
 
     @staticmethod
     @pytest.mark.parametrize("value", ["1.5", 1, -3, 1.5, 2**70])
@@ -129,13 +129,13 @@ class TestValidateValueForWebsocket:
     @staticmethod
     @pytest.mark.parametrize("value", [None, "abc", 123])
     @pytest.mark.parametrize(
-        "data_type",
+        "column_type",
         [
             pytest.param({"type": "VARCHAR", "size": 5}, id="dict"),
             pytest.param(WebSocketDataType.String, id="enum_member"),
             pytest.param(None, id="none"),
         ],
     )
-    def test_rejects_non_str_data_type(data_type, value):
-        with pytest.raises(TypeError, match="Allowed type for data_type:"):
-            validate_value_for_websocket(value, data_type)
+    def test_rejects_non_str_column_type(column_type, value):
+        with pytest.raises(TypeError, match="Allowed type for column_type:"):
+            validate_value_for_websocket(value, column_type)
