@@ -131,3 +131,17 @@ class TestValidateValueForWebsocket:
     @pytest.mark.parametrize("value", [None, "a", 1, 1.5, True, b"a", []])
     def test_does_not_validate_unknown_data_type(value):
         validate_value_for_websocket(value, "SOME_FUTURE_TYPE")
+
+    @staticmethod
+    @pytest.mark.parametrize("value", [None, "abc", 123])
+    @pytest.mark.parametrize(
+        "data_type",
+        [
+            pytest.param({"type": "VARCHAR", "size": 5}, id="dict"),
+            pytest.param(WebSocketDataType.String, id="enum_member"),
+            pytest.param(None, id="none"),
+        ],
+    )
+    def test_rejects_non_str_data_type(data_type, value):
+        with pytest.raises(TypeError, match="data_type to be a str"):
+            validate_value_for_websocket(value, data_type)

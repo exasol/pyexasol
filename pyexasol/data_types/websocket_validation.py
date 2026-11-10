@@ -51,8 +51,14 @@ def validate_value_for_websocket(value: object, data_type: str) -> None:
                    adds later keeps working.
 
     Raises:
-        TypeError -> the value is neither ``None`` nor of an accepted type.
+        TypeError -> ``data_type`` is not a ``str``
+                  -> the value is neither ``None`` nor of an accepted type.
     """
+    if not isinstance(data_type, str):
+        raise TypeError(
+            "Expected data_type to be a str, such as dataType['type'], "
+            f"got {type(data_type).__name__}."
+        )
     if value is None:
         return
     elif data_type == WebSocketDataType.Bool.value:
