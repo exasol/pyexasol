@@ -209,8 +209,9 @@ class Connection:
         has_default_insert_mapper = self.insert_mapper is convert_python_to_websocket
 
         # A custom mapper handles the session date/time formats itself.
-        if not (for_fetch and has_default_fetch_mapper) or (
-            for_insert and has_default_insert_mapper
+        if not (
+            (for_fetch and has_default_fetch_mapper)
+            or (for_insert and has_default_insert_mapper)
         ):
             return
 
