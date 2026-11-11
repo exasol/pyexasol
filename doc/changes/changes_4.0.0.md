@@ -8,7 +8,7 @@ In this major release, the following changes were made:
   based on the target column type via the new `insert_mapper` parameter of
   `Connection`. The default, `convert_python_to_websocket`, accepts only
   specific Python types per column type. See the accepted types in the
-  "Inserting Data" section of the DB-API documentation: TODO add link.
+  ["Inserting Data" section](https://exasol.github.io/pyexasol/master/user_guide/exploring_features/advanced_topics/dbapi.html#inserting-data) of the DB-API documentation.
   * A value whose type is not accepted now raises a `DataError` that names the
     row, column and allowed types. Previously, the database rejected such values,
     but it was not always clear which entry caused the error.
