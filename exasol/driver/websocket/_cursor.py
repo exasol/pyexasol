@@ -93,10 +93,6 @@ def _requires_result(method):
     return wrapper
 
 
-def _identity(value):
-    return value
-
-
 def _check_parameter_count(
     row_index: int, parameter_row: list[Any], columns: list[dict[str, Any]]
 ) -> None:
