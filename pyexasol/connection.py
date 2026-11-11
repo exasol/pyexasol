@@ -911,9 +911,25 @@ class ExaConnection:
             import_params:
                 Custom parameters for IMPORT query.
         """
-        return self.import_from_callback(
-            cb.import_from_parquet, source, table, callback_params, import_params
+        if not database_versions.MIN_VERSION_FOR_NATIVE_PARQUET_IMPORT.is_supported_by(
+            self.exasol_db_version
+        ):
+            return self.import_from_callback(
+                cb.import_from_parquet, source, table, callback_params, import_params
+            )
+        return self._import_from_native_parquet(
+            source, table, callback_params, import_params
         )
+
+    def _import_from_native_parquet(
+        self,
+        source: list[Path] | Path | str,
+        table: str | tuple[str, ...],
+        callback_params: dict | None = None,
+        import_params: dict | None = None,
+    ):
+        # TODO implement
+        pass
 
     def export_to_callback(
         self,
