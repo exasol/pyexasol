@@ -458,8 +458,11 @@ class TestDoubleToWebsocket:
         with pytest.raises(ValueError, match="must be a number") as exception_info:
             double_to_websocket(value)
 
-        # The str may be sensitive, so the message must not repeat it.
+        # The str may be sensitive, so neither the message nor the exception
+        # chain (e.g. the error raised by float()) may repeat it.
         assert repr(value) not in str(exception_info.value)
+        assert exception_info.value.__cause__ is None
+        assert exception_info.value.__suppress_context__
 
     @staticmethod
     @pytest.mark.parametrize(
@@ -550,8 +553,12 @@ class TestBooleanToWebsocket:
         ],
     )
     def test_raises_value_error_for_unsupported_value(value):
-        with pytest.raises(ValueError, match="is not supported for BOOLEAN"):
+        with pytest.raises(ValueError, match="is not supported for BOOLEAN") as info:
             boolean_to_websocket(value)
+
+        # The value may be sensitive, so the message must not repeat it.
+        assert repr(value) not in str(info.value)
+        assert type(value).__name__ in str(info.value)
 
 
 class TestConvertPythonToWebsocket:

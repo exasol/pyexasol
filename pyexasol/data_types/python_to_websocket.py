@@ -274,7 +274,7 @@ def double_to_websocket(
             raise ValueError(
                 "A str for DOUBLE must be a number that Python's float() can parse, "
                 "such as '1.5' or '1e-3'; the given str cannot be parsed."
-            )
+            ) from None
         _reject_non_finite(parsed, "DOUBLE")
         return parsed
     if isinstance(value, decimal.Decimal):
@@ -322,7 +322,7 @@ def boolean_to_websocket(value: bool | int | str | None) -> bool | None:
 
     Raises:
     * ValueError -> an int other than 0 or 1, a str that is not listed above, or
-                   any other type
+                   any other type.
     """
     if value is None or isinstance(value, bool):
         return value
@@ -338,8 +338,9 @@ def boolean_to_websocket(value: bool | int | str | None) -> bool | None:
             return converted
     allowed_strings = ", ".join(repr(string) for string in _BOOLEAN_STRINGS)
     raise ValueError(
-        f"{value!r} is not supported for BOOLEAN. Use bool, None, the int 0 or 1, or "
-        f"one of the strings {allowed_strings} (case-insensitive)."
+        f"The given {type(value).__name__} is not supported for BOOLEAN. Use bool, "
+        f"None, the int 0 or 1, or one of the strings {allowed_strings} "
+        "(case-insensitive). The value is not shown, as it may be sensitive."
     )
 
 
