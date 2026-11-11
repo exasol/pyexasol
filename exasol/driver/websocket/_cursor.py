@@ -21,8 +21,6 @@ from exasol.driver.websocket._errors import (
     ProgrammingError,
     translate_exception,
 )
-from pyexasol.data_types.python_to_websocket import convert_python_to_websocket
-from pyexasol.data_types.websocket_to_python import convert_websocket_to_python
 from pyexasol.data_types.websocket_types import WebSocketDataType
 from pyexasol.data_types.websocket_validation import validate_value_for_websocket
 
@@ -221,9 +219,9 @@ class Cursor:
             return
 
         try:
-            # A custom fetch_mapper handles the session date/time formats itself.
-            if self._connection.fetch_mapper is convert_websocket_to_python:
-                self._connection.validate_session_datetime_formats(operation)
+            self._connection.validate_session_datetime_formats(
+                operation, for_insert=False
+            )
             self._cursor = self._connection.connection.execute(operation)
         except pyexasol.exceptions.ExaError as ex:
             raise translate_exception(ex) from ex
@@ -234,9 +232,9 @@ class Cursor:
         parameters = [list(params) for params in seq_of_parameters]
         insert_mapper = self._connection.insert_mapper
         try:
-            # A custom insert_mapper handles the session date/time formats itself.
-            if insert_mapper is convert_python_to_websocket:
-                self._connection.validate_session_datetime_formats(operation)
+            self._connection.validate_session_datetime_formats(
+                operation, for_insert=True
+            )
 
             # Prepare the statement on the database to get the target column types.
             statement = self._connection.connection.cls_statement(

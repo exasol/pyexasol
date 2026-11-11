@@ -13,7 +13,6 @@ from exasol.driver.websocket.dbapi2 import (
     ProgrammingError,
 )
 from pyexasol.data_types.python_to_websocket import convert_python_to_websocket
-from pyexasol.data_types.websocket_to_python import convert_websocket_to_python
 
 
 @pytest.fixture
@@ -38,42 +37,22 @@ def mock_connection(mock_statement):
 
 class TestSessionDatetimeFormatValidation:
     @staticmethod
-    @pytest.mark.parametrize(
-        "fetch_mapper, expect_validation",
-        [
-            pytest.param(convert_websocket_to_python, True, id="default"),
-            pytest.param(lambda value, data_type: value, False, id="custom"),
-        ],
-    )
-    def test_execute_validates_only_for_default_fetch_mapper(
-        mock_connection, fetch_mapper, expect_validation
-    ):
-        mock_connection.fetch_mapper = fetch_mapper
-
+    def test_execute_delegates_validation_to_connection(mock_connection):
         Cursor(mock_connection).execute("SELECT 1")
 
-        validate = mock_connection.validate_session_datetime_formats
-        assert validate.called is expect_validation
+        mock_connection.validate_session_datetime_formats.assert_called_once_with(
+            "SELECT 1", for_insert=False
+        )
 
     @staticmethod
-    @pytest.mark.parametrize(
-        "insert_mapper, expect_validation",
-        [
-            pytest.param(convert_python_to_websocket, True, id="default"),
-            pytest.param(lambda value, data_type: value, False, id="custom"),
-        ],
-    )
-    def test_executemany_validates_only_for_default_insert_mapper(
-        mock_connection, insert_mapper, expect_validation
-    ):
-        mock_connection.insert_mapper = insert_mapper
-        # A custom fetch_mapper must not affect the validation done for inserts.
-        mock_connection.fetch_mapper = lambda value, data_type: value
+    def test_executemany_delegates_validation_to_connection(mock_connection):
+        operation = "INSERT INTO t VALUES (?, ?)"
 
-        Cursor(mock_connection).executemany("INSERT INTO t VALUES (?, ?)", [("a", 1)])
+        Cursor(mock_connection).executemany(operation, [("a", 1)])
 
-        validate = mock_connection.validate_session_datetime_formats
-        assert validate.called is expect_validation
+        mock_connection.validate_session_datetime_formats.assert_called_once_with(
+            operation, for_insert=True
+        )
 
 
 class TestExecutemany:

@@ -174,7 +174,6 @@ class Connection:
             "access_token": None,
             "refresh_token": None,
         }
-        self.fetch_mapper = fetch_mapper
         self.insert_mapper = insert_mapper
         self._connection = None
 
@@ -192,16 +191,21 @@ class Connection:
         return self._connection
 
     @_requires_connection
-    def validate_session_datetime_formats(self, operation):
+    def validate_session_datetime_formats(self, operation, for_insert):
         """Validate the active session date/time format models.
 
         Operations containing ``ALTER SESSION`` are ignored so that an
         application can change or restore session settings while bypassing the validation.
         The following operation will validate the new date/time formats.
-
-        Callers that use a custom mapper, which is responsible for handling the
-        session date/time formats it supports, should skip this validation.
         """
+        is_default_mapper = self._options["fetch_mapper"] is convert_websocket_to_python
+        if for_insert:
+            is_default_mapper = self.insert_mapper is convert_python_to_websocket
+
+        # A custom mapper handles the session date/time formats itself.
+        if not is_default_mapper:
+            return
+
         if _is_alter_session(operation):
             return
 

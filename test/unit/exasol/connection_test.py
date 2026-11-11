@@ -116,7 +116,7 @@ class TestValidateSessionDatetimeFormats:
             SUPPORTED_DATE_FORMATS[0],
             SUPPORTED_TIMESTAMP_FORMATS[0],
         ) as connection:
-            connection.validate_session_datetime_formats("SELECT 1")
+            connection.validate_session_datetime_formats("SELECT 1", for_insert=False)
 
     def test_rejects_unsupported_formats(self):
         with self._connection_with_session_formats(
@@ -124,7 +124,9 @@ class TestValidateSessionDatetimeFormats:
             "DD.MM.YYYY HH24:MI:SS",
         ) as connection:
             with pytest.raises(InterfaceError) as exception_info:
-                connection.validate_session_datetime_formats("SELECT 1")
+                connection.validate_session_datetime_formats(
+                    "SELECT 1", for_insert=False
+                )
 
         message = str(exception_info.value)
         assert "Unsupported NLS_DATE_FORMAT 'DD.MM.YYYY'" in message
@@ -135,10 +137,51 @@ class TestValidateSessionDatetimeFormats:
         connection._connection = Mock()
 
         connection.validate_session_datetime_formats(
-            "ALTER  SESSION SET NLS_TIMESTAMP_FORMAT = 'unsupported'"
+            "ALTER  SESSION SET NLS_TIMESTAMP_FORMAT = 'unsupported'", for_insert=False
         )
 
         connection._connection.execute.assert_not_called()
+        connection._connection = None
+
+    @staticmethod
+    @pytest.mark.parametrize(
+        "kwargs, mapper_attr, custom_attr",
+        [
+            pytest.param(
+                {"for_insert": False}, "fetch_mapper", "insert_mapper", id="fetch"
+            ),
+            pytest.param(
+                {"for_insert": True}, "insert_mapper", "fetch_mapper", id="insert"
+            ),
+        ],
+    )
+    def test_skips_validation_for_custom_mapper(kwargs, mapper_attr, custom_attr):
+        connection = Connection()
+        connection._connection = Mock()
+        custom_mapper = lambda value, data_type: value  # noqa: E731
+        if mapper_attr == "fetch_mapper":
+            connection._options["fetch_mapper"] = custom_mapper
+        else:
+            connection.insert_mapper = custom_mapper
+
+        connection.validate_session_datetime_formats("SELECT 1", **kwargs)
+
+        connection._connection.execute.assert_not_called()
+        connection._connection = None
+
+    @staticmethod
+    def test_custom_mapper_of_other_direction_does_not_skip_validation():
+        connection = Connection()
+        connection._connection = Mock()
+        connection._options["fetch_mapper"] = lambda value, data_type: value
+        connection._connection.execute.return_value.fetchall.return_value = [
+            ("NLS_DATE_FORMAT", SUPPORTED_DATE_FORMATS[0]),
+            ("NLS_TIMESTAMP_FORMAT", SUPPORTED_TIMESTAMP_FORMATS[0]),
+        ]
+
+        connection.validate_session_datetime_formats("SELECT 1", for_insert=True)
+
+        connection._connection.execute.assert_called_once()
         connection._connection = None
 
 
