@@ -116,7 +116,9 @@ class TestValidateSessionDatetimeFormats:
             SUPPORTED_DATE_FORMATS[0],
             SUPPORTED_TIMESTAMP_FORMATS[0],
         ) as connection:
-            connection.validate_session_datetime_formats("SELECT 1", for_insert=False)
+            connection.validate_session_datetime_formats(
+                "SELECT 1", for_fetch=True, for_insert=False
+            )
 
     def test_rejects_unsupported_formats(self):
         with self._connection_with_session_formats(
@@ -125,7 +127,7 @@ class TestValidateSessionDatetimeFormats:
         ) as connection:
             with pytest.raises(InterfaceError) as exception_info:
                 connection.validate_session_datetime_formats(
-                    "SELECT 1", for_insert=False
+                    "SELECT 1", for_fetch=True, for_insert=False
                 )
 
         message = str(exception_info.value)
@@ -137,7 +139,9 @@ class TestValidateSessionDatetimeFormats:
         connection._connection = Mock()
 
         connection.validate_session_datetime_formats(
-            "ALTER  SESSION SET NLS_TIMESTAMP_FORMAT = 'unsupported'", for_insert=False
+            "ALTER  SESSION SET NLS_TIMESTAMP_FORMAT = 'unsupported'",
+            for_fetch=True,
+            for_insert=False,
         )
 
         connection._connection.execute.assert_not_called()
@@ -145,43 +149,41 @@ class TestValidateSessionDatetimeFormats:
 
     @staticmethod
     @pytest.mark.parametrize(
-        "kwargs, mapper_attr, custom_attr",
+        "custom_fetch, custom_insert, for_fetch, for_insert, expect_validation",
         [
-            pytest.param(
-                {"for_insert": False}, "fetch_mapper", "insert_mapper", id="fetch"
-            ),
-            pytest.param(
-                {"for_insert": True}, "insert_mapper", "fetch_mapper", id="insert"
-            ),
+            # Only the mappers of the requested directions matter.
+            (False, False, True, False, True),
+            (True, False, True, False, False),
+            (False, True, True, False, True),
+            (False, False, False, True, True),
+            (False, True, False, True, False),
+            (True, False, False, True, True),
+            # Both directions: validate if either mapper is the default.
+            (False, False, True, True, True),
+            (True, False, True, True, True),
+            (False, True, True, True, True),
+            (True, True, True, True, False),
         ],
     )
-    def test_skips_validation_for_custom_mapper(kwargs, mapper_attr, custom_attr):
+    def test_validates_if_any_requested_mapper_is_default(
+        custom_fetch, custom_insert, for_fetch, for_insert, expect_validation
+    ):
         connection = Connection()
         connection._connection = Mock()
-        custom_mapper = lambda value, data_type: value  # noqa: E731
-        if mapper_attr == "fetch_mapper":
-            connection._options["fetch_mapper"] = custom_mapper
-        else:
-            connection.insert_mapper = custom_mapper
-
-        connection.validate_session_datetime_formats("SELECT 1", **kwargs)
-
-        connection._connection.execute.assert_not_called()
-        connection._connection = None
-
-    @staticmethod
-    def test_custom_mapper_of_other_direction_does_not_skip_validation():
-        connection = Connection()
-        connection._connection = Mock()
-        connection._options["fetch_mapper"] = lambda value, data_type: value
         connection._connection.execute.return_value.fetchall.return_value = [
             ("NLS_DATE_FORMAT", SUPPORTED_DATE_FORMATS[0]),
             ("NLS_TIMESTAMP_FORMAT", SUPPORTED_TIMESTAMP_FORMATS[0]),
         ]
+        if custom_fetch:
+            connection._options["fetch_mapper"] = lambda value, data_type: value
+        if custom_insert:
+            connection.insert_mapper = lambda value, data_type: value
 
-        connection.validate_session_datetime_formats("SELECT 1", for_insert=True)
+        connection.validate_session_datetime_formats(
+            "SELECT 1", for_fetch=for_fetch, for_insert=for_insert
+        )
 
-        connection._connection.execute.assert_called_once()
+        assert connection._connection.execute.called is expect_validation
         connection._connection = None
 
 

@@ -37,21 +37,31 @@ def mock_connection(mock_statement):
 
 class TestSessionDatetimeFormatValidation:
     @staticmethod
-    def test_execute_delegates_validation_to_connection(mock_connection):
+    def test_execute_validates_for_fetch_only(mock_connection):
         Cursor(mock_connection).execute("SELECT 1")
 
         mock_connection.validate_session_datetime_formats.assert_called_once_with(
-            "SELECT 1", for_insert=False
+            "SELECT 1", for_fetch=True, for_insert=False
         )
 
     @staticmethod
-    def test_executemany_delegates_validation_to_connection(mock_connection):
+    def test_parameterized_execute_validates_for_fetch_and_insert(mock_connection):
+        operation = "SELECT d FROM t WHERE id = ? AND name = ?"
+
+        Cursor(mock_connection).execute(operation, ["a", 1])
+
+        mock_connection.validate_session_datetime_formats.assert_called_once_with(
+            operation, for_fetch=True, for_insert=True
+        )
+
+    @staticmethod
+    def test_executemany_validates_for_insert_only(mock_connection):
         operation = "INSERT INTO t VALUES (?, ?)"
 
         Cursor(mock_connection).executemany(operation, [("a", 1)])
 
         mock_connection.validate_session_datetime_formats.assert_called_once_with(
-            operation, for_insert=True
+            operation, for_fetch=False, for_insert=True
         )
 
 

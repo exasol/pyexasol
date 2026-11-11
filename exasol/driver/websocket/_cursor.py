@@ -216,12 +216,14 @@ class Cursor:
     def execute(self, operation, parameters=None):
         """See also :py:meth: `Cursor.execute`"""
         if parameters:
-            self.executemany(operation, [parameters])
+            # The parameters are converted by the insert_mapper, while the results
+            # of the statement are converted by the fetch_mapper.
+            self._execute_prepared(operation, [parameters], for_fetch=True)
             return
 
         try:
             self._connection.validate_session_datetime_formats(
-                operation, for_insert=False
+                operation, for_fetch=True, for_insert=False
             )
             self._cursor = self._connection.connection.execute(operation)
         except pyexasol.exceptions.ExaError as ex:
@@ -230,11 +232,14 @@ class Cursor:
     @_is_not_closed
     def executemany(self, operation, seq_of_parameters):
         """See also :py:meth: `Cursor.executemany`"""
+        self._execute_prepared(operation, seq_of_parameters, for_fetch=False)
+
+    def _execute_prepared(self, operation, seq_of_parameters, for_fetch):
         parameters = [list(params) for params in seq_of_parameters]
         insert_mapper = self._connection.insert_mapper
         try:
             self._connection.validate_session_datetime_formats(
-                operation, for_insert=True
+                operation, for_fetch=for_fetch, for_insert=True
             )
 
             # Prepare the statement on the database to get the target column types.
