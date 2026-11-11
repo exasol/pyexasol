@@ -74,12 +74,24 @@ Usage Notes
 
 See the :ref:`Using DB-API 2.0 <using_dbapi2_example>` example for a longer usage example.
 
-Result Value Types
-^^^^^^^^^^^^^^^^^^
+.. _WebSocket API data type definition: https://github.com/exasol/websocket-api/blob/master/docs/WebsocketAPIV3.md#data-types-type-names-and-properties
 
-To align more closely with PEP 249, the WebSocket DBAPI returns values as Python
-types by default whenever possible. Some values were already returned as Python
-types before version 3.0; version 3.0 made this behavior more consistent.
+Fetching Data
+^^^^^^^^^^^^^
+
+The WebSocket DBAPI converts fetched values with the ``fetch_mapper`` connection
+option. The Python types you receive are determined by the default mapper;
+applications can replace it with a custom mapper.
+
+Default Types
+~~~~~~~~~~~~~
+
+The default ``fetch_mapper`` is
+:func:`pyexasol.data_types.convert_websocket_to_python`. It converts values to
+Python types according to the result column's WebSocket metadata. To align more
+closely with PEP 249, it returns values as Python types whenever possible. Some
+values were already returned as Python types before version 3.0; version 3.0
+made this behavior more consistent.
 
 .. note::
     * ``NULL`` values are returned as ``None`` for all types.
@@ -132,18 +144,14 @@ types before version 3.0; version 3.0 made this behavior more consistent.
      - ``str``
      - ``str``
 
-Custom Result Value Mappers
-^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Custom Mapper
+~~~~~~~~~~~~~
 
-The default ``fetch_mapper`` is
-:func:`pyexasol.data_types.convert_websocket_to_python`. It converts values to
-Python types according to the result column's WebSocket metadata.
-
-Applications can provide a custom mapper through the ``fetch_mapper`` connection
-option. The mapper receives two positional arguments: the raw scalar value and
-the column's WebSocket ``dataType`` metadata. See the `WebSocket API data type
-definition <https://github.com/exasol/websocket-api/blob/master/docs/WebsocketAPIV3.md#data-types-type-names-and-properties>`__. Use the metadata's ``type``
-value to determine how to convert the value.
+Instead of the default mapper described above, applications can provide a custom
+mapper through the ``fetch_mapper`` connection option. The mapper receives two
+positional arguments: the raw scalar value and the column's WebSocket ``dataType``
+metadata. See the `WebSocket API data type definition`_. Use the metadata's
+``type`` value to determine how to convert the value.
 
 .. code-block:: python
 
@@ -159,13 +167,136 @@ value to determine how to convert the value.
     supporting the session date/time formats required by that mapper. The DBAPI
     only validates the session formats when the default mapper is active.
 
+Inserting Data
+^^^^^^^^^^^^^^
+
+The WebSocket DBAPI converts and validates the parameter values passed to
+``executemany`` with the ``insert_mapper`` connection option. The Python types
+accepted per column type are determined by the default mapper; applications can
+replace it with a custom mapper.
+
+Default Types
+~~~~~~~~~~~~~
+
+The default ``insert_mapper`` is
+:func:`pyexasol.data_types.convert_python_to_websocket`. It converts each value
+according to the target column's WebSocket metadata. Before anything is sent to
+the database, ``executemany`` checks every row and raises:
+
+* a ``ProgrammingError`` if a row has a different number of values than the
+  statement has columns. The error gives the row number and both counts.
+* a ``DataError`` if a value's Python type is not accepted for its column type.
+  The error gives the row number, the column location, the column type and the
+  allowed types.
+
+Both errors are raised for the first invalid entry only, so other invalid
+entries are not reported. If you get one of these errors, check your data
+directly to make sure that all rows have the expected number of values and
+that each value has a type accepted for its column.
+
+.. note::
+    * ``None`` is accepted for all types.
+    * Only the types are validated. Precision, scale and length are not checked
+      and remain the responsibility of the database.
+    * A naive ``datetime.datetime`` is assumed to be exactly the time the
+      database should store and is inserted in ISO format. A timezone-aware
+      ``datetime.datetime`` for a ``DATE``, ``TIMESTAMP`` or
+      ``TIMESTAMP WITH LOCAL TIME ZONE`` column raises a ``DataError``, because
+      these columns have no timezone and the offset cannot be sent. Convert the
+      value explicitly first, e.g. with
+      ``value.astimezone(datetime.UTC).replace(tzinfo=None)`` for a
+      ``TIMESTAMP``.
+    * Values bound to a ``VARCHAR`` column must be ``str``. Before version 4.0,
+      any value was silently converted with ``str()``, which can hide a mismatch
+      between the values and the columns they are inserted into. Convert values
+      explicitly with ``str(...)`` where a string is desired.
+
+.. list-table:: WebSocket DBAPI accepted parameter value types
+   :header-rows: 1
+
+   * - Exasol type
+     - Version < 4.0
+     - Version >= 4.0
+   * - ``BOOLEAN``
+     - ``bool``
+     - ``bool``, ``int`` (``0``/``1``), ``str`` (e.g. ``'true'``)
+   * - ``CHAR``
+     - ``str``
+     - ``str``
+   * - ``DATE``
+     - ``datetime.date``, ``datetime.datetime``, ``str``
+     - ``datetime.date``, naive ``datetime.datetime``, ``str``
+   * - ``DECIMAL(p, s)``
+     - ``decimal.Decimal``, ``float``, ``int``, ``str``
+     - ``decimal.Decimal``, ``float``, ``int``, ``str``
+   * - ``DOUBLE``
+     - any value accepted by ``float()``
+     - ``float``, ``int``, ``decimal.Decimal``, ``str`` (parsable)
+   * - ``GEOMETRY``
+     - ``str``
+     - ``str``
+   * - ``HASHTYPE``
+     - ``str``
+     - ``str``
+   * - ``INTERVAL DAY TO SECOND``
+     - ``str``
+     - ``datetime.timedelta``, ``ExaTimeDelta``, ``str``
+   * - ``INTERVAL YEAR TO MONTH``
+     - ``str``
+     - ``str``
+   * - ``TIMESTAMP``
+     - ``datetime.datetime``, ``str``
+     - naive ``datetime.datetime``, ``str``
+   * - ``TIMESTAMP WITH LOCAL TIME ZONE``
+     - ``datetime.datetime``, ``str``
+     - naive ``datetime.datetime``, ``str``
+   * - ``VARCHAR``
+     - any value (converted with ``str()``)
+     - ``str``
+
+Custom Mapper
+~~~~~~~~~~~~~
+
+Instead of the default mapper described above, applications can provide a custom
+mapper through the ``insert_mapper`` connection option. The mapper receives two
+positional arguments: the Python parameter value and the column's WebSocket
+``dataType`` metadata, and returns the value to send. See the
+`WebSocket API data type definition`_. Use the metadata's ``type`` value to
+determine how to convert the value.
+
+.. code-block:: python
+
+    from pyexasol.data_types import WebSocketDataType
+
+    def insert_mapper(value, data_type):
+        if data_type["type"] == WebSocketDataType.String.value:
+            return str(value)
+        return value
+
+The mapper's output must still be a type accepted by
+``validate_value_for_websocket`` for the column (e.g. ``float`` for ``DOUBLE``,
+``str`` for ``VARCHAR``), otherwise a ``DataError`` is raised. This validation
+gives more specific type errors than the database would.
+
+.. note::
+    When using a custom ``insert_mapper``, ``executemany`` no longer validates
+    the session's date and timestamp formats. ``execute`` still validates them
+    unless a custom ``fetch_mapper`` is also provided, so both mappers must be
+    custom for the formats to be changeable. The application is then responsible
+    for ensuring that the custom mappers support the session's formats.
+
 Session Date/Time Formats
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Before executing a user statement, the WebSocket DBAPI checks the active session
-values for ``NLS_DATE_FORMAT`` and ``NLS_TIMESTAMP_FORMAT`` in
-``EXA_PARAMETERS`` when the default ``fetch_mapper`` is active. The DBAPI
-currently supports only the exact formats listed below. Format-model matching is
+The default mappers depend on the session's ``NLS_DATE_FORMAT`` and
+``NLS_TIMESTAMP_FORMAT``, which are listed in ``EXA_PARAMETERS``. The WebSocket
+DBAPI therefore validates both values, but only when the relevant default mapper
+is active:
+
+* Before executing a user statement, if the default ``fetch_mapper`` is active.
+* Before calling ``executemany``, if the default ``insert_mapper`` is active.
+
+The DBAPI currently supports only the exact formats listed below. Format-model matching is
 case-sensitive.
 
 The supported values are represented by the following definitions in the

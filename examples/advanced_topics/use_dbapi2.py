@@ -8,6 +8,8 @@ from exasol.driver.websocket import dbapi2
 
 printer = pprint.PrettyPrinter(indent=4, width=140)
 
+USERS_QUERY = "SELECT * FROM users ORDER BY user_id LIMIT 5"
+
 with closing(
     dbapi2.connect(
         dsn=config.dsn,
@@ -21,7 +23,7 @@ with closing(
     # Query and result operations require an active cursor.
     with connection.cursor() as cursor:
         # Fetch tuples row-by-row as iterator
-        cursor.execute("SELECT * FROM users ORDER BY user_id LIMIT 5")
+        cursor.execute(USERS_QUERY)
 
         while True:
             row = cursor.fetchone()
@@ -32,12 +34,12 @@ with closing(
             printer.pprint(row)
 
         # Fetch many
-        cursor.execute("SELECT * FROM users ORDER BY user_id LIMIT 5")
+        cursor.execute(USERS_QUERY)
         printer.pprint(cursor.fetchmany(3))
         printer.pprint(cursor.fetchmany(3))
 
         # Fetch everything in one go
-        cursor.execute("SELECT * FROM users ORDER BY user_id LIMIT 5")
+        cursor.execute(USERS_QUERY)
         printer.pprint(cursor.fetchall())
 
         printer.pprint(cursor.description)
