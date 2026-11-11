@@ -74,12 +74,22 @@ Usage Notes
 
 See the :ref:`Using DB-API 2.0 <using_dbapi2_example>` example for a longer usage example.
 
-Result Value Types
-^^^^^^^^^^^^^^^^^^
+Result Value Mapping
+^^^^^^^^^^^^^^^^^^^^
 
-To align more closely with PEP 249, the WebSocket DBAPI returns values as Python
-types by default whenever possible. Some values were already returned as Python
-types before version 3.0; version 3.0 made this behavior more consistent.
+The WebSocket DBAPI converts fetched values with the ``fetch_mapper`` connection
+option. The Python types you receive are determined by the default mapper;
+applications can replace it with a custom mapper.
+
+Default Types
+~~~~~~~~~~~~~
+
+The default ``fetch_mapper`` is
+:func:`pyexasol.data_types.convert_websocket_to_python`. It converts values to
+Python types according to the result column's WebSocket metadata. To align more
+closely with PEP 249, it returns values as Python types whenever possible. Some
+values were already returned as Python types before version 3.0; version 3.0
+made this behavior more consistent.
 
 .. note::
     * ``NULL`` values are returned as ``None`` for all types.
@@ -132,18 +142,15 @@ types before version 3.0; version 3.0 made this behavior more consistent.
      - ``str``
      - ``str``
 
-Custom Result Value Mappers
-^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Custom Mapper
+~~~~~~~~~~~~~
 
-The default ``fetch_mapper`` is
-:func:`pyexasol.data_types.convert_websocket_to_python`. It converts values to
-Python types according to the result column's WebSocket metadata.
-
-Applications can provide a custom mapper through the ``fetch_mapper`` connection
-option. The mapper receives two positional arguments: the raw scalar value and
-the column's WebSocket ``dataType`` metadata. See the `WebSocket API data type
-definition <https://github.com/exasol/websocket-api/blob/master/docs/WebsocketAPIV3.md#data-types-type-names-and-properties>`__. Use the metadata's ``type``
-value to determine how to convert the value.
+Instead of the default mapper described above, applications can provide a custom
+mapper through the ``fetch_mapper`` connection option. The mapper receives two
+positional arguments: the raw scalar value and the column's WebSocket ``dataType``
+metadata. See the `WebSocket API data type
+definition <https://github.com/exasol/websocket-api/blob/master/docs/WebsocketAPIV3.md#data-types-type-names-and-properties>`__.
+Use the metadata's ``type``value to determine how to convert the value.
 
 .. code-block:: python
 
