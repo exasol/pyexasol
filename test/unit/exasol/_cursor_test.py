@@ -144,3 +144,29 @@ class TestExecutemany:
         mock_statement.execute_prepared.assert_not_called()
         mock_statement.close.assert_called_once()
         assert cursor._cursor is None
+
+    @staticmethod
+    def test_failing_close_does_not_hide_original_error(
+        mock_connection, mock_statement
+    ):
+        mock_statement.execute_prepared.side_effect = ProgrammingError("original")
+        mock_statement.close.side_effect = RuntimeError("close failed")
+        cursor = Cursor(mock_connection)
+
+        with pytest.raises(ProgrammingError, match="original"):
+            cursor.executemany(TestExecutemany.STATEMENT, [("a", 1)])
+
+        mock_statement.close.assert_called_once()
+        assert cursor._cursor is None
+
+    @staticmethod
+    def test_keyboard_interrupt_does_not_close_statement(
+        mock_connection, mock_statement
+    ):
+        mock_statement.execute_prepared.side_effect = KeyboardInterrupt
+        cursor = Cursor(mock_connection)
+
+        with pytest.raises(KeyboardInterrupt):
+            cursor.executemany(TestExecutemany.STATEMENT, [("a", 1)])
+
+        mock_statement.close.assert_not_called()

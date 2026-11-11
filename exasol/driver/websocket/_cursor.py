@@ -6,6 +6,7 @@ This module provides `PEP-249`_ DBAPI compliant cursor implementation.
 """
 
 from collections import defaultdict
+from contextlib import suppress
 from dataclasses import (
     astuple,
     dataclass,
@@ -253,10 +254,12 @@ class Cursor:
                     mapped_rows.append(mapped_row)
 
                 statement.execute_prepared(mapped_rows)
-            except BaseException:
+            except Exception:
                 # Don't leak the prepared statement on the server, and leave the
-                # cursor's previous state untouched.
-                statement.close()
+                # cursor's previous state untouched. A failure to close must not
+                # hide the original error.
+                with suppress(Exception):
+                    statement.close()
                 raise
             self._cursor = statement
         except pyexasol.exceptions.ExaError as ex:
