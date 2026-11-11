@@ -120,15 +120,8 @@ def data_type_rows():
         timestamp_local_value=(
             DATA_TYPE_CASES.timestamp_with_local_time_zone.python_value
         ),
-        # Prepared interval values must fit the target column's declared precision.
-        # Values whose year or fractional-second precision exceeds that precision
-        # are not handled by the driver; the database rejects them. ExaTimeDelta
-        # values are not handled by the driver either. The values below are
-        # converted to fixed-width WebSocket interval strings where necessary.
-        # This is tracked in:
-        # https://github.com/exasol/pyexasol/issues/428
         interval_year_month=DATA_TYPE_CASES.interval_year_to_month.python_value,
-        interval_day_second=DATA_TYPE_CASES.interval_day_to_second.websocket_value,
+        interval_day_second=DATA_TYPE_CASES.interval_day_to_second.python_value,
         boolean_value=DATA_TYPE_CASES.boolean.python_value,
         geometry_value=DATA_TYPE_CASES.geometry.python_value,
         hashtype_value=DATA_TYPE_CASES.hashtype.python_value,
