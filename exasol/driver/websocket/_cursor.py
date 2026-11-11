@@ -245,7 +245,12 @@ class Cursor:
                 # Perform data checks and mapping on each row against the target
                 # columns.
                 mapped_rows = []
-                column_data = statement.parameter_data["columns"]
+                # parameter_data is None if the statement has no placeholders.
+                column_data = (
+                    statement.parameter_data["columns"]
+                    if statement.parameter_data
+                    else []
+                )
                 for row_index, parameter_row in enumerate(parameters):
                     _check_parameter_count(row_index, parameter_row, column_data)
                     mapped_row = _map_and_validate_row(

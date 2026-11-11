@@ -146,6 +146,32 @@ class TestExecutemany:
         assert cursor._cursor is None
 
     @staticmethod
+    def test_statement_without_placeholders_and_no_rows_executes(
+        mock_connection, mock_statement
+    ):
+        mock_statement.parameter_data = None
+        cursor = Cursor(mock_connection)
+
+        cursor.executemany("INSERT INTO t VALUES (1)", [])
+
+        mock_statement.execute_prepared.assert_called_once_with([])
+        mock_statement.close.assert_not_called()
+        assert cursor._cursor is mock_statement
+
+    @staticmethod
+    def test_statement_without_placeholders_rejects_parameters(
+        mock_connection, mock_statement
+    ):
+        mock_statement.parameter_data = None
+        cursor = Cursor(mock_connection)
+
+        with pytest.raises(ProgrammingError):
+            cursor.executemany("INSERT INTO t VALUES (1)", [("a",)])
+
+        mock_statement.execute_prepared.assert_not_called()
+        mock_statement.close.assert_called_once()
+
+    @staticmethod
     def test_failing_close_does_not_hide_original_error(
         mock_connection, mock_statement
     ):
