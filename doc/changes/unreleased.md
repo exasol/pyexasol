@@ -6,43 +6,18 @@ In this major release, the following changes were made:
 
 * The WebSocket DBAPI `executemany` now converts and validates parameter values
   based on the target column type via the new `insert_mapper` parameter of
-  `Connection`. The default, `convert_python_to_websocket`, accepts the Python
-  types below per column type:
-
-  | Exasol type                        | Version < 4.0                                           | Version >= 4.0                                                  |
-  |------------------------------------|---------------------------------------------------------|-----------------------------------------------------------------|
-  | ``BOOLEAN``                        | ``bool``                                                | ``bool``, ``int`` (``0``/``1``), ``str`` (e.g. ``'true'``)      |
-  | ``CHAR``                           | ``str``                                                 | ``str``                                                         |
-  | ``DATE``                           | ``datetime.date``, ``datetime.datetime``, ``str``       | ``datetime.date``, naive ``datetime.datetime``, ``str``         |
-  | ``DECIMAL(p, s)``                  | ``decimal.Decimal``, ``float``, ``int``, ``str``        | ``decimal.Decimal``, ``float``, ``int``, ``str``                |
-  | ``DOUBLE``                         | any value accepted by ``float()``                       | ``float``, ``int``, ``decimal.Decimal``, ``str`` (parsable)     |
-  | ``GEOMETRY``                       | ``str``                                                 | ``str``                                                         |
-  | ``HASHTYPE``                       | ``str``                                                 | ``str``                                                         |
-  | ``INTERVAL DAY TO SECOND``         | ``str``                                                 | ``datetime.timedelta``, ``ExaTimeDelta``, ``str``               |
-  | ``INTERVAL YEAR TO MONTH``         | ``str``                                                 | ``str``                                                         |
-  | ``TIMESTAMP``                      | ``datetime.datetime``, ``str``                          | naive ``datetime.datetime``, ``str``                            |
-  | ``TIMESTAMP WITH LOCAL TIME ZONE`` | ``datetime.datetime``, ``str``                          | naive ``datetime.datetime``, ``str``                            |
-  | ``VARCHAR``                        | any value (converted with ``str()``)                    | ``str``                                                         |
-
-    * ``None`` is accepted for all types.
-    * With the default `insert_mapper`, values of a type that is not accepted raise
-      a ``DataError``. Previously, the database rejected such values, but it was
-      not always clear which row and column entry caused the error.
-    * Only the types are validated. Precision, scale and length are not checked
-      and remain the responsibility of the database.
-    * With the default `insert_mapper`, a naive ``datetime.datetime`` is assumed to
-      be exactly the time the database should store and is inserted in ISO format.
-      Timezone-aware ``datetime.datetime`` values for ``DATE``, ``TIMESTAMP`` and
-      ``TIMESTAMP WITH LOCAL TIME ZONE`` columns raise a ``DataError``, because
-      these columns have no timezone and the offset cannot be sent. Convert the
-      value explicitly first, e.g. with
-      ``value.astimezone(datetime.UTC).replace(tzinfo=None)`` for a ``TIMESTAMP``.
-    * The default `insert_mapper` also requires the session's ``NLS_DATE_FORMAT``
-      and ``NLS_TIMESTAMP_FORMAT`` to be the ISO-compatible formats, and validates
-      them in ``executemany``.
-    * Customers can provide their own `insert_mapper` to `Connection` to change how
-      input values are converted, including which Python input types are accepted.
-      The mapper's output must still be a type accepted by
+  `Connection`. The default, `convert_python_to_websocket`, accepts only
+  specific Python types per column type. See the accepted types in the
+  "Inserting Data" section of the DB-API documentation: TODO add link.
+  * A value whose type is not accepted now raises a `DataError` that names the
+    row, column and allowed types. Previously, the database rejected such values,
+    but it was not always clear which entry caused the error.
+  * The default `insert_mapper` requires the session's `NLS_DATE_FORMAT` and
+    `NLS_TIMESTAMP_FORMAT` to be the supported ISO-compatible formats, and
+    validates them in `executemany`.
+  * Customers can provide their own `insert_mapper` to `Connection` to change how
+    input values are converted, including which Python input types are accepted.
+    * The mapper's output must still be a type accepted by
       `validate_value_for_websocket` for the column (e.g. `float` for `DOUBLE`,
       `str` for `VARCHAR`), otherwise a `DataError` is raised. This validation gives
       more specific type errors than the database would.
@@ -55,13 +30,17 @@ In this major release, the following changes were made:
     (or `None`). Previously, `executemany` silently converted any value, such as
     `int`, `Decimal`, etc., to `str`. Such values now raise a `DataError`. This is
     intentional: stringifying arbitrary values can hide errors, such as a mismatch
-    between the values and the columns they are  inserted into. Convert values
+    between the values and the columns they are inserted into. Convert values
     explicitly with `str(...)` where a string is desired.
 
 ## Bugfixes
 
 * #371: Fixed import_from_file returning misleading error message if wrong object type was passed
 * #464: Fixed the DB API session date/time format validation depending on `fetch_mapper` when inserting. `execute` now validates only for the default `fetch_mapper`, and `executemany` only for the default `insert_mapper`
+
+## Documentation
+
+* #463: Documented the DB API `insert_mapper` and its default behavior, and grouped the `fetch_mapper` and `insert_mapper` documentation under "Fetching Data" and "Inserting Data"
 
 ## Features
 
