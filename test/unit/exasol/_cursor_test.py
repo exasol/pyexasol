@@ -126,6 +126,8 @@ class TestExecutemany:
             == f"Input shape mismatch for row 2: received {parameter_count} parameters, 2 columns"
         )
         mock_statement.execute_prepared.assert_not_called()
+        mock_statement.close.assert_called_once()
+        assert cursor._cursor is None
 
     @staticmethod
     @pytest.mark.parametrize(
@@ -161,3 +163,5 @@ class TestExecutemany:
 
         assert str(exception_info.value) == expected_message
         mock_statement.execute_prepared.assert_not_called()
+        mock_statement.close.assert_called_once()
+        assert cursor._cursor is None

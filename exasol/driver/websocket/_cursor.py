@@ -243,21 +243,28 @@ class Cursor:
                 self._connection.validate_session_datetime_formats(operation)
 
             # Prepare the statement on the database to get the target column types.
-            self._cursor = self._connection.connection.cls_statement(
+            statement = self._connection.connection.cls_statement(
                 self._connection.connection, operation, prepare=True
             )
+            try:
+                # Perform data checks and mapping on each row against the target
+                # columns.
+                mapped_rows = []
+                column_data = statement.parameter_data["columns"]
+                for row_index, parameter_row in enumerate(parameters):
+                    _check_parameter_count(row_index, parameter_row, column_data)
+                    mapped_row = _map_and_validate_row(
+                        insert_mapper, parameter_row, column_data, row_index
+                    )
+                    mapped_rows.append(mapped_row)
 
-            # Perform data checks and mapping on each row against the target columns.
-            mapped_rows = []
-            column_data = self._cursor.parameter_data["columns"]
-            for row_index, parameter_row in enumerate(parameters):
-                _check_parameter_count(row_index, parameter_row, column_data)
-                mapped_row = _map_and_validate_row(
-                    insert_mapper, parameter_row, column_data, row_index
-                )
-                mapped_rows.append(mapped_row)
-
-            self._cursor.execute_prepared(mapped_rows)
+                statement.execute_prepared(mapped_rows)
+            except BaseException:
+                # Don't leak the prepared statement on the server, and leave the
+                # cursor's previous state untouched.
+                statement.close()
+                raise
+            self._cursor = statement
         except pyexasol.exceptions.ExaError as ex:
             raise translate_exception(ex) from ex
 
