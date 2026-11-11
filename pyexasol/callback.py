@@ -207,17 +207,28 @@ def import_from_pandas(pipe, src: "pandas.DataFrame", **kwargs):
 
 
 def get_parquet_files(source: list[Path] | Path | str) -> list[Path]:
+    """
+    Resolve ``source`` to a list of parquet files.
+
+    Raises:
+        ValueError: if ``source`` is of an unsupported type, a list containing
+            invalid entries, or does not match any files.
+    """
+    parquet_files: list[Path] = []
     if isinstance(source, str):
-        matches = glob.glob(source)
-        return sorted(
-            [filepath for i in matches if (filepath := Path(i)) and filepath.is_file()]
+        parquet_files = sorted(
+            [
+                filepath
+                for i in glob.glob(source)
+                if (filepath := Path(i)) and filepath.is_file()
+            ]
         )
-    if isinstance(source, Path):
+    elif isinstance(source, Path):
         if source.is_file():
-            return [source]
+            parquet_files = [source]
         elif source.is_dir():
-            return sorted(source.glob("*.parquet"))
-    if isinstance(source, list):
+            parquet_files = sorted(source.glob("*.parquet"))
+    elif isinstance(source, list):
         not_a_valid_path_file = [
             filepath
             for filepath in source
@@ -227,10 +238,15 @@ def get_parquet_files(source: list[Path] | Path | str) -> list[Path]:
             raise ValueError(
                 f"source {source} contained entries which were not `Path` or valid `Path` files {not_a_valid_path_file}"
             )
-        return source
-    raise ValueError(
-        f"source {source} is not a supported type (Union[list[Path], Path, str])."
-    )
+        parquet_files = source
+    else:
+        raise ValueError(
+            f"source {source} is not a supported type (Union[list[Path], Path, str])."
+        )
+
+    if not parquet_files:
+        raise ValueError(f"source {source} does not match any files")
+    return parquet_files
 
 
 def import_from_parquet(
@@ -274,8 +290,7 @@ def import_from_parquet(
                 f"Fields {nested_fields} of schema from file {file} is hierarchical which is not supported."
             )
 
-    if not (parquet_files := get_parquet_files(source)):
-        raise ValueError(f"source {source} does not match any files")
+    parquet_files = get_parquet_files(source)
 
     columns = kwargs.get("columns", None)
     for file in parquet_files:
