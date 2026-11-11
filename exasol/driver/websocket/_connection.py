@@ -17,6 +17,7 @@ from exasol.driver.websocket._errors import (
     translate_exception,
 )
 from pyexasol.data_types import convert_websocket_to_python
+from pyexasol.data_types.python_to_websocket import convert_python_to_websocket
 from pyexasol.data_types.websocket_to_python import (
     SUPPORTED_DATE_FORMATS,
     SUPPORTED_TIMESTAMP_FORMATS,
@@ -115,6 +116,7 @@ class Connection:
         client_name: str = "EXASOL:DBAPI2:WS",
         client_version: str = "unknown",
         fetch_mapper: Callable = convert_websocket_to_python,
+        insert_mapper: Callable = convert_python_to_websocket,
     ):
         """
         Create a Connection object.
@@ -129,6 +131,10 @@ class Connection:
             tls: enable tls.
             certificate_validation: disable certificate validation.
             client_name: which is communicated to the DB server.
+            fetch_mapper: converts fetched values. Must have the same signature as
+                the default, ``convert_websocket_to_python``.
+            insert_mapper: converts parameter values before insertion. Must have the
+                same signature as the default, ``convert_python_to_websocket``.
         """
 
         # for more details see pyexasol.connection.ExaConnection
@@ -168,6 +174,7 @@ class Connection:
             "access_token": None,
             "refresh_token": None,
         }
+        self.insert_mapper = insert_mapper
         self._connection = None
 
     def connect(self):
@@ -184,21 +191,31 @@ class Connection:
         return self._connection
 
     @_requires_connection
-    def validate_session_datetime_formats(self, operation):
+    def validate_session_datetime_formats(self, operation, for_fetch, for_insert):
         """Validate the active session date/time format models.
 
         Operations containing ``ALTER SESSION`` are ignored so that an
         application can change or restore session settings while bypassing the validation.
         The following operation will validate the new date/time formats.
 
-        Custom fetch mappers are responsible for handling the session date/time
-        formats they support, so validation is only performed for the default
-        mapper.
+        Args:
+            operation: the SQL statement about to be executed.
+            for_fetch: the statement's results are converted by ``fetch_mapper``.
+            for_insert: the statement's parameters are converted by ``insert_mapper``.
         """
-        if (
-            _is_alter_session(operation)
-            or self._options["fetch_mapper"] is not convert_websocket_to_python
+        has_default_fetch_mapper = (
+            self._options["fetch_mapper"] is convert_websocket_to_python
+        )
+        has_default_insert_mapper = self.insert_mapper is convert_python_to_websocket
+
+        # A custom mapper handles the session date/time formats itself.
+        if not (
+            (for_fetch and has_default_fetch_mapper)
+            or (for_insert and has_default_insert_mapper)
         ):
+            return
+
+        if _is_alter_session(operation):
             return
 
         session_datetime_format_query = """

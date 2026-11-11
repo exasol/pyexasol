@@ -5,23 +5,25 @@ This module provides `PEP-249`_ DBAPI compliant cursor implementation.
 .. _PEP-249-cursor: https://peps.python.org/pep-0249/#cursor-objects
 """
 
-import datetime
-import decimal
 from collections import defaultdict
+from contextlib import suppress
 from dataclasses import (
     astuple,
     dataclass,
 )
 from functools import wraps
+from typing import Any
 
 import pyexasol.exceptions
 from exasol.driver.websocket._errors import (
+    DataError,
     InterfaceError,
     NotSupportedError,
     ProgrammingError,
     translate_exception,
 )
 from pyexasol.data_types.websocket_types import WebSocketDataType
+from pyexasol.data_types.websocket_validation import validate_value_for_websocket
 
 
 @dataclass
@@ -90,39 +92,42 @@ def _requires_result(method):
     return wrapper
 
 
-def _identity(value):
-    return value
+def _check_parameter_count(
+    row_index: int, parameter_row: list[Any], columns: list[dict[str, Any]]
+) -> None:
+    """Raise ProgrammingError unless the parameter_row has one value per column."""
+    if len(parameter_row) != len(columns):
+        raise ProgrammingError(
+            f"Input shape mismatch for row {row_index + 1}: received "
+            f"{len(parameter_row)} parameters, {len(columns)} columns"
+        )
 
 
-def _dbapi2pyexasol(value):
-    converter = _DBAPI_TO_PYEXASOL_CONVERTERS.get(type(value), _identity)
-    return converter(value)
+def _map_and_validate_row(insert_mapper, row, columns, row_index):
+    """
+    Map and validate each value of the row against its column, return the new row.
 
-
-_DBAPI_TO_PYEXASOL_CONVERTERS = {
-    decimal.Decimal: str,
-    float: str,
-    datetime.date: str,
-    datetime.datetime: str,
-}
-
-
-def _varchar(value):
-    if value is None:
-        return None
-    return str(value)
-
-
-def _double(value):
-    if value is None:
-        return None
-    return float(value)
-
-
-_REQUESTED_DB_TYPE_CONVERTERS = {
-    "VARCHAR": _varchar,
-    "DOUBLE": _double,
-}
+    Raises DataError if a value is invalid. The message gives the row number and
+    the column location, both counted from a starting index of 1, the column type
+    and the error text of the mapper or validator, which for a wrong Python type
+    lists the allowed types.
+    """
+    mapped_row = []
+    for column_index, (value, column) in enumerate(zip(row, columns)):
+        data_type = column["dataType"]
+        column_type = data_type["type"]
+        try:
+            mapped_value = insert_mapper(value, data_type)
+            validate_value_for_websocket(mapped_value, column_type)
+        except Exception as ex:
+            raise DataError(
+                f"Invalid value in seq_of_parameters row {row_index + 1}:\n"
+                f"  * Column location: {column_index + 1}\n"
+                f"  * Column type: {column_type}\n"
+                f"  * {ex}"
+            ) from ex
+        mapped_row.append(mapped_value)
+    return mapped_row
 
 
 class Cursor:
@@ -211,83 +216,62 @@ class Cursor:
     def execute(self, operation, parameters=None):
         """See also :py:meth: `Cursor.execute`"""
         if parameters:
-            self.executemany(operation, [parameters])
+            # The parameters are converted by the insert_mapper, while the results
+            # of the statement are converted by the fetch_mapper.
+            self._execute_prepared(operation, [parameters], for_fetch=True)
             return
 
         try:
-            self._connection.validate_session_datetime_formats(operation)
+            self._connection.validate_session_datetime_formats(
+                operation, for_fetch=True, for_insert=False
+            )
             self._cursor = self._connection.connection.execute(operation)
         except pyexasol.exceptions.ExaError as ex:
             raise translate_exception(ex) from ex
 
-    @staticmethod
-    def _adapt_to_requested_db_types(parameters, db_response):
-        """
-        Adapt parameter types to match the types requested by the DB in the
-        `createPreparedStatement <https://github.com/exasol/websocket-api/blob/master/docs/commands/createPreparedStatementV1.md>`_
-        response.
-
-        Args:
-
-            parameters: which will be passed/send to the database.
-            db_response: contains the DB response including the required types.
-
-
-        Attention:
-
-            This shim method currently only patches the following types:
-
-                * VARCHAR
-                * DOUBLE
-
-            therefore it the future it may be necessary to improve or extend this.
-
-            A hint that patching of a specific type is required, could be and
-            error message similar to this one:
-
-            .. code-block::
-
-                pyexasol.exceptions.ExaRequestError:
-                ...
-                message  => getString: JSON value is not a string. (...)
-                ...
-        """
-        columns = db_response["columns"]
-        selected_converters = (
-            _REQUESTED_DB_TYPE_CONVERTERS.get(column["dataType"]["type"], _identity)
-            for column in columns
-        )
-
-        try:
-            parameter_pairs = list(zip(selected_converters, parameters, strict=True))
-        except ValueError as ex:
-            raise ProgrammingError(
-                "Input shape mismatch: received "
-                f"{len(parameters)} parameters, {len(columns)} columns"
-            ) from ex
-
-        parameters = [converter(value) for converter, value in parameter_pairs]
-        return parameters
-
     @_is_not_closed
     def executemany(self, operation, seq_of_parameters):
         """See also :py:meth: `Cursor.executemany`"""
+        self._execute_prepared(operation, seq_of_parameters, for_fetch=False)
+
+    def _execute_prepared(self, operation, seq_of_parameters, for_fetch):
+        parameters = [list(params) for params in seq_of_parameters]
+        insert_mapper = self._connection.insert_mapper
         try:
-            parameters = [
-                [_dbapi2pyexasol(value) for value in params]
-                for params in seq_of_parameters
-            ]
-            self._connection.validate_session_datetime_formats(operation)
-            self._cursor = self._connection.connection.cls_statement(
-                self._connection.connection, operation, prepare=True
+            self._connection.validate_session_datetime_formats(
+                operation, for_fetch=for_fetch, for_insert=True
             )
 
-            parameter_data = self._cursor.parameter_data
-            parameters = [
-                Cursor._adapt_to_requested_db_types(params, parameter_data)
-                for params in parameters
-            ]
-            self._cursor.execute_prepared(parameters)
+            # Prepare the statement on the database to get the target column types.
+            statement = self._connection.connection.cls_statement(
+                self._connection.connection, operation, prepare=True
+            )
+            try:
+                # Perform data checks and mapping on each row against the target
+                # columns.
+                mapped_rows = []
+                # parameter_data is None if the statement has no placeholders.
+                column_data = (
+                    statement.parameter_data["columns"]
+                    if statement.parameter_data
+                    else []
+                )
+                for row_index, parameter_row in enumerate(parameters):
+                    _check_parameter_count(row_index, parameter_row, column_data)
+                    mapped_row = _map_and_validate_row(
+                        insert_mapper, parameter_row, column_data, row_index
+                    )
+                    mapped_rows.append(mapped_row)
+
+                statement.execute_prepared(mapped_rows)
+            except Exception:
+                # Don't leak the prepared statement on the server, and leave the
+                # cursor's previous state untouched. A failure to close must not
+                # hide the original error.
+                with suppress(Exception):
+                    statement.close()
+                raise
+            self._cursor = statement
         except pyexasol.exceptions.ExaError as ex:
             raise translate_exception(ex) from ex
 

@@ -56,6 +56,36 @@ class Connection(Protocol):
         to be performed.
         """
 
+    @property
+    def insert_mapper(self):
+        """
+        Callable converting a parameter value before it is inserted.
+
+        It is called with the value and the WebSocket ``dataType`` metadata of the
+        target column, and returns the value to send to the database.
+
+        Attention:
+            Addition not required by PEP-249.
+        """
+
+    def validate_session_datetime_formats(self, operation, for_fetch, for_insert):
+        """
+        Validate the session date/time formats before executing ``operation``.
+
+        Raises an Error (or subclass) if the formats are not supported by the
+        mappers in use. The validation is skipped if the relevant mappers are
+        custom, as they handle the session formats themselves.
+
+        Args:
+            operation: the SQL statement about to be executed.
+            for_fetch: the results of the statement are converted by the fetch mapper.
+            for_insert: the parameters of the statement are converted by
+                ``insert_mapper``.
+
+        Attention:
+            Addition not required by PEP-249.
+        """
+
     def cursor(self):
         """
         Return a new Cursor Object using the connection.

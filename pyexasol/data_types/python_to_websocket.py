@@ -1,9 +1,12 @@
 import datetime
 import decimal
 import math
-from typing import Literal
+from typing import (
+    Any,
+)
 
 from pyexasol.data_types.converters import ExaTimeDelta
+from pyexasol.data_types.websocket_types import WebSocketDataType
 
 
 def _reject_timezone_aware(value: datetime.datetime, target: str, hint: str) -> None:
@@ -221,22 +224,28 @@ def decimal_to_websocket(
 
 
 def double_to_websocket(
-    value: float | int | decimal.Decimal | Literal[""] | None,
+    value: float | int | decimal.Decimal | str | None,
 ) -> float | None:
     """
     Convert a Python value to a type that the WebSocket API allows for a DOUBLE.
 
     We send a JSON number, because the database rejects every non-empty string for
-    a DOUBLE, even one such as ``"1.5"``. The empty string is the only string the
-    database accepts, and it stores it as NULL, so we convert it to None.
+    a DOUBLE, even one such as ``"1.5"``. A ``str`` is therefore parsed to a ``float``
+    here. The empty string is the one string the database accepts, and it stores it
+    as NULL, so we convert it to None.
+
+    A ``str`` is parsed with ``float()``, so it uses ``.`` as the decimal separator
+    and may have an optional sign and exponent, such as ``"1.5"``, ``"-.5"`` or
+    ``"1e-3"``. Like ``float()``, this also accepts surrounding whitespace and
+    underscores. Thousands separators and ``","`` as decimal separator are rejected,
+    and so are ``"nan"`` and ``"inf"``. The session's ``NLS_NUMERIC_CHARACTERS`` has
+    no effect.
 
     An ``int`` or ``decimal.Decimal`` is converted to a ``float`` first. Otherwise, the
     database keeps only the first 17 significant digits of a large ``int``.
 
-    A ``decimal.Decimal`` too small for a double, such as ``Decimal("1E-400")``,
-    silently becomes ``0.0``, as with any float conversion.
-
-    Unlike DECIMAL, the session's ``NLS_NUMERIC_CHARACTERS`` has no effect.
+    A ``decimal.Decimal`` or ``str`` too small for a double, such as
+    ``Decimal("1E-400")``, silently becomes ``0.0``, as with any float conversion.
 
     Passed through unchanged:
     * None -> None
@@ -245,26 +254,38 @@ def double_to_websocket(
     * float            -> float
     * int              -> float
     * decimal.Decimal  -> float
+    * str              -> float
     * ``""``           -> None
 
     Raises:
-    * TypeError      -> any other type, including every non-empty str
+    * TypeError      -> any other type
     * OverflowError  -> an int too large for a double, such as ``10**400``
-    * ValueError     -> NaN, sNaN or Infinity, including a decimal.Decimal too large
-                        for a double, such as ``Decimal("1E+400")``
+    * ValueError     -> NaN, sNaN or Infinity, including a decimal.Decimal or str too
+                        large for a double, such as ``Decimal("1E+400")``.
+                        A non-empty str that is not a number. The message does not
+                        repeat the str, which may be sensitive.
     """
     if value is None or (isinstance(value, str) and value == ""):
         return None
+    if isinstance(value, str):
+        try:
+            parsed = float(value)
+        except ValueError:
+            raise ValueError(
+                "A str for DOUBLE must be a number that Python's float() can parse, "
+                "such as '1.5' or '1e-3'; the given str cannot be parsed."
+            ) from None
+        _reject_non_finite(parsed, "DOUBLE")
+        return parsed
     if isinstance(value, decimal.Decimal):
         # Checked before float(), which raises its own ValueError for sNaN.
         _reject_non_finite(value, "DOUBLE")
-
     if not isinstance(value, bool) and isinstance(value, (float, int, decimal.Decimal)):
         result = float(value)
         _reject_non_finite(result, "DOUBLE")
         return result
     raise TypeError(
-        "Allowed types: float, int, decimal.Decimal, empty string, None; "
+        "Allowed types: float, int, decimal.Decimal, str, None; "
         f"got {type(value).__name__}."
     )
 
@@ -301,7 +322,7 @@ def boolean_to_websocket(value: bool | int | str | None) -> bool | None:
 
     Raises:
     * ValueError -> an int other than 0 or 1, a str that is not listed above, or
-                   any other type
+                   any other type.
     """
     if value is None or isinstance(value, bool):
         return value
@@ -317,6 +338,62 @@ def boolean_to_websocket(value: bool | int | str | None) -> bool | None:
             return converted
     allowed_strings = ", ".join(repr(string) for string in _BOOLEAN_STRINGS)
     raise ValueError(
-        f"{value!r} is not supported for BOOLEAN. Use bool, None, the int 0 or 1, or "
-        f"one of the strings {allowed_strings} (case-insensitive)."
+        f"The given {type(value).__name__} is not supported for BOOLEAN. Use bool, "
+        f"None, the int 0 or 1, or one of the strings {allowed_strings} "
+        "(case-insensitive). The value is not shown, as it may be sensitive."
     )
+
+
+def convert_python_to_websocket(value: Any, data_type: dict[str, Any]) -> Any:
+    """
+    Convert a Python value to a type that the WebSocket API allows for the column.
+
+    ``data_type`` is the ``dataType`` dict of the column, as returned by the
+    WebSocket API, for example ``{"type": "DECIMAL", "precision": 18, "scale": 0}``.
+    Only its ``"type"`` entry is used. It has the same form as the ``data_type``
+    argument of ``convert_websocket_to_python``.
+
+    Converted types:
+
+    BOOLEAN                -> bool, None
+    DATE                   -> str, None
+    DECIMAL                -> str, None
+    DOUBLE                 -> float, None
+    INTERVAL DAY TO SECOND -> str, None
+    TIMESTAMP              -> str, None
+    TIMESTAMP WITH LOCAL TIME ZONE -> str, None
+
+    Passed through unchanged:
+
+    CHAR
+    GEOMETRY
+    HASHTYPE
+    INTERVAL YEAR TO MONTH
+    VARCHAR
+    <others>, including an unknown type
+
+    Raises:
+    * TypeError     -> a type that the column type does not support. This applies to
+                      all converted types except BOOLEAN.
+    * ValueError    -> BOOLEAN: a value or type that is not supported.
+                      DATE and TIMESTAMP: a timezone-aware datetime.datetime.
+                      DECIMAL and DOUBLE: NaN or Infinity.
+    * OverflowError -> DOUBLE: an int too large for a double
+    """
+    column_type = data_type["type"]
+    if column_type == WebSocketDataType.Bool.value:
+        return boolean_to_websocket(value)
+    if column_type == WebSocketDataType.Date.value:
+        return date_to_websocket(value)
+    if column_type == WebSocketDataType.Decimal.value:
+        return decimal_to_websocket(value)
+    if column_type == WebSocketDataType.Double.value:
+        return double_to_websocket(value)
+    if column_type == WebSocketDataType.IntervalDayToSecond.value:
+        return interval_day_to_second_to_websocket(value)
+    if column_type in (
+        WebSocketDataType.Timestamp.value,
+        WebSocketDataType.TimestampTz.value,
+    ):
+        return timestamp_to_websocket(value)
+    return value
