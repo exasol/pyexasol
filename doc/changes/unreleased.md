@@ -41,10 +41,11 @@ In this major release, the following changes were made:
       and ``NLS_TIMESTAMP_FORMAT`` to be the ISO-compatible formats, and validates
       them in ``executemany``.
     * Customers can provide their own `insert_mapper` to `Connection` to change any
-      of this behavior. With a custom `insert_mapper`, the session's date and
-      timestamp formats are no longer validated, so they can be changed. It is then
-      the customer's responsibility to ensure that the custom `insert_mapper`
-      produces strings in the session's formats.
+      of this behavior. With a custom `insert_mapper`, `executemany` no longer
+      validates the session's date and timestamp formats. `execute` still validates
+      them unless a custom `fetch_mapper` is also provided, so both mappers must be
+      custom for the formats to be changeable. It is then the customer's
+      responsibility to ensure that the custom mappers support the session's formats.
   * **Breaking change:** Values bound to a `VARCHAR` column must now be `str`
     (or `None`). Previously, `executemany` silently converted any value, such as
     `int`, `Decimal`, etc., to `str`. Such values now raise a `DataError`. This is
