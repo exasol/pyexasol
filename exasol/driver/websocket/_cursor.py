@@ -22,6 +22,7 @@ from exasol.driver.websocket._errors import (
     translate_exception,
 )
 from pyexasol.data_types.python_to_websocket import convert_python_to_websocket
+from pyexasol.data_types.websocket_to_python import convert_websocket_to_python
 from pyexasol.data_types.websocket_types import WebSocketDataType
 from pyexasol.data_types.websocket_validation import validate_value_for_websocket
 
@@ -224,7 +225,9 @@ class Cursor:
             return
 
         try:
-            self._connection.validate_session_datetime_formats(operation)
+            # A custom fetch_mapper handles the session date/time formats itself.
+            if self._connection.fetch_mapper is convert_websocket_to_python:
+                self._connection.validate_session_datetime_formats(operation)
             self._cursor = self._connection.connection.execute(operation)
         except pyexasol.exceptions.ExaError as ex:
             raise translate_exception(ex) from ex

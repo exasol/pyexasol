@@ -13,6 +13,7 @@ from exasol.driver.websocket.dbapi2 import (
     ProgrammingError,
 )
 from pyexasol.data_types.python_to_websocket import convert_python_to_websocket
+from pyexasol.data_types.websocket_to_python import convert_websocket_to_python
 
 
 @pytest.fixture
@@ -33,6 +34,46 @@ def mock_connection(mock_statement):
     connection.insert_mapper = lambda value, data_type: value
     connection.connection.cls_statement.return_value = mock_statement
     return connection
+
+
+class TestSessionDatetimeFormatValidation:
+    @staticmethod
+    @pytest.mark.parametrize(
+        "fetch_mapper, expect_validation",
+        [
+            pytest.param(convert_websocket_to_python, True, id="default"),
+            pytest.param(lambda value, data_type: value, False, id="custom"),
+        ],
+    )
+    def test_execute_validates_only_for_default_fetch_mapper(
+        mock_connection, fetch_mapper, expect_validation
+    ):
+        mock_connection.fetch_mapper = fetch_mapper
+
+        Cursor(mock_connection).execute("SELECT 1")
+
+        validate = mock_connection.validate_session_datetime_formats
+        assert validate.called is expect_validation
+
+    @staticmethod
+    @pytest.mark.parametrize(
+        "insert_mapper, expect_validation",
+        [
+            pytest.param(convert_python_to_websocket, True, id="default"),
+            pytest.param(lambda value, data_type: value, False, id="custom"),
+        ],
+    )
+    def test_executemany_validates_only_for_default_insert_mapper(
+        mock_connection, insert_mapper, expect_validation
+    ):
+        mock_connection.insert_mapper = insert_mapper
+        # A custom fetch_mapper must not affect the validation done for inserts.
+        mock_connection.fetch_mapper = lambda value, data_type: value
+
+        Cursor(mock_connection).executemany("INSERT INTO t VALUES (?, ?)", [("a", 1)])
+
+        validate = mock_connection.validate_session_datetime_formats
+        assert validate.called is expect_validation
 
 
 class TestExecutemany:

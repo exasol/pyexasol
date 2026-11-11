@@ -174,6 +174,7 @@ class Connection:
             "access_token": None,
             "refresh_token": None,
         }
+        self.fetch_mapper = fetch_mapper
         self.insert_mapper = insert_mapper
         self._connection = None
 
@@ -198,14 +199,10 @@ class Connection:
         application can change or restore session settings while bypassing the validation.
         The following operation will validate the new date/time formats.
 
-        Custom fetch mappers are responsible for handling the session date/time
-        formats they support, so validation is only performed for the default
-        mapper.
+        Callers that use a custom mapper, which is responsible for handling the
+        session date/time formats it supports, should skip this validation.
         """
-        if (
-            _is_alter_session(operation)
-            or self._options["fetch_mapper"] is not convert_websocket_to_python
-        ):
+        if _is_alter_session(operation):
             return
 
         session_datetime_format_query = """

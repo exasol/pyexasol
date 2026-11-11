@@ -6,6 +6,7 @@
 ## Bugfixes
 
 * #371: Fixed import_from_file returning misleading error message if wrong object type was passed
+* #464: Fixed the DB API session date/time format validation depending on `fetch_mapper` when inserting. `execute` now validates only for the default `fetch_mapper`, and `executemany` only for the default `insert_mapper`
 
 ## Features
 
