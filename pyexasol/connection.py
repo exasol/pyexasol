@@ -933,8 +933,9 @@ class ExaConnection:
         callback_params: dict | None = None,
         import_params: dict | None = None,
     ):
+        parquet_files = cb.get_parquet_files(source)
+
         # TODO implement
-        pass
 
     def export_to_callback(
         self,

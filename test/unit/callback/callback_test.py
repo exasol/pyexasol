@@ -152,6 +152,15 @@ class TestGetParquetFiles:
         assert result == [tmp_file]
 
     @staticmethod
+    @pytest.mark.parametrize("source", ["not_a_valid_path", Path("empty_dir"), []])
+    def test_matches_no_files(tmp_path, monkeypatch, source):
+        (tmp_path / "empty_dir").mkdir()
+        monkeypatch.chdir(tmp_path)
+
+        with pytest.raises(ValueError, match="does not match any files"):
+            get_parquet_files(source)
+
+    @staticmethod
     def test_list_path_not_valid_files():
         invalid_path = Path("not_a_valid_path_file")
         with pytest.raises(ValueError, match="contained entries which were not `Path`"):
