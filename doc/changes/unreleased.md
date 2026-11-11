@@ -40,12 +40,17 @@ In this major release, the following changes were made:
     * The default `insert_mapper` also requires the session's ``NLS_DATE_FORMAT``
       and ``NLS_TIMESTAMP_FORMAT`` to be the ISO-compatible formats, and validates
       them in ``executemany``.
-    * Customers can provide their own `insert_mapper` to `Connection` to change any
-      of this behavior. With a custom `insert_mapper`, `executemany` no longer
-      validates the session's date and timestamp formats. `execute` still validates
-      them unless a custom `fetch_mapper` is also provided, so both mappers must be
-      custom for the formats to be changeable. It is then the customer's
-      responsibility to ensure that the custom mappers support the session's formats.
+    * Customers can provide their own `insert_mapper` to `Connection` to change how
+      input values are converted, including which Python input types are accepted.
+      The mapper's output must still be a type accepted by
+      `validate_value_for_websocket` for the column (e.g. `float` for `DOUBLE`,
+      `str` for `VARCHAR`), otherwise a `DataError` is raised. This validation gives
+      more specific type errors than the database would.
+    * With a custom `insert_mapper`, `executemany` no longer validates the session's
+      date and timestamp formats. `execute` still validates them unless a custom
+      `fetch_mapper` is also provided, so both mappers must be custom for the
+      formats to be changeable. It is then the customer's responsibility to ensure
+      that the custom mappers support the session's formats.
   * **Breaking change:** Values bound to a `VARCHAR` column must now be `str`
     (or `None`). Previously, `executemany` silently converted any value, such as
     `int`, `Decimal`, etc., to `str`. Such values now raise a `DataError`. This is
