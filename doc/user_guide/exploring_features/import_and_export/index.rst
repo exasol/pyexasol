@@ -60,7 +60,8 @@ Export
 """"""
 See :meth:`pyexasol.ExaConnection.export_to_file`. This method supports exporting data
 from an Exasol database into a file, path object, file-like object opened in binary
-mode, or to a process ``STDOUT`` using ``sys.stdout.buffer``.
+mode, or to a process ``STDOUT`` using ``sys.stdout.buffer``. It supports the
+common :ref:`Import/Export parameters <parameters>`.
 
 .. code-block:: python
 
