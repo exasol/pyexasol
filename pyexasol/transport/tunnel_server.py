@@ -49,15 +49,21 @@ class ExaTunnelServer(socketserver.TCPServer):
             self.exa_address_public_key = public_key_sha
 
     def server_activate(self):
+        # No listen(): the socket is an outgoing connection to Exasol (see server_bind),
+        # so there is nothing to listen on.
         pass
 
     def get_request(self):
         return self.socket, self.server_address
 
     def shutdown_request(self, request):
+        # Intentionally a no-op: the request is the tunnel socket itself, which is
+        # reused for the whole transfer and is closed by the server, not per request.
         pass
 
     def close_request(self, request):
+        # Intentionally a no-op: closing here would tear down the tunnel socket
+        # (see shutdown_request).
         pass
 
     def set_sock_opts(self):
