@@ -41,6 +41,7 @@ from . import (
 )
 from ._metadata import __version__
 from ._sql_splitter import split_sql_script
+from .database_versions import MIN_VERSION_FOR_NATIVE_PARQUET_IMPORT
 from .exceptions import (
     ExaAuthError,
     ExaCommunicationError,
@@ -59,6 +60,7 @@ from .ext import ExaExtension
 from .formatter import ExaFormatter
 from .http_transport import (
     ExaHttpThread,
+    ExaParquetHttpThread,
     ExaSQLExportThread,
     ExaSQLImportThread,
     ExaSQLThread,
@@ -69,6 +71,7 @@ from .query_builders.csv.builders import (
     ExportBuilder,
     ImportBuilder,
 )
+from .query_builders.parquet.builders import ImportBuilder as ParquetImportBuilder
 from .script_output import ExaScriptOutputProcess
 from .statement import ExaStatement
 from .warnings import PyexasolWarning
@@ -911,9 +914,116 @@ class ExaConnection:
             import_params:
                 Custom parameters for IMPORT query.
         """
+        parquet_files = self._select_native_parquet_files(
+            source, callback_params, import_params
+        )
+        if parquet_files:
+            return self._import_from_native_parquet(
+                parquet_files, table, import_params=import_params
+            )
+
         return self.import_from_callback(
             cb.import_from_parquet, source, table, callback_params, import_params
         )
+
+    def _select_native_parquet_files(
+        self,
+        source: list[Path] | Path | str,
+        callback_params: dict | None,
+        import_params: dict | None,
+    ) -> list[Path]:
+        """
+        Return the files to import natively, or ``[]`` to use the callback import.
+
+        The native import understands only the parameters of the native
+        ``ImportBuilder``.
+        """
+        if not MIN_VERSION_FOR_NATIVE_PARQUET_IMPORT.is_supported_by(
+            self.exasol_db_version
+        ):
+            return []
+
+        reason = None
+        parquet_files = cb.get_parquet_files(source)
+        native_params = set(ParquetImportBuilder.model_fields) | {
+            field.alias
+            for field in ParquetImportBuilder.model_fields.values()
+            if field.alias
+        }
+        if not parquet_files:
+            reason = "no files matched"
+        elif callback_params:
+            reason = "callback_params are only supported by the callback import"
+        elif unsupported := set(import_params or {}) - native_params:
+            reason = f"unsupported import_params {sorted(unsupported)}"
+
+        if reason:
+            self.logger.debug(f"Using callback import for Parquet: {reason}")
+            return []
+        return parquet_files
+
+    def _import_from_native_parquet(
+        self,
+        parquet_files: list[Path],
+        table: str | tuple[str, ...],
+        import_params: dict | None = None,
+    ):
+        """
+        Import the files one after another, each with its own ``IMPORT`` statement.
+
+        The files are not imported atomically: if one fails, the files before it
+        stay imported (subject to the connection's ``autocommit``) and the
+        remaining files are not attempted.
+        """
+        import_builder = ParquetImportBuilder(
+            table=table, **(import_params if import_params is not None else {})
+        )
+        for index, parquet_file in enumerate(parquet_files):
+            try:
+                self._import_native_parquet_file(parquet_file, import_builder)
+            except ExaImportError:
+                self.logger.debug(
+                    f"Native Parquet import failed for {parquet_file} "
+                    f"(file {index + 1} of {len(parquet_files)}); "
+                    f"{index} file(s) were imported before it"
+                )
+                raise
+
+    def _import_native_parquet_file(
+        self, parquet_file: Path, import_builder: ParquetImportBuilder
+    ):
+        http_thread = ExaParquetHttpThread(
+            ipaddr=self.ws_ipaddr,
+            port=self.ws_port,
+            parquet_file=parquet_file,
+            encryption=self.options["encryption"],
+        )
+        sql_thread = ExaSQLThread(
+            connection=self,
+            compression=False,
+            query_builder=import_builder,
+        )
+
+        try:
+            http_thread.start()
+            sql_thread.set_http_thread(http_thread)
+            sql_thread.start()
+            sql_thread.join_with_exc()
+            http_thread.terminate()
+            http_thread.join_with_exc()
+        except (Exception, KeyboardInterrupt) as error:
+            http_thread.terminate()
+            http_thread.join()
+            sql_thread.join(1)
+
+            if sql_thread.is_alive():
+                self.abort_query()
+                sql_thread.join()
+
+            raise ExaImportError(
+                connection=self,
+                exceptions=(error, http_thread.exc, sql_thread.exc),
+            ) from error
 
     def export_to_callback(
         self,

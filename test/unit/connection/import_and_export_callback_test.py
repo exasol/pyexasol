@@ -4,9 +4,11 @@ from unittest.mock import (
 )
 
 import pytest
+from packaging.version import Version
 from pydantic import ValidationError
 
 from pyexasol.connection import ExaConnection
+from pyexasol.database_versions import MIN_VERSION_FOR_NATIVE_PARQUET_IMPORT
 
 
 @pytest.fixture
@@ -176,3 +178,105 @@ class TestImportFromCallback:
 
         _, sql_kwargs = mock_sql_import_thread.call_args
         assert sql_kwargs["query_builder"].table == table
+
+
+class TestImportFromParquetPathSelection:
+    NATIVE_VERSION = MIN_VERSION_FOR_NATIVE_PARQUET_IMPORT.version
+
+    @staticmethod
+    @pytest.fixture
+    def parquet_file(tmp_path):
+        parquet_file = tmp_path / "data.parquet"
+        parquet_file.write_bytes(b"PAR1")
+        return parquet_file
+
+    @staticmethod
+    @pytest.fixture
+    def conn(exa_conn):
+        exa_conn.exasol_db_version = TestImportFromParquetPathSelection.NATIVE_VERSION
+        exa_conn.logger = MagicMock()
+        exa_conn._select_native_parquet_files = (
+            ExaConnection._select_native_parquet_files.__get__(exa_conn)
+        )
+        exa_conn.import_from_callback = MagicMock(return_value="legacy_result")
+        exa_conn._import_from_native_parquet = MagicMock(return_value="native_result")
+        return exa_conn
+
+    @staticmethod
+    def _import(conn, source, callback_params=None, import_params=None):
+        return ExaConnection.import_from_parquet(
+            conn,
+            source=source,
+            table="TARGET_TABLE",
+            callback_params=callback_params,
+            import_params=import_params,
+        )
+
+    @staticmethod
+    def test_uses_native_import_for_one_file(conn, parquet_file):
+        result = TestImportFromParquetPathSelection._import(conn, parquet_file)
+
+        assert result == "native_result"
+        conn.import_from_callback.assert_not_called()
+        conn._import_from_native_parquet.assert_called_once_with(
+            [parquet_file], "TARGET_TABLE", import_params=None
+        )
+
+    @staticmethod
+    def test_uses_native_import_for_several_files(conn, tmp_path):
+        files = [tmp_path / f"{index}.parquet" for index in range(2)]
+        for file in files:
+            file.write_bytes(b"PAR1")
+
+        TestImportFromParquetPathSelection._import(conn, tmp_path)
+
+        conn._import_from_native_parquet.assert_called_once_with(
+            files, "TARGET_TABLE", import_params=None
+        )
+
+    @staticmethod
+    def test_uses_native_import_for_native_import_params(conn, parquet_file):
+        import_params = {"MaxRows": 10}
+
+        TestImportFromParquetPathSelection._import(
+            conn, parquet_file, import_params=import_params
+        )
+
+        conn._import_from_native_parquet.assert_called_once_with(
+            [parquet_file], "TARGET_TABLE", import_params=import_params
+        )
+
+    @staticmethod
+    def test_uses_callback_import_before_native_version(conn, parquet_file):
+        conn.exasol_db_version = Version("2025.2.0")
+
+        result = TestImportFromParquetPathSelection._import(conn, parquet_file)
+
+        assert result == "legacy_result"
+        conn._import_from_native_parquet.assert_not_called()
+
+    @staticmethod
+    @pytest.mark.parametrize(
+        "callback_params, import_params",
+        [
+            pytest.param({"columns": ["FIRST"]}, None, id="callback_params"),
+            pytest.param(None, {"columns": ["FIRST"]}, id="legacy_import_params"),
+        ],
+    )
+    def test_uses_callback_import_for_unsupported_params(
+        conn, parquet_file, callback_params, import_params
+    ):
+        result = TestImportFromParquetPathSelection._import(
+            conn, parquet_file, callback_params, import_params
+        )
+
+        assert result == "legacy_result"
+        conn._import_from_native_parquet.assert_not_called()
+        conn.logger.debug.assert_called_once()
+
+    @staticmethod
+    def test_uses_callback_import_when_no_file_matches(conn, tmp_path):
+        result = TestImportFromParquetPathSelection._import(conn, tmp_path)
+
+        assert result == "legacy_result"
+        conn._import_from_native_parquet.assert_not_called()
