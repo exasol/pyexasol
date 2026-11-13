@@ -15,6 +15,7 @@ from typing import TYPE_CHECKING
 
 from .query_builders.base_builder import QueryBuilder
 from .query_builders.csv.builders import (
+    BooleanRepresentation,
     Delimit,
     ExportBuilder,
     FileFormat,
@@ -94,6 +95,7 @@ class ExportQuery(SqlQuery):
     # set these values in param dictionary to ExaConnection
     delimit: Delimit | None = None
     with_column_names: bool = False
+    boolean: BooleanRepresentation | None = None
 
     def build_query(
         self,
@@ -137,6 +139,7 @@ class ExportQuery(SqlQuery):
             null=self.null,
             row_separator=self.row_separator,
             with_column_names=self.with_column_names,
+            boolean=self.boolean,
         )
 
 
@@ -467,7 +470,7 @@ class ExaTCPServer(socketserver.TCPServer):
 
     timeout: int | None = 1
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs) -> None:
         self.compression: bool = kwargs.pop("compression", False)
         self.encryption: bool = kwargs.pop("encryption", True)
 
