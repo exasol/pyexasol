@@ -14,6 +14,7 @@ from pyexasol.http_transport import (
     ExaSQLThread,
     ExaTCPServer,
 )
+from pyexasol.query_builders.csv.builders import BooleanRepresentation
 
 
 @pytest.fixture
@@ -61,13 +62,14 @@ class TestExportParams:
 
     @staticmethod
     def test_boolean(connection, fill_table, output_filepath, all_data):
-        params = {"boolean": "1/0"}
+        bool_rep = BooleanRepresentation.YES_NO_LOWER_CASE
+        params = {"boolean": bool_rep}
 
         connection.export_to_file(
             dst=output_filepath, query_or_table=fill_table, export_params=params
         )
 
-        assert output_filepath.read_text() == all_data.csv_str()
+        assert output_filepath.read_text() == all_data.csv_str(boolean=bool_rep)
 
     @staticmethod
     def test_without_column_names(connection, fill_table, output_filepath, all_data):
