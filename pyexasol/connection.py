@@ -526,7 +526,7 @@ class ExaConnection:
             query_params:
                 Values for SQL query placeholders.
             export_params:
-                `Custom parameters <https://exasol.github.io/pyexasol/master/user_guide/exploring_features/import_and_export/parameters.html>`__ for EXPORT query
+                Custom :ref:`parameters` for EXPORT query
 
         Examples:
             >>> con = ExaConnection(...)
