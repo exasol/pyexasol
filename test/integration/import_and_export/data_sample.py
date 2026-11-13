@@ -28,7 +28,7 @@ class DataSample:
         return value
 
     @staticmethod
-    def _convert_to_csv_format(value, boolean: BoolRep):
+    def _convert_to_csv_format(value, boolean: BoolRep | None):
         if value is None:
             return value
         # a bool needs to be converted to an integer

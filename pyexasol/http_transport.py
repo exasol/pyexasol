@@ -25,6 +25,8 @@ from .query_builders.csv.builders import (
 if TYPE_CHECKING:
     from pyexasol import ExaConnection
 
+from pyexasol.query_builders.csv.builders import BooleanRepresentation
+
 
 @dataclass
 class SqlQuery:
@@ -94,7 +96,7 @@ class ExportQuery(SqlQuery):
     # set these values in param dictionary to ExaConnection
     delimit: Delimit | None = None
     with_column_names: bool = False
-    boolean: BooleanRepresentation = None
+    boolean: BooleanRepresentation | None = None
 
     def build_query(
         self,
@@ -469,7 +471,7 @@ class ExaTCPServer(socketserver.TCPServer):
 
     timeout: int | None = 1
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs) -> None:
         self.compression: bool = kwargs.pop("compression", False)
         self.encryption: bool = kwargs.pop("encryption", True)
 

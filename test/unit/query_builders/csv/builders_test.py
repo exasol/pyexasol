@@ -150,7 +150,7 @@ class TestExportBuilderBoolean:
     @staticmethod
     @pytest.mark.parametrize(
         "boolean",
-        [value for value in BooleanRepresentation] + [None],
+        [*BooleanRepresentation] + [None],
     )
     def test_accepts_boolean(boolean):
         builder = ExportBuilder(
@@ -166,9 +166,7 @@ class TestExportBuilderBoolean:
             "'T/F', 't/f', 'y/n', 'Y/N', 'yes/no', 'Yes/No' or 'YES/NO'"
         )
         with pytest.raises(ValidationError, match=expected):
-            ExportBuilder(
-                compression=False, query_or_table="TABLE", boolean=value
-            )
+            ExportBuilder(compression=False, query_or_table="TABLE", boolean=value)
 
 
 class TestExportBuilderWithColumnNames:

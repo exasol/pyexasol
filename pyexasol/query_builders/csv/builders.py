@@ -53,17 +53,17 @@ class Trim(StringEnum):
 
 
 class BooleanRepresentation(enum.StrEnum):
-    NUMERIC = '1/0'
-    TRUE_FALSE_UPPER_CASE = 'TRUE/FALSE'
-    TRUE_FALSE_LOWER_CASE = 'true/false'
-    TRUE_FALSE_CAPITALIZED = 'True/False'
-    T_F_UPPER_CASE = 'T/F'
-    T_F_LOWER_CASE = 't/f'
-    Y_N_LOWER_CASE = 'y/n'
-    Y_N_UPPER_CASE = 'Y/N'
-    YES_NO_LOWER_CASE = 'yes/no'
-    YES_NO_CAPITALIZED = 'Yes/No'
-    YES_NO_UPPER_CASE = 'YES/NO'
+    NUMERIC = "1/0"
+    TRUE_FALSE_UPPER_CASE = "TRUE/FALSE"
+    TRUE_FALSE_LOWER_CASE = "true/false"
+    TRUE_FALSE_CAPITALIZED = "True/False"
+    T_F_UPPER_CASE = "T/F"
+    T_F_LOWER_CASE = "t/f"
+    Y_N_LOWER_CASE = "y/n"
+    Y_N_UPPER_CASE = "Y/N"
+    YES_NO_LOWER_CASE = "yes/no"
+    YES_NO_CAPITALIZED = "Yes/No"
+    YES_NO_UPPER_CASE = "YES/NO"
 
 
 # Match a single column number (for example, ``1``) or a numeric range
