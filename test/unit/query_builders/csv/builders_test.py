@@ -3,6 +3,7 @@ from packaging.version import Version
 from pydantic import ValidationError
 
 from pyexasol.query_builders.csv.builders import (
+    BooleanRepresentation,
     Delimit,
     ExportBuilder,
     FileFormat,
@@ -143,6 +144,31 @@ class TestExportBuilderDelimit:
             match=r"Input should be 'AUTO', 'ALWAYS' or 'NEVER'",
         ):
             ExportBuilder(compression=False, query_or_table="TABLE", delimit=delimit)
+
+
+class TestExportBuilderBoolean:
+    @staticmethod
+    @pytest.mark.parametrize(
+        "boolean",
+        [value for value in BooleanRepresentation] + [None],
+    )
+    def test_accepts_boolean(boolean):
+        builder = ExportBuilder(
+            compression=False, query_or_table="TABLE", boolean=boolean
+        )
+        assert builder.boolean == boolean
+
+    @staticmethod
+    @pytest.mark.parametrize("value", ["A/B", "trUE/false"])
+    def test_rejects_non_boolean(value):
+        expected = (
+            "Input should be '1/0', 'TRUE/FALSE', 'true/false', 'True/False', "
+            "'T/F', 't/f', 'y/n', 'Y/N', 'yes/no', 'Yes/No' or 'YES/NO'"
+        )
+        with pytest.raises(ValidationError, match=expected):
+            ExportBuilder(
+                compression=False, query_or_table="TABLE", boolean=value
+            )
 
 
 class TestExportBuilderWithColumnNames:

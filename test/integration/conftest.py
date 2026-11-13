@@ -17,7 +17,7 @@ DATA_DIRECTORY = _ROOT / ".." / "data"
 
 @pytest.fixture(scope="session")
 def container_name():
-    return "db_container_test"
+    return os.environ.get("EXASOL_DOCKER_CONTAINER", "db_container_test")
 
 
 @pytest.fixture(scope="session")
@@ -89,8 +89,8 @@ def pytest_generate_tests(metafunc):
 def dsn(certificate_type, default_ipaddr, default_port):
     if certificate_type == ssl.CERT_NONE:
         return os.environ.get("EXAHOST", f"{default_ipaddr}:{default_port}")
-    # The host name is different for this case. As it is required to be the same
-    # host name that the certificate is signed. This comes from the ITDE.
+    # Using certificate incl. verification, requires the host name to match
+    # the certificate. This is only given for host `exasol-test-database`.
     return os.environ.get("EXAHOST", f"exasol-test-database:{default_port}")
 
 
@@ -131,9 +131,15 @@ def flush_statistics(connection):
 
 
 @pytest.fixture(scope="session", autouse=True)
-def prepare_database(dsn_resolved, user, password, container_name):
+def prepare_database(default_port, user, password, container_name):
+    """
+    DockerDataLoader uses exaplus to import the initial data from a
+    file from within the Docker container.
+
+    Hence, dsn is like below rather than dsn_resolved as seen from outside.
+    """
     loader = DockerDataLoader(
-        dsn=dsn_resolved,
+        dsn=f"127.0.0.1:{default_port}",
         username=user,
         password=password,
         container_name=container_name,

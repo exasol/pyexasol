@@ -60,6 +60,16 @@ class TestExportParams:
         assert output_filepath.read_text() == all_data.csv_str()
 
     @staticmethod
+    def test_boolean(connection, fill_table, output_filepath, all_data):
+        params = {"boolean": "1/0"}
+
+        connection.export_to_file(
+            dst=output_filepath, query_or_table=fill_table, export_params=params
+        )
+
+        assert output_filepath.read_text() == all_data.csv_str()
+
+    @staticmethod
     def test_without_column_names(connection, fill_table, output_filepath, all_data):
         connection.export_to_file(dst=output_filepath, query_or_table=fill_table)
 

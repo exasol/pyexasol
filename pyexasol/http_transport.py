@@ -94,6 +94,7 @@ class ExportQuery(SqlQuery):
     # set these values in param dictionary to ExaConnection
     delimit: Delimit | None = None
     with_column_names: bool = False
+    boolean: BooleanRepresentation = None
 
     def build_query(
         self,
@@ -137,6 +138,7 @@ class ExportQuery(SqlQuery):
             null=self.null,
             row_separator=self.row_separator,
             with_column_names=self.with_column_names,
+            boolean=self.boolean,
         )
 
 
