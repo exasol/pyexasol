@@ -84,12 +84,11 @@ class ClauseFormatter:
             return None
         return f"DELIMIT = {delimit}"
 
-    @staticmethod
-    def boolean(boolean: str | None) -> str | None:
+    def boolean(self, boolean: str | None) -> str | None:
         """Format the EXPORT-only ``BOOLEAN`` clause."""
         if boolean is None:
             return None
-        return f"BOOLEAN = '{boolean}'"
+        return f"BOOLEAN = {self.formatter.quote(boolean)}"
 
     def encoding(self, encoding: str | None) -> str | None:
         if encoding is None:

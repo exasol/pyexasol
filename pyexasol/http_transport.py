@@ -15,6 +15,7 @@ from typing import TYPE_CHECKING
 
 from .query_builders.base_builder import QueryBuilder
 from .query_builders.csv.builders import (
+    BooleanRepresentation,
     Delimit,
     ExportBuilder,
     FileFormat,
@@ -25,7 +26,6 @@ from .query_builders.csv.builders import (
 if TYPE_CHECKING:
     from pyexasol import ExaConnection
 
-from pyexasol.query_builders.csv.builders import BooleanRepresentation
 
 
 @dataclass

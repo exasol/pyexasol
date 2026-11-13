@@ -33,7 +33,7 @@ class DataSample:
             return value
         # a bool needs to be converted to an integer
         if isinstance(value, bool):
-            if boolean == None:
+            if boolean is None:
                 return int(value)
             value_range = str(boolean).split("/")
             return value_range[0 if value else 1]

@@ -156,6 +156,14 @@ class TestClauseFormatter:
 
     @staticmethod
     @pytest.mark.parametrize(
+        "boolean,expected",
+        [("True/False", "BOOLEAN = 'True/False'"), (None, None)],
+    )
+    def test_boolean(clause_formatter, boolean, expected):
+        assert clause_formatter.boolean(boolean) == expected
+
+    @staticmethod
+    @pytest.mark.parametrize(
         "with_column_names,expected",
         [(True, "WITH COLUMN NAMES"), (False, None)],
     )
