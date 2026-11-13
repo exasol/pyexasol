@@ -27,7 +27,6 @@ if TYPE_CHECKING:
     from pyexasol import ExaConnection
 
 
-
 @dataclass
 class SqlQuery:
     connection: ExaConnection
