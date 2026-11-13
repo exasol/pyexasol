@@ -65,10 +65,6 @@ class BooleanRepresentation(enum.StrEnum):
     YES_NO_CAPITALIZED = 'Yes/No'
     YES_NO_UPPER_CASE = 'YES/NO'
 
-    @property
-    def default(self) -> BooleanRepresentation:
-        return self.NUMERIC
-
 
 # Match a single column number (for example, ``1``) or a numeric range
 # (``1..3``), optionally followed by a case-insensitive FORMAT clause, such as
