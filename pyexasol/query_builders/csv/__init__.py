@@ -6,6 +6,7 @@ See the Exasol documentation for the
 """
 
 from .builders import (
+    BooleanRepresentation,
     Delimit,
     ExportBuilder,
     FileFormat,
@@ -14,6 +15,7 @@ from .builders import (
 )
 
 __all__ = [
+    "BooleanRepresentation",
     "Delimit",
     "ExportBuilder",
     "FileFormat",
