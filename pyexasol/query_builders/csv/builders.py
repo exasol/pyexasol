@@ -52,6 +52,9 @@ class Trim(StringEnum):
     RTRIM = "RTRIM"
 
 
+# Please note: BooleanRepresentation needs to use enum.StrEnum rather than
+# StringEnum to preserve the case, distinguishing "true/false" from
+# "TRUE/FALSE".
 class BooleanRepresentation(enum.StrEnum):
     NUMERIC = "1/0"
     TRUE_FALSE_UPPER_CASE = "TRUE/FALSE"
