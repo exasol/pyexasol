@@ -1,3 +1,4 @@
+.. include:: <isopub.txt>
 .. _developer_guide:
 
 :octicon:`tools` Developer Guide
@@ -5,8 +6,11 @@
 
 .. toctree::
     :maxdepth: 2
+    :hidden:
 
     developer_guide/import_export_threading
+    developer_guide/integration_tests
+    developer_guide/performance_tests
 
 This guide explains how to develop PyExasol and run tests.
 
@@ -39,128 +43,23 @@ In our CI, PyExasol is checked for various formatting & type checks with nox tas
 To run these more easily locally, we've added a `.pre-commit-config.yaml`,
 which you can activate with `pre-commit <https://pre-commit.com/>`_
 
-    .. code-block:: shell
+.. code-block:: shell
 
-        poetry run -- pre-commit install --hook-type pre-commit --hook-type pre-push
-
-Running tests
-++++++++++++++
-
-.. note::
-    If you manually run some integration or performance tests or want to try something out,
-    you can start and stop a test database manually using ``nox -s db:start`` and
-    ``nox -s db:stop``.
+   poetry run -- pre-commit install --hook-type pre-commit --hook-type pre-push
 
 Unit Tests
-----------
+++++++++++
 
 .. code-block:: shell
 
     nox -s test:unit
 
-If you want to forward additional arguments to pytest, you need to pass ``--`` to indicate the end of the argument vector for the nox command. For example:
+If you want to forward additional arguments to pytest, you need to pass ``--``
+to indicate the end of the argument vector for the nox command. For example:
 
 .. code-block:: shell
 
    nox -s test::unit -- -k meta
-
-Integration Tests
------------------
-
-.. attention::
-
-   As a Docker container with a test database needs to be started for the integration tests, it may take a bit before the tests themselves start executing. After the tests have been run, the database will be shut down again.
-
-   If you are running Docker inside of a VM and are running the integration tests with `ssl.CERT_REQUIRED`, inside your VM map the `exasol-test-database` to the associated IP address.
-   This mapping is required due to how the certificate was created & for hostname resolution.
-
-    .. code-block:: shell
-
-        echo "127.0.0.1 exasol-test-database" | sudo tee -a /etc/hosts
-
-.. important::
-
-    By default, local integration test runs only execute the `ssl.CERT_NONE` variant, so they do
-    not require a certificate setup.
-
-    To enable the certificate-verification variant locally, pass:
-
-    .. code-block:: shell
-
-        poetry run -- nox -s test:integration -- --with-cert
-
-    Continuous integration enables this automatically, so both certificate modes are covered there.
-
-
-.. code-block:: shell
-
-    nox -s test:integration
-
-Passing additional arguments to pytest works the same as for the unit tests.
-
-The large parquet tests can be excluded from an integration test run using
-the ``parquet_slow`` marker:
-
-.. code-block:: shell
-
-    nox -s test:integration -- -m "not parquet_slow"
-
-Performance Tests
------------------
-
-.. attention::
-
-   For the performance tests, a Docker container with a test database needs to be started.
-   This can be done with ``poetry run -- nox -s db:start``.
-
-   As these tests are meant to measure the performance of functions, the tests
-   are expected to take a bit to set up and execute. If you are running the tests
-   for the first time, it is recommend that you modify the throughput data values
-   to a smaller value; this can be done by modifying :attr:`BenchmarkSpecifications.target_data_size`.
-
-To execute the performance tests, you need to additionally execute:
-
-.. code-block:: shell
-
-    poetry install --with performance
-
-This installs `pytest-benchmark <https://pypi.org/project/pytest-benchmark/>__`,
-which provides a pytest fixture ``benchmark`` to re-run tests a specified number of times,
-to capture how long each execution took to run, and to calculate various statistical
-values for comparative purposes.
-
-.. note::
-    ``pytest-benchmark`` is not included in the ``dev`` dependencies due to an odd
-    correlation observed when executing the integration tests. This was observed
-    with ``pytest-benchmark`` version 5.1.0 and its dependency ``py-cpuinfo`` 9.0.0.
-    Namely, when executing the integration tests with Python 3.11, we saw that the
-    tests in ``transaction_test.py`` consistently failed. This was not observed
-    for other Python versions and could not be correlated with other changes at the
-    time of investigation.
-
-Updating the Benchmark JSON File
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-To ensure that PyExasol's functional performance does not degrade over time, the
-performance tests are executed in the CI, which provides semi-homogeneous runners, and
-their results are compared in the workflow ``performance-checks.yml`` per pull request.
-If the comparison fails, a developer should scrutinize the changes to determine the
-cause and, if deemed relevant, update the
-``test/performance/.benchmarks/0001_performance.json`` with results
-saved from the CI run (i.e. from the relevant artifact):
-
-* Is it a new test?
-
-  * Then, add it to the JSON file.
-
-* Was a test removed?
-
-  * If we meant to remove it, remove it from the JSON file.
-
-* What change made that impacted the tests?
-
-  * If it's a change we intended and cannot improve upon, then alter the corresponding
-    benchmark results in the JSON file.
 
 Preparing & Triggering a Release
 ++++++++++++++++++++++++++++++++
