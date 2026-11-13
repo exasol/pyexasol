@@ -51,7 +51,7 @@ method. When the code is executed, these are validated using the :class:`pyexaso
      - List of CSV columns with optional `numeric`_ or `date`_ formats
    * - ``delimit``
      - ``Delimit.AUTO``
-     - Delimiter mode, see :ref:`available_values` below.
+     - Mode for delimiting single values, see :ref:`available_values` below.
    * - ``encoding``
      - ``"UTF8"``
      - File encoding
@@ -60,7 +60,7 @@ method. When the code is executed, these are validated using the :class:`pyexaso
      - Format to use when exporting the file or stream, see
        :ref:`available_values` below.
    * - ``null``
-     - ``\x00``
+     - ``"\x00"``
      - Custom `NULL` value
    * - ``row_separator``
      - ``"LF"``
@@ -133,7 +133,7 @@ Available values
 Some parameters support an enumeration of specific values.
 
 .. literalinclude:: ../../../../pyexasol/query_builders/csv/builders.py
-   :caption: Available values for representing booleans
+   :caption: Available values for representing boolean values
    :language: python
    :pyobject: BooleanRepresentation
 
@@ -146,6 +146,11 @@ Some parameters support an enumeration of specific values.
    :caption: Available values for file formats
    :language: python
    :pyobject: FileFormat
+
+.. literalinclude:: ../../../../pyexasol/query_builders/csv/builders.py
+   :caption: Available values for trimming values
+   :language: python
+   :pyobject: Trim
 
 .. _comment:
 
@@ -165,7 +170,9 @@ This can be used for profiling and auditing. Example:
             "comment": (
                 "This comment will be inserted before the query. "
                 "This query is importing users from CSV."
-            ) } )
+            )
+	}
+    )
 
 The comment is inserted as a block comment (``/* <comment> */``). The block
 comment closing sequence (``*/``) must not be used inside the comment.
