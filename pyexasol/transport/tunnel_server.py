@@ -77,23 +77,32 @@ class ExaTunnelServer(socketserver.TCPServer):
         # only large packets are expected for HTTP transport
         self.socket.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
 
-        # default keep-alive once a minute, 5 probes
-        keepidle = 60
-        keepintvl = 60
-        keepcnt = 5
+        # TCP keep-alive settings:
+        # keepidle_seconds:  idle time before the first probe is sent
+        # keepintvl_seconds: time between consecutive probes
+        # keepcnt_probes:    number of unanswered probes after which the
+        #                    connection is considered dead and dropped
+        keepidle_seconds = 60
+        keepintvl_seconds = 60
+        keepcnt_probes = 5
 
         if sys.platform.startswith("linux") or sys.platform.startswith("darwin"):
             is_darwin = sys.platform.startswith("darwin")
             # https://bugs.python.org/issue34932
             keep_alive = 0x10 if is_darwin else socket.TCP_KEEPIDLE
             self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
-            self.socket.setsockopt(socket.IPPROTO_TCP, keep_alive, keepidle)
-            self.socket.setsockopt(socket.IPPROTO_TCP, socket.TCP_KEEPINTVL, keepintvl)
-            self.socket.setsockopt(socket.IPPROTO_TCP, socket.TCP_KEEPCNT, keepcnt)
+            self.socket.setsockopt(socket.IPPROTO_TCP, keep_alive, keepidle_seconds)
+            self.socket.setsockopt(
+                socket.IPPROTO_TCP, socket.TCP_KEEPINTVL, keepintvl_seconds
+            )
+            self.socket.setsockopt(
+                socket.IPPROTO_TCP, socket.TCP_KEEPCNT, keepcnt_probes
+            )
 
         elif sys.platform.startswith("win"):
             self.socket.ioctl(
-                socket.SIO_KEEPALIVE_VALS, (1, keepidle * 1000, keepintvl * 1000)
+                socket.SIO_KEEPALIVE_VALS,
+                (1, keepidle_seconds * 1000, keepintvl_seconds * 1000),
             )
 
     @staticmethod
