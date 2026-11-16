@@ -10,6 +10,7 @@ from typing import TYPE_CHECKING
 
 from .query_builders.base_builder import QueryBuilder
 from .query_builders.csv.builders import (
+    BooleanRepresentation,
     Delimit,
     ExportBuilder,
     FileFormat,
@@ -90,6 +91,7 @@ class ExportQuery(SqlQuery):
     # set these values in param dictionary to ExaConnection
     delimit: Delimit | None = None
     with_column_names: bool = False
+    boolean: BooleanRepresentation | None = None
 
     def build_query(
         self,
@@ -133,6 +135,7 @@ class ExportQuery(SqlQuery):
             null=self.null,
             row_separator=self.row_separator,
             with_column_names=self.with_column_names,
+            boolean=self.boolean,
         )
 
 
@@ -452,7 +455,7 @@ class ExaHTTPTransportWrapper:
 class ExaTCPServer(ExaTunnelServer):
     """Tunnel server for CSV transfers, which stream data through a pipe."""
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs) -> None:
         self.compression: bool = kwargs.pop("compression", False)
 
         r_fd, w_fd = os.pipe()

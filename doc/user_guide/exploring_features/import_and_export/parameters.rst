@@ -28,43 +28,48 @@ method. When the code is executed, these are validated using the :class:`pyexaso
    :header-rows: 1
 
    * - Name
-     - Example
+     - Sample value
      - Description
-   * - column_delimiter
-     - "
+   * - ``boolean``
+     - ``BooleanRepresentation.NUMERIC``
+     - Representation of boolean values, see :ref:`available_values` below.
+   * - ``column_delimiter``
+     - ``'"'``
      - Column delimiter for CSV (quoting)
-   * - column_separator
-     - ,
+   * - ``column_separator``
+     - ``","``
      - Column separator for CSV
-   * - columns
-     - ["id", "name"]
-     - List of table columns, useful to reorder table columns during export from table
-   * - comment
-     - This is a query description
+   * - ``columns``
+     - ``["id", "name"]``
+     - List of table columns, useful to reorder table columns during export
+       from table
+   * - ``comment``
+     - ``"This is a query description"``
      - Add a comment before the beginning of the query. See :ref:`comment`.
-   * - csv_cols
-     - ["1..5", "6 FORMAT='999.99'", "8"]
+   * - ``csv_cols``
+     - ``["1..5", "6 FORMAT='999.99'", "8"]``
      - List of CSV columns with optional `numeric`_ or `date`_ formats
-   * - delimit
-     - AUTO
-     - Delimiter mode: ``AUTO``, ``ALWAYS``, ``NEVER``
-   * - encoding
-     - UTF8
+   * - ``delimit``
+     - ``Delimit.AUTO``
+     - Mode for delimiting single values, see :ref:`available_values` below.
+   * - ``encoding``
+     - ``"UTF8"``
      - File encoding
-   * - format
-     - gz
-     - Export file or stream compressed with ``gz``, ``bzip2``, ``zip``
-   * - null
-     - \N
+   * - ``format``
+     - ``FileFormat.GZ``
+     - Format to use when exporting the file or stream, see
+       :ref:`available_values` below.
+   * - ``null``
+     - ``"\x00"``
      - Custom `NULL` value
-   * - row_separator
-     - LF
+   * - ``row_separator``
+     - ``"LF"``
      - Row separator for CSV (line-endings)
-   * - with_column_names
-     - True
+   * - ``with_column_names``
+     - ``True``
      - Add column names as the first line, which may be useful for external APIs (e.g. pandas).
-       The default value for this is False, except for `export_to_pandas`,
-       `export_to_parquet`, and `export_to_polars` where it is set to True.
+       The default value for this is False, except for ``export_to_pandas``,
+       ``export_to_parquet``, and ``export_to_polars`` where it is set to ``True``.
 
 .. _import_params:
 
@@ -79,46 +84,73 @@ method. When the code is executed, these are validated using the :class:`pyexaso
    :header-rows: 1
 
    * - Name
-     - Example
+     - Sample value
      - Description
-   * - column_delimiter
-     - "
+   * - ``column_delimiter``
+     - ``'"'``
      - Column delimiter for CSV (quoting)
-   * - column_separator
-     - ,
+   * - ``column_separator``
+     - ``","``
      - Column separator for CSV
-   * - columns
-     - ["id", "name"]
-     - List of table columns in the data source, useful if the column order of data source does not match the column order of Exasol table
-   * - comment
-     - This is a query description
+   * - ``columns``
+     - ``["id", "name"]``
+     - List of table columns in the data source, useful if the column order of
+       data source does not match the column order of Exasol table
+   * - ``comment``
+     - ``"This is a query description"``
      - Add a comment before the beginning of the query.  See :ref:`comment`.
-   * - csv_cols
-     - ["1..5", "6 FORMAT='999.99'", "8"]
+   * - ``csv_cols``
+     - ``["1..5", "6 FORMAT='999.99'", "8"]``
      - List of CSV columns with optional `numeric`_ or `date`_ formats
-   * - encoding
-     - UTF8
+   * - ``encoding``
+     - ``"UTF8"``
      - File encoding
-   * - format
-     - gz
-     - Import file or stream compressed with ``gz``, ``bzip2``, ``zip``
-   * - null
-     - \N
+   * - ``format``
+     - ``FileFormat.GZ``
+     - Format to assume when importing the file or stream, see
+       :ref:`available_values` below.
+   * - ``null``
+     - ``"\x00"``
      - Custom NULL value
-   * - row_separator
-     - LF
+   * - ``row_separator``
+     - ``"LF"``
      - Row separator for CSV (line-endings)
-   * - skip
-     - 1
+   * - ``skip``
+     - ``1``
      - How many first rows to skip, useful for skipping header
-   * - trim
-     - TRIM
-     - Trim mode: ``TRIM``, ``RTRIM``, ``LTRIM``
-
+   * - ``trim``
+     - ``Trim.TRIM``
+     - Trim mode, see :ref:`available_values` below.
 
 .. _numeric: https://docs.exasol.com/db/latest/sql_references/formatmodels.htm#Numericformatmodels
 .. _date: https://docs.exasol.com/db/latest/sql_references/formatmodels.htm#Datetimeformatmodels
 
+.. _available_values:
+
+Available values
+----------------
+
+Some parameters support an enumeration of specific values.
+
+.. literalinclude:: ../../../../pyexasol/query_builders/csv/builders.py
+   :caption: Available values for representing boolean values
+   :language: python
+   :pyobject: BooleanRepresentation
+
+.. literalinclude:: ../../../../pyexasol/query_builders/csv/builders.py
+   :caption: Available values for delimiters
+   :language: python
+   :pyobject: Delimit
+
+.. literalinclude:: ../../../../pyexasol/query_builders/csv/builders.py
+   :caption: Available values for file formats
+   :language: python
+   :pyobject: FileFormat
+
+.. literalinclude:: ../../../../pyexasol/query_builders/csv/builders.py
+   :caption: Available values for trimming values
+   :language: python
+   :pyobject: Trim
 
 .. _comment:
 
@@ -131,10 +163,16 @@ This can be used for profiling and auditing. Example:
 
 .. code-block:: python
 
-    C.import_from_file('/test/my_file.csv', 'users', import_params={'comment': '''
-    This comment will be inserted before the query.
-    This query is importing user from CSV.
-    '''})
+    connection.import_from_file(
+        "/test/my_file.csv",
+        "users",
+        import_params={
+            "comment": (
+                "This comment will be inserted before the query. "
+                "This query is importing users from CSV."
+            )
+	}
+    )
 
-The comment is inserted as a block comment (``/* <comment> */``). The block comment
-closing sequence (``*/``) is forbidden in the comment.
+The comment is inserted as a block comment (``/* <comment> */``). The block
+comment closing sequence (``*/``) must not be used inside the comment.

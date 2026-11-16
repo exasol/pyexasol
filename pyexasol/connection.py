@@ -526,7 +526,7 @@ class ExaConnection:
             query_params:
                 Values for SQL query placeholders.
             export_params:
-                Custom parameters for EXPORT query.
+                Custom :ref:`parameters` for EXPORT query
 
         Examples:
             >>> con = ExaConnection(...)

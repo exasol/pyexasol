@@ -15,7 +15,7 @@ def dsn(default_ipaddr, default_port):
 
 
 class BenchmarkSpecifications:
-    def __init__(self):
+    def __init__(self) -> None:
         self.initial_data_size: Final[int] = 1_000
         # This value was chosen with the specified data creation to generate
         # around 1 GB of throughput.

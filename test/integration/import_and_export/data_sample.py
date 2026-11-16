@@ -3,6 +3,9 @@ from dataclasses import dataclass
 from datetime import datetime
 from io import StringIO
 from pathlib import Path
+from typing import Any
+
+from pyexasol.query_builders.csv.builders import BooleanRepresentation as BoolRep
 
 DATETIME_STR_FORMAT = "%Y-%m-%d %H:%M:%S.%f"
 
@@ -25,12 +28,15 @@ class DataSample:
         return value
 
     @staticmethod
-    def _convert_to_csv_format(value):
+    def _convert_to_csv_format(value, boolean: BoolRep | None):
         if value is None:
             return value
         # a bool needs to be converted to an integer
         if isinstance(value, bool):
-            return int(value)
+            if boolean is None:
+                return int(value)
+            value_range = str(boolean).split("/")
+            return value_range[0 if value else 1]
         # a datetime needs to be converted to a formatted string & in additional quotes
         if isinstance(value, datetime):
             return f'"{value.strftime(DATETIME_STR_FORMAT)}"'
@@ -50,7 +56,14 @@ class DataSample:
             for row in self.list_dict
         ]
 
-    def csv_str(self, selected_columns: list[str] | None = None) -> str:
+    def csv_str(
+        self,
+        selected_columns: list[str] | None = None,
+        boolean: BoolRep | None = None,
+    ) -> str:
+        def convert(value: Any):
+            return self._convert_to_csv_format(value, boolean=boolean)
+
         if selected_columns is None:
             selected_columns = self.columns
 
@@ -59,9 +72,7 @@ class DataSample:
                 output, dialect="unix", quoting=csv.QUOTE_NONE, quotechar=None
             )
             for row in self.list_dict:
-                writer.writerow(
-                    [self._convert_to_csv_format(row[key]) for key in selected_columns]
-                )
+                writer.writerow([convert(row[key]) for key in selected_columns])
             return output.getvalue()
 
     def write_csv(
