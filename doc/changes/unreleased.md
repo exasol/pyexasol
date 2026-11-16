@@ -7,7 +7,7 @@
 * **Exasol 2026.1.0 or newer:** The Parquet files are imported natively. PyExasol serves each local file to the database through a tunnel, and the database reads and loads it directly.
 * **Older Exasol versions:** The existing callback-based import is used.
 
-The method signature and the way you call it are the same on all versions, so existing code does not need to change unless it passes `callback_params` to a database that now takes the native path.
+The method signature and the way you call it are the same on all versions, so existing code does not need to change unless it passes `callback_params`, or `import_params` that the native import does not accept (see below), to a database that now takes the native path.
 
 ## Features
 

@@ -913,7 +913,14 @@ class ExaConnection:
                 Only supported for databases older than the native Parquet import
                 version; raises ``ValueError`` otherwise.
             import_params:
-                Custom parameters for IMPORT query.
+                Custom parameters for IMPORT query. The accepted parameters depend
+                on the database version:
+
+                - Older than the native Parquet import version: the generic
+                  :ref:`import_params`, validated by
+                  :class:`pyexasol.http_transport.ImportQuery`.
+                - Native Parquet import version or newer: only the parameters of
+                  :class:`pyexasol.query_builders.parquet.builders.ImportBuilder`
         """
         if not database_versions.MIN_VERSION_FOR_NATIVE_PARQUET_IMPORT.is_supported_by(
             self.exasol_db_version
