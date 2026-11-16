@@ -31,9 +31,16 @@ class ExaTunnelServer(socketserver.TCPServer):
         super().__init__(*args, **kwargs)
 
     def server_bind(self):
+        """
+        Connect to the Exasol server instead of binding a local listening socket.
+
+        Performs the Exasol tunneling handshake, stores the internal Exasol address
+        (``exa_address_ipaddr`` / ``exa_address_port``) for use in queries and,
+        if encryption is enabled, wraps the socket in an ad-hoc SSL context.
+        """
         self.set_sock_opts()
 
-        """ Special Exasol packet to establish tunneling and return an internal Exasol address, which can be used in a query """
+        # Special Exasol packet to establish tunneling and return an internal Exasol address, which can be used in a query
         self.socket.connect(self.server_address)
         self.socket.sendall(struct.pack("iii", 0x02212102, 1, 1))
         _, port, ipaddr = struct.unpack("ii16s", self.socket.recv(24))
