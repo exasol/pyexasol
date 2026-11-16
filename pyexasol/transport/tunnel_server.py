@@ -82,17 +82,12 @@ class ExaTunnelServer(socketserver.TCPServer):
         keepintvl = 60
         keepcnt = 5
 
-        if sys.platform.startswith("linux"):
-            self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
-            self.socket.setsockopt(socket.IPPROTO_TCP, socket.TCP_KEEPIDLE, keepidle)
-            self.socket.setsockopt(socket.IPPROTO_TCP, socket.TCP_KEEPINTVL, keepintvl)
-            self.socket.setsockopt(socket.IPPROTO_TCP, socket.TCP_KEEPCNT, keepcnt)
-
-        elif sys.platform.startswith("darwin"):
-            # TCP_KEEPALIVE = 0x10
+        if sys.platform.startswith("linux") or sys.platform.startswith("darwin"):
+            is_darwin = sys.platform.startswith("darwin")
             # https://bugs.python.org/issue34932
+            keep_alive = 0x10 if is_darwin else socket.TCP_KEEPIDLE
             self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
-            self.socket.setsockopt(socket.IPPROTO_TCP, 0x10, keepidle)
+            self.socket.setsockopt(socket.IPPROTO_TCP, keep_alive, keepidle)
             self.socket.setsockopt(socket.IPPROTO_TCP, socket.TCP_KEEPINTVL, keepintvl)
             self.socket.setsockopt(socket.IPPROTO_TCP, socket.TCP_KEEPCNT, keepcnt)
 
