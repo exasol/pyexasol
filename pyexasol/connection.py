@@ -786,10 +786,16 @@ class ExaConnection:
                 - ``tuple[str, ...]``: schema-qualified table identifier, such as
                   ``("SCHEMA", "TABLE")``.
             import_params:
-                Custom parameters for IMPORT query.
+                Custom :ref:`import_params` for IMPORT query
 
         Note:
             File must be opened in binary mode.
+
+            ``row_separator`` is only sent when you set it, so the database applies
+            its own default of ``LF``. For files with ``CRLF`` line endings, as written
+            by Python's ``csv`` module, pass ``import_params={"row_separator": "CRLF"}``,
+            otherwise the carriage return stays in the last string column or the import
+            fails with ``ETL-2105`` on quoted fields.
         """
         cb.check_import_from_file_source(src)
 
