@@ -7,7 +7,7 @@ from http.server import BaseHTTPRequestHandler
 from .server import ExaParquetTCPServer
 
 # One byte range: ``bytes=<start>-<end>``, ``bytes=<start>-`` or ``bytes=-<suffix>``.
-_BYTE_RANGE = re.compile(r"\s*bytes\s*=\s*([0-9]*)-([0-9]*)\s*", re.IGNORECASE)
+_BYTE_RANGE = re.compile(r"\s*bytes\s*=\s*(\d*)-(\d*)\s*", re.IGNORECASE)
 
 
 class ExaParquetHttpRequestHandler(BaseHTTPRequestHandler):
