@@ -90,6 +90,64 @@ class TestServerBind:
         assert server.exa_address_public_key == "fingerprint"
 
 
+class TestExaAddress:
+    @staticmethod
+    def test_without_public_key(make_server):
+        server = make_server(encryption=False)
+        server.exa_address_ipaddr = "10.0.0.7"
+        server.exa_address_port = 4242
+
+        assert server.exa_address == "10.0.0.7:4242"
+
+    @staticmethod
+    def test_with_public_key(make_server):
+        server = make_server(encryption=True)
+        server.exa_address_ipaddr = "10.0.0.7"
+        server.exa_address_port = 4242
+        server.exa_address_public_key = "abc="
+
+        assert server.exa_address == "10.0.0.7:4242/abc="
+
+
+class TestServeFirstClient:
+    @staticmethod
+    def test_returns_without_request_when_already_terminated(make_server):
+        server = make_server()
+        server.is_terminated = True
+
+        with patch.object(server, "handle_request") as handle_request:
+            server.serve_first_client()
+
+        handle_request.assert_not_called()
+
+    @staticmethod
+    def test_handles_requests_until_a_client_connected(make_server):
+        server = make_server()
+        calls = []
+
+        def handle_request():
+            calls.append(1)
+            if len(calls) == 3:
+                server.total_clients = 1
+
+        with patch.object(server, "handle_request", side_effect=handle_request):
+            server.serve_first_client()
+
+        assert len(calls) == 3
+
+    @staticmethod
+    def test_stops_when_terminated_while_waiting(make_server):
+        server = make_server()
+
+        def handle_request():
+            server.is_terminated = True
+
+        with patch.object(server, "handle_request", side_effect=handle_request) as hr:
+            server.serve_first_client()
+
+        hr.assert_called_once()
+
+
 class TestRequestAdapters:
     """The tunnel socket is already connected, so it is reused as the request."""
 

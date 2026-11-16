@@ -289,17 +289,13 @@ class ExaHttpThread(threading.Thread):
 
     @property
     def exa_address(self) -> str:
-        address = f"{self.server.exa_address_ipaddr}:{self.server.exa_address_port}"
-        if public_key := self.server.exa_address_public_key:
-            address = f"{address}/{public_key}"
-        return address
+        return self.server.exa_address
 
     def run(self):
         try:
             # Handle exactly one HTTP request
             # Exit loop if thread was explicitly terminated prior to receiving HTTP request
-            while self.server.total_clients == 0 and not self.server.is_terminated:
-                self.server.handle_request()
+            self.server.serve_first_client()
         except BaseException as e:
             self.exc = e
         finally:

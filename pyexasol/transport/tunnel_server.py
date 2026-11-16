@@ -30,6 +30,23 @@ class ExaTunnelServer(socketserver.TCPServer):
         self.encryption: bool = kwargs.pop("encryption", True)
         super().__init__(*args, **kwargs)
 
+    @property
+    def exa_address(self) -> str:
+        """Exasol-internal address (``ipaddr:port[/public_key]``) for use in a query."""
+        address = f"{self.exa_address_ipaddr}:{self.exa_address_port}"
+        if self.exa_address_public_key:
+            address = f"{address}/{self.exa_address_public_key}"
+        return address
+
+    def serve_first_client(self):
+        """
+        Handle requests until a client has connected.
+
+        Returns early if the server is terminated before a client connects.
+        """
+        while self.total_clients == 0 and not self.is_terminated:
+            self.handle_request()
+
     def server_bind(self):
         self.set_sock_opts()
 
