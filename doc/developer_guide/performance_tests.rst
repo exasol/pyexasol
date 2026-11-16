@@ -34,13 +34,11 @@ values for comparative purposes.
 Updating the Benchmark JSON File
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-To ensure that PyExasol's functional performance does not degrade over time, the
-performance tests are executed in the CI, which provides semi-homogeneous runners, and
-their results are compared in the workflow ``performance-checks.yml`` per pull request.
-If the comparison fails, a developer should scrutinize the changes to determine the
-cause and, if deemed relevant, update the
-``test/performance/.benchmarks/0001_performance.json`` with results
-saved from the CI run (i.e. from the relevant artifact):
+To ensure that PyExasol's functional performance does not degrade over time.
+If the comparison fails, a developer should scrutinize the changes to
+determine the cause and, if deemed relevant, update the
+``test/performance/.benchmarks/0001_performance.json`` with results saved from
+the CI run (i.e. from the relevant artifact):
 
 * Is it a new test?
 

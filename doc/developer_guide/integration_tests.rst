@@ -13,7 +13,8 @@ significant time depending on your network connection's bandwidth.
 Also starting the Docker container may take a bit before the tests themselves
 start executing.
 
-After the tests have been run, the database will be shut down again.
+``nox -s test:integration`` will shut down the database when the tests have
+finished.
 
 Exasol Version
 --------------
