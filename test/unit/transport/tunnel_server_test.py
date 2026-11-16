@@ -2,7 +2,7 @@ import struct
 from base64 import b64decode
 from socketserver import BaseRequestHandler
 from unittest.mock import (
-    MagicMock,
+    Mock,
     patch,
 )
 
@@ -34,7 +34,7 @@ def make_server():
 
 @pytest.fixture
 def fake_socket():
-    sock = MagicMock()
+    sock = Mock()
     sock.recv.return_value = exasol_reply(port=4242, ipaddr="10.0.0.7")
     return sock
 
@@ -72,7 +72,7 @@ class TestServerBind:
     ):
         server = make_server(encryption=True)
         server.socket = fake_socket
-        context = MagicMock()
+        context = Mock()
 
         with patch.object(
             ExaTunnelServer,
@@ -96,7 +96,7 @@ class TestRequestAdapters:
     @staticmethod
     def test_request_is_not_closed_between_requests(make_server):
         server = make_server()
-        request = MagicMock()
+        request = Mock()
 
         server.shutdown_request(request)
         server.close_request(request)
