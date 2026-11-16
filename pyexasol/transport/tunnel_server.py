@@ -104,8 +104,8 @@ class ExaTunnelServer(socketserver.TCPServer):
     @staticmethod
     def generate_adhoc_ssl_context() -> tuple[SSLContext, str]:
         """
-        Create temporary self-signed certificate for encrypted HTTP transport
-        Exasol does not check validity of certificates
+        Create temporary self-signed certificate for encrypted HTTP transport.
+        Exasol does not check validity of certificates.
         """
         from base64 import b64encode
         from datetime import (
