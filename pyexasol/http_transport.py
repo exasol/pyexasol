@@ -173,7 +173,7 @@ class ExaSQLThread(threading.Thread):
     def run(self):
         try:
             self.run_sql()
-        except BaseException as e:
+        except BaseException as e:  # NOSONAR(S5754) re-raised by join_with_exc()
             self.exc = e
 
             # In case of SQL error stop HTTP server, close pipes and interrupt I/O in callback function
@@ -299,7 +299,7 @@ class ExaHttpThread(threading.Thread):
             # Handle exactly one HTTP request
             # Exit loop if thread was explicitly terminated prior to receiving HTTP request
             self.server.serve_first_client()
-        except BaseException as e:
+        except BaseException as e:  # NOSONAR(S5754) re-raised by join_with_exc()
             self.exc = e
         finally:
             self.server.server_close()

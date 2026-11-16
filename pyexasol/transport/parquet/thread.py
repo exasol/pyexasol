@@ -36,7 +36,7 @@ class ExaParquetHttpThread(threading.Thread):
             # One connection serves all requests of the import. Stop waiting for it
             # if the import fails before Exasol connects.
             self.server.serve_first_client()
-        except BaseException as error:
+        except BaseException as error:  # NOSONAR(S5754) re-raised by join_with_exc()
             self.exc = error
         finally:
             self.exc = self.exc or self.server.request_error
