@@ -1,4 +1,5 @@
 from collections.abc import Callable
+from decimal import Decimal
 from pathlib import Path
 from unittest import mock
 
@@ -6,6 +7,7 @@ import pyarrow as pa
 import pytest
 from pyarrow import parquet as pq
 
+from pyexasol import database_versions
 from test.integration.import_and_export.helper import select_result
 
 
@@ -79,11 +81,35 @@ class TestExportToParquet:
         assert m.call_count == 0
 
 
+@pytest.fixture
+def skip_if_native_parquet_import(connection):
+    # ``columns`` is a (callback_params / import_params) feature of the callback based
+    # import; the native Parquet import does not offer it yet.
+    if database_versions.MIN_VERSION_FOR_NATIVE_PARQUET_IMPORT.is_supported_by(
+        connection.exasol_db_version
+    ):
+        pytest.skip("Selecting columns is not supported by the native Parquet import")
+
+
 @pytest.mark.parquet
 class TestImportFromParquet:
     @staticmethod
     def _create_parquet_file(path: Path, data: list[dict]):
         table = pa.Table.from_pylist(data)
+        # The native Parquet import (newer databases) does not convert between types,
+        # so the DECIMAL(10,2) column SCORE needs to be a decimal in the file as well.
+        index = table.schema.get_field_index("SCORE")
+        table = table.set_column(
+            index,
+            "SCORE",
+            pa.array(
+                [
+                    None if v is None else Decimal(str(v))
+                    for v in table["SCORE"].to_pylist()
+                ],
+                type=pa.decimal128(10, 2),
+            ),
+        )
         pq.write_table(table, path)
 
     def test_load_single_file(
@@ -98,6 +124,7 @@ class TestImportFromParquet:
 
     def test_load_specific_columns(
         self,
+        skip_if_native_parquet_import,
         tmp_path,
         empty_table,
         connection,

@@ -24,16 +24,38 @@ C = pyexasol.connect(
 
 with tempfile.TemporaryDirectory() as directory_path:
 
-    # Export from Exasol table into the temporary directory into a local parquet file
-    C.export_to_parquet(dst=directory_path, query_or_table="users")
+    # Export from Exasol table into the temporary directory into a local parquet file.
+    # The data is transferred as CSV, so BOOLEAN columns are exported as 1/0 and read as
+    # int64 by default. The native Parquet import (Exasol 2026.1.0 and newer) rejects
+    # int64 for BOOLEAN columns, so we export booleans as true/false to get a bool column.
+    C.export_to_parquet(
+        dst=directory_path,
+        query_or_table="users",
+        export_params={"boolean": "true/false"},
+    )
     parquet_table = pq.read_table(directory_path)
     print(parquet_table.schema)
 
     stmt = C.last_statement()
     print(f"EXPORTED {stmt.rowcount()} rows in {stmt.execution_time}s")
 
-    # Prepare empty table for import
-    C.execute("TRUNCATE TABLE users_copy")
+    # Prepare empty table for import. The native Parquet import (Exasol 2026.1.0 and
+    # newer) does not convert between types, e.g. a Parquet double cannot be imported
+    # into a DECIMAL column. As the CSV-based export yields doubles for DECIMAL(10,5),
+    # the target table declares user_rating as DOUBLE.
+    C.execute("""
+        CREATE OR REPLACE TABLE users_copy
+        (
+            user_id         DECIMAL(18,0),
+            user_name       VARCHAR(255),
+            register_dt     DATE,
+            last_visit_ts   TIMESTAMP,
+            is_female       BOOLEAN,
+            user_rating     DOUBLE,
+            user_score      DOUBLE,
+            status          VARCHAR(50)
+        )
+    """)
 
     # import_from_parquet allows for users to specify parquet files in multiple ways;
     # this example usage using a string with a glob pattern is just one of them.

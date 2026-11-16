@@ -67,8 +67,10 @@ from .query_builders.csv.builders import (
     ExportBuilder,
     ImportBuilder,
 )
+from .query_builders.parquet.builders import ImportBuilder as ParquetImportBuilder
 from .script_output import ExaScriptOutputProcess
 from .statement import ExaStatement
+from .transport.parquet import ExaParquetHttpThread
 from .warnings import PyexasolWarning
 
 if TYPE_CHECKING:
@@ -913,8 +915,17 @@ class ExaConnection:
             callback_params:
                 Dict with additional parameters for callback function
                 `parquet.ParquetFile.iter_batches <https://arrow.apache.org/docs/python/generated/pyarrow.parquet.ParquetFile.html#pyarrow.parquet.ParquetFile.iter_batches>`__.
+                Only supported for databases older than the native Parquet import
+                version; raises ``ValueError`` otherwise.
             import_params:
-                Custom parameters for IMPORT query.
+                Custom parameters for IMPORT query. The accepted parameters depend
+                on the database version:
+
+                - Older than the native Parquet import version: the generic
+                  :ref:`import_params`, validated by
+                  :class:`pyexasol.http_transport.ImportQuery`.
+                - Native Parquet import version or newer: only the parameters of
+                  :class:`pyexasol.query_builders.parquet.builders.ImportBuilder`
         """
         if not database_versions.MIN_VERSION_FOR_NATIVE_PARQUET_IMPORT.is_supported_by(
             self.exasol_db_version
@@ -922,20 +933,67 @@ class ExaConnection:
             return self.import_from_callback(
                 cb.import_from_parquet, source, table, callback_params, import_params
             )
-        return self._import_from_native_parquet(
-            source, table, callback_params, import_params
-        )
+        if callback_params:
+            raise ValueError(
+                "callback_params are not supported by the native Parquet import "
+                f"(database version >= {database_versions.MIN_VERSION_FOR_NATIVE_PARQUET_IMPORT.version}); "
+                "use import_params instead."
+            )
+        return self._import_from_native_parquet(source, table, import_params)
 
     def _import_from_native_parquet(
         self,
         source: list[Path] | Path | str,
         table: str | tuple[str, ...],
-        callback_params: dict | None = None,
         import_params: dict | None = None,
     ):
-        parquet_files = cb.get_parquet_files(source)
+        if import_params is None:
+            import_params = {}
 
-        # TODO implement
+        parquet_files = cb.get_parquet_files(source)
+        import_builder = ParquetImportBuilder(table=table, **import_params)
+
+        # An Exasol tunnel accepts one connection for one statement, so each file
+        # gets its own tunnel and IMPORT. The files are not imported atomically:
+        # if one fails, earlier files stay imported (subject to ``autocommit``).
+        for index, parquet_file in enumerate(parquet_files):
+            http_thread = ExaParquetHttpThread(
+                ipaddr=self.ws_ipaddr,
+                port=self.ws_port,
+                parquet_file=parquet_file,
+                encryption=self.options["encryption"],
+            )
+            sql_thread = ExaSQLThread(
+                connection=self,
+                compression=False,
+                query_builder=import_builder,
+            )
+
+            try:
+                http_thread.start()
+                sql_thread.set_http_thread(http_thread)
+                sql_thread.start()
+                sql_thread.join_with_exc()
+                http_thread.terminate()
+                http_thread.join_with_exc()
+            except (Exception, KeyboardInterrupt) as error:
+                http_thread.terminate()
+                http_thread.join()
+                sql_thread.join(1)
+
+                if sql_thread.is_alive():
+                    self.abort_query()
+                    sql_thread.join()
+
+                self.logger.debug(
+                    f"Native Parquet import failed for {parquet_file} "
+                    f"(file {index + 1} of {len(parquet_files)}); "
+                    f"{index} file(s) were imported before it"
+                )
+                raise ExaImportError(
+                    connection=self,
+                    exceptions=(error, http_thread.exc, sql_thread.exc),
+                ) from error
 
     def export_to_callback(
         self,
