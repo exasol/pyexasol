@@ -13,3 +13,7 @@ The minimum supported Python version is now 3.11.5, as later `soupsieve` version
 ## Refactorings
 
 * #484: Dropped support for Python versions < 3.11.5
+
+## Documentation
+
+* #370: Documented the row separator required when importing files with `CRLF` line endings
