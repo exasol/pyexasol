@@ -86,7 +86,7 @@ class ExaTunnelServer(socketserver.TCPServer):
         keepintvl_seconds = 60
         keepcnt_probes = 5
 
-        if sys.platform.startswith("linux") or sys.platform.startswith("darwin"):
+        if sys.platform.startswith(("linux", "darwin")):
             is_darwin = sys.platform.startswith("darwin")
             # https://bugs.python.org/issue34932
             keep_alive = 0x10 if is_darwin else socket.TCP_KEEPIDLE
