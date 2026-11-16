@@ -206,7 +206,7 @@ def import_from_pandas(pipe, src: "pandas.DataFrame", **kwargs):
     )
 
 
-def get_parquet_files(source: list[Path] | Path | str) -> list[Path]:
+def get_parquet_files(source: list[Path] | Path | str) -> list[Path]:  # NOSONAR(S3776)
     """
     Resolve ``source`` to a list of parquet files.
 
