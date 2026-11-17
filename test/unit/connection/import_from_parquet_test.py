@@ -27,6 +27,13 @@ def _set_db_version(connection, version):
     connection.login_info = {"releaseVersion": release} if release else {}
 
 
+def test_docstring_mentions_native_min_version():
+    # Docstrings cannot interpolate the constant, so guard against drifting.
+    from pyexasol import ExaConnection
+
+    assert str(MIN_VERSION) in ExaConnection.import_from_parquet.__doc__
+
+
 class TestImportFromParquet:
     @staticmethod
     @pytest.mark.parametrize(
@@ -66,6 +73,20 @@ class TestImportFromParquet:
         )
         connection.import_from_callback.assert_not_called()
         assert result is connection._import_from_native_parquet.return_value
+
+    @staticmethod
+    def test_native_false_forces_callback_on_supported_version(connection):
+        _set_db_version(connection, MIN_VERSION)
+
+        result = connection.import_from_parquet(
+            "data/*.parquet", "tbl", {"a": 1}, {"b": 2}, native=False
+        )
+
+        connection.import_from_callback.assert_called_once_with(
+            cb.import_from_parquet, "data/*.parquet", "tbl", {"a": 1}, {"b": 2}
+        )
+        connection._import_from_native_parquet.assert_not_called()
+        assert result is connection.import_from_callback.return_value
 
     @staticmethod
     def test_native_rejects_callback_params(connection):

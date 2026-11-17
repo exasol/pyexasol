@@ -889,9 +889,18 @@ class ExaConnection:
         table: str | tuple[str, ...],
         callback_params: dict | None = None,
         import_params: dict | None = None,
+        native: bool = True,
     ):
         """
         Import a large amount of data from local parquet file(s).
+
+        Exasol 2026.1.0 and newer use the native Parquet import, older versions use the
+        callback-based import. Pass ``native=False`` to force the callback-based import.
+
+        The native import does not convert between types, so the Parquet column types
+        must match the table. For example, a Parquet ``double`` cannot be imported into
+        a ``DECIMAL`` column. The callback-based import sends CSV, so Exasol converts
+        the values.
 
         Args:
             source: Local filepath specification(s) to process. Can be one of:
@@ -910,20 +919,24 @@ class ExaConnection:
             callback_params:
                 Dict with additional parameters for callback function
                 `parquet.ParquetFile.iter_batches <https://arrow.apache.org/docs/python/generated/pyarrow.parquet.ParquetFile.html#pyarrow.parquet.ParquetFile.iter_batches>`__.
-                Only supported for databases older than the native Parquet import
-                version; raises ``ValueError`` otherwise.
+                Only supported by the callback-based import; raises ``ValueError``
+                for the native import.
             import_params:
-                Custom parameters for IMPORT query. The accepted parameters depend
-                on the database version:
+                Custom parameters for IMPORT query. They are the ``import_params`` of:
 
-                - Older than the native Parquet import version: the generic
-                  :ref:`import_params`, validated by
-                  :class:`pyexasol.http_transport.ImportQuery`.
-                - Native Parquet import version or newer: only the parameters of
+                - Callback-based import:
+                  :class:`pyexasol.http_transport.ImportQuery`
+                - Native Parquet import:
                   :class:`pyexasol.query_builders.parquet.builders.ImportBuilder`
+            native:
+                If ``False``, always use the callback-based import. Defaults to ``True``
+                (use the native import when the database supports it).
         """
-        if not database_versions.MIN_VERSION_FOR_NATIVE_PARQUET_IMPORT.is_supported_by(
-            self.exasol_db_version
+        if (
+            not native
+            or not database_versions.MIN_VERSION_FOR_NATIVE_PARQUET_IMPORT.is_supported_by(
+                self.exasol_db_version
+            )
         ):
             return self.import_from_callback(
                 cb.import_from_parquet, source, table, callback_params, import_params
