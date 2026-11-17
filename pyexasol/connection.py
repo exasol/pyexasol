@@ -890,6 +890,7 @@ class ExaConnection:
         callback_params: dict | None = None,
         import_params: dict | None = None,
         native: bool = True,
+        max_parallel_files: int = 10,
     ):
         """
         Import a large amount of data from local parquet file(s).
@@ -931,6 +932,11 @@ class ExaConnection:
             native:
                 If ``False``, always use the callback-based import. Defaults to ``True``
                 (use the native import when the database supports it).
+            max_parallel_files:
+                Only used by the native import. Exasol opens one connection per file,
+                so PyExasol starts one tunnel (one thread) per file. At most this many
+                files are imported by one ``IMPORT`` statement, further files are
+                imported by following statements. Defaults to ``10``.
         """
         if (
             not native
@@ -947,14 +953,19 @@ class ExaConnection:
                 f"(database version >= {database_versions.MIN_VERSION_FOR_NATIVE_PARQUET_IMPORT.version}); "
                 "use import_params instead."
             )
-        return self._import_from_native_parquet(source, table, import_params)
+        return self._import_from_native_parquet(
+            source, table, import_params, max_parallel_files
+        )
 
     def _import_from_native_parquet(
         self,
         source: list[Path] | Path | str,
         table: str | tuple[str, ...],
         import_params: dict | None = None,
+        max_parallel_files: int = 10,
     ):
+        if max_parallel_files < 1:
+            raise ValueError("max_parallel_files must be at least 1.")
         if import_params is None:
             import_params = {}
 
@@ -962,46 +973,76 @@ class ExaConnection:
         import_builder = ParquetImportBuilder(table=table, **import_params)
 
         # An Exasol tunnel accepts one connection for one statement, so each file
-        # gets its own tunnel and IMPORT. The files are not imported atomically:
-        # if one fails, earlier files stay imported (subject to ``autocommit``).
-        for index, parquet_file in enumerate(parquet_files):
-            http_thread = ExaParquetHttpThread(
-                ipaddr=self.ws_ipaddr,
-                port=self.ws_port,
-                parquet_file=parquet_file,
-                encryption=self.options["encryption"],
+        # gets its own tunnel (one thread each). Up to ``max_parallel_files`` files
+        # are imported by one IMPORT statement, and the batches run sequentially.
+        # The batches are not imported atomically: if one fails, earlier batches
+        # stay imported (subject to ``autocommit``).
+        for batch_start in range(0, len(parquet_files), max_parallel_files):
+            batch = parquet_files[batch_start : batch_start + max_parallel_files]
+            self._import_native_parquet_batch(
+                batch, import_builder, batch_start, len(parquet_files)
             )
+
+    def _import_native_parquet_batch(
+        self,
+        batch: list[Path],
+        import_builder: ParquetImportBuilder,
+        batch_start: int,
+        total_files: int,
+    ):
+        http_threads: list[ExaParquetHttpThread] = []
+        sql_thread = None
+
+        try:
+            for parquet_file in batch:
+                http_thread = ExaParquetHttpThread(
+                    ipaddr=self.ws_ipaddr,
+                    port=self.ws_port,
+                    parquet_file=parquet_file,
+                    encryption=self.options["encryption"],
+                )
+                http_threads.append(http_thread)
+                http_thread.start()
+
             sql_thread = ExaSQLThread(
                 connection=self,
                 compression=False,
                 query_builder=import_builder,
             )
+            sql_thread.set_exa_address_list(
+                [http_thread.exa_address for http_thread in http_threads]
+            )
+            sql_thread.start()
+            sql_thread.join_with_exc()
 
-            try:
-                http_thread.start()
-                sql_thread.set_http_thread(http_thread)
-                sql_thread.start()
-                sql_thread.join_with_exc()
+            for http_thread in http_threads:
                 http_thread.terminate()
                 http_thread.join_with_exc()
-            except (Exception, KeyboardInterrupt) as error:
+        except (Exception, KeyboardInterrupt) as error:
+            for http_thread in http_threads:
                 http_thread.terminate()
-                http_thread.join()
-                sql_thread.join(1)
+                if http_thread.is_alive():
+                    http_thread.join()
 
+            if sql_thread is not None:
+                sql_thread.join(1)
                 if sql_thread.is_alive():
                     self.abort_query()
                     sql_thread.join()
 
-                self.logger.debug(
-                    f"Native Parquet import failed for {parquet_file} "
-                    f"(file {index + 1} of {len(parquet_files)}); "
-                    f"{index} file(s) were imported before it"
-                )
-                raise ExaImportError(
-                    connection=self,
-                    exceptions=(error, http_thread.exc, sql_thread.exc),
-                ) from error
+            self.logger.debug(
+                f"Native Parquet import failed for the batch of files "
+                f"{batch_start + 1}-{batch_start + len(batch)} of {total_files}; "
+                f"{batch_start} file(s) were imported before it"
+            )
+            raise ExaImportError(
+                connection=self,
+                exceptions=(
+                    error,
+                    *(http_thread.exc for http_thread in http_threads),
+                    sql_thread.exc if sql_thread else None,
+                ),
+            ) from error
 
     def export_to_callback(
         self,
