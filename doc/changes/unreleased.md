@@ -32,3 +32,7 @@ To resolve this, either:
 ## Refactorings
 
 * #484: Dropped support for Python versions < 3.11.5
+
+## Documentation
+
+* #370: Documented the row separator required when importing files with `CRLF` line endings
