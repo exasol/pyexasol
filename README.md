@@ -39,7 +39,7 @@ PyExasol provides an [API](https://exasol.github.io/pyexasol/master/api.html) to
 ## System Requirements
 
 - Exasol >= 8
-- Python >= 3.11
+- Python >= 3.11.5
 
 ## Getting Started
 
