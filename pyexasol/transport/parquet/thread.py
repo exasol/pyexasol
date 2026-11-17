@@ -3,6 +3,7 @@ from __future__ import annotations
 import socket
 import threading
 from pathlib import Path
+from ssl import SSLContext
 
 from .handler import ExaParquetHttpRequestHandler
 from .server import ExaParquetTCPServer
@@ -17,12 +18,14 @@ class ExaParquetHttpThread(threading.Thread):
         port: int,
         parquet_file: Path,
         encryption: bool,
+        ssl_context: tuple[SSLContext, str] | None = None,
     ):
         self.server = ExaParquetTCPServer(
             (ipaddr, port),
             ExaParquetHttpRequestHandler,
             parquet_file=parquet_file,
             encryption=encryption,
+            ssl_context=ssl_context,
         )
         self.exc = None
         super().__init__()
