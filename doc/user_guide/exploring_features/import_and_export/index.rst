@@ -82,6 +82,25 @@ data from a file, path object, file-like object opened in binary mode, or from a
 
      Files opened in text mode are not supported and will raise an error.
 
+.. _import_row_separator:
+
+.. note::
+
+     The ``IMPORT`` statement only carries a ``ROW SEPARATOR`` clause when you pass
+     ``row_separator``, so by default the database uses ``LF``. A file with ``CRLF``
+     line endings, which is what Python's ``csv`` module, Excel and most RFC 4180
+     producers write, then keeps the carriage return in the last column of every row
+     (silently for string columns, with an error for e.g. numeric columns), or fails
+     with ``ETL-2105`` when the last column is quoted. Files that already use ``LF``
+     need no ``row_separator``. Otherwise, say which separator the file uses:
+
+     .. code-block:: python
+
+         C.import_from_file('/test/my_file.csv', "users", import_params={"row_separator": "CRLF"})
+
+     or write the file with ``LF`` line endings, for example with
+     ``csv.writer(f, lineterminator="\n")``.
+
 .. code-block:: python
 
     # Import from file defined with string path
