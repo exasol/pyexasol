@@ -71,6 +71,7 @@ from .query_builders.parquet.builders import ImportBuilder as ParquetImportBuild
 from .script_output import ExaScriptOutputProcess
 from .statement import ExaStatement
 from .transport.parquet import ExaParquetHttpThread
+from .transport.tunnel_server import ExaTunnelServer
 from .warnings import PyexasolWarning
 
 if TYPE_CHECKING:
@@ -976,6 +977,13 @@ class ExaConnection:
 
         parquet_files = cb.get_parquet_files(source)
         import_builder = ParquetImportBuilder(table=table, **import_params)
+        # Generating the certificate is costly, so do it once and share it between
+        # all tunnels of this import.
+        ssl_context = (
+            ExaTunnelServer.generate_adhoc_ssl_context()
+            if self.options["encryption"]
+            else None
+        )
 
         # An Exasol tunnel accepts one connection for one statement, so each file
         # gets its own tunnel (one thread each). Up to ``max_parallel_files`` files
@@ -985,13 +993,14 @@ class ExaConnection:
         for batch_start in range(0, len(parquet_files), max_parallel_files):
             batch = parquet_files[batch_start : batch_start + max_parallel_files]
             self._import_native_parquet_batch(
-                batch, import_builder, batch_start, len(parquet_files)
+                batch, import_builder, ssl_context, batch_start, len(parquet_files)
             )
 
     def _import_native_parquet_batch(
         self,
         batch: list[Path],
         import_builder: ParquetImportBuilder,
+        ssl_context: tuple[ssl.SSLContext, str] | None,
         batch_start: int,
         total_files: int,
     ):
@@ -1005,6 +1014,7 @@ class ExaConnection:
                     port=self.ws_port,
                     parquet_file=parquet_file,
                     encryption=self.options["encryption"],
+                    ssl_context=ssl_context,
                 )
                 http_threads.append(http_thread)
                 http_thread.start()

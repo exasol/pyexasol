@@ -177,6 +177,35 @@ class TestNativeParquetLoop:
         assert addresses == [2, 1]
 
     @staticmethod
+    def test_generates_one_certificate_shared_by_all_tunnels(threads, files):
+        connection, http_cls, _ = threads
+        connection.options["encryption"] = True
+
+        with patch(
+            "pyexasol.connection.ExaTunnelServer.generate_adhoc_ssl_context"
+        ) as generate:
+            connection._import_from_native_parquet(files, "tbl", max_parallel_files=2)
+
+        generate.assert_called_once()
+        assert http_cls.call_count == 3  # spread over two batches
+        assert {c.kwargs["ssl_context"] for c in http_cls.call_args_list} == {
+            generate.return_value
+        }
+
+    @staticmethod
+    def test_generates_no_certificate_without_encryption(threads, files):
+        connection, http_cls, _ = threads
+        connection.options["encryption"] = False
+
+        with patch(
+            "pyexasol.connection.ExaTunnelServer.generate_adhoc_ssl_context"
+        ) as generate:
+            connection._import_from_native_parquet(files, "tbl")
+
+        generate.assert_not_called()
+        assert {c.kwargs["ssl_context"] for c in http_cls.call_args_list} == {None}
+
+    @staticmethod
     def test_rejects_invalid_max_parallel_files(threads, files):
         connection, _, _ = threads
 
