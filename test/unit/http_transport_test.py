@@ -356,18 +356,8 @@ class TestImportTransportThreadLifecycle:
     @staticmethod
     def test_http_thread_closes_server_and_signals_worker_finished_event_after_success():
         worker_finished_event = threading.Event()
-        server = Mock(
-            total_clients=0,
-            is_terminated=False,
-            read_pipe=Mock(),
-            write_pipe=Mock(),
-        )
+        server = Mock(read_pipe=Mock(), write_pipe=Mock())
         server.can_finish_get = Mock()
-
-        def handle_request():
-            server.total_clients = 1
-
-        server.handle_request.side_effect = handle_request
 
         with patch.object(http_transport_module, "ExaTCPServer", return_value=server):
             thread = ExaHttpThread(
@@ -380,7 +370,7 @@ class TestImportTransportThreadLifecycle:
             thread.run()
 
         assert thread.exc is None
-        server.handle_request.assert_called_once_with()
+        server.serve_first_client.assert_called_once_with()
         server.server_close.assert_called_once_with()
         assert worker_finished_event.is_set()
 
@@ -388,14 +378,9 @@ class TestImportTransportThreadLifecycle:
     def test_http_thread_closes_server_and_signals_worker_finished_event_after_failure():
         worker_finished_event = threading.Event()
         expected_error = BrokenPipeError("HTTP request failed")
-        server = Mock(
-            total_clients=0,
-            is_terminated=False,
-            read_pipe=Mock(),
-            write_pipe=Mock(),
-        )
+        server = Mock(read_pipe=Mock(), write_pipe=Mock())
         server.can_finish_get = Mock()
-        server.handle_request.side_effect = expected_error
+        server.serve_first_client.side_effect = expected_error
 
         with patch.object(http_transport_module, "ExaTCPServer", return_value=server):
             thread = ExaHttpThread(
