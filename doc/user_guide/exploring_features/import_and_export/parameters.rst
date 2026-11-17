@@ -113,7 +113,7 @@ method. When the code is executed, these are validated using the :class:`pyexaso
      - ``"\x00"``
      - Custom NULL value
    * - ``row_separator``
-     - ``"LF"``
+     - ``"CRLF"``
      - Row separator for CSV (line-endings). PyExasol sends no ``ROW SEPARATOR``
        clause unless you set this, so the database default of ``LF`` applies. Set
        ``"CRLF"`` only if you supply CSV with ``CRLF`` line endings, for example
