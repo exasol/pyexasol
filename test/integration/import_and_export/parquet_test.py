@@ -1,3 +1,5 @@
+import os
+import threading
 from collections.abc import Callable
 from decimal import Decimal
 from pathlib import Path
@@ -8,6 +10,7 @@ import pytest
 from pyarrow import parquet as pq
 
 from pyexasol import database_versions
+from pyexasol.exceptions import ExaImportError
 from test.integration.import_and_export.helper import select_result
 
 
@@ -179,3 +182,156 @@ class TestImportFromParquet:
 
         expected = all_data.list_tuple() + [all_data.list_tuple()[-1]]
         assert select_result(connection) == expected
+
+
+@pytest.fixture
+def require_native_parquet_import(connection):
+    if not database_versions.MIN_VERSION_FOR_NATIVE_PARQUET_IMPORT.is_supported_by(
+        connection.exasol_db_version
+    ):
+        pytest.skip("Requires the native Parquet import")
+
+
+@pytest.mark.parquet
+@pytest.mark.usefixtures("require_native_parquet_import")
+class TestNativeImportFromParquetMultipleFilesAndErrors:
+    @staticmethod
+    def _write(path: Path, data: list[dict], score_type=None):
+        table = pa.Table.from_pylist(data)
+        index = table.schema.get_field_index("SCORE")
+        values = [
+            None if v is None else Decimal(str(v)) for v in table["SCORE"].to_pylist()
+        ]
+        if score_type is None:
+            table = table.set_column(
+                index, "SCORE", pa.array(values, type=pa.decimal128(10, 2))
+            )
+        else:  # e.g. double, which the native import cannot convert to DECIMAL
+            table = table.set_column(
+                index,
+                "SCORE",
+                pa.array(
+                    [None if v is None else float(v) for v in values], type=score_type
+                ),
+            )
+        pq.write_table(table, path)
+
+    @staticmethod
+    def _row_count(connection, table_name):
+        return connection.execute(f"SELECT COUNT(*) FROM {table_name}").fetchval()
+
+    @staticmethod
+    def _import_threads():
+        return [
+            t
+            for t in threading.enumerate()
+            if t is not threading.current_thread() and t.name != "MainThread"
+        ]
+
+    @pytest.fixture
+    def five_files(self, tmp_path, all_data):
+        paths = []
+        for i in range(5):
+            path = tmp_path / f"{i}.parquet"
+            self._write(path, all_data.list_dict)
+            paths.append(path)
+        return paths
+
+    @pytest.mark.parametrize("max_parallel_files", [1, 2, 5, 10])
+    def test_batches_load_all_files(
+        self,
+        five_files,
+        empty_table,
+        connection,
+        table_name,
+        all_data,
+        max_parallel_files,
+    ):
+        connection.import_from_parquet(
+            five_files, table_name, max_parallel_files=max_parallel_files
+        )
+
+        assert sorted(select_result(connection)) == sorted(all_data.list_tuple() * 5)
+
+    def test_corrupt_file_in_batch_raises_and_cleans_up(
+        self, five_files, empty_table, connection, table_name
+    ):
+        five_files[2].write_bytes(b"this is not a parquet file")
+        threads_before = self._import_threads()
+
+        with pytest.raises(ExaImportError):
+            connection.import_from_parquet(five_files, table_name, max_parallel_files=5)
+
+        assert self._import_threads() == threads_before
+        # the connection is still usable afterwards
+        assert self._row_count(connection, table_name) == 0
+
+    def test_failure_in_later_batch_keeps_earlier_batches(
+        self, five_files, empty_table, connection, table_name, all_data
+    ):
+        five_files[3].write_bytes(b"this is not a parquet file")
+
+        with pytest.raises(ExaImportError):
+            connection.import_from_parquet(five_files, table_name, max_parallel_files=2)
+
+        # batches [0, 1] were imported, batch [2, 3] failed, batch [4] never ran
+        assert self._row_count(connection, table_name) == 2 * len(all_data.list_dict)
+
+    def test_type_mismatch_raises(
+        self, tmp_path, empty_table, connection, table_name, all_data
+    ):
+        good = tmp_path / "a.parquet"
+        bad = tmp_path / "b.parquet"
+        self._write(good, all_data.list_dict)
+        self._write(bad, all_data.list_dict, score_type=pa.float64())
+
+        with pytest.raises(ExaImportError):
+            connection.import_from_parquet([good, bad], table_name)
+
+        assert self._row_count(connection, table_name) == 0
+
+    def test_missing_table_raises_and_cleans_up(self, five_files, connection):
+        threads_before = self._import_threads()
+
+        with pytest.raises(ExaImportError):
+            connection.import_from_parquet(five_files, "THIS_TABLE_DOES_NOT_EXIST")
+
+        assert self._import_threads() == threads_before
+
+    @pytest.mark.skipif(
+        hasattr(os, "geteuid") and os.geteuid() == 0,
+        reason="root can read files without permissions",
+    )
+    def test_unreadable_file_raises(
+        self, five_files, empty_table, connection, table_name
+    ):
+        # the file passes the listing check, but cannot be opened by the tunnel
+        five_files[1].chmod(0o000)
+
+        try:
+            with pytest.raises(ExaImportError):
+                connection.import_from_parquet(five_files, table_name)
+        finally:
+            five_files[1].chmod(0o644)
+
+        assert self._row_count(connection, table_name) == 0
+
+    def test_connection_usable_after_failure(
+        self, five_files, empty_table, connection, table_name, all_data
+    ):
+        five_files[0].write_bytes(b"this is not a parquet file")
+        with pytest.raises(ExaImportError):
+            connection.import_from_parquet(five_files, table_name)
+
+        connection.import_from_parquet(five_files[1:], table_name)
+
+        assert self._row_count(connection, table_name) == 4 * len(all_data.list_dict)
+
+    @pytest.mark.parametrize("value", [0, -1])
+    def test_invalid_max_parallel_files(
+        self, five_files, empty_table, connection, table_name, value
+    ):
+        with pytest.raises(ValueError, match="max_parallel_files"):
+            connection.import_from_parquet(
+                five_files, table_name, max_parallel_files=value
+            )

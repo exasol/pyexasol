@@ -69,7 +69,7 @@ class TestImportFromParquet:
         )
 
         connection._import_from_native_parquet.assert_called_once_with(
-            "data/*.parquet", "tbl", {"b": 2}
+            "data/*.parquet", "tbl", {"b": 2}, 10
         )
         connection.import_from_callback.assert_not_called()
         assert result is connection._import_from_native_parquet.return_value
@@ -144,27 +144,51 @@ class TestNativeParquetLoop:
             yield connection, http_cls, sql_cls
 
     @staticmethod
-    def test_one_tunnel_and_statement_per_file(threads, files):
+    def test_one_tunnel_per_file_in_one_statement(threads, files):
         connection, http_cls, sql_cls = threads
         http_threads = [MagicMock() for _ in files]
-        sql_threads = [MagicMock() for _ in files]
         http_cls.side_effect = http_threads
-        sql_cls.side_effect = sql_threads
 
         connection._import_from_native_parquet(files, "tbl")
 
         assert [c.kwargs["parquet_file"] for c in http_cls.call_args_list] == files
-        for http_thread, sql_thread in zip(http_threads, sql_threads):
-            sql_thread.set_http_thread.assert_called_once_with(http_thread)
-            sql_thread.join_with_exc.assert_called_once()
+        sql_cls.assert_called_once()
+        sql_thread = sql_cls.return_value
+        sql_thread.set_exa_address_list.assert_called_once_with(
+            [t.exa_address for t in http_threads]
+        )
+        sql_thread.join_with_exc.assert_called_once()
+        for http_thread in http_threads:
+            http_thread.start.assert_called_once()
             http_thread.terminate.assert_called_once()
+
+    @staticmethod
+    def test_splits_files_into_batches(threads, files):
+        connection, http_cls, sql_cls = threads
+
+        connection._import_from_native_parquet(files, "tbl", max_parallel_files=2)
+
+        assert http_cls.call_count == 3
+        assert sql_cls.call_count == 2
+        addresses = [
+            len(c.args[0])
+            for c in sql_cls.return_value.set_exa_address_list.call_args_list
+        ]
+        assert addresses == [2, 1]
+
+    @staticmethod
+    def test_rejects_invalid_max_parallel_files(threads, files):
+        connection, _, _ = threads
+
+        with pytest.raises(ValueError, match="max_parallel_files"):
+            connection._import_from_native_parquet(files, "tbl", max_parallel_files=0)
 
     @staticmethod
     def test_shares_one_builder_with_import_params(threads, files):
         connection, _, sql_cls = threads
 
         connection._import_from_native_parquet(
-            files, ("SCH", "tbl"), import_params={"MaxRows": 10}
+            files, ("SCH", "tbl"), import_params={"MaxRows": 10}, max_parallel_files=1
         )
 
         builders = {c.kwargs["query_builder"] for c in sql_cls.call_args_list}
@@ -174,17 +198,16 @@ class TestNativeParquetLoop:
         assert builder.max_rows == 10
 
     @staticmethod
-    def test_stops_after_failed_file_and_raises_import_error(threads, files):
+    def test_stops_after_failed_batch_and_raises_import_error(threads, files):
         connection, http_cls, sql_cls = threads
         sql_cls.return_value.join_with_exc.side_effect = [None, RuntimeError("boom")]
         sql_cls.return_value.is_alive.return_value = False
 
         with pytest.raises(ExaImportError):
-            connection._import_from_native_parquet(files, "tbl")
+            connection._import_from_native_parquet(files, "tbl", max_parallel_files=1)
 
         assert http_cls.call_count == 2  # third file is not attempted
         connection.abort_query.assert_not_called()
-        http_cls.return_value.join.assert_called_once()
 
     @staticmethod
     def test_aborts_query_if_sql_thread_still_running(threads, files):
@@ -197,5 +220,4 @@ class TestNativeParquetLoop:
 
         connection.abort_query.assert_called_once()
         http_cls.return_value.terminate.assert_called()
-        http_cls.return_value.join.assert_called_once()
         assert sql_cls.return_value.join.call_count == 2  # timed, then final

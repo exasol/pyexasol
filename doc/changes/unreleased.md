@@ -4,7 +4,7 @@
 
 `import_from_parquet()` now has a native import path. The path is chosen by database version:
 
-* **Exasol 2026.1.0 or newer:** Native import. PyExasol serves each local Parquet file to the database through a tunnel, and the database reads and loads it directly.
+* **Exasol 2026.1.0 or newer:** Native import. PyExasol serves each local Parquet file to the database through its own tunnel, and the database reads and loads it directly.
 * **Older Exasol versions:** The existing callback-based import. PyArrow reads the Parquet file and writes it as CSV text, which the database parses.
 
 ## Breaking behavior for `import_from_parquet()` on Exasol 2026.1.0 or newer
@@ -45,7 +45,7 @@ The builders perform the same function with additional Pydantic validation.
 * #394:
   * Extracted the tunnel server code from `http_transport.py` into the new `ExaTunnelServer` in `pyexasol/transport/tunnel_server.py`, so other transports can share it with the existing one. It provides the `exa_address` property and the `serve_first_client()` method, which `ExaHttpThread` now uses
   * Added `ExaParquetHttpThread`, which serves a single local Parquet file to Exasol through an HTTP tunnel, including HTTP range requests
-  * Added native Parquet import to `import_from_parquet()` for Exasol >= 2026.1.0
+  * Added native Parquet import to `import_from_parquet()` for Exasol >= 2026.1.0. Each file gets its own tunnel (one thread), and up to `max_parallel_files` files (default `10`) are imported by one `IMPORT` statement; further files follow in subsequent statements, which are not atomic
 
 ## Refactorings
 
