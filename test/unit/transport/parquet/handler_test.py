@@ -2,6 +2,7 @@ import http.client
 import io
 import random
 import threading
+import time
 from http.server import ThreadingHTTPServer
 from types import SimpleNamespace
 
@@ -10,6 +11,7 @@ import pyarrow.parquet as pq
 import pytest
 
 from pyexasol.transport.parquet.handler import ExaParquetHttpRequestHandler
+from pyexasol.transport.parquet.server import ExaParquetTCPServer
 
 parse_range = ExaParquetHttpRequestHandler._parse_range
 
@@ -92,6 +94,8 @@ def serve(parquet_file):
 
     def _serve(file=None):
         server = ThreadingHTTPServer(("127.0.0.1", 0), ExaParquetHttpRequestHandler)
+        # Same error handling as the real tunnel server.
+        server.handle_error = lambda *_: ExaParquetTCPServer.handle_error(server, *_)
         server.parquet_file = file or parquet_file
         server.total_clients = 0
         server.request_error = None
@@ -200,6 +204,24 @@ class TestGet:
 
         assert response.read() == CONTENT
         connection.close()
+
+
+class TestUnexpectedError:
+    @staticmethod
+    def test_missing_file_is_recorded_as_request_error(serve, tmp_path):
+        server = serve(tmp_path / "deleted.parquet")
+
+        connection = http.client.HTTPConnection(*server.server_address, timeout=5)
+        connection.request("GET", "/000.parquet")
+        with pytest.raises(http.client.HTTPException):
+            connection.getresponse()
+        connection.close()
+
+        # handle_error() runs in the request thread, just after the connection closes
+        deadline = time.monotonic() + 5
+        while server.request_error is None and time.monotonic() < deadline:
+            time.sleep(0.01)
+        assert isinstance(server.request_error, FileNotFoundError)
 
 
 class TestFileChangedDuringImport:
