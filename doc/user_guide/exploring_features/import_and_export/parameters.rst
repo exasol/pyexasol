@@ -113,11 +113,11 @@ method. When the code is executed, these are validated using the :class:`pyexaso
      - ``"\x00"``
      - Custom NULL value
    * - ``row_separator``
-     - ``"CRLF"``
+     - ``"LF"``
      - Row separator for CSV (line-endings). PyExasol sends no ``ROW SEPARATOR``
-       clause unless you set this, so the database default of ``LF`` applies. Pass
-       ``"CRLF"`` for files written by Python's ``csv`` module, Excel or any other
-       RFC 4180 producer, see :ref:`the import note <import_row_separator>`.
+       clause unless you set this, so the database default of ``LF`` applies. Set
+       ``"CRLF"`` only if you supply CSV with ``CRLF`` line endings, for example
+       to ``import_from_file``, see :ref:`the import note <import_row_separator>`.
    * - ``skip``
      - ``1``
      - How many first rows to skip, useful for skipping header
