@@ -2,7 +2,7 @@
 
 Branch: `feature/394-part-3-import-native-parquet`
 Database: `exasol/docker-db:2026.1.0`, local docker container (client and database on the same host)
-Script: `bench_import.py` (repo root, untracked)
+Scripts: `bench_import.py` and `bench_import_wide.py` (repo root)
 
 ## Modes compared
 
@@ -102,6 +102,29 @@ native 10 per statement 0.26, 0.52, 1.21, 0.81, 0.94 s; callback 0.09, 0.13, 0.1
   measured, nor where, if at all, the native import overtakes the callback import for
   larger data.
 
+## Wider data
+
+`bench_import_wide.py`: 10 files with 20,000 rows each, after the certificate sharing.
+The columns are a third each `DECIMAL(18,0)` (Parquet `int64`), `DOUBLE` and
+`VARCHAR(30)` (values repeat, so they compress well). 3 repeats, medians.
+
+| Columns | Parquet size | Native 1 per statement | Native 10 per statement | Callback | Native 10 vs callback |
+|---------|--------------|------------------------|-------------------------|----------|-----------------------|
+| 3       | 2 MB         | 1.20 s                 | 0.31 s                  | 0.18 s   | 1.7x slower           |
+| 30      | 24 MB        | 1.75 s                 | 0.59 s                  | 0.44 s   | 1.3x slower           |
+| 100     | 80 MB        | 3.31 s                 | 1.40 s                  | 1.26 s   | 1.1x slower           |
+| 300     | 239 MB       | 9.22 s                 | 3.63 s                  | 3.60 s   | tied                  |
+
+- The gap to the callback import closes as the data per file grows. The native costs
+  are mostly fixed per file or per statement, so they matter less for wide files. At 300
+  columns native with 10 files per statement and the callback import take the same time.
+- Batching is faster at every width (3.8x at 3 columns down to 2.5x at 300 columns),
+  but its advantage shrinks as the data grows.
+- The native import did not get ahead of the callback import in these runs, although it
+  skips the CSV conversion.
+- CPU and memory use were not measured, and only this one shape (10 files, 3 repeats)
+  was run.
+
 ## Not measured
 
 - Other databases or remote clients. Only one local container was used. Network latency
@@ -109,7 +132,8 @@ native 10 per statement 0.26, 0.52, 1.21, 0.81, 0.94 s; callback 0.09, 0.13, 0.1
 - Batch sizes other than 1 and 10.
 - Whether Exasol reads the files of one batch in parallel or one after another. The
   speedup from batching could come from either that or the saved per-statement overhead.
-- Memory use.
+- Memory and CPU use.
+- Files that compress poorly, and more than 300 columns.
 
 ## Existing import tests
 
@@ -118,8 +142,8 @@ The 15 import tests in `parquet_test.py` (`TestImportFromParquet`,
 default batch size forced to 1 and to 10 (`default_batch_plugin.py`, env var
 `BENCH_BATCH`):
 
-| `BENCH_BATCH` | Run 1 | Run 2 | Run 3 |
-|---------------|-------|-------|-------|
+| `BENCH_BATCH` | Run 1  | Run 2  | Run 3  |
+|---------------|--------|--------|--------|
 | 1             | 9.12 s | 9.22 s | 9.26 s |
 | 10            | 9.34 s | 9.41 s | 9.68 s |
 
@@ -132,6 +156,8 @@ after a failure, which only holds when all files share one statement.
 
 ```
 poetry run python bench_import.py [n_files=20] [rows_per_file=50000] [repeats=3]
+
+poetry run python bench_import_wide.py 10 20000 100   # files, rows per file, columns
 
 BENCH_BATCH=1 PYTHONPATH=. poetry run pytest -p default_batch_plugin \
   test/integration/import_and_export/parquet_test.py \
