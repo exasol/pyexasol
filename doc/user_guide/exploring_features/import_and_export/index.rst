@@ -78,11 +78,13 @@ See :meth:`pyexasol.ExaConnection.import_from_file`. This method supports import
 data from a file, path object, file-like object opened in binary mode, or from a process
 ``STDIN`` using ``sys.stdin.buffer``.
 
-.. _import_row_separator:
-
 .. note::
 
      Files opened in text mode are not supported and will raise an error.
+
+.. _import_row_separator:
+
+.. note::
 
      The ``IMPORT`` statement only carries a ``ROW SEPARATOR`` clause when you pass
      ``row_separator``, so by default the database uses ``LF``. A file with ``CRLF``
