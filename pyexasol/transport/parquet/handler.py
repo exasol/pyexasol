@@ -65,14 +65,23 @@ class ExaParquetHttpRequestHandler(BaseHTTPRequestHandler):
         """
         Send the response headers, shared so ``HEAD`` and ``GET`` always match.
 
-        Answers 200 OK for the whole file, 206 Partial Content with ``Content-Range``
-        for a byte range and 416 Range Not Satisfiable for an unsatisfiable one.
+        Responses:
+
+        * 200 OK: the whole file, for no ``Range`` header or an ignored one
+          (an ignored ``Range`` header is answered like none).
+        * 206 Partial Content: the requested byte range, with ``Content-Range``.
+        * 416 Range Not Satisfiable: a valid range that cannot be satisfied, with
+          ``Content-Range: bytes */<size>``.
+
+        ``Range`` is only defined for ``GET`` (RFC 9110 §14.2), so ``HEAD`` always
+        ignores it.
+
         Returns the inclusive ``(start, end)`` offsets of the body to send, or
         ``None`` for 416.
         """
         parquet_file = self.server.parquet_file
         file_size = parquet_file.stat().st_size
-        range_header = self.headers.get("Range")
+        range_header = self.headers.get("Range") if self.command == "GET" else None
         byte_range = self._parse_range(range_header, file_size)
         if byte_range is None:
             self.send_response(HTTPStatus.REQUESTED_RANGE_NOT_SATISFIABLE)
@@ -81,13 +90,13 @@ class ExaParquetHttpRequestHandler(BaseHTTPRequestHandler):
             self.end_headers()
             return None
 
-        start, end = byte_range
-        status = HTTPStatus.PARTIAL_CONTENT if range_header else HTTPStatus.OK
+        start, end, is_partial = byte_range
+        status = HTTPStatus.PARTIAL_CONTENT if is_partial else HTTPStatus.OK
         self.send_response(status)
         self.send_header("Accept-Ranges", "bytes")
         self.send_header("Content-Type", "application/octet-stream")
         self.send_header("Content-Length", str(end - start + 1))
-        if range_header:
+        if is_partial:
             self.send_header("Content-Range", f"bytes {start}-{end}/{file_size}")
         self.end_headers()
         return start, end
@@ -95,46 +104,58 @@ class ExaParquetHttpRequestHandler(BaseHTTPRequestHandler):
     @staticmethod
     def _parse_range(
         range_header: str | None, file_size: int
-    ) -> tuple[int, int] | None:
+    ) -> tuple[int, int, bool] | None:
         """
-        Return the inclusive ``(start, end)`` byte offsets to send of the Parquet file.
+        Return the inclusive ``(start, end, is_partial)`` of the Parquet file to send.
 
         Offsets are zero-based, so ``bytes=0-99`` is the first 100 bytes. Only one
-        range is supported (``a-b``, ``a-`` and ``-n``); further ranges are ignored.
-        Examples for a 1000 byte file:
+        range is supported (``a-b``, ``a-`` and ``-n``). ``is_partial`` tells whether
+        the Range header is honored (206 Partial Content with ``Content-Range``) or
+        ignored (200 OK), even if a honored range covers the whole file. Examples for
+        a 1000 byte file:
 
-        - ``bytes=100-199``: bytes 100 to 199, ``(100, 199)``.
-        - ``bytes=900-``: from byte 900 to the end, ``(900, 999)``.
-        - ``bytes=-100``: the last 100 bytes, ``(900, 999)``. This is how a reader
-          fetches the Parquet footer without knowing the file size first.
-        - ``bytes=900-5000``: an end past the file is clamped, ``(900, 999)``.
-        - no ``Range`` header: the whole file, ``(0, 999)``.
+        - ``bytes=100-199``: bytes 100 to 199, ``(100, 199, True)``.
+        - ``bytes=900-``: from byte 900 to the end, ``(900, 999, True)``.
+        - ``bytes=-100``: the last 100 bytes, ``(900, 999, True)``. This is how a
+          reader fetches the Parquet footer without knowing the file size first.
+        - ``bytes=900-5000``: an end past the file is clamped, ``(900, 999, True)``.
+        - no ``Range`` header: the whole file, ``(0, 999, False)``.
 
-        ``None`` (answered with 416 Range Not Satisfiable) is returned for a unit
-        other than ``bytes``, a malformed range, or a start at or beyond the end of
-        the file.
+        Following RFC 9110 §14.2, the header is ignored (the whole file is returned,
+        not partial) if it uses a unit other than ``bytes`` (which MUST be ignored),
+        or is invalid or unsupported: malformed syntax (``bytes=a-b``), a reversed
+        range (``bytes=20-10``), multiple ranges (``bytes=0-9,20-29``) or any range
+        on an empty file.
+
+        ``None`` (answered with 416 Range Not Satisfiable) is returned only for a
+        valid range that cannot be satisfied: a start at or beyond the end of the
+        file, or a zero-length suffix.
         """
         last = file_size - 1
-        if not range_header:
-            return 0, last
+        whole_file = (0, last, False)
+        if not range_header or file_size == 0:
+            return whole_file
 
-        match = _BYTE_RANGE.fullmatch(range_header.split(",")[0])
+        match = _BYTE_RANGE.fullmatch(range_header)
         if not match:
-            return None
+            return whole_file
 
         first, second = match.groups()
         if first:
             start = int(first)
+            if second and int(second) < start:
+                return whole_file
+            if start >= file_size:
+                return None
             end = min(int(second), last) if second else last
         elif second:
+            if int(second) == 0:
+                return None
             start = max(file_size - int(second), 0)
             end = last
         else:
-            return None
-
-        if start >= file_size or end < start:
-            return None
-        return start, end
+            return whole_file
+        return start, end, True
 
     def _write_range(self, start: int, end: int):
         """
