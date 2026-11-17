@@ -2,6 +2,7 @@ import http.client
 import io
 import random
 import threading
+import time
 from http.server import ThreadingHTTPServer
 from types import SimpleNamespace
 
@@ -10,6 +11,7 @@ import pyarrow.parquet as pq
 import pytest
 
 from pyexasol.transport.parquet.handler import ExaParquetHttpRequestHandler
+from pyexasol.transport.parquet.server import ExaParquetTCPServer
 
 parse_range = ExaParquetHttpRequestHandler._parse_range
 
@@ -21,15 +23,32 @@ class TestParseRange:
     @pytest.mark.parametrize(
         "header, size, expected",
         [
-            pytest.param(None, 100, (0, 99), id="no_header_whole_file"),
-            pytest.param(None, 0, (0, -1), id="no_header_empty_file"),
-            pytest.param("bytes=0-9", 100, (0, 9), id="closed"),
-            pytest.param("bytes=10-", 100, (10, 99), id="open_ended"),
-            pytest.param("bytes=-10", 100, (90, 99), id="suffix"),
-            pytest.param("bytes=-500", 100, (0, 99), id="suffix_larger_than_file"),
-            pytest.param("bytes=90-500", 100, (90, 99), id="end_clamped_to_file"),
-            pytest.param("bytes=0-9,20-29", 100, (0, 9), id="only_first_range_used"),
-            pytest.param(" BYTES = 0-9", 100, (0, 9), id="unit_case_and_spaces"),
+            pytest.param(None, 100, (0, 99, False), id="no_header_whole_file"),
+            pytest.param(None, 0, (0, -1, False), id="no_header_empty_file"),
+            pytest.param("bytes=0-9", 100, (0, 9, True), id="closed"),
+            pytest.param("bytes=10-", 100, (10, 99, True), id="open_ended"),
+            pytest.param("bytes=-10", 100, (90, 99, True), id="suffix"),
+            pytest.param(
+                "bytes=-500", 100, (0, 99, True), id="suffix_larger_than_file"
+            ),
+            pytest.param("bytes=90-500", 100, (90, 99, True), id="end_clamped_to_file"),
+            pytest.param(
+                "bytes=0-9,20-29", 100, (0, 99, False), id="multiple_ranges_ignored"
+            ),
+            pytest.param(
+                "items=0-9", 100, (0, 99, False), id="unsupported_unit_ignored"
+            ),
+            pytest.param("bytes=a-b", 100, (0, 99, False), id="not_numbers_ignored"),
+            pytest.param(
+                "bytes=20-10", 100, (0, 99, False), id="end_before_start_ignored"
+            ),
+            pytest.param("bytes=-", 100, (0, 99, False), id="no_digits_ignored"),
+            pytest.param("bytes=0-99", 100, (0, 99, True), id="whole_file_is_partial"),
+            pytest.param("bytes=0-", 100, (0, 99, True), id="open_ended_whole_file"),
+            pytest.param(
+                "bytes=0-9", 0, (0, -1, False), id="range_on_empty_file_ignored"
+            ),
+            pytest.param(" BYTES = 0-9", 100, (0, 9, True), id="unit_case_and_spaces"),
         ],
     )
     def test_satisfiable(header, size, expected):
@@ -40,11 +59,6 @@ class TestParseRange:
         "header, size",
         [
             pytest.param("bytes=100-", 100, id="start_at_file_size"),
-            pytest.param("bytes=20-10", 100, id="end_before_start"),
-            pytest.param("items=0-9", 100, id="unsupported_unit"),
-            pytest.param("bytes=a-b", 100, id="not_numbers"),
-            pytest.param("bytes=0-9", 0, id="range_on_empty_file"),
-            pytest.param("bytes=-", 100, id="no_digits"),
             pytest.param("bytes=-0", 100, id="zero_length_suffix"),
         ],
     )
@@ -80,6 +94,8 @@ def serve(parquet_file):
 
     def _serve(file=None):
         server = ThreadingHTTPServer(("127.0.0.1", 0), ExaParquetHttpRequestHandler)
+        # Same error handling as the real tunnel server.
+        server.handle_error = lambda *_: ExaParquetTCPServer.handle_error(server, *_)
         server.parquet_file = file or parquet_file
         server.total_clients = 0
         server.request_error = None
@@ -115,6 +131,15 @@ class TestHead:
         assert response.read() == b""
         connection.close()
 
+    @staticmethod
+    def test_ignores_range(serve):
+        connection, response = request(serve(), "HEAD", "bytes=10-19")
+
+        assert response.status == 200
+        assert response.getheader("Content-Length") == "100"
+        assert response.getheader("Content-Range") is None
+        connection.close()
+
 
 class TestGet:
     @staticmethod
@@ -125,6 +150,27 @@ class TestGet:
         assert response.getheader("Content-Range") == "bytes 10-19/100"
         assert response.getheader("Content-Length") == "10"
         assert response.read() == CONTENT[10:20]
+        connection.close()
+
+    @staticmethod
+    @pytest.mark.parametrize(
+        "header", ["items=0-9", "bytes=a-b", "bytes=20-10", "bytes=0-9,20-29"]
+    )
+    def test_ignored_range_returns_whole_file(serve, header):
+        connection, response = request(serve(), "GET", header)
+
+        assert response.status == 200
+        assert response.getheader("Content-Range") is None
+        assert response.read() == CONTENT
+        connection.close()
+
+    @staticmethod
+    def test_range_covering_whole_file_returns_partial_content(serve):
+        connection, response = request(serve(), "GET", "bytes=0-")
+
+        assert response.status == 206
+        assert response.getheader("Content-Range") == "bytes 0-99/100"
+        assert response.read() == CONTENT
         connection.close()
 
     @staticmethod
@@ -158,6 +204,24 @@ class TestGet:
 
         assert response.read() == CONTENT
         connection.close()
+
+
+class TestUnexpectedError:
+    @staticmethod
+    def test_missing_file_is_recorded_as_request_error(serve, tmp_path):
+        server = serve(tmp_path / "deleted.parquet")
+
+        connection = http.client.HTTPConnection(*server.server_address, timeout=5)
+        connection.request("GET", "/000.parquet")
+        with pytest.raises(http.client.HTTPException):
+            connection.getresponse()
+        connection.close()
+
+        # handle_error() runs in the request thread, just after the connection closes
+        deadline = time.monotonic() + 5
+        while server.request_error is None and time.monotonic() < deadline:
+            time.sleep(0.01)
+        assert isinstance(server.request_error, FileNotFoundError)
 
 
 class TestFileChangedDuringImport:
