@@ -4,9 +4,15 @@
 
 This release adds support for option `BOOLEAN` in `export_to_file()`. See the section "Exasol Parameters" in the user guide for supported values.
 
+The minimum supported Python version is now 3.11.5, as later `soupsieve` versions, needed to resolve a reported vulnerability, no longer support older versions.
+
 ## Features
 
 * #264: Added support for option `BOOLEAN` in `export_to_file`
+
+## Refactorings
+
+* #484: Dropped support for Python versions < 3.11.5
 
 ## Bugfixes
 
