@@ -63,8 +63,7 @@ class SqlQuery:
     """
     Base class for the import and export query dataclasses.
 
-    .. deprecated::
-        Use ``ImportBuilder`` or ``ExportBuilder`` from ``pyexasol.query_builders.csv.builders`` instead.
+    Deprecated: use ``ImportBuilder`` or ``ExportBuilder`` from ``pyexasol.query_builders.csv.builders`` instead.
     """
 
     connection: ExaConnection
@@ -96,8 +95,7 @@ class ImportQuery(SqlQuery):
     """
     Validate import parameters and build an IMPORT query.
 
-    .. deprecated::
-        Use ``pyexasol.query_builders.csv.builders.ImportBuilder`` instead.
+    Deprecated: use ``pyexasol.query_builders.csv.builders.ImportBuilder`` instead.
     """
 
     # set these values in param dictionary to ExaConnection
@@ -150,8 +148,7 @@ class ExportQuery(SqlQuery):
     """
     Validate export parameters and build an EXPORT query.
 
-    .. deprecated::
-        Use ``pyexasol.query_builders.csv.builders.ExportBuilder`` instead.
+    Deprecated: use ``pyexasol.query_builders.csv.builders.ExportBuilder`` instead.
     """
 
     # set these values in param dictionary to ExaConnection
@@ -270,8 +267,7 @@ class ExaSQLExportThread(ExaSQLThread):
     Build and run EXPORT query into separate thread
     Main thread is busy outputting data in callbacks
 
-    .. deprecated::
-        Use ``ExaSQLThread`` with an ``ExportBuilder`` as ``query_builder`` instead.
+    Deprecated: use ``ExaSQLThread`` with an ``ExportBuilder`` as ``query_builder`` instead.
     """
 
     def __init__(
@@ -312,8 +308,7 @@ class ExaSQLImportThread(ExaSQLThread):
     Build and run IMPORT query into separate thread
     Main thread is busy parsing results in callbacks
 
-    .. deprecated::
-        Use ``ExaSQLThread`` with an ``ImportBuilder`` as ``query_builder`` instead.
+    Deprecated: use ``ExaSQLThread`` with an ``ImportBuilder`` as ``query_builder`` instead.
     """
 
     def __init__(
