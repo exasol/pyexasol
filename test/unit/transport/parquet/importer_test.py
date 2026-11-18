@@ -31,31 +31,29 @@ class TestExaParquetImporterValidation:
             )
 
 
-class TestNativeParquetLoop:
-    @staticmethod
-    @pytest.fixture
-    def files(tmp_path):
-        paths = [tmp_path / f"{i}.parquet" for i in range(3)]
-        for path in paths:
-            path.write_bytes(b"PAR1")
-        return paths
+@pytest.fixture
+def files(tmp_path):
+    paths = [tmp_path / f"{i}.parquet" for i in range(3)]
+    for path in paths:
+        path.write_bytes(b"PAR1")
+    return paths
 
-    @staticmethod
-    @pytest.fixture
-    def threads(mock_exaconnection_factory):
-        connection = mock_exaconnection_factory()
-        connection.logger = MagicMock()
-        connection.abort_query = MagicMock()
-        connection.ws_ipaddr = "127.0.0.1"
-        connection.ws_port = 8563
-        with (
-            patch(
-                "pyexasol.transport.parquet.importer.ExaParquetHttpThread"
-            ) as http_cls,
-            patch("pyexasol.transport.parquet.importer.ExaSQLThread") as sql_cls,
-        ):
-            yield connection, http_cls, sql_cls
 
+@pytest.fixture
+def threads(mock_exaconnection_factory):
+    connection = mock_exaconnection_factory()
+    connection.logger = MagicMock()
+    connection.abort_query = MagicMock()
+    connection.ws_ipaddr = "127.0.0.1"
+    connection.ws_port = 8563
+    with (
+        patch("pyexasol.transport.parquet.importer.ExaParquetHttpThread") as http_cls,
+        patch("pyexasol.transport.parquet.importer.ExaSQLThread") as sql_cls,
+    ):
+        yield connection, http_cls, sql_cls
+
+
+class TestExaParquetImporter:
     @staticmethod
     def test_one_tunnel_per_file_in_one_statement(threads, files):
         connection, http_cls, sql_cls = threads
@@ -160,14 +158,205 @@ class TestNativeParquetLoop:
         connection.abort_query.assert_not_called()
 
     @staticmethod
+    def test_logs_failed_batch_with_number_of_imported_files(threads, files):
+        connection, _, sql_cls = threads
+        sql_cls.return_value.join_with_exc.side_effect = [None, RuntimeError("boom")]
+        sql_cls.return_value.is_alive.return_value = False
+
+        with pytest.raises(ExaImportError):
+            ExaParquetImporter(connection).import_from_native_parquet(
+                files, "tbl", max_parallel_files=1
+            )
+
+        (message,) = (c.args[0] for c in connection.logger.debug.call_args_list)
+        assert "files 2-2 of 3" in message
+        assert "1 file(s) were imported before it" in message
+
+
+class TestImportNativeParquetBatch:
+    @staticmethod
+    def _import_batch(connection, files, ssl_context=None):
+        ExaParquetImporter(connection)._import_native_parquet_batch(
+            files, MagicMock(), ssl_context, 0, len(files)
+        )
+
+    @staticmethod
+    def test_finishes_http_threads_after_statement(threads, files):
+        connection, http_cls, sql_cls = threads
+        http_threads = [MagicMock() for _ in files]
+        http_cls.side_effect = http_threads
+
+        TestImportNativeParquetBatch._import_batch(connection, files)
+
+        sql_cls.return_value.join_with_exc.assert_called_once()
+        for http_thread in http_threads:
+            http_thread.terminate.assert_called_once()
+            http_thread.join_with_exc.assert_called_once()
+        connection.abort_query.assert_not_called()
+
+    @staticmethod
     def test_aborts_query_if_sql_thread_still_running(threads, files):
         connection, http_cls, sql_cls = threads
         sql_cls.return_value.join_with_exc.side_effect = KeyboardInterrupt
         sql_cls.return_value.is_alive.return_value = True
 
         with pytest.raises(ExaImportError):
-            ExaParquetImporter(connection).import_from_native_parquet(files, "tbl")
+            TestImportNativeParquetBatch._import_batch(connection, files)
 
         connection.abort_query.assert_called_once()
         http_cls.return_value.terminate.assert_called()
         assert sql_cls.return_value.join.call_count == 2  # timed, then final
+
+    @staticmethod
+    def test_wraps_errors_of_all_threads_in_import_error(threads, files):
+        connection, http_cls, sql_cls = threads
+        http_thread = http_cls.return_value
+        http_thread.exc = ConnectionError("http")
+        sql_cls.return_value.exc = RuntimeError("sql")
+        sql_cls.return_value.join_with_exc.side_effect = sql_cls.return_value.exc
+        sql_cls.return_value.is_alive.return_value = False
+
+        with pytest.raises(ExaImportError) as exc_info:
+            TestImportNativeParquetBatch._import_batch(connection, files[:1])
+
+        assert exc_info.value.__cause__ is sql_cls.return_value.exc
+        assert http_thread.exc in exc_info.value.exceptions
+        assert sql_cls.return_value.exc in exc_info.value.exceptions
+
+    @staticmethod
+    def test_cleans_up_started_threads_if_starting_one_fails(threads, files):
+        connection, http_cls, sql_cls = threads
+        started = MagicMock()
+        started.is_alive.return_value = False
+        http_cls.side_effect = [started, OSError("cannot bind")]
+
+        with pytest.raises(ExaImportError):
+            TestImportNativeParquetBatch._import_batch(connection, files[:2])
+
+        started.terminate.assert_called()
+        sql_cls.assert_not_called()  # the statement is never started
+        connection.abort_query.assert_not_called()
+
+    @staticmethod
+    def test_does_not_join_sql_thread_that_failed_to_start(threads, files):
+        connection, _, sql_cls = threads
+        sql_cls.return_value.start.side_effect = RuntimeError("cannot start thread")
+
+        with pytest.raises(ExaImportError):
+            TestImportNativeParquetBatch._import_batch(connection, files[:1])
+
+        sql_cls.return_value.join.assert_not_called()
+        connection.abort_query.assert_not_called()
+
+
+class TestStartHttpThreads:
+    @staticmethod
+    def test_starts_one_thread_per_file_with_connection_settings(threads, files):
+        connection, http_cls, _ = threads
+        connection.options["encryption"] = True
+        ssl_context = (MagicMock(), "sha")
+        http_cls.side_effect = [MagicMock() for _ in files]
+        http_threads = []
+
+        ExaParquetImporter(connection)._start_http_threads(
+            files, ssl_context, http_threads
+        )
+
+        assert len(http_threads) == len(files)
+        assert [c.kwargs for c in http_cls.call_args_list] == [
+            {
+                "ipaddr": "127.0.0.1",
+                "port": 8563,
+                "parquet_file": file,
+                "encryption": True,
+                "ssl_context": ssl_context,
+            }
+            for file in files
+        ]
+        for http_thread in http_threads:
+            http_thread.start.assert_called_once()
+
+    @staticmethod
+    def test_keeps_threads_started_before_a_failure(threads, files):
+        connection, http_cls, _ = threads
+        first = MagicMock()
+        http_cls.side_effect = [first, OSError("cannot bind")]
+        http_threads = []
+
+        with pytest.raises(OSError, match="cannot bind"):
+            ExaParquetImporter(connection)._start_http_threads(
+                files[:2], None, http_threads
+            )
+
+        assert http_threads == [first]
+
+
+class TestStartSqlThread:
+    @staticmethod
+    def test_starts_sql_thread_with_builder_and_tunnel_addresses(threads):
+        connection, _, sql_cls = threads
+        import_builder = MagicMock()
+        http_threads = [MagicMock(), MagicMock()]
+
+        sql_thread = ExaParquetImporter(connection)._start_sql_thread(
+            import_builder, http_threads
+        )
+
+        sql_cls.assert_called_once_with(
+            connection=connection, compression=False, query_builder=import_builder
+        )
+        assert sql_thread is sql_cls.return_value
+        sql_thread.set_exa_address_list.assert_called_once_with(
+            [t.exa_address for t in http_threads]
+        )
+        sql_thread.start.assert_called_once()
+        sql_thread.join_with_exc.assert_not_called()  # waiting is up to the caller
+
+
+class TestAbortAfterFailure:
+    @staticmethod
+    @pytest.fixture
+    def importer(threads):
+        connection, _, _ = threads
+        return ExaParquetImporter(connection)
+
+    @staticmethod
+    def test_joins_only_http_threads_that_are_still_alive(importer):
+        alive, finished = MagicMock(), MagicMock()
+        alive.is_alive.return_value = True
+        finished.is_alive.return_value = False
+
+        importer._abort_after_failure([alive, finished], None)
+
+        alive.terminate.assert_called_once()
+        finished.terminate.assert_called_once()
+        alive.join.assert_called_once()
+        finished.join.assert_not_called()
+
+    @staticmethod
+    def test_without_sql_thread_does_not_abort_query(importer):
+        importer._abort_after_failure([], None)
+
+        importer.connection.abort_query.assert_not_called()
+
+    @staticmethod
+    def test_does_not_abort_query_if_sql_thread_finished(importer):
+        sql_thread = MagicMock()
+        sql_thread.is_alive.return_value = False
+
+        importer._abort_after_failure([], sql_thread)
+
+        sql_thread.join.assert_called_once_with(1)
+        importer.connection.abort_query.assert_not_called()
+
+    @staticmethod
+    def test_aborts_query_before_final_join_if_sql_thread_still_running(importer):
+        sql_thread = MagicMock()
+        sql_thread.is_alive.return_value = True
+        calls = MagicMock()
+        calls.attach_mock(sql_thread.join, "join")
+        calls.attach_mock(importer.connection.abort_query, "abort_query")
+
+        importer._abort_after_failure([], sql_thread)
+
+        assert [c[0] for c in calls.mock_calls] == ["join", "abort_query", "join"]

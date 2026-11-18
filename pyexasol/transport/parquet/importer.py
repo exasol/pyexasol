@@ -56,6 +56,64 @@ class ExaParquetImporter:
                 batch, import_builder, ssl_context, batch_start, len(parquet_files)
             )
 
+    def _abort_after_failure(
+        self,
+        http_threads: list[ExaParquetHttpThread],
+        sql_thread: ExaSQLThread | None,
+    ):
+        for http_thread in http_threads:
+            http_thread.terminate()
+            if http_thread.is_alive():
+                http_thread.join()
+
+        if sql_thread is not None:
+            sql_thread.join(1)
+            if sql_thread.is_alive():
+                # The statement is still running, so interrupt it before joining.
+                self.connection.abort_query()
+                sql_thread.join()
+
+    @staticmethod
+    def _finish_http_threads(http_threads: list[ExaParquetHttpThread]):
+        for http_thread in http_threads:
+            http_thread.terminate()
+            http_thread.join_with_exc()
+
+    def _start_http_threads(
+        self,
+        batch: list[Path],
+        ssl_context: tuple[ssl.SSLContext, str] | None,
+        http_threads: list[ExaParquetHttpThread],
+    ):
+        # Appends to ``http_threads`` as it goes, so that the caller's failure
+        # handling also sees the threads started before a later one failed.
+        for parquet_file in batch:
+            http_thread = ExaParquetHttpThread(
+                ipaddr=self.connection.ws_ipaddr,
+                port=self.connection.ws_port,
+                parquet_file=parquet_file,
+                encryption=self.connection.options["encryption"],
+                ssl_context=ssl_context,
+            )
+            http_threads.append(http_thread)
+            http_thread.start()
+
+    def _start_sql_thread(
+        self,
+        import_builder: ParquetImportBuilder,
+        http_threads: list[ExaParquetHttpThread],
+    ) -> ExaSQLThread:
+        sql_thread = ExaSQLThread(
+            connection=self.connection,
+            compression=False,
+            query_builder=import_builder,
+        )
+        sql_thread.set_exa_address_list(
+            [http_thread.exa_address for http_thread in http_threads]
+        )
+        sql_thread.start()
+        return sql_thread
+
     def _import_native_parquet_batch(
         self,
         batch: list[Path],
@@ -68,42 +126,12 @@ class ExaParquetImporter:
         sql_thread = None
 
         try:
-            for parquet_file in batch:
-                http_thread = ExaParquetHttpThread(
-                    ipaddr=self.connection.ws_ipaddr,
-                    port=self.connection.ws_port,
-                    parquet_file=parquet_file,
-                    encryption=self.connection.options["encryption"],
-                    ssl_context=ssl_context,
-                )
-                http_threads.append(http_thread)
-                http_thread.start()
-
-            sql_thread = ExaSQLThread(
-                connection=self.connection,
-                compression=False,
-                query_builder=import_builder,
-            )
-            sql_thread.set_exa_address_list(
-                [http_thread.exa_address for http_thread in http_threads]
-            )
-            sql_thread.start()
+            self._start_http_threads(batch, ssl_context, http_threads)
+            sql_thread = self._start_sql_thread(import_builder, http_threads)
             sql_thread.join_with_exc()
-
-            for http_thread in http_threads:
-                http_thread.terminate()
-                http_thread.join_with_exc()
+            self._finish_http_threads(http_threads)
         except (Exception, KeyboardInterrupt) as error:
-            for http_thread in http_threads:
-                http_thread.terminate()
-                if http_thread.is_alive():
-                    http_thread.join()
-
-            if sql_thread is not None:
-                sql_thread.join(1)
-                if sql_thread.is_alive():
-                    self.connection.abort_query()
-                    sql_thread.join()
+            self._abort_after_failure(http_threads, sql_thread)
 
             self.connection.logger.debug(
                 f"Native Parquet import failed for the batch of files "
