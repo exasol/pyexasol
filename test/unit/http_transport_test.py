@@ -1,4 +1,5 @@
 import threading
+import warnings
 from importlib import import_module
 from unittest.mock import (
     Mock,
@@ -17,6 +18,7 @@ from pyexasol.http_transport import (
     ExaHttpThread,
     ExaHTTPTransportWrapper,
     ExaSQLExportThread,
+    ExaSQLImportThread,
     ExaSQLThread,
     ExportQuery,
     ImportQuery,
@@ -24,6 +26,7 @@ from pyexasol.http_transport import (
 )
 from pyexasol.query_builders.common_formattings import TransportEndpoint
 from pyexasol.query_builders.csv.clause_formatter import ClauseFormatter
+from pyexasol.warnings import PyexasolDeprecationWarning
 
 http_transport_module = import_module("pyexasol.http_transport")
 
@@ -428,3 +431,39 @@ class TestExaHTTPTransportWrapper:
             http_transport_wrapper_with_mocks.import_from_callback(
                 callback="string", src=None
             )
+
+
+class TestDeprecations:
+    def test_warns_on_every_instantiation_when_recorded(self, mock_connection):
+        for _ in range(2):
+            with pytest.warns(PyexasolDeprecationWarning):
+                SqlQuery(connection=mock_connection, compression=True)
+
+    @pytest.mark.parametrize("cls", [SqlQuery, ImportQuery, ExportQuery])
+    def test_query_classes_warn(self, mock_connection, cls):
+        with pytest.warns(PyexasolDeprecationWarning, match=cls.__name__):
+            cls(connection=mock_connection, compression=True)
+
+    def test_thread_classes_warn(self, mock_connection):
+        with pytest.warns(PyexasolDeprecationWarning, match="ExaSQLExportThread"):
+            ExaSQLExportThread(mock_connection, True, "t", {})
+        with pytest.warns(PyexasolDeprecationWarning, match="ExaSQLImportThread"):
+            ExaSQLImportThread(mock_connection, True, "t", {})
+
+    def test_run_sql_does_not_emit_query_class_warnings(self, mock_connection):
+        mock_connection.options["encryption"] = False
+        with pytest.warns(PyexasolDeprecationWarning, match="ExaSQLExportThread"):
+            export_thread = ExaSQLExportThread(mock_connection, False, "t", {})
+        with pytest.warns(PyexasolDeprecationWarning, match="ExaSQLImportThread"):
+            import_thread = ExaSQLImportThread(mock_connection, False, "t", {})
+        export_thread.set_exa_address_list(["127.0.0.1:8563"])
+        import_thread.set_exa_address_list(["127.0.0.1:8563"])
+
+        with warnings.catch_warnings():
+            warnings.simplefilter("error")
+            export_thread.run_sql()
+            import_thread.run_sql()
+
+        # suppression is scoped: direct use still warns afterwards
+        with pytest.warns(PyexasolDeprecationWarning, match="ImportQuery"):
+            ImportQuery(connection=mock_connection, compression=True)

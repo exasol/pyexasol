@@ -30,7 +30,7 @@ are workers created by :meth:`ExaConnection.import_from_callback` or
         end
 
         subgraph sql_group["SQL thread"]
-            sql["ExaSQLImportThread or<br/>ExaSQLExportThread"]
+            sql["ExaSQLThread with<br/>ImportBuilder or ExportBuilder"]
         end
 
         db[("Exasol database")]

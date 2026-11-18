@@ -4,9 +4,14 @@ import os
 import socketserver
 import threading
 import zlib
-from collections.abc import Iterable
+from collections.abc import (
+    Iterable,
+    Iterator,
+)
+from contextlib import contextmanager
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
+from warnings import warn
 
 from .query_builders.base_builder import QueryBuilder
 from .query_builders.csv.builders import (
@@ -18,13 +23,49 @@ from .query_builders.csv.builders import (
     Trim,
 )
 from .transport.tunnel_server import ExaTunnelServer
+from .warnings import PyexasolDeprecationWarning
 
 if TYPE_CHECKING:
     from pyexasol import ExaConnection
 
 
+_internal_use = threading.local()
+
+
+@contextmanager
+def _suppress_deprecation_warnings() -> Iterator[None]:
+    """
+    Silence deprecation warnings for internal use of deprecated classes in the
+    current thread only (``warnings.catch_warnings`` is not thread-safe).
+    """
+    previous = getattr(_internal_use, "active", False)
+    _internal_use.active = True
+    try:
+        yield
+    finally:
+        _internal_use.active = previous
+
+
+def _warn_deprecated(name: str, replacement: str, stacklevel: int = 3) -> None:
+    if getattr(_internal_use, "active", False):
+        return
+    # Repetition is limited by the stdlib per-call-site warnings registry
+    warn(
+        f"{name} is deprecated and will be removed in the future. "
+        f"Use {replacement} instead.",
+        PyexasolDeprecationWarning,
+        stacklevel=stacklevel,
+    )
+
+
 @dataclass
 class SqlQuery:
+    """
+    Base class for the import and export query dataclasses.
+
+    Deprecated: use ``ImportBuilder`` or ``ExportBuilder`` from ``pyexasol.query_builders.csv.builders`` instead.
+    """
+
     connection: ExaConnection
     compression: bool
     # set these values in param dictionary to ExaConnection
@@ -38,9 +79,25 @@ class SqlQuery:
     null: str | None = None
     row_separator: str | None = None
 
+    def __post_init__(self):
+        replacement = {
+            "ImportQuery": "pyexasol.query_builders.csv.builders.ImportBuilder",
+            "ExportQuery": "pyexasol.query_builders.csv.builders.ExportBuilder",
+        }.get(
+            type(self).__name__,
+            "ImportBuilder or ExportBuilder from pyexasol.query_builders.csv.builders",
+        )
+        _warn_deprecated(type(self).__name__, replacement, stacklevel=4)
+
 
 @dataclass
 class ImportQuery(SqlQuery):
+    """
+    Validate import parameters and build an IMPORT query.
+
+    Deprecated: use ``pyexasol.query_builders.csv.builders.ImportBuilder`` instead.
+    """
+
     # set these values in param dictionary to ExaConnection
     skip: str | int | None = None
     trim: Trim | None = None
@@ -88,6 +145,12 @@ class ImportQuery(SqlQuery):
 
 @dataclass
 class ExportQuery(SqlQuery):
+    """
+    Validate export parameters and build an EXPORT query.
+
+    Deprecated: use ``pyexasol.query_builders.csv.builders.ExportBuilder`` instead.
+    """
+
     # set these values in param dictionary to ExaConnection
     delimit: Delimit | None = None
     with_column_names: bool = False
@@ -203,6 +266,8 @@ class ExaSQLExportThread(ExaSQLThread):
     """
     Build and run EXPORT query into separate thread
     Main thread is busy outputting data in callbacks
+
+    Deprecated: use ``ExaSQLThread`` with an ``ExportBuilder`` as ``query_builder`` instead.
     """
 
     def __init__(
@@ -213,6 +278,10 @@ class ExaSQLExportThread(ExaSQLThread):
         export_params: dict,
         worker_finished_event: threading.Event | None = None,
     ):
+        _warn_deprecated(
+            "ExaSQLExportThread",
+            "ExaSQLThread with an ExportBuilder as query_builder",
+        )
         super().__init__(
             connection, compression, worker_finished_event=worker_finished_event
         )
@@ -221,12 +290,16 @@ class ExaSQLExportThread(ExaSQLThread):
         self.params = export_params
 
     def run_sql(self):
-        export_query = ExportQuery.load_from_dict(
-            connection=self.connection, compression=self.compression, params=self.params
-        ).build_query(
-            table=self.query_or_table,
-            exa_address_list=self.exa_address_list,
-        )
+        # The thread class already warned on construction
+        with _suppress_deprecation_warnings():
+            export_query = ExportQuery.load_from_dict(
+                connection=self.connection,
+                compression=self.compression,
+                params=self.params,
+            ).build_query(
+                table=self.query_or_table,
+                exa_address_list=self.exa_address_list,
+            )
         self.connection.execute(export_query)
 
 
@@ -234,6 +307,8 @@ class ExaSQLImportThread(ExaSQLThread):
     """
     Build and run IMPORT query into separate thread
     Main thread is busy parsing results in callbacks
+
+    Deprecated: use ``ExaSQLThread`` with an ``ImportBuilder`` as ``query_builder`` instead.
     """
 
     def __init__(
@@ -244,6 +319,10 @@ class ExaSQLImportThread(ExaSQLThread):
         import_params: dict,
         worker_finished_event: threading.Event | None = None,
     ):
+        _warn_deprecated(
+            "ExaSQLImportThread",
+            "ExaSQLThread with an ImportBuilder as query_builder",
+        )
         super().__init__(
             connection, compression, worker_finished_event=worker_finished_event
         )
@@ -252,9 +331,13 @@ class ExaSQLImportThread(ExaSQLThread):
         self.params = import_params
 
     def run_sql(self):
-        import_query = ImportQuery.load_from_dict(
-            connection=self.connection, compression=self.compression, params=self.params
-        ).build_query(table=self.table, exa_address_list=self.exa_address_list)
+        # The thread class already warned on construction
+        with _suppress_deprecation_warnings():
+            import_query = ImportQuery.load_from_dict(
+                connection=self.connection,
+                compression=self.compression,
+                params=self.params,
+            ).build_query(table=self.table, exa_address_list=self.exa_address_list)
         self.connection.execute(import_query)
 
 

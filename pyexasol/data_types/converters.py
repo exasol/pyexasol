@@ -105,7 +105,7 @@ class ExaTimeDelta(datetime.timedelta):
         """
         Convert this duration to an Exasol ``INTERVAL DAY TO SECOND`` string.
 
-        .. deprecated::
+        .. deprecated:: 4.0.0
             Use ``to_interval_unpadded`` instead.
 
         The result uses the format ``[+-]DDDDDDDDD HH:MM:SS.NNNNNNNNN``.
