@@ -1196,19 +1196,18 @@ class ExaConnection:
         if query_params is not None and isinstance(query_or_table, str):
             query_or_table = self.format.format(query_or_table, **query_params)
 
-        # There is no need to actually run a separate thread here, all work is performed in separate processes
-        # We simply reuse thread class to keep logic in one place
-        sql_thread = ExaSQLThread(
-            self,
-            compression,
-            query_builder=ExportBuilder(
-                compression=compression,
-                query_or_table=query_or_table,
-                **export_params,
-            ),
+        export_builder = ExportBuilder(
+            compression=compression,
+            query_or_table=query_or_table,
+            **export_params,
         )
-        sql_thread.set_exa_address_list(exa_address_list)
-        sql_thread.run_sql()
+        export_query = export_builder.build_query(
+            database_version=self.exasol_db_version,
+            encryption=self.options["encryption"],
+            exa_address_list=exa_address_list,
+            formatter=self.format,
+        )
+        self.execute(export_query)
 
     def import_parallel(self, exa_address_list, table, import_params=None):
         """
@@ -1238,19 +1237,18 @@ class ExaConnection:
             False if ("format" in import_params) else self.options["compression"]
         )
 
-        # There is no need to actually run a separate thread here, all work is performed in separate processes
-        # We simply reuse thread class to keep logic in one place
-        sql_thread = ExaSQLThread(
-            self,
-            compression,
-            query_builder=ImportBuilder(
-                compression=compression,
-                table=table,
-                **import_params,
-            ),
+        import_builder = ImportBuilder(
+            compression=compression,
+            table=table,
+            **import_params,
         )
-        sql_thread.set_exa_address_list(exa_address_list)
-        sql_thread.run_sql()
+        import_query = import_builder.build_query(
+            database_version=self.exasol_db_version,
+            encryption=self.options["encryption"],
+            exa_address_list=exa_address_list,
+            formatter=self.format,
+        )
+        self.execute(import_query)
 
     def session_id(self) -> str:
         """
