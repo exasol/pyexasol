@@ -452,10 +452,10 @@ class TestDeprecations:
 
     def test_run_sql_does_not_emit_query_class_warnings(self, mock_connection):
         mock_connection.options["encryption"] = False
-        with pytest.warns(PyexasolDeprecationWarning) as record:
+        with pytest.warns(PyexasolDeprecationWarning, match="ExaSQLExportThread"):
             export_thread = ExaSQLExportThread(mock_connection, False, "t", {})
+        with pytest.warns(PyexasolDeprecationWarning, match="ExaSQLImportThread"):
             import_thread = ExaSQLImportThread(mock_connection, False, "t", {})
-        assert len(record) == 2
         export_thread.set_exa_address_list(["127.0.0.1:8563"])
         import_thread.set_exa_address_list(["127.0.0.1:8563"])
 
