@@ -18,7 +18,7 @@ if TYPE_CHECKING:
 
 
 class ExaParquetImporter:
-    """Native Parquet import for one :class:`pyexasol.ExaConnection`."""
+    """Native Parquet import for :class:`pyexasol.ExaConnection`."""
 
     def __init__(self, connection: ExaConnection):
         self.connection = connection
@@ -28,10 +28,10 @@ class ExaParquetImporter:
         source: list[Path] | Path | str,
         table: str | tuple[str, ...],
         import_params: dict | None = None,
-        max_parallel_files: int = 10,
+        max_files_per_batch: int = 1,
     ):
-        if max_parallel_files < 1:
-            raise ValueError("max_parallel_files must be at least 1.")
+        if max_files_per_batch < 1:
+            raise ValueError("max_files_per_batch must be at least 1.")
         if import_params is None:
             import_params = {}
 
@@ -46,12 +46,12 @@ class ExaParquetImporter:
         )
 
         # An Exasol tunnel accepts one connection for one statement, so each file
-        # gets its own tunnel (one thread each). Up to ``max_parallel_files`` files
+        # gets its own tunnel (one thread each). Up to ``max_files_per_batch`` files
         # are imported by one IMPORT statement, and the batches run sequentially.
         # The batches are not imported atomically: if one fails, earlier batches
         # stay imported (subject to ``autocommit``).
-        for batch_start in range(0, len(parquet_files), max_parallel_files):
-            batch = parquet_files[batch_start : batch_start + max_parallel_files]
+        for batch_start in range(0, len(parquet_files), max_files_per_batch):
+            batch = parquet_files[batch_start : batch_start + max_files_per_batch]
             self._import_native_parquet_batch(
                 batch, import_builder, ssl_context, batch_start, len(parquet_files)
             )

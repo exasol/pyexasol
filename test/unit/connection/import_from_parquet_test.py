@@ -68,7 +68,7 @@ class TestImportFromParquet:
         )
 
         connection.native_import.assert_called_once_with(
-            "data/*.parquet", "tbl", {"b": 2}, 10
+            "data/*.parquet", "tbl", {"b": 2}, 1
         )
         connection.import_from_callback.assert_not_called()
         assert result is connection.native_import.return_value

@@ -894,7 +894,7 @@ class ExaConnection:
         callback_params: dict | None = None,
         import_params: dict | None = None,
         native: bool = True,
-        max_parallel_files: int = 10,
+        max_files_per_batch: int = 1,
     ):
         """
         Import a large amount of data from local parquet file(s).
@@ -936,11 +936,13 @@ class ExaConnection:
             native:
                 If ``False``, always use the callback-based import. Defaults to ``True``
                 (use the native import when the database supports it).
-            max_parallel_files:
+            max_files_per_batch:
                 Only used by the native import. Exasol opens one connection per file,
-                so PyExasol starts one tunnel (one thread) per file. At most this many
-                files are imported by one ``IMPORT`` statement, further files are
-                imported by following statements. Defaults to ``10``.
+                so PyExasol starts one tunnel (one thread) per file. The files are
+                split into batches of at most this many files. The files of one batch
+                are imported in parallel by one ``IMPORT`` statement, and the batches
+                are processed in sequence. Defaults to ``1``, i.e. one file after
+                the other.
         """
         if (
             not native
@@ -958,7 +960,7 @@ class ExaConnection:
                 "use import_params instead."
             )
         return ExaParquetImporter(self).import_from_native_parquet(
-            source, table, import_params, max_parallel_files
+            source, table, import_params, max_files_per_batch
         )
 
     def export_to_callback(

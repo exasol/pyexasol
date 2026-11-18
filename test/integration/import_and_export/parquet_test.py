@@ -237,7 +237,7 @@ class TestNativeImportFromParquetMultipleFilesAndErrors:
             paths.append(path)
         return paths
 
-    @pytest.mark.parametrize("max_parallel_files", [1, 2, 5, 10])
+    @pytest.mark.parametrize("max_files_per_batch", [1, 2, 5, 10])
     def test_batches_load_all_files(
         self,
         five_files,
@@ -245,10 +245,10 @@ class TestNativeImportFromParquetMultipleFilesAndErrors:
         connection,
         table_name,
         all_data,
-        max_parallel_files,
+        max_files_per_batch,
     ):
         connection.import_from_parquet(
-            five_files, table_name, max_parallel_files=max_parallel_files
+            five_files, table_name, max_files_per_batch=max_files_per_batch
         )
 
         assert sorted(select_result(connection)) == sorted(all_data.list_tuple() * 5)
@@ -260,7 +260,9 @@ class TestNativeImportFromParquetMultipleFilesAndErrors:
         threads_before = self._import_threads()
 
         with pytest.raises(ExaImportError):
-            connection.import_from_parquet(five_files, table_name, max_parallel_files=5)
+            connection.import_from_parquet(
+                five_files, table_name, max_files_per_batch=5
+            )
 
         assert self._import_threads() == threads_before
         # the connection is still usable afterwards
@@ -272,7 +274,9 @@ class TestNativeImportFromParquetMultipleFilesAndErrors:
         five_files[3].write_bytes(b"this is not a parquet file")
 
         with pytest.raises(ExaImportError):
-            connection.import_from_parquet(five_files, table_name, max_parallel_files=2)
+            connection.import_from_parquet(
+                five_files, table_name, max_files_per_batch=2
+            )
 
         # batches [0, 1] were imported, batch [2, 3] failed, batch [4] never ran
         assert self._row_count(connection, table_name) == 2 * len(all_data.list_dict)
@@ -328,10 +332,10 @@ class TestNativeImportFromParquetMultipleFilesAndErrors:
         assert self._row_count(connection, table_name) == 4 * len(all_data.list_dict)
 
     @pytest.mark.parametrize("value", [0, -1])
-    def test_invalid_max_parallel_files(
+    def test_invalid_max_files_per_batch(
         self, five_files, empty_table, connection, table_name, value
     ):
-        with pytest.raises(ValueError, match="max_parallel_files"):
+        with pytest.raises(ValueError, match="max_files_per_batch"):
             connection.import_from_parquet(
-                five_files, table_name, max_parallel_files=value
+                five_files, table_name, max_files_per_batch=value
             )

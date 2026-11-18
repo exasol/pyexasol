@@ -60,7 +60,9 @@ class TestExaParquetImporter:
         http_threads = [MagicMock() for _ in files]
         http_cls.side_effect = http_threads
 
-        ExaParquetImporter(connection).import_from_native_parquet(files, "tbl")
+        ExaParquetImporter(connection).import_from_native_parquet(
+            files, "tbl", max_files_per_batch=len(files)
+        )
 
         assert [c.kwargs["parquet_file"] for c in http_cls.call_args_list] == files
         sql_cls.assert_called_once()
@@ -78,7 +80,7 @@ class TestExaParquetImporter:
         connection, http_cls, sql_cls = threads
 
         ExaParquetImporter(connection).import_from_native_parquet(
-            files, "tbl", max_parallel_files=2
+            files, "tbl", max_files_per_batch=2
         )
 
         assert http_cls.call_count == 3
@@ -98,7 +100,7 @@ class TestExaParquetImporter:
             "pyexasol.transport.parquet.importer.ExaTunnelServer.generate_adhoc_ssl_context"
         ) as generate:
             ExaParquetImporter(connection).import_from_native_parquet(
-                files, "tbl", max_parallel_files=2
+                files, "tbl", max_files_per_batch=2
             )
 
         generate.assert_called_once()
@@ -121,12 +123,12 @@ class TestExaParquetImporter:
         assert {c.kwargs["ssl_context"] for c in http_cls.call_args_list} == {None}
 
     @staticmethod
-    def test_rejects_invalid_max_parallel_files(threads, files):
+    def test_rejects_invalid_max_files_per_batch(threads, files):
         connection, _, _ = threads
 
-        with pytest.raises(ValueError, match="max_parallel_files"):
+        with pytest.raises(ValueError, match="max_files_per_batch"):
             ExaParquetImporter(connection).import_from_native_parquet(
-                files, "tbl", max_parallel_files=0
+                files, "tbl", max_files_per_batch=0
             )
 
     @staticmethod
@@ -134,7 +136,7 @@ class TestExaParquetImporter:
         connection, _, sql_cls = threads
 
         ExaParquetImporter(connection).import_from_native_parquet(
-            files, ("SCH", "tbl"), import_params={"MaxRows": 10}, max_parallel_files=1
+            files, ("SCH", "tbl"), import_params={"MaxRows": 10}, max_files_per_batch=1
         )
 
         builders = {c.kwargs["query_builder"] for c in sql_cls.call_args_list}
@@ -151,7 +153,7 @@ class TestExaParquetImporter:
 
         with pytest.raises(ExaImportError):
             ExaParquetImporter(connection).import_from_native_parquet(
-                files, "tbl", max_parallel_files=1
+                files, "tbl", max_files_per_batch=1
             )
 
         assert http_cls.call_count == 2  # third file is not attempted
@@ -165,7 +167,7 @@ class TestExaParquetImporter:
 
         with pytest.raises(ExaImportError):
             ExaParquetImporter(connection).import_from_native_parquet(
-                files, "tbl", max_parallel_files=1
+                files, "tbl", max_files_per_batch=1
             )
 
         (message,) = (c.args[0] for c in connection.logger.debug.call_args_list)
