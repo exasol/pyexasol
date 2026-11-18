@@ -97,7 +97,7 @@ class TestExportParallel:
 
     @staticmethod
     def test_unknown_param_raises_without_executing(mock_connection):
-        with pytest.raises((TypeError, ValidationError)):
+        with pytest.raises(ValidationError):
             ExaConnection.export_parallel(
                 mock_connection,
                 ADDRESS_LIST,
@@ -154,7 +154,7 @@ class TestImportParallel:
 
     @staticmethod
     def test_unknown_param_raises_without_executing(mock_connection):
-        with pytest.raises((TypeError, ValidationError)):
+        with pytest.raises(ValidationError):
             ExaConnection.import_parallel(
                 mock_connection,
                 ADDRESS_LIST,

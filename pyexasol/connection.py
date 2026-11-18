@@ -1177,6 +1177,10 @@ class ExaConnection:
                 Values for SQL query placeholders.
             export_params:
                 Custom parameters for Export query.
+
+        Raises:
+            pydantic.ValidationError: Unknown keys or invalid values in ``export_params``.
+
         Note:
             - Init HTTP transport in child processes first using pyexasol.http_transport()
             - Get internal Exasol address from each child process using .address
@@ -1217,6 +1221,9 @@ class ExaConnection:
                 Table to import to.
             import_params:
                 Custom parameters for import.
+
+        Raises:
+            pydantic.ValidationError: Unknown keys or invalid values in ``import_params``.
 
         Note:
             - Init HTTP transport in child processes first using pyexasol.http_transport()
