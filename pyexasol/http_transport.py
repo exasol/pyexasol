@@ -25,14 +25,8 @@ if TYPE_CHECKING:
     from pyexasol import ExaConnection
 
 
-_deprecation_warnings_emitted: set[str] = set()
-
-
 def _warn_deprecated(name: str, replacement: str, stacklevel: int = 3) -> None:
-    # Warn once per process for each deprecated class
-    if name in _deprecation_warnings_emitted:
-        return
-    _deprecation_warnings_emitted.add(name)
+    # Repetition is limited by the stdlib per-call-site warnings registry
     warn(
         f"{name} is deprecated and will be removed in the future. "
         f"Use {replacement} instead.",

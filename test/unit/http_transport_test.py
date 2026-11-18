@@ -1,5 +1,4 @@
 import threading
-import warnings
 from importlib import import_module
 from unittest.mock import (
     Mock,
@@ -434,16 +433,10 @@ class TestExaHTTPTransportWrapper:
 
 
 class TestDeprecations:
-    @pytest.fixture(autouse=True)
-    def reset_emitted(self):
-        http_transport_module._deprecation_warnings_emitted.clear()
-
-    def test_warns_only_once_per_class(self, mock_connection):
-        with pytest.warns(PyexasolDeprecationWarning):
-            SqlQuery(connection=mock_connection, compression=True)
-        with warnings.catch_warnings():
-            warnings.simplefilter("error")
-            SqlQuery(connection=mock_connection, compression=True)
+    def test_warns_on_every_instantiation_when_recorded(self, mock_connection):
+        for _ in range(2):
+            with pytest.warns(PyexasolDeprecationWarning):
+                SqlQuery(connection=mock_connection, compression=True)
 
     @pytest.mark.parametrize("cls", [SqlQuery, ImportQuery, ExportQuery])
     def test_query_classes_warn(self, mock_connection, cls):
@@ -453,6 +446,5 @@ class TestDeprecations:
     def test_thread_classes_warn(self, mock_connection):
         with pytest.warns(PyexasolDeprecationWarning, match="ExaSQLExportThread"):
             ExaSQLExportThread(mock_connection, True, "t", {})
-        http_transport_module._deprecation_warnings_emitted.clear()
         with pytest.warns(PyexasolDeprecationWarning, match="ExaSQLImportThread"):
             ExaSQLImportThread(mock_connection, True, "t", {})
