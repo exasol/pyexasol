@@ -4,6 +4,7 @@ import sys
 import tempfile
 import time
 from pathlib import Path
+from typing import Any
 
 import pyarrow as pa
 import pyarrow.parquet as pq
@@ -15,7 +16,7 @@ N_FILES = int(sys.argv[1]) if len(sys.argv) > 1 else 20
 ROWS = int(sys.argv[2]) if len(sys.argv) > 2 else 50_000
 REPEATS = int(sys.argv[3]) if len(sys.argv) > 3 else 3
 # label -> kwargs for import_from_parquet
-MODES = {
+MODES: dict[str, dict[str, Any]] = {
     "native, 1 file per statement": {"max_parallel_files": 1},
     "native, 10 files per statement": {"max_parallel_files": 10},
     "callback (native=False)": {"native": False},
@@ -43,7 +44,7 @@ with tempfile.TemporaryDirectory() as d:
             ),
             Path(d) / f"{i:03d}.parquet",
         )
-    times = {m: [] for m in MODES}
+    times: dict[str, list[float]] = {m: [] for m in MODES}
     for rep in range(REPEATS):
         for mode, kwargs in MODES.items():
             con.execute(
@@ -57,5 +58,8 @@ with tempfile.TemporaryDirectory() as d:
     con.execute("DROP SCHEMA BENCH_PARQUET CASCADE")
 
 print(f"{N_FILES} files x {ROWS} rows, {REPEATS} repeats")
-for mode, t in times.items():
-    print(f"{mode:<32} min {min(t):.2f}s  median {statistics.median(t):.2f}s")
+for mode, samples in times.items():
+    print(
+        f"{mode:<32} min {min(samples):.2f}s  "
+        f"median {statistics.median(samples):.2f}s"
+    )

@@ -6,6 +6,7 @@ import sys
 import tempfile
 import time
 from pathlib import Path
+from typing import Any
 
 import pyarrow as pa
 import pyarrow.parquet as pq
@@ -14,7 +15,7 @@ import pyexasol
 
 N_FILES, ROWS, N_COLS = int(sys.argv[1]), int(sys.argv[2]), int(sys.argv[3])
 REPEATS = 3
-MODES = {
+MODES: dict[str, dict[str, Any]] = {
     "native, 1 per stmt": {"max_parallel_files": 1},
     "native, 10 per stmt": {"max_parallel_files": 10},
     "callback": {"native": False},
@@ -52,7 +53,7 @@ with tempfile.TemporaryDirectory() as d:
             Path(d) / f"{i:03d}.parquet",
         )
     size = sum(f.stat().st_size for f in Path(d).glob("*.parquet")) / 1e6
-    times = {m: [] for m in MODES}
+    times: dict[str, list[float]] = {m: [] for m in MODES}
     for _ in range(REPEATS):
         for mode, kw in MODES.items():
             con.execute(f"CREATE OR REPLACE TABLE BENCH ({ddl})")
@@ -64,5 +65,8 @@ with tempfile.TemporaryDirectory() as d:
             )
 con.execute("DROP SCHEMA BENCH_PARQUET CASCADE")
 print(f"{N_FILES} files x {ROWS} rows x {N_COLS} cols ({size:.0f} MB parquet)")
-for m, t in times.items():
-    print(f"  {m:<20} median {statistics.median(t):.2f}s  min {min(t):.2f}s")
+for m, samples in times.items():
+    print(
+        f"  {m:<20} median {statistics.median(samples):.2f}s  "
+        f"min {min(samples):.2f}s"
+    )

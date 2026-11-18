@@ -15,4 +15,4 @@ def _patched(self, *args, **kwargs):
     return _original(self, *args, **kwargs)
 
 
-ExaConnection.import_from_parquet = _patched
+setattr(ExaConnection, "import_from_parquet", _patched)
