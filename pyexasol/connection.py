@@ -1193,7 +1193,7 @@ class ExaConnection:
             False if ("format" in export_params) else self.options["compression"]
         )
 
-        if query_params is not None:
+        if query_params is not None and isinstance(query_or_table, str):
             query_or_table = self.format.format(query_or_table, **query_params)
 
         # There is no need to actually run a separate thread here, all work is performed in separate processes

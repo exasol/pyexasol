@@ -31,7 +31,10 @@ The builders perform the same function with additional Pydantic validation.
 ## Refactorings
 
 * #385: Deprecated `SqlQuery`, `ImportQuery`, `ExportQuery`, `ExaSQLImportThread` and `ExaSQLExportThread` in favor of the builders and `ExaSQLThread`
-* #389: `ExaConnection.import_parallel` and `export_parallel` now use `ImportBuilder` and `ExportBuilder` via `ExaSQLThread` internally, instead of the deprecated `ExaSQLImportThread` and `ExaSQLExportThread`
+* #389:
+  * `ExaConnection.import_parallel` and `export_parallel` now use `ImportBuilder` and `ExportBuilder` via `ExaSQLThread` internally, instead of the deprecated `ExaSQLImportThread` and `ExaSQLExportThread`
+  * An unknown key in `import_params` / `export_params` of these methods now raises `pydantic.ValidationError` instead of `TypeError`, see Behavior change above
+  * `export_parallel` no longer fails when `query_or_table` is a `(schema, table)` tuple and `query_params` is given. Like `export_to_callback`, it only formats `query_or_table` with `query_params` when it is a string
 * #484: Dropped support for Python versions < 3.11.5
 
 ## Documentation

@@ -57,6 +57,19 @@ class TestExportParallel:
         assert "SELECT * FROM t WHERE id > '5'" in executed_query(mock_connection)
 
     @staticmethod
+    def test_exports_table_tuple_ignores_query_params(mock_connection):
+        ExaConnection.export_parallel(
+            mock_connection,
+            ADDRESS_LIST,
+            ("MY_SCHEMA", "MY_TABLE"),
+            query_params={"min_id": 5},
+        )
+
+        assert executed_query(mock_connection).startswith(
+            "EXPORT MY_SCHEMA.MY_TABLE INTO CSV"
+        )
+
+    @staticmethod
     def test_export_params_are_used(mock_connection):
         ExaConnection.export_parallel(
             mock_connection,
