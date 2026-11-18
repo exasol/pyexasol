@@ -4,7 +4,11 @@ import os
 import socketserver
 import threading
 import zlib
-from collections.abc import Iterable
+from collections.abc import (
+    Iterable,
+    Iterator,
+)
+from contextlib import contextmanager
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 from warnings import warn
@@ -25,7 +29,26 @@ if TYPE_CHECKING:
     from pyexasol import ExaConnection
 
 
+_internal_use = threading.local()
+
+
+@contextmanager
+def _suppress_deprecation_warnings() -> Iterator[None]:
+    """
+    Silence deprecation warnings for internal use of deprecated classes in the
+    current thread only (``warnings.catch_warnings`` is not thread-safe).
+    """
+    previous = getattr(_internal_use, "active", False)
+    _internal_use.active = True
+    try:
+        yield
+    finally:
+        _internal_use.active = previous
+
+
 def _warn_deprecated(name: str, replacement: str, stacklevel: int = 3) -> None:
+    if getattr(_internal_use, "active", False):
+        return
     # Repetition is limited by the stdlib per-call-site warnings registry
     warn(
         f"{name} is deprecated and will be removed in the future. "
@@ -271,12 +294,16 @@ class ExaSQLExportThread(ExaSQLThread):
         self.params = export_params
 
     def run_sql(self):
-        export_query = ExportQuery.load_from_dict(
-            connection=self.connection, compression=self.compression, params=self.params
-        ).build_query(
-            table=self.query_or_table,
-            exa_address_list=self.exa_address_list,
-        )
+        # The thread class already warned on construction
+        with _suppress_deprecation_warnings():
+            export_query = ExportQuery.load_from_dict(
+                connection=self.connection,
+                compression=self.compression,
+                params=self.params,
+            ).build_query(
+                table=self.query_or_table,
+                exa_address_list=self.exa_address_list,
+            )
         self.connection.execute(export_query)
 
 
@@ -309,9 +336,13 @@ class ExaSQLImportThread(ExaSQLThread):
         self.params = import_params
 
     def run_sql(self):
-        import_query = ImportQuery.load_from_dict(
-            connection=self.connection, compression=self.compression, params=self.params
-        ).build_query(table=self.table, exa_address_list=self.exa_address_list)
+        # The thread class already warned on construction
+        with _suppress_deprecation_warnings():
+            import_query = ImportQuery.load_from_dict(
+                connection=self.connection,
+                compression=self.compression,
+                params=self.params,
+            ).build_query(table=self.table, exa_address_list=self.exa_address_list)
         self.connection.execute(import_query)
 
 

@@ -1,4 +1,5 @@
 import threading
+import warnings
 from importlib import import_module
 from unittest.mock import (
     Mock,
@@ -448,3 +449,21 @@ class TestDeprecations:
             ExaSQLExportThread(mock_connection, True, "t", {})
         with pytest.warns(PyexasolDeprecationWarning, match="ExaSQLImportThread"):
             ExaSQLImportThread(mock_connection, True, "t", {})
+
+    def test_run_sql_does_not_emit_query_class_warnings(self, mock_connection):
+        mock_connection.options["encryption"] = False
+        with pytest.warns(PyexasolDeprecationWarning) as record:
+            export_thread = ExaSQLExportThread(mock_connection, False, "t", {})
+            import_thread = ExaSQLImportThread(mock_connection, False, "t", {})
+        assert len(record) == 2
+        export_thread.set_exa_address_list(["127.0.0.1:8563"])
+        import_thread.set_exa_address_list(["127.0.0.1:8563"])
+
+        with warnings.catch_warnings():
+            warnings.simplefilter("error")
+            export_thread.run_sql()
+            import_thread.run_sql()
+
+        # suppression is scoped: direct use still warns afterwards
+        with pytest.warns(PyexasolDeprecationWarning, match="ImportQuery"):
+            ImportQuery(connection=mock_connection, compression=True)
