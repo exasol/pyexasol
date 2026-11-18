@@ -12,13 +12,13 @@ An unknown key in `import_params` / `export_params` of `ExaConnection.import_par
 
 The following classes in `pyexasol/http_transport.py` are deprecated. Each emits a `PyexasolDeprecationWarning` when instantiated; as for any warning, Python's warning filters decide whether and how often it is shown. They remain available as thin wrappers around the new builders for backwards compatibility but will be removed in a future release:
 
-| Deprecated                | Replacement                                                             |
-|---------------------------|-------------------------------------------------------------------------|
-| `SqlQuery`                | `ImportBuilder` / `ExportBuilder` (`pyexasol.query_builders.csv.builders`) |
-| `ImportQuery`             | `ImportBuilder` (`pyexasol.query_builders.csv.builders`)                |
-| `ExportQuery`             | `ExportBuilder` (`pyexasol.query_builders.csv.builders`)                |
-| `ExaSQLImportThread`      | `ExaSQLThread(query_builder=ImportBuilder(...))`                        |
-| `ExaSQLExportThread`      | `ExaSQLThread(query_builder=ExportBuilder(...))`                        |
+| Deprecated           | Replacement                                                                |
+|----------------------|----------------------------------------------------------------------------|
+| `SqlQuery`           | `ImportBuilder` / `ExportBuilder` (`pyexasol.query_builders.csv.builders`) |
+| `ImportQuery`        | `ImportBuilder` (`pyexasol.query_builders.csv.builders`)                   |
+| `ExportQuery`        | `ExportBuilder` (`pyexasol.query_builders.csv.builders`)                   |
+| `ExaSQLImportThread` | `ExaSQLThread(query_builder=ImportBuilder(...))`                           |
+| `ExaSQLExportThread` | `ExaSQLThread(query_builder=ExportBuilder(...))`                           |
 
 The builders perform the same function with additional Pydantic validation.
 
