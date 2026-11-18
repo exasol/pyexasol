@@ -21,7 +21,7 @@ Please refer to the Exasol User Manual to learn more about:
 
 These parameters are given as a dictionary, like ``export_params = { "name1": "value1", "name2": ["value2", "value3"]}``.
 This dictionary is passed into the :ref:`Variants` for a selected ``export_to_*``
-method. When the code is executed, these are validated using the :class:`pyexasol.query_builders.csv.builders.ExportBuilder`.
+method. When the code is executed, these are validated using the ``pyexasol.query_builders.csv.builders.ExportBuilder``.
 
 .. note::
    ``pyexasol.http_transport.ExportQuery`` is deprecated. Use ``ExportBuilder`` instead.
@@ -81,7 +81,7 @@ method. When the code is executed, these are validated using the :class:`pyexaso
 
 These parameters are given as a dictionary, like ``import_params = { "name1": "value1", "name2": ["value2", "value3"]}``.
 This dictionary is passed into the :ref:`Variants` for a selected ``import_from_*``
-method. When the code is executed, these are validated using the :class:`pyexasol.query_builders.csv.builders.ImportBuilder`.
+method. When the code is executed, these are validated using the ``pyexasol.query_builders.csv.builders.ImportBuilder``.
 
 .. note::
    ``pyexasol.http_transport.ImportQuery`` is deprecated. Use ``ImportBuilder`` instead.
