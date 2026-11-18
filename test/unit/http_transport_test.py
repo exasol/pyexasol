@@ -1,4 +1,5 @@
 import threading
+import warnings
 from importlib import import_module
 from unittest.mock import (
     Mock,
@@ -17,6 +18,7 @@ from pyexasol.http_transport import (
     ExaHttpThread,
     ExaHTTPTransportWrapper,
     ExaSQLExportThread,
+    ExaSQLImportThread,
     ExaSQLThread,
     ExportQuery,
     ImportQuery,
@@ -24,6 +26,7 @@ from pyexasol.http_transport import (
 )
 from pyexasol.query_builders.common_formattings import TransportEndpoint
 from pyexasol.query_builders.csv.clause_formatter import ClauseFormatter
+from pyexasol.warnings import PyexasolDeprecationWarning
 
 http_transport_module = import_module("pyexasol.http_transport")
 
@@ -428,3 +431,28 @@ class TestExaHTTPTransportWrapper:
             http_transport_wrapper_with_mocks.import_from_callback(
                 callback="string", src=None
             )
+
+
+class TestDeprecations:
+    @pytest.fixture(autouse=True)
+    def reset_emitted(self):
+        http_transport_module._deprecation_warnings_emitted.clear()
+
+    def test_warns_only_once_per_class(self, mock_connection):
+        with pytest.warns(PyexasolDeprecationWarning):
+            SqlQuery(connection=mock_connection, compression=True)
+        with warnings.catch_warnings():
+            warnings.simplefilter("error")
+            SqlQuery(connection=mock_connection, compression=True)
+
+    @pytest.mark.parametrize("cls", [SqlQuery, ImportQuery, ExportQuery])
+    def test_query_classes_warn(self, mock_connection, cls):
+        with pytest.warns(PyexasolDeprecationWarning, match=cls.__name__):
+            cls(connection=mock_connection, compression=True)
+
+    def test_thread_classes_warn(self, mock_connection):
+        with pytest.warns(PyexasolDeprecationWarning, match="ExaSQLExportThread"):
+            ExaSQLExportThread(mock_connection, True, "t", {})
+        http_transport_module._deprecation_warnings_emitted.clear()
+        with pytest.warns(PyexasolDeprecationWarning, match="ExaSQLImportThread"):
+            ExaSQLImportThread(mock_connection, True, "t", {})

@@ -4,6 +4,20 @@
 
 The minimum supported Python version is now 3.11.5, as later `soupsieve` versions, needed to resolve a reported vulnerability, no longer support older versions.
 
+### Deprecations
+
+The following classes in `pyexasol/http_transport.py` are deprecated. Each emits a `PyexasolDeprecationWarning` the first time it is instantiated after `pyexasol` is loaded. They remain available as thin wrappers around the new builders for backwards compatibility but will be removed in a future release:
+
+| Deprecated                | Replacement                                                             |
+|---------------------------|-------------------------------------------------------------------------|
+| `SqlQuery`                | `ImportBuilder` / `ExportBuilder` (`pyexasol.query_builders.csv.builders`) |
+| `ImportQuery`             | `ImportBuilder` (`pyexasol.query_builders.csv.builders`)                |
+| `ExportQuery`             | `ExportBuilder` (`pyexasol.query_builders.csv.builders`)                |
+| `ExaSQLImportThread`      | `ExaSQLThread(query_builder=ImportBuilder(...))`                        |
+| `ExaSQLExportThread`      | `ExaSQLThread(query_builder=ExportBuilder(...))`                        |
+
+The builders perform the same function with additional Pydantic validation.
+
 ## Features
 
 * #394:
@@ -12,6 +26,8 @@ The minimum supported Python version is now 3.11.5, as later `soupsieve` version
 
 ## Refactorings
 
+* #385: Deprecated `SqlQuery`, `ImportQuery`, `ExportQuery`, `ExaSQLImportThread` and `ExaSQLExportThread` in favor of the builders and `ExaSQLThread`, see Deprecations above
+* #389: `ExaConnection.import_parallel` and `export_parallel` now use `ImportBuilder` and `ExportBuilder` via `ExaSQLThread` internally, instead of the deprecated `ExaSQLImportThread` and `ExaSQLExportThread`; their external behavior is unchanged
 * #484: Dropped support for Python versions < 3.11.5
 
 ## Documentation

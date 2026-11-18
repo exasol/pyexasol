@@ -7,6 +7,7 @@ import zlib
 from collections.abc import Iterable
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
+from warnings import warn
 
 from .query_builders.base_builder import QueryBuilder
 from .query_builders.csv.builders import (
@@ -18,13 +19,37 @@ from .query_builders.csv.builders import (
     Trim,
 )
 from .transport.tunnel_server import ExaTunnelServer
+from .warnings import PyexasolDeprecationWarning
 
 if TYPE_CHECKING:
     from pyexasol import ExaConnection
 
 
+_deprecation_warnings_emitted: set[str] = set()
+
+
+def _warn_deprecated(name: str, replacement: str, stacklevel: int = 3) -> None:
+    # Warn once per process for each deprecated class
+    if name in _deprecation_warnings_emitted:
+        return
+    _deprecation_warnings_emitted.add(name)
+    warn(
+        f"{name} is deprecated and will be removed in the future. "
+        f"Use {replacement} instead.",
+        PyexasolDeprecationWarning,
+        stacklevel=stacklevel,
+    )
+
+
 @dataclass
 class SqlQuery:
+    """
+    Base class for the import and export query dataclasses.
+
+    .. deprecated::
+        Use ``ImportBuilder`` or ``ExportBuilder`` from ``pyexasol.query_builders.csv.builders`` instead.
+    """
+
     connection: ExaConnection
     compression: bool
     # set these values in param dictionary to ExaConnection
@@ -38,9 +63,26 @@ class SqlQuery:
     null: str | None = None
     row_separator: str | None = None
 
+    def __post_init__(self):
+        replacement = {
+            "ImportQuery": "pyexasol.query_builders.csv.builders.ImportBuilder",
+            "ExportQuery": "pyexasol.query_builders.csv.builders.ExportBuilder",
+        }.get(
+            type(self).__name__,
+            "ImportBuilder or ExportBuilder from pyexasol.query_builders.csv.builders",
+        )
+        _warn_deprecated(type(self).__name__, replacement, stacklevel=4)
+
 
 @dataclass
 class ImportQuery(SqlQuery):
+    """
+    Validate import parameters and build an IMPORT query.
+
+    .. deprecated::
+        Use ``pyexasol.query_builders.csv.builders.ImportBuilder`` instead.
+    """
+
     # set these values in param dictionary to ExaConnection
     skip: str | int | None = None
     trim: Trim | None = None
@@ -88,6 +130,13 @@ class ImportQuery(SqlQuery):
 
 @dataclass
 class ExportQuery(SqlQuery):
+    """
+    Validate export parameters and build an EXPORT query.
+
+    .. deprecated::
+        Use ``pyexasol.query_builders.csv.builders.ExportBuilder`` instead.
+    """
+
     # set these values in param dictionary to ExaConnection
     delimit: Delimit | None = None
     with_column_names: bool = False
@@ -203,6 +252,9 @@ class ExaSQLExportThread(ExaSQLThread):
     """
     Build and run EXPORT query into separate thread
     Main thread is busy outputting data in callbacks
+
+    .. deprecated::
+        Use ``ExaSQLThread`` with an ``ExportBuilder`` as ``query_builder`` instead.
     """
 
     def __init__(
@@ -213,6 +265,10 @@ class ExaSQLExportThread(ExaSQLThread):
         export_params: dict,
         worker_finished_event: threading.Event | None = None,
     ):
+        _warn_deprecated(
+            "ExaSQLExportThread",
+            "ExaSQLThread with an ExportBuilder as query_builder",
+        )
         super().__init__(
             connection, compression, worker_finished_event=worker_finished_event
         )
@@ -234,6 +290,9 @@ class ExaSQLImportThread(ExaSQLThread):
     """
     Build and run IMPORT query into separate thread
     Main thread is busy parsing results in callbacks
+
+    .. deprecated::
+        Use ``ExaSQLThread`` with an ``ImportBuilder`` as ``query_builder`` instead.
     """
 
     def __init__(
@@ -244,6 +303,10 @@ class ExaSQLImportThread(ExaSQLThread):
         import_params: dict,
         worker_finished_event: threading.Event | None = None,
     ):
+        _warn_deprecated(
+            "ExaSQLImportThread",
+            "ExaSQLThread with an ImportBuilder as query_builder",
+        )
         super().__init__(
             connection, compression, worker_finished_event=worker_finished_event
         )

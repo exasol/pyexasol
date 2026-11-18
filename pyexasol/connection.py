@@ -59,8 +59,6 @@ from .ext import ExaExtension
 from .formatter import ExaFormatter
 from .http_transport import (
     ExaHttpThread,
-    ExaSQLExportThread,
-    ExaSQLImportThread,
     ExaSQLThread,
 )
 from .logger import ExaLogger
@@ -1196,8 +1194,14 @@ class ExaConnection:
 
         # There is no need to actually run a separate thread here, all work is performed in separate processes
         # We simply reuse thread class to keep logic in one place
-        sql_thread = ExaSQLExportThread(
-            self, compression, query_or_table, export_params
+        sql_thread = ExaSQLThread(
+            self,
+            compression,
+            query_builder=ExportBuilder(
+                compression=compression,
+                query_or_table=query_or_table,
+                **export_params,
+            ),
         )
         sql_thread.set_exa_address_list(exa_address_list)
         sql_thread.run_sql()
@@ -1229,7 +1233,15 @@ class ExaConnection:
 
         # There is no need to actually run a separate thread here, all work is performed in separate processes
         # We simply reuse thread class to keep logic in one place
-        sql_thread = ExaSQLImportThread(self, compression, table, import_params)
+        sql_thread = ExaSQLThread(
+            self,
+            compression,
+            query_builder=ImportBuilder(
+                compression=compression,
+                table=table,
+                **import_params,
+            ),
+        )
         sql_thread.set_exa_address_list(exa_address_list)
         sql_thread.run_sql()
 
