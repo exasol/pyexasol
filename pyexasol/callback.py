@@ -228,32 +228,19 @@ def import_from_parquet(
     from pyarrow import (
         csv,
         parquet,
-        types,
     )
 
-    from pyexasol.transport.parquet.importer import get_parquet_files
-
-    def ensure_no_nested_columns(schema, requested_columns: list[str] | None) -> None:
-        nested_fields = []
-        for field in schema:
-            if not types.is_nested(field.type):
-                continue
-            if requested_columns and field.name in requested_columns:
-                nested_fields.append(field)
-            if not requested_columns:
-                nested_fields.append(field)
-
-        if nested_fields:
-            raise ValueError(
-                f"Fields {nested_fields} of schema from file {file} is hierarchical which is not supported."
-            )
+    from pyexasol.transport.parquet.importer import (
+        ensure_no_nested_columns,
+        get_parquet_files,
+    )
 
     parquet_files = get_parquet_files(source)
 
     columns = kwargs.get("columns", None)
     for file in parquet_files:
         parquet_file = parquet.ParquetFile(file, memory_map=True)
-        ensure_no_nested_columns(parquet_file.schema_arrow, columns)
+        ensure_no_nested_columns(file, parquet_file.schema_arrow, columns)
         for batch in parquet_file.iter_batches(**kwargs):
             write_options = csv.WriteOptions(include_header=False)
             csv.write_csv(batch, pipe, write_options=write_options)

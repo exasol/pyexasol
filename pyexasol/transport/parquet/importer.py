@@ -14,6 +14,8 @@ from pyexasol.transport.parquet.thread import ExaParquetHttpThread
 from pyexasol.transport.tunnel_server import ExaTunnelServer
 
 if TYPE_CHECKING:
+    import pyarrow as pa
+
     from pyexasol.connection import ExaConnection
 
 
@@ -59,6 +61,26 @@ def get_parquet_files(source: list[Path] | Path | str) -> list[Path]:  # NOSONAR
     if not (parquet_files := get_files()):
         raise ValueError(f"source {source} does not match any files")
     return parquet_files
+
+
+def ensure_no_nested_columns(
+    file: Path, schema: pa.Schema, requested_columns: list[str] | None
+) -> None:
+    from pyarrow import types
+
+    nested_fields = []
+    for field in schema:
+        if not types.is_nested(field.type):
+            continue
+        if requested_columns and field.name in requested_columns:
+            nested_fields.append(field)
+        if not requested_columns:
+            nested_fields.append(field)
+
+    if nested_fields:
+        raise ValueError(
+            f"Fields {nested_fields} of schema from file {file} is hierarchical which is not supported."
+        )
 
 
 class ExaParquetImporter:

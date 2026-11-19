@@ -1,8 +1,6 @@
 from io import BytesIO
 from pathlib import Path
 
-import pyarrow as pa
-import pyarrow.parquet as pq
 import pytest
 from pyarrow import dataset
 from pyarrow.lib import ArrowInvalid
@@ -132,13 +130,3 @@ class TestImportFromParquetExceptions:
         pipe = BytesIO()
         with pytest.raises(ValueError, match="does not match any files"):
             import_from_parquet(pipe, "not_a_valid_path")
-
-    @staticmethod
-    def test_hierarchical_data_is_not_supported(tmp_path):
-        filepath = tmp_path / "hierarchical.parquet"
-        table = pa.Table.from_pydict({"list": [[1]]})
-        pq.write_table(table, filepath)
-
-        pipe = BytesIO()
-        with pytest.raises(ValueError, match="is hierarchical which is not supported"):
-            import_from_parquet(pipe, filepath)

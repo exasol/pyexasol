@@ -4,12 +4,15 @@ from unittest.mock import (
     patch,
 )
 
+import pyarrow as pa
+import pyarrow.parquet as pq
 import pytest
 from pydantic import ValidationError
 
 from pyexasol.exceptions import ExaImportError
 from pyexasol.transport.parquet.importer import (
     ExaParquetImporter,
+    ensure_no_nested_columns,
     get_parquet_files,
 )
 
@@ -58,6 +61,24 @@ class TestGetParquetFiles:
     def test_not_a_valid_source_type():
         with pytest.raises(ValueError, match="is not a supported type"):
             get_parquet_files({"not_a_path"})
+
+
+@pytest.mark.parquet
+class TestEnsureNoNestedColumns:
+    @staticmethod
+    def test_hierarchical_data_is_not_supported(tmp_path):
+        filepath = tmp_path / "hierarchical.parquet"
+        pq.write_table(pa.Table.from_pydict({"list": [[1]]}), filepath)
+        schema = pq.ParquetFile(filepath).schema_arrow
+
+        with pytest.raises(ValueError, match="is hierarchical which is not supported"):
+            ensure_no_nested_columns(filepath, schema, None)
+
+    @staticmethod
+    def test_nested_column_not_requested_passes(tmp_path):
+        schema = pa.schema([("flat", pa.int64()), ("list", pa.list_(pa.int64()))])
+
+        ensure_no_nested_columns(tmp_path / "file.parquet", schema, ["flat"])
 
 
 class TestExaParquetImporterValidation:
