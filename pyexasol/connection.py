@@ -904,11 +904,7 @@ class ExaConnection:
 
         Exasol 2026.1.0 and newer use the native Parquet import, older versions use the
         callback-based import. Pass ``native=False`` to force the callback-based import.
-
-        The native import does not convert between types, so the Parquet column types
-        must match the table. For example, a Parquet ``double`` cannot be imported into
-        a ``DECIMAL`` column. The callback-based import sends CSV, so Exasol converts
-        the values.
+        See the note at the end for the differences.
 
         Args:
             source: Local filepath specification(s) to process. Can be one of:
@@ -930,10 +926,7 @@ class ExaConnection:
                 - Callback-based import: parameters for
                   `parquet.ParquetFile.iter_batches <https://arrow.apache.org/docs/python/generated/pyarrow.parquet.ParquetFile.html#pyarrow.parquet.ParquetFile.iter_batches>`__.
                 - Native import: only ``max_files_per_batch`` is used
-                  (default ``1``). Exasol opens one connection
-                  per file, so the files are split into batches of at most this many
-                  files. A batch is imported in parallel by one ``IMPORT`` statement,
-                  the batches in sequence.
+                  (default ``1``), see the note below.
             import_params:
                 Custom parameters for IMPORT query. They are the ``import_params`` of:
 
@@ -944,6 +937,23 @@ class ExaConnection:
             native:
                 If ``False``, always use the callback-based import. Defaults to ``True``
                 (use the native import when the database supports it).
+
+        Note:
+            The native import (Exasol 2026.1.0 and newer) differs from the
+            callback-based import in the following ways:
+
+            - **No type conversion:** The Parquet column types must match the table.
+              For example, a Parquet ``double`` cannot be imported into a ``DECIMAL``
+              column. The callback-based import sends CSV, so Exasol converts the
+              values.
+            - **Batches:** Exasol opens one connection per file, so the files are split
+              into batches of at most ``max_files_per_batch`` files (see
+              ``callback_params``). A batch is imported in parallel by one ``IMPORT``
+              statement, the batches in sequence.
+            - **Transaction:** If autocommit is on, all batches run in one transaction.
+              It is committed after the last batch, or rolled back if any batch fails,
+              and autocommit is restored afterward. If autocommit is off, nothing is
+              committed or rolled back, so you control the transaction.
         """
         parquet_files = get_parquet_files(source)
 
