@@ -62,7 +62,7 @@ def get_parquet_files(source: list[Path] | Path | str) -> list[Path]:  # NOSONAR
     return parquet_files
 
 
-def ensure_no_nested_columns(
+def ensure_no_nested_columns(  # NOSONAR(S3776)
     parquet_files: list[Path],
     requested_columns: list[str] | None = None,
     skipped_column_indexes: Collection[int] = (),

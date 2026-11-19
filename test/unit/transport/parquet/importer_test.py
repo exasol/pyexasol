@@ -103,8 +103,10 @@ class TestExaParquetImporterValidation:
         parquet_file = tmp_path / "a.parquet"
         parquet_file.write_bytes(b"PAR1")
 
+        importer = ExaParquetImporter(connection)
+
         with pytest.raises(ValidationError):
-            ExaParquetImporter(connection).import_from_native_parquet(
+            importer.import_from_native_parquet(
                 [parquet_file], "tbl", import_params={"columns": ["A"]}
             )
 
@@ -206,10 +208,10 @@ class TestExaParquetImporter:
     def test_rejects_invalid_max_files_per_batch(threads, files):
         connection, _, _ = threads
 
+        importer = ExaParquetImporter(connection)
+
         with pytest.raises(ValueError, match="max_files_per_batch"):
-            ExaParquetImporter(connection).import_from_native_parquet(
-                files, "tbl", max_files_per_batch=0
-            )
+            importer.import_from_native_parquet(files, "tbl", max_files_per_batch=0)
 
     @staticmethod
     def test_shares_one_builder_with_import_params(threads, files):
@@ -231,10 +233,10 @@ class TestExaParquetImporter:
         sql_cls.return_value.join_with_exc.side_effect = [None, RuntimeError("boom")]
         sql_cls.return_value.is_alive.return_value = False
 
+        importer = ExaParquetImporter(connection)
+
         with pytest.raises(ExaImportError):
-            ExaParquetImporter(connection).import_from_native_parquet(
-                files, "tbl", max_files_per_batch=1
-            )
+            importer.import_from_native_parquet(files, "tbl", max_files_per_batch=1)
 
         assert http_cls.call_count == 2  # third file is not attempted
         connection.abort_query.assert_not_called()
@@ -245,10 +247,10 @@ class TestExaParquetImporter:
         sql_cls.return_value.join_with_exc.side_effect = [None, RuntimeError("boom")]
         sql_cls.return_value.is_alive.return_value = False
 
+        importer = ExaParquetImporter(connection)
+
         with pytest.raises(ExaImportError):
-            ExaParquetImporter(connection).import_from_native_parquet(
-                files, "tbl", max_files_per_batch=1
-            )
+            importer.import_from_native_parquet(files, "tbl", max_files_per_batch=1)
 
         (message,) = (c.args[0] for c in connection.logger.debug.call_args_list)
         assert "files 2-2 of 3" in message
@@ -275,12 +277,14 @@ class TestImportFromNativeParquetNestedColumns:
     def test_nested_columns_fail_before_import(threads, files):
         connection, http_cls, sql_cls = threads
 
+        importer = ExaParquetImporter(connection)
+
         with patch(
             "pyexasol.transport.parquet.importer.ensure_no_nested_columns",
             side_effect=ValueError("hierarchical"),
         ):
             with pytest.raises(ValueError, match="hierarchical"):
-                ExaParquetImporter(connection).import_from_native_parquet(files, "tbl")
+                importer.import_from_native_parquet(files, "tbl")
 
         http_cls.assert_not_called()
         sql_cls.assert_not_called()
@@ -396,10 +400,10 @@ class TestStartHttpThreads:
         http_cls.side_effect = [first, OSError("cannot bind")]
         http_threads = []
 
+        importer = ExaParquetImporter(connection)
+
         with pytest.raises(OSError, match="cannot bind"):
-            ExaParquetImporter(connection)._start_http_threads(
-                files[:2], None, http_threads
-            )
+            importer._start_http_threads(files[:2], None, http_threads)
 
         assert http_threads == [first]
 
