@@ -8,7 +8,15 @@ from collections.abc import (
 )
 from contextlib import contextmanager
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import (
+    TYPE_CHECKING,
+    Annotated,
+)
+
+from pydantic import (
+    Field,
+    validate_call,
+)
 
 from pyexasol.exceptions import ExaImportError
 from pyexasol.http_transport import ExaSQLThread
@@ -143,15 +151,14 @@ class ExaParquetImporter:
     def __init__(self, connection: ExaConnection):
         self.connection = connection
 
+    @validate_call
     def import_from_native_parquet(
         self,
         parquet_files: list[Path],
         table: str | tuple[str, ...],
         import_params: dict | None = None,
-        max_files_per_batch: int = 1,
+        max_files_per_batch: Annotated[int, Field(strict=True, ge=1)] = 1,
     ):
-        if max_files_per_batch < 1:
-            raise ValueError("max_files_per_batch must be at least 1.")
         if import_params is None:
             import_params = {}
 
