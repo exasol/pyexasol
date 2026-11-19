@@ -73,16 +73,23 @@ def ensure_no_nested_columns(  # NOSONAR(S3776)
     Columns at the 0-based positions in ``skipped_column_indexes`` are not checked.
 
     Raises:
-        ValueError: if a checked column of any file is nested (hierarchical).
+        ValueError: if a file is not a valid parquet file, or if a checked column
+            of any file is nested (hierarchical).
     """
     from pyarrow import (
         parquet,
         types,
     )
+    from pyarrow.lib import ArrowInvalid
 
     def nested_fields_of(file: Path) -> list:
+        try:
+            schema = parquet.read_schema(file)
+        except ArrowInvalid as e:
+            raise ValueError(f"File {file} is not a valid parquet file: {e}") from e
+
         nested_fields = []
-        for index, field in enumerate(parquet.read_schema(file)):
+        for index, field in enumerate(schema):
             if not types.is_nested(field.type):
                 continue
             if index in skipped_column_indexes:

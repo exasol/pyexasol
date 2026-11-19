@@ -95,6 +95,14 @@ class TestEnsureNoNestedColumns:
         with pytest.raises(ValueError, match="is hierarchical which is not supported"):
             ensure_no_nested_columns([filepath], skipped_column_indexes={0})
 
+    @staticmethod
+    def test_invalid_parquet_file_raises_error_naming_the_file(tmp_path):
+        filepath = tmp_path / "corrupt.parquet"
+        filepath.write_bytes(b"this is not a parquet file")
+
+        with pytest.raises(ValueError, match="corrupt.parquet.*not a valid parquet"):
+            ensure_no_nested_columns([filepath], None)
+
 
 class TestExaParquetImporterValidation:
     @staticmethod
