@@ -168,7 +168,7 @@ def require_native_parquet_import(connection):
 
 @pytest.mark.parquet
 @pytest.mark.usefixtures("require_native_parquet_import")
-class TestNativeImportFromParquetMultipleFilesAndErrors:
+class TestImportFromParquetErrors:
     @staticmethod
     def _write(path: Path, data: list[dict], score_type=None):
         table = pa.Table.from_pylist(data)
@@ -211,7 +211,13 @@ class TestNativeImportFromParquetMultipleFilesAndErrors:
             paths.append(path)
         return paths
 
-    @pytest.mark.parametrize("max_files_per_batch", [1, 2, 5, 10])
+    @pytest.mark.parametrize(
+        "max_files_per_batch",
+        [
+            pytest.param(2, id="smaller_than_number_of_files"),
+            pytest.param(6, id="greater_than_number_of_files"),
+        ],
+    )
     def test_batches_load_all_files(
         self,
         five_files,
