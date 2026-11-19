@@ -1,3 +1,4 @@
+from pathlib import Path
 from unittest.mock import (
     MagicMock,
     patch,
@@ -7,27 +8,68 @@ import pytest
 from pydantic import ValidationError
 
 from pyexasol.exceptions import ExaImportError
-from pyexasol.transport.parquet.importer import ExaParquetImporter
+from pyexasol.transport.parquet.importer import (
+    ExaParquetImporter,
+    get_parquet_files,
+)
+
+
+class TestGetParquetFiles:
+    @staticmethod
+    def test_str_with_glob_works(tmp_path):
+        tmp_file = tmp_path / "empty.parquet"
+        tmp_file.touch()
+
+        result = get_parquet_files(str(tmp_path / "*.parquet"))
+        assert result == [tmp_file]
+
+    @staticmethod
+    def test_path_as_file_works(tmp_path):
+        tmp_file = tmp_path / "empty.parquet"
+        tmp_file.touch()
+
+        result = get_parquet_files(tmp_file)
+        assert result == [tmp_file]
+
+    @staticmethod
+    def test_path_as_directory_works(tmp_path):
+        tmp_file = tmp_path / "empty.parquet"
+        tmp_file.touch()
+
+        result = get_parquet_files(tmp_path)
+        assert result == [tmp_file]
+
+    @staticmethod
+    @pytest.mark.parametrize("source", ["not_a_valid_path", Path("empty_dir"), []])
+    def test_matches_no_files(tmp_path, monkeypatch, source):
+        (tmp_path / "empty_dir").mkdir()
+        monkeypatch.chdir(tmp_path)
+
+        with pytest.raises(ValueError, match="does not match any files"):
+            get_parquet_files(source)
+
+    @staticmethod
+    def test_list_path_not_valid_files():
+        invalid_path = Path("not_a_valid_path_file")
+        with pytest.raises(ValueError, match="contained entries which were not `Path`"):
+            get_parquet_files([invalid_path])
+
+    @staticmethod
+    def test_not_a_valid_source_type():
+        with pytest.raises(ValueError, match="is not a supported type"):
+            get_parquet_files({"not_a_path"})
 
 
 class TestExaParquetImporterValidation:
     @staticmethod
-    def test_matches_no_files(mock_exaconnection_factory):
-        connection = mock_exaconnection_factory()
-
-        with pytest.raises(ValueError, match="does not match any files"):
-            ExaParquetImporter(connection).import_from_native_parquet(
-                "not_a_valid_path", "tbl"
-            )
-
-    @staticmethod
     def test_rejects_unknown_import_params(mock_exaconnection_factory, tmp_path):
         connection = mock_exaconnection_factory()
-        (tmp_path / "a.parquet").write_bytes(b"PAR1")
+        parquet_file = tmp_path / "a.parquet"
+        parquet_file.write_bytes(b"PAR1")
 
         with pytest.raises(ValidationError):
             ExaParquetImporter(connection).import_from_native_parquet(
-                tmp_path, "tbl", import_params={"columns": ["A"]}
+                [parquet_file], "tbl", import_params={"columns": ["A"]}
             )
 
 

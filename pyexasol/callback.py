@@ -19,7 +19,6 @@ Import callback arguments:
 """
 
 import csv
-import glob
 import io
 import os
 import shutil
@@ -206,50 +205,6 @@ def import_from_pandas(pipe, src: "pandas.DataFrame", **kwargs):
     )
 
 
-def get_parquet_files(source: list[Path] | Path | str) -> list[Path]:  # NOSONAR(S3776)
-    """
-    Resolve ``source`` to a list of parquet files.
-
-    Raises:
-        ValueError: if ``source`` is of an unsupported type, a list containing
-            invalid entries, or does not match any files.
-    """
-
-    def get_files() -> list[Path]:
-        if isinstance(source, str):
-            matches = glob.glob(source)
-            return sorted(
-                [
-                    filepath
-                    for i in matches
-                    if (filepath := Path(i)) and filepath.is_file()
-                ]
-            )
-        if isinstance(source, Path):
-            if source.is_file():
-                return [source]
-            elif source.is_dir():
-                return sorted(source.glob("*.parquet"))
-        if isinstance(source, list):
-            not_a_valid_path_file = [
-                filepath
-                for filepath in source
-                if not isinstance(filepath, Path) or not filepath.is_file()
-            ]
-            if len(not_a_valid_path_file) > 0:
-                raise ValueError(
-                    f"source {source} contained entries which were not `Path` or valid `Path` files {not_a_valid_path_file}"
-                )
-            return source
-        raise ValueError(
-            f"source {source} is not a supported type (Union[list[Path], Path, str])."
-        )
-
-    if not (parquet_files := get_files()):
-        raise ValueError(f"source {source} does not match any files")
-    return parquet_files
-
-
 def import_from_parquet(
     pipe, source: list[Path] | Path | str, **kwargs
 ):  # NOSONAR(S3776)
@@ -275,6 +230,8 @@ def import_from_parquet(
         parquet,
         types,
     )
+
+    from pyexasol.transport.parquet.importer import get_parquet_files
 
     def ensure_no_nested_columns(schema, requested_columns: list[str] | None) -> None:
         nested_fields = []

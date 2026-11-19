@@ -69,7 +69,10 @@ from .query_builders.csv.builders import (
 )
 from .script_output import ExaScriptOutputProcess
 from .statement import ExaStatement
-from .transport.parquet.importer import ExaParquetImporter
+from .transport.parquet.importer import (
+    ExaParquetImporter,
+    get_parquet_files,
+)
 from .warnings import PyexasolWarning
 
 if TYPE_CHECKING:
@@ -944,6 +947,7 @@ class ExaConnection:
                 are processed in sequence. Defaults to ``1``, i.e. one file after
                 the other.
         """
+        parquet_files = get_parquet_files(source)
         if (
             not native
             or not database_versions.MIN_VERSION_FOR_NATIVE_PARQUET_IMPORT.is_supported_by(
@@ -951,7 +955,11 @@ class ExaConnection:
             )
         ):
             return self.import_from_callback(
-                cb.import_from_parquet, source, table, callback_params, import_params
+                cb.import_from_parquet,
+                parquet_files,
+                table,
+                callback_params,
+                import_params,
             )
         if callback_params:
             raise ValueError(
@@ -960,7 +968,7 @@ class ExaConnection:
                 "use import_params instead."
             )
         return ExaParquetImporter(self).import_from_native_parquet(
-            source, table, import_params, max_files_per_batch
+            parquet_files, table, import_params, max_files_per_batch
         )
 
     def export_to_callback(
