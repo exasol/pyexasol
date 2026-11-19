@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import glob
 import ssl
+from collections.abc import Collection
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -62,10 +63,14 @@ def get_parquet_files(source: list[Path] | Path | str) -> list[Path]:  # NOSONAR
 
 
 def ensure_no_nested_columns(
-    parquet_files: list[Path], requested_columns: list[str] | None = None
+    parquet_files: list[Path],
+    requested_columns: list[str] | None = None,
+    skipped_column_indexes: Collection[int] = (),
 ) -> None:
     """
     Ensure none of the columns that will be imported from ``parquet_files`` are nested.
+
+    Columns at the 0-based positions in ``skipped_column_indexes`` are not checked.
 
     Raises:
         ValueError: if a checked column of any file is nested (hierarchical).
@@ -77,8 +82,10 @@ def ensure_no_nested_columns(
 
     def nested_fields_of(file: Path) -> list:
         nested_fields = []
-        for field in parquet.read_schema(file):
+        for index, field in enumerate(parquet.read_schema(file)):
             if not types.is_nested(field.type):
+                continue
+            if index in skipped_column_indexes:
                 continue
             if requested_columns and field.name in requested_columns:
                 nested_fields.append(field)
@@ -112,6 +119,10 @@ class ExaParquetImporter:
             import_params = {}
 
         import_builder = ParquetImportBuilder(table=table, **import_params)
+        ensure_no_nested_columns(
+            parquet_files,
+            skipped_column_indexes=import_builder.skipped_column_indexes,
+        )
         # Generating the certificate is costly, so do it once and share it between
         # all tunnels of this import.
         ssl_context = (

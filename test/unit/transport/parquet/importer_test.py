@@ -80,6 +80,21 @@ class TestEnsureNoNestedColumns:
 
         ensure_no_nested_columns([filepath], ["flat"])
 
+    @staticmethod
+    def test_skipped_nested_column_passes(tmp_path):
+        filepath = tmp_path / "file.parquet"
+        pq.write_table(pa.Table.from_pydict({"flat": [1], "list": [[1]]}), filepath)
+
+        ensure_no_nested_columns([filepath], skipped_column_indexes={1})
+
+    @staticmethod
+    def test_nested_column_not_skipped_fails(tmp_path):
+        filepath = tmp_path / "file.parquet"
+        pq.write_table(pa.Table.from_pydict({"flat": [1], "list": [[1]]}), filepath)
+
+        with pytest.raises(ValueError, match="is hierarchical which is not supported"):
+            ensure_no_nested_columns([filepath], skipped_column_indexes={0})
+
 
 class TestExaParquetImporterValidation:
     @staticmethod
@@ -109,9 +124,11 @@ def threads(mock_exaconnection_factory):
     connection.abort_query = MagicMock()
     connection.ws_ipaddr = "127.0.0.1"
     connection.ws_port = 8563
+    # The parquet files in these tests are fake, so the nested column check is mocked.
     with (
         patch("pyexasol.transport.parquet.importer.ExaParquetHttpThread") as http_cls,
         patch("pyexasol.transport.parquet.importer.ExaSQLThread") as sql_cls,
+        patch("pyexasol.transport.parquet.importer.ensure_no_nested_columns"),
     ):
         yield connection, http_cls, sql_cls
 
@@ -236,6 +253,37 @@ class TestExaParquetImporter:
         (message,) = (c.args[0] for c in connection.logger.debug.call_args_list)
         assert "files 2-2 of 3" in message
         assert "1 file(s) were imported before it" in message
+
+
+class TestImportFromNativeParquetNestedColumns:
+    @staticmethod
+    def test_checks_nested_columns_with_skipped_indexes(threads, files):
+        connection, _, sql_cls = threads
+
+        with patch(
+            "pyexasol.transport.parquet.importer.ensure_no_nested_columns"
+        ) as ensure:
+            ExaParquetImporter(connection).import_from_native_parquet(
+                files, "tbl", import_params={"SkipCols": ["1", "3..4"]}
+            )
+
+        ensure.assert_called_once_with(
+            files, skipped_column_indexes=frozenset({1, 3, 4})
+        )
+
+    @staticmethod
+    def test_nested_columns_fail_before_import(threads, files):
+        connection, http_cls, sql_cls = threads
+
+        with patch(
+            "pyexasol.transport.parquet.importer.ensure_no_nested_columns",
+            side_effect=ValueError("hierarchical"),
+        ):
+            with pytest.raises(ValueError, match="hierarchical"):
+                ExaParquetImporter(connection).import_from_native_parquet(files, "tbl")
+
+        http_cls.assert_not_called()
+        sql_cls.assert_not_called()
 
 
 class TestImportNativeParquetBatch:
