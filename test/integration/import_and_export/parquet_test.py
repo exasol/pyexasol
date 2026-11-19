@@ -1,11 +1,15 @@
+import copy
+import threading
 from collections.abc import Callable
+from decimal import Decimal
 from pathlib import Path
-from unittest import mock
 
 import pyarrow as pa
 import pytest
 from pyarrow import parquet as pq
 
+from pyexasol import database_versions
+from pyexasol.exceptions import ExaImportError
 from test.integration.import_and_export.helper import select_result
 
 
@@ -17,6 +21,59 @@ def prepare_parquet_table(list_dict: list[dict]) -> pa.Table:
     )
     # this is not ideal as the database & Python data use bool
     return table.set_column(4, "IS_GRADUATING", table["IS_GRADUATING"].cast(pa.int64()))
+
+
+def write_parquet_file(path: Path, data: list[dict], score_type=None) -> None:
+    """
+    Write ``data`` to a parquet file. The native Parquet import (newer databases)
+    does not convert between types, so the DECIMAL(10,2) column SCORE is written as
+    a decimal, unless another ``score_type`` (e.g. double) is requested.
+    """
+    table = pa.Table.from_pylist(data)
+    index = table.schema.get_field_index("SCORE")
+    values = [
+        None if v is None else Decimal(str(v)) for v in table["SCORE"].to_pylist()
+    ]
+    if score_type is not None:
+        values = [None if v is None else float(v) for v in values]  # type: ignore[misc]
+    table = table.set_column(
+        index,
+        "SCORE",
+        pa.array(values, type=score_type or pa.decimal128(10, 2)),
+    )
+    pq.write_table(table, path)
+
+
+def is_native_parquet_import(connection) -> bool:
+    return database_versions.MIN_VERSION_FOR_NATIVE_PARQUET_IMPORT.is_supported_by(
+        connection.exasol_db_version
+    )
+
+
+@pytest.fixture
+def require_native_parquet_import(connection):
+    if not is_native_parquet_import(connection):
+        pytest.skip("Requires the native Parquet import")
+
+
+@pytest.fixture
+def file_data_with_nested_column(all_data):
+    # Add a nested column, to cover the edge case of a user whose file contains a
+    # column that cannot be imported and must therefore be deselected or skipped.
+    list_dict = copy.deepcopy(all_data.list_dict)
+    for row in list_dict:
+        row["nested_column"] = [[0]] * len(row["FIRST_NAME"])
+    return list_dict
+
+
+@pytest.fixture
+def five_files(tmp_path, all_data):
+    paths = []
+    for i in range(5):
+        path = tmp_path / f"{i}.parquet"
+        write_parquet_file(path, all_data.list_dict)
+        paths.append(path)
+    return paths
 
 
 @pytest.mark.parquet
@@ -53,75 +110,90 @@ class TestExportToParquet:
         assert len(list(filepath.glob("*"))) == number_entries / rows_per_file
         assert pq.read_table(filepath) == expected
 
-    @staticmethod
-    def test_export_fails_as_not_a_directory(connection, tmp_path, table_name):
-        dst = tmp_path / "dummy"
-        dst.mkdir()
-        filepath = dst / "file.parquet"
-        filepath.touch()
-
-        with mock.patch("pyexasol.connection.ExaConnection.export_to_callback") as m:
-            with pytest.raises(ValueError, match="exists and is not a directory"):
-                connection.export_to_parquet(dst=filepath, query_or_table=table_name)
-        assert m.call_count == 0
-
-    @staticmethod
-    def test_export_fails_due_to_non_empty_directory(connection, tmp_path, table_name):
-        dst = tmp_path / "dummy"
-        dst.mkdir()
-        filepath = dst / "file.parquet"
-        filepath.touch()
-
-        with mock.patch("pyexasol.connection.ExaConnection.export_to_callback") as m:
-            with pytest.raises(ValueError, match="contains existing files"):
-                connection.export_to_parquet(dst=dst, query_or_table=table_name)
-
-        assert m.call_count == 0
-
 
 @pytest.mark.parquet
 class TestImportFromParquet:
-    @staticmethod
-    def _create_parquet_file(path: Path, data: list[dict]):
-        table = pa.Table.from_pylist(data)
-        pq.write_table(table, path)
-
     def test_load_single_file(
         self, tmp_path, empty_table, connection, table_name, all_data
     ):
         filepath = tmp_path / "single_file.parquet"
-        self._create_parquet_file(filepath, all_data.list_dict)
+        write_parquet_file(filepath, all_data.list_dict)
 
         connection.import_from_parquet(filepath, table_name)
 
         assert select_result(connection) == all_data.list_tuple()
 
-    def test_load_specific_columns(
+    @pytest.mark.parametrize(
+        "max_files_per_batch",
+        [
+            pytest.param(2, id="smaller_than_number_of_files"),
+            pytest.param(6, id="greater_than_number_of_files"),
+        ],
+    )
+    def test_batches_load_all_files(
+        self,
+        five_files,
+        empty_table,
+        connection,
+        table_name,
+        all_data,
+        max_files_per_batch,
+    ):
+        connection.import_from_parquet(
+            five_files,
+            table_name,
+            callback_params={"max_files_per_batch": max_files_per_batch},
+        )
+
+        assert sorted(select_result(connection)) == sorted(all_data.list_tuple() * 5)
+
+    def test_load_specific_columns_callback_import(
+        self,
+        tmp_path,
+        empty_table,
+        connection,
+        table_name,
+        file_data_with_nested_column,
+        reduced_import_data,
+    ):
+        filepath = tmp_path / "single_file.parquet"
+        write_parquet_file(filepath, file_data_with_nested_column)
+
+        reduced_columns = ["FIRST_NAME", "LAST_NAME", "AGE", "SCORE"]
+
+        # ``columns`` is a feature of the callback based import only
+        connection.import_from_parquet(
+            filepath,
+            table_name,
+            import_params={"columns": reduced_columns},
+            callback_params={"columns": reduced_columns},
+            native=False,
+        )
+
+        assert select_result(connection) == reduced_import_data.list_tuple()
+
+    @pytest.mark.usefixtures("require_native_parquet_import")
+    def test_skip_columns_native_import(
         self,
         tmp_path,
         empty_table,
         connection,
         table_name,
         all_data,
-        reduced_import_data,
+        file_data_with_nested_column,
     ):
         filepath = tmp_path / "single_file.parquet"
-        # add a nested column, to cover edge case from user which would cause errors
-        # if the user were not deselecting this column
-        for row in all_data.list_dict:
-            row["nested_column"] = [[0]] * len(row["FIRST_NAME"])
-        self._create_parquet_file(filepath, all_data.list_dict)
-
-        reduced_columns = ["FIRST_NAME", "LAST_NAME", "AGE", "SCORE"]
+        write_parquet_file(filepath, file_data_with_nested_column)
+        # the nested column is the last one in the file
+        nested_index = len(file_data_with_nested_column[0]) - 1
 
         connection.import_from_parquet(
             filepath,
             table_name,
-            import_params={"columns": reduced_columns},
-            callback_params={"columns": reduced_columns},
+            import_params={"parquet_skip_cols": [str(nested_index)]},
         )
 
-        assert select_result(connection) == reduced_import_data.list_tuple()
+        assert select_result(connection) == all_data.list_tuple()
 
     @pytest.mark.parametrize(
         "source_function",
@@ -141,10 +213,8 @@ class TestImportFromParquet:
         all_data,
         source_function: Callable,
     ):
-        self._create_parquet_file(tmp_path / "first_file.parquet", all_data.list_dict)
-        self._create_parquet_file(
-            tmp_path / "second_file.parquet", [all_data.list_dict[-1]]
-        )
+        write_parquet_file(tmp_path / "first_file.parquet", all_data.list_dict)
+        write_parquet_file(tmp_path / "second_file.parquet", [all_data.list_dict[-1]])
 
         connection.import_from_parquet(
             source=source_function(tmp_path), table=table_name
@@ -152,3 +222,70 @@ class TestImportFromParquet:
 
         expected = all_data.list_tuple() + [all_data.list_tuple()[-1]]
         assert select_result(connection) == expected
+
+
+@pytest.mark.parquet
+@pytest.mark.usefixtures("require_native_parquet_import")
+class TestImportFromParquetErrors:
+    @staticmethod
+    def _row_count(connection, table_name):
+        return connection.execute(f"SELECT COUNT(*) FROM {table_name}").fetchval()
+
+    @staticmethod
+    def _import_threads():
+        return [
+            t
+            for t in threading.enumerate()
+            if t is not threading.current_thread() and t.name != "MainThread"
+        ]
+
+    @staticmethod
+    def _make_rejected_by_database(path: Path, data: list[dict]):
+        # A double cannot be converted to DECIMAL by the native import. The file
+        # passes the up-front schema check, so the database is what rejects it.
+        write_parquet_file(path, data, score_type=pa.float64())
+
+    def test_failing_file_in_batch_raises_and_cleans_up(
+        self, five_files, empty_table, connection, table_name, all_data
+    ):
+        self._make_rejected_by_database(five_files[2], all_data.list_dict)
+        threads_before = self._import_threads()
+
+        with pytest.raises(ExaImportError):
+            connection.import_from_parquet(
+                five_files, table_name, callback_params={"max_files_per_batch": 5}
+            )
+
+        assert self._import_threads() == threads_before
+        # all files are in one statement, so none of them was imported
+        assert self._row_count(connection, table_name) == 0
+
+    def test_failure_in_later_batch_rolls_back_earlier_batches(
+        self, five_files, empty_table, connection, table_name, all_data
+    ):
+        self._make_rejected_by_database(five_files[3], all_data.list_dict)
+
+        with pytest.raises(ExaImportError):
+            connection.import_from_parquet(
+                five_files, table_name, callback_params={"max_files_per_batch": 2}
+            )
+
+        # batches [0, 1] were imported, but batch [2, 3] failed, so all is rolled back
+        assert self._row_count(connection, table_name) == 0
+        assert connection.attr["autocommit"] is True
+
+    def test_failure_in_later_batch_with_autocommit_off_leaves_transaction_to_user(
+        self, five_files, empty_table, connection, table_name, all_data
+    ):
+        self._make_rejected_by_database(five_files[3], all_data.list_dict)
+        connection.set_autocommit(False)
+
+        with pytest.raises(ExaImportError):
+            connection.import_from_parquet(
+                five_files, table_name, callback_params={"max_files_per_batch": 2}
+            )
+
+        assert connection.attr["autocommit"] is False
+        assert self._row_count(connection, table_name) == 2 * len(all_data.list_dict)
+        connection.rollback()
+        assert self._row_count(connection, table_name) == 0

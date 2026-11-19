@@ -28,6 +28,13 @@ class ExaTunnelServer(socketserver.TCPServer):
 
     def __init__(self, *args, **kwargs):
         self.encryption: bool = kwargs.pop("encryption", True)
+        # Optional ``(context, public_key_sha)`` as returned by
+        # ``generate_adhoc_ssl_context()``. Generating a certificate is costly (RSA
+        # key generation), so callers starting several servers can create it once
+        # and share it.
+        self.ssl_context: tuple[SSLContext, str] | None = kwargs.pop(
+            "ssl_context", None
+        )
         super().__init__(*args, **kwargs)
 
     @property
@@ -66,7 +73,9 @@ class ExaTunnelServer(socketserver.TCPServer):
         self.exa_address_port = port
 
         if self.encryption:
-            context, public_key_sha = self.generate_adhoc_ssl_context()
+            context, public_key_sha = (
+                self.ssl_context or self.generate_adhoc_ssl_context()
+            )
             self.socket = context.wrap_socket(
                 self.socket, server_side=True, do_handshake_on_connect=False
             )
