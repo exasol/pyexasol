@@ -316,6 +316,50 @@ class TestAutocommitHandling:
         ]
 
     @staticmethod
+    def test_cleanup_errors_do_not_hide_import_error(threads, files):
+        connection, _, sql_cls = threads
+        connection.attr = {"autocommit": True}
+        connection.rollback.side_effect = ConnectionError("rollback")
+        connection.set_autocommit.side_effect = [None, ConnectionError("restore")]
+        sql_cls.return_value.join_with_exc.side_effect = [None, RuntimeError("boom")]
+        sql_cls.return_value.is_alive.return_value = False
+
+        with pytest.raises(ExaImportError) as exc_info:
+            ExaParquetImporter(connection).import_from_native_parquet(
+                files, "tbl", max_files_per_batch=1
+            )
+
+        assert isinstance(exc_info.value.__cause__, RuntimeError)
+        connection.rollback.assert_called_once()
+        assert connection.set_autocommit.call_count == 2
+
+    @staticmethod
+    def test_restore_error_is_raised_if_import_succeeded(threads, files):
+        connection, _, _ = threads
+        connection.attr = {"autocommit": True}
+        connection.set_autocommit.side_effect = [None, ConnectionError("restore")]
+
+        with pytest.raises(ConnectionError, match="restore"):
+            ExaParquetImporter(connection).import_from_native_parquet(
+                files, "tbl", max_files_per_batch=1
+            )
+
+    @staticmethod
+    def test_abort_query_error_does_not_hide_import_error(threads, files):
+        connection, _, sql_cls = threads
+        connection.abort_query.side_effect = ConnectionError("abort")
+        sql_cls.return_value.join_with_exc.side_effect = RuntimeError("boom")
+        sql_cls.return_value.is_alive.return_value = True
+
+        with pytest.raises(ExaImportError) as exc_info:
+            ExaParquetImporter(connection).import_from_native_parquet(
+                files, "tbl", max_files_per_batch=1
+            )
+
+        assert isinstance(exc_info.value.__cause__, RuntimeError)
+        assert sql_cls.return_value.join.call_count == 2
+
+    @staticmethod
     def test_failure_with_autocommit_off_does_not_roll_back(threads, files):
         connection, _, sql_cls = threads
         connection.attr = {"autocommit": False}

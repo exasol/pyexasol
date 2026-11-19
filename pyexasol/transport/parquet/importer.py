@@ -6,7 +6,10 @@ from collections.abc import (
     Collection,
     Iterator,
 )
-from contextlib import contextmanager
+from contextlib import (
+    contextmanager,
+    suppress,
+)
 from pathlib import Path
 from typing import (
     TYPE_CHECKING,
@@ -38,6 +41,8 @@ def transaction_if_autocommit(connection: ExaConnection) -> Iterator[None]:
     If autocommit is on, it is switched off for the duration of the block, the
     transaction is committed when the block succeeds and rolled back when it
     raises, and autocommit is switched back on afterward.
+    If the block fails, errors during the rollback or while switching autocommit
+    back on are suppressed, so that the original error is the one raised.
     If autocommit is already off, the user controls the transaction, so nothing
     is changed, committed or rolled back.
     """
@@ -50,9 +55,13 @@ def transaction_if_autocommit(connection: ExaConnection) -> Iterator[None]:
         yield
         connection.commit()
     except BaseException:
-        connection.rollback()
+        # The connection may be broken, so do not let cleanup errors hide the cause.
+        with suppress(Exception):
+            connection.rollback()
+        with suppress(Exception):
+            connection.set_autocommit(True)
         raise
-    finally:
+    else:
         connection.set_autocommit(True)
 
 
@@ -198,7 +207,8 @@ class ExaParquetImporter:
             sql_thread.join(1)
             if sql_thread.is_alive():
                 # The statement is still running, so interrupt it before joining.
-                self.connection.abort_query()
+                with suppress(Exception):
+                    self.connection.abort_query()
                 sql_thread.join()
 
     @staticmethod

@@ -27,6 +27,10 @@ The minimum supported Python version is now 3.11.5, as later `soupsieve` version
 
 An unknown key in `import_params` / `export_params` of `ExaConnection.import_parallel` and `export_parallel` now raises `pydantic.ValidationError` (a `ValueError`) instead of `TypeError`, because the parameters are now validated by `ImportBuilder` / `ExportBuilder`. Code that catches `TypeError` for this case must catch `pydantic.ValidationError` instead. Invalid values already raised `pydantic.ValidationError`. Keys that collide with arguments the method passes to the builder itself (such as `compression`, `table` or `query_or_table`) still raise `TypeError`.
 
+### Behavior change in `import_from_parquet()` for the callback-based import
+
+`import_from_parquet()` now resolves the source files and checks them for nested columns before starting the import, for both the native and the callback-based import. An unsupported source, a source matching no files, an invalid Parquet file or a nested column now raises a `ValueError` directly, instead of an `ExaImportError` wrapping the `ValueError` raised inside the callback. Code that catches `ExaImportError` for these cases must also catch `ValueError`. The benefit is that these problems are found before any data is imported.
+
 ### Deprecations
 
 The following classes in `pyexasol/http_transport.py` are deprecated. Each emits a `PyexasolDeprecationWarning` when instantiated; as for any warning, Python's warning filters decide whether and how often it is shown. They remain available as thin wrappers around the new builders for backwards compatibility but will be removed in a future release:
