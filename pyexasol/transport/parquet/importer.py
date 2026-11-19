@@ -18,7 +18,7 @@ from pydantic import (
     validate_call,
 )
 
-from pyexasol.exceptions import ExaImportError
+from pyexasol.exceptions import ExaNativeParquetImportError
 from pyexasol.http_transport import ExaSQLThread
 from pyexasol.query_builders.parquet.builders import (
     ImportBuilder as ParquetImportBuilder,
@@ -182,9 +182,7 @@ class ExaParquetImporter:
         with transaction_if_autocommit(self.connection):
             for batch_start in range(0, len(parquet_files), max_files_per_batch):
                 batch = parquet_files[batch_start : batch_start + max_files_per_batch]
-                self._import_native_parquet_batch(
-                    batch, import_builder, ssl_context, batch_start, len(parquet_files)
-                )
+                self._import_native_parquet_batch(batch, import_builder, ssl_context)
 
     def _abort_after_failure(
         self,
@@ -249,8 +247,6 @@ class ExaParquetImporter:
         batch: list[Path],
         import_builder: ParquetImportBuilder,
         ssl_context: tuple[ssl.SSLContext, str] | None,
-        batch_start: int,
-        total_files: int,
     ):
         http_threads: list[ExaParquetHttpThread] = []
         sql_thread = None
@@ -263,15 +259,12 @@ class ExaParquetImporter:
         except (Exception, KeyboardInterrupt) as error:
             self._abort_after_failure(http_threads, sql_thread)
 
-            self.connection.logger.debug(
-                f"Native Parquet import failed for the batch of files "
-                f"{batch_start + 1}-{batch_start + len(batch)} of {total_files}"
-            )
-            raise ExaImportError(
+            raise ExaNativeParquetImportError(
                 connection=self.connection,
                 exceptions=(
                     error,
                     *(http_thread.exc for http_thread in http_threads),
                     sql_thread.exc if sql_thread else None,
                 ),
+                files=batch,
             ) from error

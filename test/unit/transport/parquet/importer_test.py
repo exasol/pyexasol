@@ -10,7 +10,10 @@ import pyarrow.parquet as pq
 import pytest
 from pydantic import ValidationError
 
-from pyexasol.exceptions import ExaImportError
+from pyexasol.exceptions import (
+    ExaImportError,
+    ExaNativeParquetImportError,
+)
 from pyexasol.transport.parquet.importer import (
     ExaParquetImporter,
     ensure_no_nested_columns,
@@ -255,20 +258,6 @@ class TestExaParquetImporter:
         assert http_cls.call_count == 2  # third file is not attempted
         connection.abort_query.assert_not_called()
 
-    @staticmethod
-    def test_logs_failed_batch(threads, files):
-        connection, _, sql_cls = threads
-        sql_cls.return_value.join_with_exc.side_effect = [None, RuntimeError("boom")]
-        sql_cls.return_value.is_alive.return_value = False
-
-        importer = ExaParquetImporter(connection)
-
-        with pytest.raises(ExaImportError):
-            importer.import_from_native_parquet(files, "tbl", max_files_per_batch=1)
-
-        (message,) = (c.args[0] for c in connection.logger.debug.call_args_list)
-        assert "files 2-2 of 3" in message
-
 
 class TestAutocommitHandling:
     @staticmethod
@@ -380,7 +369,7 @@ class TestImportNativeParquetBatch:
     @staticmethod
     def _import_batch(connection, files, ssl_context=None):
         ExaParquetImporter(connection)._import_native_parquet_batch(
-            files, MagicMock(), ssl_context, 0, len(files)
+            files, MagicMock(), ssl_context
         )
 
     @staticmethod
@@ -425,6 +414,21 @@ class TestImportNativeParquetBatch:
         assert exc_info.value.__cause__ is sql_cls.return_value.exc
         assert http_thread.exc in exc_info.value.exceptions
         assert sql_cls.return_value.exc in exc_info.value.exceptions
+
+    @staticmethod
+    def test_error_names_files_of_failed_batch(threads, files):
+        connection, http_cls, sql_cls = threads
+        http_cls.return_value.exc = None
+        sql_cls.return_value.exc = None
+        sql_cls.return_value.join_with_exc.side_effect = RuntimeError("boom")
+        sql_cls.return_value.is_alive.return_value = False
+
+        with pytest.raises(ExaNativeParquetImportError) as exc_info:
+            TestImportNativeParquetBatch._import_batch(connection, files[:2])
+
+        assert isinstance(exc_info.value, ExaImportError)
+        assert exc_info.value.files == [str(f) for f in files[:2]]
+        assert all(str(f) in str(exc_info.value) for f in files[:2])
 
     @staticmethod
     def test_cleans_up_started_threads_if_starting_one_fails(threads, files):
