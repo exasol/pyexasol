@@ -63,8 +63,6 @@ with tempfile.TemporaryDirectory() as directory_path:
     # Import from temporary directory with a local parquet file into an Exasol table
     C.import_from_parquet(source=filepath_glob, table="users_copy")
 
-    # Count the rows in the table to get the total, as last_statement() would only
-    # describe the last batch processed.
     imported_rows = C.execute("SELECT COUNT(*) FROM users_copy").fetchval()
     print(f"IMPORTED {imported_rows} rows")
 
