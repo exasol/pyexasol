@@ -69,16 +69,16 @@ class TestEnsureNoNestedColumns:
     def test_hierarchical_data_is_not_supported(tmp_path):
         filepath = tmp_path / "hierarchical.parquet"
         pq.write_table(pa.Table.from_pydict({"list": [[1]]}), filepath)
-        schema = pq.ParquetFile(filepath).schema_arrow
 
         with pytest.raises(ValueError, match="is hierarchical which is not supported"):
-            ensure_no_nested_columns(filepath, schema, None)
+            ensure_no_nested_columns([filepath], None)
 
     @staticmethod
     def test_nested_column_not_requested_passes(tmp_path):
-        schema = pa.schema([("flat", pa.int64()), ("list", pa.list_(pa.int64()))])
+        filepath = tmp_path / "file.parquet"
+        pq.write_table(pa.Table.from_pydict({"flat": [1], "list": [[1]]}), filepath)
 
-        ensure_no_nested_columns(tmp_path / "file.parquet", schema, ["flat"])
+        ensure_no_nested_columns([filepath], ["flat"])
 
 
 class TestExaParquetImporterValidation:

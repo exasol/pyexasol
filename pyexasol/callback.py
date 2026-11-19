@@ -237,10 +237,10 @@ def import_from_parquet(
 
     parquet_files = get_parquet_files(source)
 
-    columns = kwargs.get("columns", None)
+    ensure_no_nested_columns(parquet_files, kwargs.get("columns", None))
+
     for file in parquet_files:
         parquet_file = parquet.ParquetFile(file, memory_map=True)
-        ensure_no_nested_columns(file, parquet_file.schema_arrow, columns)
         for batch in parquet_file.iter_batches(**kwargs):
             write_options = csv.WriteOptions(include_header=False)
             csv.write_csv(batch, pipe, write_options=write_options)

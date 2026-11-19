@@ -71,6 +71,7 @@ from .script_output import ExaScriptOutputProcess
 from .statement import ExaStatement
 from .transport.parquet.importer import (
     ExaParquetImporter,
+    ensure_no_nested_columns,
     get_parquet_files,
 )
 from .warnings import PyexasolWarning
@@ -948,12 +949,18 @@ class ExaConnection:
                 the other.
         """
         parquet_files = get_parquet_files(source)
+
+        # Callback import: local parquet files are streamed to Exasol as CSV.
         if (
             not native
             or not database_versions.MIN_VERSION_FOR_NATIVE_PARQUET_IMPORT.is_supported_by(
                 self.exasol_db_version
             )
         ):
+            if callback_params is None:
+                callback_params = {}
+
+            ensure_no_nested_columns(parquet_files, callback_params.get("columns"))
             return self.import_from_callback(
                 cb.import_from_parquet,
                 parquet_files,
@@ -961,6 +968,8 @@ class ExaConnection:
                 callback_params,
                 import_params,
             )
+
+        # Native Parquet import: Exasol reads the local parquet files directly.
         if callback_params:
             raise ValueError(
                 "callback_params are not supported by the native Parquet import "

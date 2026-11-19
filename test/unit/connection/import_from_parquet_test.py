@@ -16,8 +16,12 @@ MIN_VERSION = MIN_VERSION_FOR_NATIVE_PARQUET_IMPORT.version
 def connection(mock_exaconnection_factory):
     connection = mock_exaconnection_factory()
     connection.import_from_callback = MagicMock()
-    with patch("pyexasol.connection.ExaParquetImporter") as importer_cls:
+    with (
+        patch("pyexasol.connection.ExaParquetImporter") as importer_cls,
+        patch("pyexasol.connection.ensure_no_nested_columns") as ensure,
+    ):
         connection.native_import = importer_cls.return_value.import_from_native_parquet
+        connection.ensure_no_nested_columns = ensure
         yield connection
 
 
@@ -126,3 +130,30 @@ class TestImportFromParquet:
 
         connection.native_import.assert_not_called()
         connection.import_from_callback.assert_not_called()
+
+
+class TestImportFromParquetNestedColumns:
+    @staticmethod
+    def test_nested_columns_fail_before_callback_import(
+        connection, source, parquet_files
+    ):
+        _set_db_version(connection, None)
+        connection.ensure_no_nested_columns.side_effect = ValueError("hierarchical")
+
+        with pytest.raises(ValueError, match="hierarchical"):
+            connection.import_from_parquet(source, "tbl")
+
+        connection.ensure_no_nested_columns.assert_called_once_with(parquet_files, None)
+        connection.import_from_callback.assert_not_called()
+
+    @staticmethod
+    def test_requested_columns_are_passed(connection, source, parquet_files):
+        _set_db_version(connection, None)
+
+        connection.import_from_parquet(
+            source, "tbl", callback_params={"columns": ["a"]}
+        )
+
+        connection.ensure_no_nested_columns.assert_called_once_with(
+            parquet_files, ["a"]
+        )

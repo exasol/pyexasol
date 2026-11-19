@@ -14,8 +14,6 @@ from pyexasol.transport.parquet.thread import ExaParquetHttpThread
 from pyexasol.transport.tunnel_server import ExaTunnelServer
 
 if TYPE_CHECKING:
-    import pyarrow as pa
-
     from pyexasol.connection import ExaConnection
 
 
@@ -64,23 +62,35 @@ def get_parquet_files(source: list[Path] | Path | str) -> list[Path]:  # NOSONAR
 
 
 def ensure_no_nested_columns(
-    file: Path, schema: pa.Schema, requested_columns: list[str] | None
+    parquet_files: list[Path], requested_columns: list[str] | None = None
 ) -> None:
-    from pyarrow import types
+    """
+    Ensure none of the columns that will be imported from ``parquet_files`` are nested.
 
-    nested_fields = []
-    for field in schema:
-        if not types.is_nested(field.type):
-            continue
-        if requested_columns and field.name in requested_columns:
-            nested_fields.append(field)
-        if not requested_columns:
-            nested_fields.append(field)
+    Raises:
+        ValueError: if a checked column of any file is nested (hierarchical).
+    """
+    from pyarrow import (
+        parquet,
+        types,
+    )
 
-    if nested_fields:
-        raise ValueError(
-            f"Fields {nested_fields} of schema from file {file} is hierarchical which is not supported."
-        )
+    def nested_fields_of(file: Path) -> list:
+        nested_fields = []
+        for field in parquet.read_schema(file):
+            if not types.is_nested(field.type):
+                continue
+            if requested_columns and field.name in requested_columns:
+                nested_fields.append(field)
+            if not requested_columns:
+                nested_fields.append(field)
+        return nested_fields
+
+    for file in parquet_files:
+        if nested_fields := nested_fields_of(file):
+            raise ValueError(
+                f"Fields {nested_fields} of schema from file {file} is hierarchical which is not supported."
+            )
 
 
 class ExaParquetImporter:
