@@ -205,13 +205,14 @@ class TestExaParquetImporter:
         assert {c.kwargs["ssl_context"] for c in http_cls.call_args_list} == {None}
 
     @staticmethod
-    def test_rejects_invalid_max_files_per_batch(threads, files):
+    @pytest.mark.parametrize("value", [0, -1])
+    def test_rejects_invalid_max_files_per_batch(threads, files, value):
         connection, _, _ = threads
 
         importer = ExaParquetImporter(connection)
 
         with pytest.raises(ValueError, match="max_files_per_batch"):
-            importer.import_from_native_parquet(files, "tbl", max_files_per_batch=0)
+            importer.import_from_native_parquet(files, "tbl", max_files_per_batch=value)
 
     @staticmethod
     def test_shares_one_builder_with_import_params(threads, files):

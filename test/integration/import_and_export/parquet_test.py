@@ -3,7 +3,6 @@ import threading
 from collections.abc import Callable
 from decimal import Decimal
 from pathlib import Path
-from unittest import mock
 
 import pyarrow as pa
 import pytest
@@ -57,31 +56,6 @@ class TestExportToParquet:
 
         assert len(list(filepath.glob("*"))) == number_entries / rows_per_file
         assert pq.read_table(filepath) == expected
-
-    @staticmethod
-    def test_export_fails_as_not_a_directory(connection, tmp_path, table_name):
-        dst = tmp_path / "dummy"
-        dst.mkdir()
-        filepath = dst / "file.parquet"
-        filepath.touch()
-
-        with mock.patch("pyexasol.connection.ExaConnection.export_to_callback") as m:
-            with pytest.raises(ValueError, match="exists and is not a directory"):
-                connection.export_to_parquet(dst=filepath, query_or_table=table_name)
-        assert m.call_count == 0
-
-    @staticmethod
-    def test_export_fails_due_to_non_empty_directory(connection, tmp_path, table_name):
-        dst = tmp_path / "dummy"
-        dst.mkdir()
-        filepath = dst / "file.parquet"
-        filepath.touch()
-
-        with mock.patch("pyexasol.connection.ExaConnection.export_to_callback") as m:
-            with pytest.raises(ValueError, match="contains existing files"):
-                connection.export_to_parquet(dst=dst, query_or_table=table_name)
-
-        assert m.call_count == 0
 
 
 @pytest.fixture
@@ -332,12 +306,3 @@ class TestNativeImportFromParquetMultipleFilesAndErrors:
         connection.import_from_parquet(five_files[1:], table_name)
 
         assert self._row_count(connection, table_name) == 4 * len(all_data.list_dict)
-
-    @pytest.mark.parametrize("value", [0, -1])
-    def test_invalid_max_files_per_batch(
-        self, five_files, empty_table, connection, table_name, value
-    ):
-        with pytest.raises(ValueError, match="max_files_per_batch"):
-            connection.import_from_parquet(
-                five_files, table_name, callback_params={"max_files_per_batch": value}
-            )
