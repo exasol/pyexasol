@@ -107,16 +107,28 @@ class TestImportFromParquet:
         assert result is connection.import_from_callback.return_value
 
     @staticmethod
-    def test_native_rejects_callback_params(connection, source, parquet_files):
+    def test_native_passes_max_files_per_batch(connection, source, parquet_files):
         _set_db_version(connection, MIN_VERSION)
+        params = {"max_files_per_batch": 3}
 
-        with pytest.raises(ValueError, match="callback_params are not supported"):
-            connection.import_from_parquet(
-                source, "tbl", callback_params={"batch_size": 1}
-            )
+        connection.import_from_parquet(source, "tbl", callback_params=params)
 
-        connection.native_import.assert_not_called()
-        connection.import_from_callback.assert_not_called()
+        connection.native_import.assert_called_once_with(parquet_files, "tbl", None, 3)
+        assert params == {"max_files_per_batch": 3}
+
+    @staticmethod
+    def test_callback_import_does_not_receive_max_files_per_batch(
+        connection, source, parquet_files
+    ):
+        _set_db_version(connection, None)
+
+        connection.import_from_parquet(
+            source, "tbl", {"batch_size": 1, "max_files_per_batch": 3}
+        )
+
+        connection.import_from_callback.assert_called_once_with(
+            cb.import_from_parquet_files, parquet_files, "tbl", {"batch_size": 1}, None
+        )
 
     @staticmethod
     @pytest.mark.parametrize("version", [None, MIN_VERSION])

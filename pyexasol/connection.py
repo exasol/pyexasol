@@ -898,7 +898,6 @@ class ExaConnection:
         callback_params: dict | None = None,
         import_params: dict | None = None,
         native: bool = True,
-        max_files_per_batch: int = 1,
     ):
         """
         Import a large amount of data from local parquet file(s).
@@ -926,10 +925,15 @@ class ExaConnection:
                 - ``tuple[str, ...]``: schema-qualified table identifier, such as
                   ``("SCHEMA", "TABLE")``.
             callback_params:
-                Dict with additional parameters for callback function
-                `parquet.ParquetFile.iter_batches <https://arrow.apache.org/docs/python/generated/pyarrow.parquet.ParquetFile.html#pyarrow.parquet.ParquetFile.iter_batches>`__.
-                Only supported by the callback-based import; raises ``ValueError``
-                for the native import.
+                Dict with additional parameters.
+
+                - Callback-based import: parameters for
+                  `parquet.ParquetFile.iter_batches <https://arrow.apache.org/docs/python/generated/pyarrow.parquet.ParquetFile.html#pyarrow.parquet.ParquetFile.iter_batches>`__.
+                - Native import: only ``max_files_per_batch`` is used
+                  (default ``1``). Exasol opens one connection
+                  per file, so the files are split into batches of at most this many
+                  files. A batch is imported in parallel by one ``IMPORT`` statement,
+                  the batches in sequence.
             import_params:
                 Custom parameters for IMPORT query. They are the ``import_params`` of:
 
@@ -940,15 +944,13 @@ class ExaConnection:
             native:
                 If ``False``, always use the callback-based import. Defaults to ``True``
                 (use the native import when the database supports it).
-            max_files_per_batch:
-                Only used by the native import. Exasol opens one connection per file,
-                so PyExasol starts one tunnel (one thread) per file. The files are
-                split into batches of at most this many files. The files of one batch
-                are imported in parallel by one ``IMPORT`` statement, and the batches
-                are processed in sequence. Defaults to ``1``, i.e. one file after
-                the other.
         """
         parquet_files = get_parquet_files(source)
+
+        # Copy so the caller's dict is not modified.
+        callback_params = dict(callback_params or {})
+        # Only used by the native import, so it must not reach the callback import.
+        max_files_per_batch = callback_params.pop("max_files_per_batch", 1)
 
         # Callback import: local parquet files are streamed to Exasol as CSV.
         if (
@@ -957,9 +959,6 @@ class ExaConnection:
                 self.exasol_db_version
             )
         ):
-            if callback_params is None:
-                callback_params = {}
-
             ensure_no_nested_columns(parquet_files, callback_params.get("columns"))
             return self.import_from_callback(
                 cb.import_from_parquet_files,
@@ -970,12 +969,6 @@ class ExaConnection:
             )
 
         # Native Parquet import: Exasol reads the local parquet files directly.
-        if callback_params:
-            raise ValueError(
-                "callback_params are not supported by the native Parquet import "
-                f"(database version >= {database_versions.MIN_VERSION_FOR_NATIVE_PARQUET_IMPORT.version}); "
-                "use import_params instead."
-            )
         return ExaParquetImporter(self).import_from_native_parquet(
             parquet_files, table, import_params, max_files_per_batch
         )

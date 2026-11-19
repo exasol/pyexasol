@@ -248,7 +248,9 @@ class TestNativeImportFromParquetMultipleFilesAndErrors:
         max_files_per_batch,
     ):
         connection.import_from_parquet(
-            five_files, table_name, max_files_per_batch=max_files_per_batch
+            five_files,
+            table_name,
+            callback_params={"max_files_per_batch": max_files_per_batch},
         )
 
         assert sorted(select_result(connection)) == sorted(all_data.list_tuple() * 5)
@@ -261,7 +263,7 @@ class TestNativeImportFromParquetMultipleFilesAndErrors:
 
         with pytest.raises(ExaImportError):
             connection.import_from_parquet(
-                five_files, table_name, max_files_per_batch=5
+                five_files, table_name, callback_params={"max_files_per_batch": 5}
             )
 
         assert self._import_threads() == threads_before
@@ -275,7 +277,7 @@ class TestNativeImportFromParquetMultipleFilesAndErrors:
 
         with pytest.raises(ExaImportError):
             connection.import_from_parquet(
-                five_files, table_name, max_files_per_batch=2
+                five_files, table_name, callback_params={"max_files_per_batch": 2}
             )
 
         # batches [0, 1] were imported, batch [2, 3] failed, batch [4] never ran
@@ -337,5 +339,5 @@ class TestNativeImportFromParquetMultipleFilesAndErrors:
     ):
         with pytest.raises(ValueError, match="max_files_per_batch"):
             connection.import_from_parquet(
-                five_files, table_name, max_files_per_batch=value
+                five_files, table_name, callback_params={"max_files_per_batch": value}
             )
