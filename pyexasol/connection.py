@@ -931,7 +931,7 @@ class ExaConnection:
                 Custom parameters for IMPORT query. They are the ``import_params`` of:
 
                 - Callback-based import:
-                  :class:`pyexasol.http_transport.ImportQuery`
+                  :class:`pyexasol.query_builders.csv.builders.ImportBuilder`
                 - Native Parquet import:
                   :class:`pyexasol.query_builders.parquet.builders.ImportBuilder`
             native:
