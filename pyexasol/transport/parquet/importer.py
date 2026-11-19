@@ -2,7 +2,11 @@ from __future__ import annotations
 
 import glob
 import ssl
-from collections.abc import Collection
+from collections.abc import (
+    Collection,
+    Iterator,
+)
+from contextlib import contextmanager
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -16,6 +20,32 @@ from pyexasol.transport.tunnel_server import ExaTunnelServer
 
 if TYPE_CHECKING:
     from pyexasol.connection import ExaConnection
+
+
+@contextmanager
+def transaction_if_autocommit(connection: ExaConnection) -> Iterator[None]:
+    """
+    Run the enclosed statements as one transaction, if autocommit is on.
+
+    If autocommit is on, it is switched off for the duration of the block, the
+    transaction is committed when the block succeeds and rolled back when it
+    raises, and autocommit is switched back on afterward.
+    If autocommit is already off, the user controls the transaction, so nothing
+    is changed, committed or rolled back.
+    """
+    if not connection.attr.get("autocommit", False):
+        yield
+        return
+
+    connection.set_autocommit(False)
+    try:
+        yield
+        connection.commit()
+    except BaseException:
+        connection.rollback()
+        raise
+    finally:
+        connection.set_autocommit(True)
 
 
 def get_parquet_files(source: list[Path] | Path | str) -> list[Path]:  # NOSONAR(S3776)
@@ -140,14 +170,14 @@ class ExaParquetImporter:
 
         # An Exasol tunnel accepts one connection for one statement, so each file
         # gets its own tunnel (one thread each). Up to ``max_files_per_batch`` files
-        # are imported by one IMPORT statement, and the batches run sequentially.
-        # The batches are not imported atomically: if one fails, earlier batches
-        # stay imported (subject to ``autocommit``).
-        for batch_start in range(0, len(parquet_files), max_files_per_batch):
-            batch = parquet_files[batch_start : batch_start + max_files_per_batch]
-            self._import_native_parquet_batch(
-                batch, import_builder, ssl_context, batch_start, len(parquet_files)
-            )
+        # are imported by one IMPORT statement, and the batches run sequentially,
+        # all in one transaction (if autocommit is on; otherwise the user controls it).
+        with transaction_if_autocommit(self.connection):
+            for batch_start in range(0, len(parquet_files), max_files_per_batch):
+                batch = parquet_files[batch_start : batch_start + max_files_per_batch]
+                self._import_native_parquet_batch(
+                    batch, import_builder, ssl_context, batch_start, len(parquet_files)
+                )
 
     def _abort_after_failure(
         self,
@@ -228,8 +258,7 @@ class ExaParquetImporter:
 
             self.connection.logger.debug(
                 f"Native Parquet import failed for the batch of files "
-                f"{batch_start + 1}-{batch_start + len(batch)} of {total_files}; "
-                f"{batch_start} file(s) were imported before it"
+                f"{batch_start + 1}-{batch_start + len(batch)} of {total_files}"
             )
             raise ExaImportError(
                 connection=self.connection,

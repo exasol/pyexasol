@@ -260,7 +260,7 @@ class TestImportFromParquetErrors:
         # all files are in one statement, so none of them was imported
         assert self._row_count(connection, table_name) == 0
 
-    def test_failure_in_later_batch_keeps_earlier_batches(
+    def test_failure_in_later_batch_rolls_back_earlier_batches(
         self, five_files, empty_table, connection, table_name, all_data
     ):
         self._make_rejected_by_database(five_files[3], all_data.list_dict)
@@ -270,5 +270,22 @@ class TestImportFromParquetErrors:
                 five_files, table_name, callback_params={"max_files_per_batch": 2}
             )
 
-        # batches [0, 1] were imported, batch [2, 3] failed, batch [4] never ran
+        # batches [0, 1] were imported, but batch [2, 3] failed, so all is rolled back
+        assert self._row_count(connection, table_name) == 0
+        assert connection.attr["autocommit"] is True
+
+    def test_failure_in_later_batch_with_autocommit_off_leaves_transaction_to_user(
+        self, five_files, empty_table, connection, table_name, all_data
+    ):
+        self._make_rejected_by_database(five_files[3], all_data.list_dict)
+        connection.set_autocommit(False)
+
+        with pytest.raises(ExaImportError):
+            connection.import_from_parquet(
+                five_files, table_name, callback_params={"max_files_per_batch": 2}
+            )
+
+        assert connection.attr["autocommit"] is False
         assert self._row_count(connection, table_name) == 2 * len(all_data.list_dict)
+        connection.rollback()
+        assert self._row_count(connection, table_name) == 0

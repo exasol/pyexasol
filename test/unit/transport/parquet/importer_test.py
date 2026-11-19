@@ -1,6 +1,7 @@
 from pathlib import Path
 from unittest.mock import (
     MagicMock,
+    call,
     patch,
 )
 
@@ -134,6 +135,10 @@ def threads(mock_exaconnection_factory):
     connection.abort_query = MagicMock()
     connection.ws_ipaddr = "127.0.0.1"
     connection.ws_port = 8563
+    connection.attr = {"autocommit": False}
+    connection.set_autocommit = MagicMock()
+    connection.commit = MagicMock()
+    connection.rollback = MagicMock()
     # The parquet files in these tests are fake, so the nested column check is mocked.
     with (
         patch("pyexasol.transport.parquet.importer.ExaParquetHttpThread") as http_cls,
@@ -251,7 +256,7 @@ class TestExaParquetImporter:
         connection.abort_query.assert_not_called()
 
     @staticmethod
-    def test_logs_failed_batch_with_number_of_imported_files(threads, files):
+    def test_logs_failed_batch(threads, files):
         connection, _, sql_cls = threads
         sql_cls.return_value.join_with_exc.side_effect = [None, RuntimeError("boom")]
         sql_cls.return_value.is_alive.return_value = False
@@ -263,7 +268,79 @@ class TestExaParquetImporter:
 
         (message,) = (c.args[0] for c in connection.logger.debug.call_args_list)
         assert "files 2-2 of 3" in message
-        assert "1 file(s) were imported before it" in message
+
+
+class TestAutocommitHandling:
+    @staticmethod
+    def _events(connection):
+        events = MagicMock()
+        events.attach_mock(connection.set_autocommit, "set_autocommit")
+        events.attach_mock(connection.commit, "commit")
+        events.attach_mock(connection.rollback, "rollback")
+        return events
+
+    @staticmethod
+    def test_autocommit_on_is_disabled_commits_once_and_restored(threads, files):
+        connection, _, _ = threads
+        connection.attr = {"autocommit": True}
+        events = TestAutocommitHandling._events(connection)
+
+        ExaParquetImporter(connection).import_from_native_parquet(
+            files, "tbl", max_files_per_batch=1
+        )
+
+        assert events.mock_calls == [
+            call.set_autocommit(False),
+            call.commit(),
+            call.set_autocommit(True),
+        ]
+
+    @staticmethod
+    def test_autocommit_off_is_left_alone(threads, files):
+        connection, _, _ = threads
+        connection.attr = {"autocommit": False}
+        events = TestAutocommitHandling._events(connection)
+
+        ExaParquetImporter(connection).import_from_native_parquet(
+            files, "tbl", max_files_per_batch=1
+        )
+
+        assert events.mock_calls == []
+
+    @staticmethod
+    def test_failure_rolls_back_and_restores_autocommit(threads, files):
+        connection, http_cls, sql_cls = threads
+        connection.attr = {"autocommit": True}
+        sql_cls.return_value.join_with_exc.side_effect = [None, RuntimeError("boom")]
+        sql_cls.return_value.is_alive.return_value = False
+        events = TestAutocommitHandling._events(connection)
+
+        with pytest.raises(ExaImportError):
+            ExaParquetImporter(connection).import_from_native_parquet(
+                files, "tbl", max_files_per_batch=1
+            )
+
+        assert events.mock_calls == [
+            call.set_autocommit(False),
+            call.rollback(),
+            call.set_autocommit(True),
+        ]
+
+    @staticmethod
+    def test_failure_with_autocommit_off_does_not_roll_back(threads, files):
+        connection, _, sql_cls = threads
+        connection.attr = {"autocommit": False}
+        sql_cls.return_value.join_with_exc.side_effect = [None, RuntimeError("boom")]
+        sql_cls.return_value.is_alive.return_value = False
+
+        with pytest.raises(ExaImportError):
+            ExaParquetImporter(connection).import_from_native_parquet(
+                files, "tbl", max_files_per_batch=1
+            )
+
+        connection.rollback.assert_not_called()
+        connection.commit.assert_not_called()
+        connection.set_autocommit.assert_not_called()
 
 
 class TestImportFromNativeParquetNestedColumns:
