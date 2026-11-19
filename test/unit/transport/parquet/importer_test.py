@@ -304,10 +304,10 @@ class TestAutocommitHandling:
         sql_cls.return_value.is_alive.return_value = False
         events = TestAutocommitHandling._events(connection)
 
+        importer = ExaParquetImporter(connection)
+
         with pytest.raises(ExaImportError):
-            ExaParquetImporter(connection).import_from_native_parquet(
-                files, "tbl", max_files_per_batch=1
-            )
+            importer.import_from_native_parquet(files, "tbl", max_files_per_batch=1)
 
         assert events.mock_calls == [
             call.set_autocommit(False),
@@ -324,10 +324,10 @@ class TestAutocommitHandling:
         sql_cls.return_value.join_with_exc.side_effect = [None, RuntimeError("boom")]
         sql_cls.return_value.is_alive.return_value = False
 
+        importer = ExaParquetImporter(connection)
+
         with pytest.raises(ExaImportError) as exc_info:
-            ExaParquetImporter(connection).import_from_native_parquet(
-                files, "tbl", max_files_per_batch=1
-            )
+            importer.import_from_native_parquet(files, "tbl", max_files_per_batch=1)
 
         assert isinstance(exc_info.value.__cause__, RuntimeError)
         connection.rollback.assert_called_once()
@@ -339,10 +339,10 @@ class TestAutocommitHandling:
         connection.attr = {"autocommit": True}
         connection.set_autocommit.side_effect = [None, ConnectionError("restore")]
 
+        importer = ExaParquetImporter(connection)
+
         with pytest.raises(ConnectionError, match="restore"):
-            ExaParquetImporter(connection).import_from_native_parquet(
-                files, "tbl", max_files_per_batch=1
-            )
+            importer.import_from_native_parquet(files, "tbl", max_files_per_batch=1)
 
     @staticmethod
     def test_abort_query_error_does_not_hide_import_error(threads, files):
@@ -351,10 +351,10 @@ class TestAutocommitHandling:
         sql_cls.return_value.join_with_exc.side_effect = RuntimeError("boom")
         sql_cls.return_value.is_alive.return_value = True
 
+        importer = ExaParquetImporter(connection)
+
         with pytest.raises(ExaImportError) as exc_info:
-            ExaParquetImporter(connection).import_from_native_parquet(
-                files, "tbl", max_files_per_batch=1
-            )
+            importer.import_from_native_parquet(files, "tbl", max_files_per_batch=1)
 
         assert isinstance(exc_info.value.__cause__, RuntimeError)
         assert sql_cls.return_value.join.call_count == 2
@@ -366,10 +366,10 @@ class TestAutocommitHandling:
         sql_cls.return_value.join_with_exc.side_effect = [None, RuntimeError("boom")]
         sql_cls.return_value.is_alive.return_value = False
 
+        importer = ExaParquetImporter(connection)
+
         with pytest.raises(ExaImportError):
-            ExaParquetImporter(connection).import_from_native_parquet(
-                files, "tbl", max_files_per_batch=1
-            )
+            importer.import_from_native_parquet(files, "tbl", max_files_per_batch=1)
 
         connection.rollback.assert_not_called()
         connection.commit.assert_not_called()
