@@ -225,21 +225,31 @@ def import_from_parquet(
 
     Please note that nested or hierarchical column types are not supported.
     """
-    from pyarrow import (
-        csv,
-        parquet,
-    )
-
     from pyexasol.transport.parquet.importer import (
         ensure_no_nested_columns,
         get_parquet_files,
     )
 
     parquet_files = get_parquet_files(source)
-
     ensure_no_nested_columns(parquet_files, kwargs.get("columns", None))
+    import_from_parquet_files(pipe, parquet_files, **kwargs)
 
-    for file in parquet_files:
+
+def import_from_parquet_files(pipe, source: list[Path], **kwargs):
+    """
+    Stream already resolved and validated local parquet files to ``pipe`` as CSV.
+
+    Args:
+        source: Local parquet files to process.
+        **kwargs:
+            Custom params for :func:`pyarrow.parquet.ParquetFile.iter_batches`.
+    """
+    from pyarrow import (
+        csv,
+        parquet,
+    )
+
+    for file in source:
         parquet_file = parquet.ParquetFile(file, memory_map=True)
         for batch in parquet_file.iter_batches(**kwargs):
             write_options = csv.WriteOptions(include_header=False)

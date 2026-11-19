@@ -962,7 +962,7 @@ class ExaConnection:
 
             ensure_no_nested_columns(parquet_files, callback_params.get("columns"))
             return self.import_from_callback(
-                cb.import_from_parquet,
+                cb.import_from_parquet_files,
                 parquet_files,
                 table,
                 callback_params,

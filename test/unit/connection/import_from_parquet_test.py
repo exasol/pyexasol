@@ -68,7 +68,7 @@ class TestImportFromParquet:
         result = connection.import_from_parquet(source, "tbl", {"a": 1}, {"b": 2})
 
         connection.import_from_callback.assert_called_once_with(
-            cb.import_from_parquet, parquet_files, "tbl", {"a": 1}, {"b": 2}
+            cb.import_from_parquet_files, parquet_files, "tbl", {"a": 1}, {"b": 2}
         )
         connection.native_import.assert_not_called()
         assert result is connection.import_from_callback.return_value
@@ -101,7 +101,7 @@ class TestImportFromParquet:
         )
 
         connection.import_from_callback.assert_called_once_with(
-            cb.import_from_parquet, parquet_files, "tbl", {"a": 1}, {"b": 2}
+            cb.import_from_parquet_files, parquet_files, "tbl", {"a": 1}, {"b": 2}
         )
         connection.native_import.assert_not_called()
         assert result is connection.import_from_callback.return_value
