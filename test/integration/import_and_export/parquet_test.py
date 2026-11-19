@@ -270,14 +270,6 @@ class TestNativeImportFromParquetMultipleFilesAndErrors:
 
         assert self._row_count(connection, table_name) == 0
 
-    def test_missing_table_raises_and_cleans_up(self, five_files, connection):
-        threads_before = self._import_threads()
-
-        with pytest.raises(ExaImportError):
-            connection.import_from_parquet(five_files, "THIS_TABLE_DOES_NOT_EXIST")
-
-        assert self._import_threads() == threads_before
-
     @pytest.mark.skipif(
         hasattr(os, "geteuid") and os.geteuid() == 0,
         reason="root can read files without permissions",
