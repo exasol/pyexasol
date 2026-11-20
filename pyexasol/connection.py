@@ -1219,7 +1219,7 @@ class ExaConnection:
             table:
                 Table to import to
             import_params:
-                Custom parameters for IMPORT query
+                Custom :ref:`parameters` for IMPORT query
 
         Raises:
             pydantic.ValidationError: Unknown keys or invalid values in ``import_params``
