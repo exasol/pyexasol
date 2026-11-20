@@ -104,15 +104,15 @@ class ExaConnection:
 
         Public Attributes:
             ``attr``:
-                Read-only ``dict`` of attributes of current connection.
+                Read-only ``dict`` of attributes of current connection
 
             ``login_info``:
                 Read-only ``dict`` of login information returned by second
-                response of LOGIN command.
+                response of LOGIN command
 
             ``options``:
                 Read-only ``dict`` of arguments passed to
-                :meth:`pyexasol.ExaConnection.connect`.
+                :meth:`pyexasol.ExaConnection.connect`
     """
 
     cls_statement = ExaStatement
@@ -238,7 +238,7 @@ class ExaConnection:
             resolve_hostnames:
                 Explicitly resolve host names to IP addresses before connecting.
                 Deactivating this will let the operating system resolve the host name
-                (default: True)
+                (default: True).
             client_name:
                 Custom name of client application displayed in Exasol sessions tables
                 (Default: PyExasol)
@@ -934,7 +934,7 @@ class ExaConnection:
 
         Args:
             callback:
-                Callback function.
+                Callback function
             dst:
                 (optional) Path to file or file-like object where data will be exported to
             query_or_table:
@@ -1252,19 +1252,19 @@ class ExaConnection:
 
     def session_id(self) -> str:
         """
-        Session id of current session.
+        Session id of current session
 
         Returns:
-            Unique `SESSION_ID` of the current session as string.
+            Unique `SESSION_ID` of the current session as string
         """
         return str(self.login_info.get("sessionId", ""))
 
     def protocol_version(self) -> int:
         """
-        Actual protocol version used by the established connection.
+        Actual protocol version used by the established connection
 
         Returns:
-            ``0`` if connection was not established yet (e.g. due to exception handling), otherwise protocol version as int.
+            ``0`` if connection was not established yet (e.g. due to exception handling), otherwise protocol version as int
 
         Warnings:
             Actual Protocol version might be downgraded from requested protocol version if Exasol server does not support it
@@ -1280,7 +1280,7 @@ class ExaConnection:
     @property
     def exasol_db_version(self) -> Version | None:
         """
-        Version of the Exasol database of the current session.
+        Version of the Exasol database of the current session
 
         The login information is returned by the second response of LOGIN command
         and calls this "releaseVersion".
@@ -1294,7 +1294,7 @@ class ExaConnection:
         Last created statement object
 
         Returns:
-            ExaStatement: last created statement.
+            ExaStatement: last created statement
 
         Note:
             It is mainly used for HTTP transport to access internal IMPORT / EXPORT query,
