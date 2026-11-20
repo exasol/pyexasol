@@ -524,7 +524,7 @@ class ExaConnection:
             query_params:
                 Values for SQL query placeholders
             export_params:
-                Custom :ref:`parameters` for EXPORT query
+                Custom :ref:`export_params` for EXPORT query
 
         Examples:
             >>> con = ExaConnection(...)
@@ -559,7 +559,7 @@ class ExaConnection:
             query_params:
                 Values for SQL query placeholders
             export_params:
-                Custom :ref:`parameters` for EXPORT query
+                Custom :ref:`export_params` for EXPORT query
 
         Returns:
             `list` of `tuples`
@@ -602,7 +602,7 @@ class ExaConnection:
                 Dictionary with additional parameters for callback function
                 `pandas.read_csv <https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.read_csv.html>`__.
             export_params:
-                 Custom :ref:`parameters` for EXPORT query
+                 Custom :ref:`export_params` for EXPORT query
 
         Returns:
             instance of :class:`pandas.DataFrame`
@@ -691,7 +691,7 @@ class ExaConnection:
                    that the writing of multiple files will be done in parallel and that
                    the order is not guaranteed to be preserved.
             export_params:
-                Custom :ref:`parameters` for EXPORT query
+                Custom :ref:`export_params` for EXPORT query
         """
         if not export_params:
             export_params = {}
@@ -736,7 +736,7 @@ class ExaConnection:
                 Dictionary with additional parameters for callback function
                 `polars.read_csv <https://docs.pola.rs/api/python/stable/reference/api/polars.read_csv.html>`__.
             export_params:
-                Custom :ref:`parameters` for EXPORT query
+                Custom :ref:`export_params` for EXPORT query
 
         Returns:
             instance of :class:`polars.DataFrame`
@@ -822,7 +822,7 @@ class ExaConnection:
                 - ``tuple[str, ...]``: schema-qualified table identifier, such as
                   ``("SCHEMA", "TABLE")``
             import_params:
-                Custom :ref:`parameters` for IMPORT query
+                Custom :ref:`import_params` for IMPORT query
         """
         return self.import_from_callback(
             cb.import_from_iterable, src, table, None, import_params
@@ -851,7 +851,7 @@ class ExaConnection:
                 Dictionary with additional parameters for callback function
                 `pandas.DataFrame.to_csv <https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.to_csv.html>`__.
             import_params:
-                Custom :ref:`parameters` for IMPORT query
+                Custom :ref:`import_params` for IMPORT query
         """
         return self.import_from_callback(
             cb.import_from_pandas, src, table, callback_params, import_params
@@ -880,7 +880,7 @@ class ExaConnection:
                 Dictionary with additional parameters for callback function
                 `polars.DataFrame.write_csv <https://docs.pola.rs/api/python/stable/reference/api/polars.DataFrame.write_csv.html>`__.
             import_params:
-                Custom :ref:`parameters` for IMPORT query
+                Custom :ref:`import_params` for IMPORT query
         """
         return self.import_from_callback(
             cb.import_from_polars, src, table, callback_params, import_params
@@ -914,7 +914,7 @@ class ExaConnection:
                 Dict with additional parameters for callback function
                 `parquet.ParquetFile.iter_batches <https://arrow.apache.org/docs/python/generated/pyarrow.parquet.ParquetFile.html#pyarrow.parquet.ParquetFile.iter_batches>`__
             import_params:
-                Custom :ref:`parameters` for IMPORT query
+                Custom :ref:`import_params` for IMPORT query
         """
         return self.import_from_callback(
             cb.import_from_parquet, source, table, callback_params, import_params
@@ -950,7 +950,7 @@ class ExaConnection:
             callback_params:
                 Dictionary with additional parameters for callback function
             export_params:
-                Custom :ref:`parameters` for EXPORT query
+                Custom :ref:`export_params` for EXPORT query
 
         Returns:
             result of callback function
@@ -1076,7 +1076,7 @@ class ExaConnection:
             callback_params:
                 Dictionary with additional parameters for callback function
             import_params:
-                Custom :ref:`parameters` for IMPORT query
+                Custom :ref:`import_params` for IMPORT query
 
         Raises:
             TypeError: callback argument is not Callable
@@ -1176,7 +1176,7 @@ class ExaConnection:
             query_params:
                 Values for SQL query placeholders
             export_params:
-                Custom :ref:`parameters` for EXPORT query
+                Custom :ref:`export_params` for EXPORT query
 
         Raises:
             pydantic.ValidationError: Unknown keys or invalid values in ``export_params``
@@ -1219,7 +1219,7 @@ class ExaConnection:
             table:
                 Table to import to
             import_params:
-                Custom :ref:`parameters` for IMPORT query
+                Custom :ref:`import_params` for IMPORT query
 
         Raises:
             pydantic.ValidationError: Unknown keys or invalid values in ``import_params``
