@@ -776,7 +776,7 @@ class ExaConnection:
         Args:
             src:
                 Source file or file-like object.
-                Must be either a file-path, or a binary stream , i.e. a file opened in binary mode.
+                Must be either a file-path, or a binary stream, i.e. a file opened in binary mode.
             table:
                 Destination table for IMPORT. Can be one of:
 
