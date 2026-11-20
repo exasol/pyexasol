@@ -600,7 +600,7 @@ class ExaConnection:
                 Values for SQL query placeholders
             callback_params:
                 Dictionary with additional parameters for callback function
-                `pandas.read_csv <https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.read_csv.html>`__.
+                `pandas.read_csv <https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.read_csv.html>`__
             export_params:
                  Custom :ref:`export_params` for EXPORT query
 
@@ -681,7 +681,7 @@ class ExaConnection:
 
                 existing_data_behavior
                    Set to ``error``, which requires that the specified ``dst`` not
-                   contain any files or an exception will be thrown.
+                   contain any files or an exception will be thrown
                 max_rows_per_file
                    Set to ``0``, which means that all rows will be written to 1 file.
                    If ``max_rows_per_file`` is altered, ensure that ``max_rows_per_group``
@@ -734,7 +734,7 @@ class ExaConnection:
                 Values for SQL query placeholders
             callback_params:
                 Dictionary with additional parameters for callback function
-                `polars.read_csv <https://docs.pola.rs/api/python/stable/reference/api/polars.read_csv.html>`__.
+                `polars.read_csv <https://docs.pola.rs/api/python/stable/reference/api/polars.read_csv.html>`__
             export_params:
                 Custom :ref:`export_params` for EXPORT query
 
@@ -849,7 +849,7 @@ class ExaConnection:
                   ``("SCHEMA", "TABLE")``
             callback_params:
                 Dictionary with additional parameters for callback function
-                `pandas.DataFrame.to_csv <https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.to_csv.html>`__.
+                `pandas.DataFrame.to_csv <https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.to_csv.html>`__
             import_params:
                 Custom :ref:`import_params` for IMPORT query
         """
@@ -878,7 +878,7 @@ class ExaConnection:
                   ``("SCHEMA", "TABLE")``
             callback_params:
                 Dictionary with additional parameters for callback function
-                `polars.DataFrame.write_csv <https://docs.pola.rs/api/python/stable/reference/api/polars.DataFrame.write_csv.html>`__.
+                `polars.DataFrame.write_csv <https://docs.pola.rs/api/python/stable/reference/api/polars.DataFrame.write_csv.html>`__
             import_params:
                 Custom :ref:`import_params` for IMPORT query
         """
@@ -1353,7 +1353,7 @@ class ExaConnection:
 
     def get_nodes(self, pool_size=None):
         """
-        List of currently active Exasol nodes which is normally used for :ref:`http_transport_parallel`.
+        List of currently active Exasol nodes which is normally used for :ref:`http_transport_parallel`
 
         Args:
             pool_size:
