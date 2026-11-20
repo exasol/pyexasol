@@ -40,3 +40,4 @@ The builders perform the same function with additional Pydantic validation.
 ## Documentation
 
 * #370: Documented the row separator required when importing files with `CRLF` line endings
+* #474: Added links to import/export parameters in user guide for all callback variants

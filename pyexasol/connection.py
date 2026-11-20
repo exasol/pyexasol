@@ -512,7 +512,7 @@ class ExaConnection:
 
         Args:
             dst:
-                Path to file or file-like object where data will be exported to.
+                Path to file or file-like object where data will be exported to
             query_or_table:
                 Source from which to export data. Can be one of:
 
@@ -522,7 +522,7 @@ class ExaConnection:
                 - ``str``: if lacks non-trailing space, it is treated like a
                   table identifier. Otherwise, it is treated like a query.
             query_params:
-                Values for SQL query placeholders.
+                Values for SQL query placeholders
             export_params:
                 Custom :ref:`parameters` for EXPORT query
 
@@ -557,9 +557,9 @@ class ExaConnection:
                 - ``str``: if lacks non-trailing space, it is treated like a
                   table identifier. Otherwise, it is treated like a query.
             query_params:
-                Values for SQL query placeholders.
+                Values for SQL query placeholders
             export_params:
-                Custom parameters for EXPORT query.
+                Custom :ref:`parameters` for EXPORT query
 
         Returns:
             `list` of `tuples`
@@ -597,12 +597,12 @@ class ExaConnection:
                 - ``str``: if lacks non-trailing space, it is treated like a
                   table identifier. Otherwise, it is treated like a query.
             query_params:
-                Values for SQL query placeholders.
+                Values for SQL query placeholders
             callback_params:
                 Dictionary with additional parameters for callback function
                 `pandas.read_csv <https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.read_csv.html>`__.
             export_params:
-                 Custom parameters for EXPORT query.
+                 Custom :ref:`parameters` for EXPORT query
 
         Returns:
             instance of :class:`pandas.DataFrame`
@@ -653,9 +653,9 @@ class ExaConnection:
                     ValueError
                         '<dst>' contains existing files and `callback_params['existing_data_behavior']` is not one of these values: ("overwrite_or_ignore", "delete_matching").
                     pyarrow.lib.ArrowInvalid:
-                        Could not write to <dst> Parquet Export from Exasol via Python Container/parquet as the directory is not empty and existing_data_behavior is to error
+                        Could not write to <dst> Parquet Export from Exasol via Python Container/parquet as the directory is not empty and existing_data_behavior is to error.
                     ValueError:
-                        I/O operation on closed file.
+                        I/O operation on closed file
                     DB error message:
                         ETL-5106: Following error occured while writing data to external connection [https://172.0.0.1:8653/000.csv failed after 200009 bytes. [OpenSSL SSL_read: SSL_ERROR_SYSCALL, errno 0],[56],[Failure when receiving data from the peer]] (Session: XXXXX)
 
@@ -673,7 +673,7 @@ class ExaConnection:
                 - ``str``: if lacks non-trailing space, it is treated like a
                   table identifier. Otherwise, it is treated like a query.
             query_params:
-                Values for SQL query placeholders.
+                Values for SQL query placeholders
             callback_params:
                 Dictionary with additional parameters for callback function
                 `pyarrow.dataset.write_dataset <https://arrow.apache.org/docs/python/generated/pyarrow.dataset.write_dataset.html>`__.
@@ -691,7 +691,7 @@ class ExaConnection:
                    that the writing of multiple files will be done in parallel and that
                    the order is not guaranteed to be preserved.
             export_params:
-                Custom parameters for EXPORT query.
+                Custom :ref:`parameters` for EXPORT query
         """
         if not export_params:
             export_params = {}
@@ -731,12 +731,12 @@ class ExaConnection:
                 - ``str``: if lacks non-trailing space, it is treated like a
                   table identifier. Otherwise, it is treated like a query.
             query_params:
-                Values for SQL query placeholders.
+                Values for SQL query placeholders
             callback_params:
                 Dictionary with additional parameters for callback function
                 `polars.read_csv <https://docs.pola.rs/api/python/stable/reference/api/polars.read_csv.html>`__.
             export_params:
-                Custom parameters for EXPORT query.
+                Custom :ref:`parameters` for EXPORT query
 
         Returns:
             instance of :class:`polars.DataFrame`
@@ -776,15 +776,15 @@ class ExaConnection:
         Args:
             src:
                 Source file or file-like object.
-                Must be either a file-path, or a binary stream , i.e. a file opened in binary mode
+                Must be either a file-path, or a binary stream , i.e. a file opened in binary mode.
             table:
                 Destination table for IMPORT. Can be one of:
 
-                - ``str``: table identifier.
+                - ``str``: table identifier
                 - ``tuple[str, ...]``: schema-qualified table identifier, such as
-                  ``("SCHEMA", "TABLE")``.
+                  ``("SCHEMA", "TABLE")``
             import_params:
-                Custom :ref:`import_params` for IMPORT query.
+                Custom :ref:`import_params` for IMPORT query
 
         Note:
             File must be opened in binary mode.
@@ -818,11 +818,11 @@ class ExaConnection:
             table:
                 Destination table for IMPORT. Can be one of:
 
-                - ``str``: table identifier.
+                - ``str``: table identifier
                 - ``tuple[str, ...]``: schema-qualified table identifier, such as
-                  ``("SCHEMA", "TABLE")``.
+                  ``("SCHEMA", "TABLE")``
             import_params:
-                Custom parameters for IMPORT query.
+                Custom :ref:`parameters` for IMPORT query
         """
         return self.import_from_callback(
             cb.import_from_iterable, src, table, None, import_params
@@ -840,18 +840,18 @@ class ExaConnection:
 
         Args:
             src:
-                Source :class:`pandas.DataFrame` instance.
+                Source :class:`pandas.DataFrame` instance
             table:
                 Destination table for IMPORT. Can be one of:
 
-                - ``str``: table identifier.
+                - ``str``: table identifier
                 - ``tuple[str, ...]``: schema-qualified table identifier, such as
-                  ``("SCHEMA", "TABLE")``.
+                  ``("SCHEMA", "TABLE")``
             callback_params:
                 Dictionary with additional parameters for callback function
                 `pandas.DataFrame.to_csv <https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.to_csv.html>`__.
             import_params:
-                Custom parameters for IMPORT query.
+                Custom :ref:`parameters` for IMPORT query
         """
         return self.import_from_callback(
             cb.import_from_pandas, src, table, callback_params, import_params
@@ -869,18 +869,18 @@ class ExaConnection:
 
         Args:
             src:
-                Source :class:`polars.DataFrame` or :class:`polars.LazyFrame` instance.
+                Source :class:`polars.DataFrame` or :class:`polars.LazyFrame` instance
             table:
                 Destination table for IMPORT. Can be one of:
 
-                - ``str``: table identifier.
+                - ``str``: table identifier
                 - ``tuple[str, ...]``: schema-qualified table identifier, such as
-                  ``("SCHEMA", "TABLE")``.
+                  ``("SCHEMA", "TABLE")``
             callback_params:
                 Dictionary with additional parameters for callback function
                 `polars.DataFrame.write_csv <https://docs.pola.rs/api/python/stable/reference/api/polars.DataFrame.write_csv.html>`__.
             import_params:
-                Custom parameters for IMPORT query.
+                Custom :ref:`parameters` for IMPORT query
         """
         return self.import_from_callback(
             cb.import_from_polars, src, table, callback_params, import_params
@@ -907,14 +907,14 @@ class ExaConnection:
             table:
                 Destination table for IMPORT. Can be one of:
 
-                - ``str``: table identifier.
+                - ``str``: table identifier
                 - ``tuple[str, ...]``: schema-qualified table identifier, such as
-                  ``("SCHEMA", "TABLE")``.
+                  ``("SCHEMA", "TABLE")``
             callback_params:
                 Dict with additional parameters for callback function
-                `parquet.ParquetFile.iter_batches <https://arrow.apache.org/docs/python/generated/pyarrow.parquet.ParquetFile.html#pyarrow.parquet.ParquetFile.iter_batches>`__.
+                `parquet.ParquetFile.iter_batches <https://arrow.apache.org/docs/python/generated/pyarrow.parquet.ParquetFile.html#pyarrow.parquet.ParquetFile.iter_batches>`__
             import_params:
-                Custom parameters for IMPORT query.
+                Custom :ref:`parameters` for IMPORT query
         """
         return self.import_from_callback(
             cb.import_from_parquet, source, table, callback_params, import_params
@@ -936,7 +936,7 @@ class ExaConnection:
             callback:
                 Callback function.
             dst:
-                (optional) Path to file or file-like object where data will be exported to.
+                (optional) Path to file or file-like object where data will be exported to
             query_or_table:
                 Source from which to export data. Can be one of:
 
@@ -946,20 +946,20 @@ class ExaConnection:
                 - ``str``: if lacks non-trailing space, it is treated like a
                   table identifier. Otherwise, it is treated like a query.
             query_params:
-                Values for SQL query placeholders.
+                Values for SQL query placeholders
             callback_params:
-                Dictionary with additional parameters for callback function.
+                Dictionary with additional parameters for callback function
             export_params:
-                Custom parameters for EXPORT query.
+                Custom :ref:`parameters` for EXPORT query
 
         Returns:
             result of callback function
 
         Raises:
-            TypeError: callback argument is not Callable.
-            pydantic.ValidationError: Invalid values from ``export_params``.
+            TypeError: callback argument is not Callable
+            pydantic.ValidationError: Invalid values from ``export_params``
             ExaExportError: one or more exceptions occurred when executing the
-               callback function.
+               callback function
 
         Warnings:
             - This function may run out of memory
@@ -1064,23 +1064,23 @@ class ExaConnection:
 
         Args:
             callback:
-                Callback function.
+                Callback function
             src:
-                Source for the callback function.
+                Source for the callback function
             table:
                 Destination table for IMPORT. Can be one of:
 
-                - ``str``: table identifier.
+                - ``str``: table identifier
                 - ``tuple[str, ...]``: schema-qualified table identifier, such as
-                  ``("SCHEMA", "TABLE")``.
+                  ``("SCHEMA", "TABLE")``
             callback_params:
-                Dictionary with additional parameters for callback function.
+                Dictionary with additional parameters for callback function
             import_params:
-                Custom parameters for IMPORT query.
+                Custom :ref:`parameters` for IMPORT query
 
         Raises:
-            TypeError: callback argument is not Callable.
-            pydantic.ValidationError: Invalid values from ``import_params``.
+            TypeError: callback argument is not Callable
+            pydantic.ValidationError: Invalid values from ``import_params``
         """
         if not callable(callback):
             raise TypeError(
@@ -1170,16 +1170,16 @@ class ExaConnection:
 
         Args:
             exa_address_list:
-                List of ``ipaddr:port`` strings obtained from HTTP transport ``.address``.
+                List of ``ipaddr:port`` strings obtained from HTTP transport ``.address``
             query_or_table:
-                SQL query or table for the export.
+                SQL query or table for the export
             query_params:
-                Values for SQL query placeholders.
+                Values for SQL query placeholders
             export_params:
-                Custom parameters for Export query.
+                Custom :ref:`parameters` for EXPORT query
 
         Raises:
-            pydantic.ValidationError: Unknown keys or invalid values in ``export_params``.
+            pydantic.ValidationError: Unknown keys or invalid values in ``export_params``
 
         Note:
             - Init HTTP transport in child processes first using pyexasol.http_transport()
@@ -1215,14 +1215,14 @@ class ExaConnection:
 
         Args:
             exa_address_list:
-                List of ``ipaddr:port`` strings obtained from HTTP transport ``.address``.
+                List of ``ipaddr:port`` strings obtained from HTTP transport ``.address``
             table:
-                Table to import to.
+                Table to import to
             import_params:
-                Custom parameters for import.
+                Custom parameters for IMPORT query
 
         Raises:
-            pydantic.ValidationError: Unknown keys or invalid values in ``import_params``.
+            pydantic.ValidationError: Unknown keys or invalid values in ``import_params``
 
         Note:
             - Init HTTP transport in child processes first using pyexasol.http_transport()
@@ -1319,7 +1319,7 @@ class ExaConnection:
 
         Note:
             Please note that "disconnect" should always be False when .close() is being called from .req()-like functions
-            to prevent an infinite loop if websocket exception happens during handling of "disconnect" command
+            to prevent an infinite loop if websocket exception happens during handling of "disconnect" command.
         """
         if self._ws.connected:
             if disconnect:
