@@ -924,7 +924,7 @@ class ExaConnection:
                 Dict with additional parameters.
 
                 - Callback-based import: Dict with additional parameters for callback function
-                `parquet.ParquetFile.iter_batches <https://arrow.apache.org/docs/python/generated/pyarrow.parquet.ParquetFile.html#pyarrow.parquet.ParquetFile.iter_batches>`__
+                  `parquet.ParquetFile.iter_batches <https://arrow.apache.org/docs/python/generated/pyarrow.parquet.ParquetFile.html#pyarrow.parquet.ParquetFile.iter_batches>`__
                 - Native import: only ``max_files_per_batch`` is supported
                   (default ``1``), see the note below. Any other key raises
                   ``pydantic.ValidationError``.
