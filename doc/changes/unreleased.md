@@ -19,6 +19,7 @@ Code that works today can fail after a database upgrade to 2026.1.0 if it relies
 
 * **Implicit type conversion:** The native import does not convert between types, so the Parquet column types must match the table. For example, a Parquet `double` cannot be imported into a `DECIMAL` column. The callback-based import writes CSV text, so the database converts the values to the column types.
 * **`callback_params`:** The native import supports only `max_files_per_batch` and raises `pydantic.ValidationError` for any other key.
+* **`last_statement()`:** The callback-based import runs one `IMPORT`, so `last_statement()` gives the total `rowcount()` and `execution_time`. The native import only does this for a single batch (see `max_files_per_batch`). With several batches, it returns the `COMMIT` (autocommit on, `rowcount()` is 0) or the last batch's `IMPORT` (autocommit off), so code such as `log.info(f"imported {C.last_statement().rowcount()} rows")` silently reports a wrong number. Count the rows in the table instead. Returning the totals from the native import is future work.
 * **Generic `import_params`:** The native import accepts only the parameters of `pyexasol.query_builders.parquet.builders.ImportBuilder`.
 
 To resolve this, either:

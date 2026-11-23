@@ -959,6 +959,12 @@ class ExaConnection:
               ``last_statement()`` still returns the ``IMPORT``.
               If autocommit is off, nothing is committed or rolled back, so you control
               the transaction: if a later batch fails, the earlier batches remain in it.
+            - **last_statement():** The callback-based import runs one ``IMPORT``, so
+              ``last_statement()`` gives the total ``rowcount()`` and ``execution_time``.
+              The native import only does this for a single batch. With several
+              batches, it returns the ``COMMIT`` (autocommit on, ``rowcount()`` is 0) or
+              the last batch's ``IMPORT`` (autocommit off), so do not rely on it for
+              the number of imported rows. Count the rows in the table instead.
         """
         parquet_files = get_parquet_files(source)
 
