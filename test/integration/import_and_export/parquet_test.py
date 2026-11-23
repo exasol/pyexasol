@@ -426,8 +426,15 @@ class TestImportFromParquet:
             # import would succeed. Instead, 2 columns are left (``skipped`` are gone).
             filepath = self.prepare(tmp_path, connection, table_name)
 
+            # Exasol may append a "tool process exited unexpectedly" crash to the
+            # ETL-6009 message (flaky), so call the import directly and only
+            # check for the column-count error.
             with pytest.raises(ExaImportError, match=r"ETL-6009.*source \(=2\)"):
-                import_skipping(connection, filepath, table_name, skip_cols)
+                connection.import_from_parquet(
+                    filepath,
+                    table_name,
+                    import_params={"parquet_skip_cols": skip_cols},
+                )
 
         def test_exasol_rejects_an_imported_map(self, tmp_path, connection, table_name):
             # Skipping NAME instead of the map. pyexasol's own check is bypassed,
