@@ -956,8 +956,9 @@ class ExaConnection:
               It is committed after the last batch, or rolled back if any batch fails,
               and autocommit is restored afterward. A single batch is one ``IMPORT``
               statement, which is atomic anyway, so no transaction is started and
-              ``last_statement()`` still returns the ``IMPORT``. If autocommit is off, nothing is
-              committed or rolled back, so you control the transaction.
+              ``last_statement()`` still returns the ``IMPORT``.
+              If autocommit is off, nothing is committed or rolled back, so you control
+              the transaction: if a later batch fails, the earlier batches remain in it.
         """
         parquet_files = get_parquet_files(source)
 
