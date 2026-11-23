@@ -118,8 +118,10 @@ class TestExaParquetImporterValidation:
         parquet_file = tmp_path / "a.parquet"
         parquet_file.write_bytes(b"PAR1")
 
+        importer = ExaParquetImporter(connection)
+
         with pytest.raises(ValidationError, match=key):
-            ExaParquetImporter(connection).import_from_native_parquet(
+            importer.import_from_native_parquet(
                 [parquet_file], "tbl", callback_params={key: ["A"]}
             )
 
