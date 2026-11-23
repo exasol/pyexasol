@@ -8,6 +8,7 @@ from collections.abc import (
 )
 from contextlib import (
     contextmanager,
+    nullcontext,
     suppress,
 )
 from pathlib import Path
@@ -213,11 +214,17 @@ class ExaParquetImporter:
             else None
         )
 
-        # An Exasol tunnel accepts one connection for one statement, so each file
-        # gets its own tunnel (one thread each). Up to ``max_files_per_batch`` files
-        # are imported by one IMPORT statement, and the batches run sequentially,
-        # all in one transaction (if autocommit is on; otherwise the user controls it).
-        with transaction_if_autocommit(self.connection):
+        # An Exasol tunnel accepts one connection per statement, so each file gets its
+        # own tunnel. Up to ``max_files_per_batch`` files go into one IMPORT, and the
+        # batches run sequentially. With several batches and autocommit on, they share
+        # one transaction. A single IMPORT is already atomic, so it needs none, which
+        # also keeps ``last_statement()`` pointing at the IMPORT instead of a COMMIT.
+        needs_transaction = len(parquet_files) > max_files_per_batch
+        with (
+            transaction_if_autocommit(self.connection)
+            if needs_transaction
+            else nullcontext()
+        ):
             for batch_start in range(0, len(parquet_files), max_files_per_batch):
                 batch = parquet_files[batch_start : batch_start + max_files_per_batch]
                 self._import_native_parquet_batch(batch, import_builder, ssl_context)

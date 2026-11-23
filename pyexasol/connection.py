@@ -951,9 +951,12 @@ class ExaConnection:
               into batches of at most ``max_files_per_batch`` files (see
               ``callback_params``). A batch is imported in parallel by one ``IMPORT``
               statement, the batches in sequence.
-            - **Transaction:** If autocommit is on, all batches run in one transaction.
+            - **Transaction:** If autocommit is on and there is more than one batch,
+              all batches run in one transaction.
               It is committed after the last batch, or rolled back if any batch fails,
-              and autocommit is restored afterward. If autocommit is off, nothing is
+              and autocommit is restored afterward. A single batch is one ``IMPORT``
+              statement, which is atomic anyway, so no transaction is started and
+              ``last_statement()`` still returns the ``IMPORT``. If autocommit is off, nothing is
               committed or rolled back, so you control the transaction.
         """
         parquet_files = get_parquet_files(source)

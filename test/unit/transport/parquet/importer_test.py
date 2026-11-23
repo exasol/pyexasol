@@ -306,6 +306,29 @@ class TestAutocommitHandling:
         ]
 
     @staticmethod
+    @pytest.mark.parametrize("max_files_per_batch", [3, 10])
+    def test_single_batch_needs_no_transaction(threads, files, max_files_per_batch):
+        connection, _, _ = threads
+        connection.attr = {"autocommit": True}
+        events = TestAutocommitHandling._events(connection)
+
+        ExaParquetImporter(connection).import_from_native_parquet(
+            files, "tbl", callback_params={"max_files_per_batch": max_files_per_batch}
+        )
+
+        assert events.mock_calls == []
+
+    @staticmethod
+    def test_single_file_needs_no_transaction(threads, files):
+        connection, _, _ = threads
+        connection.attr = {"autocommit": True}
+        events = TestAutocommitHandling._events(connection)
+
+        ExaParquetImporter(connection).import_from_native_parquet(files[:1], "tbl")
+
+        assert events.mock_calls == []
+
+    @staticmethod
     def test_autocommit_off_is_left_alone(threads, files):
         connection, _, _ = threads
         connection.attr = {"autocommit": False}
