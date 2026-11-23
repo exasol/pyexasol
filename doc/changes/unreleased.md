@@ -45,6 +45,8 @@ The following classes in `pyexasol/http_transport.py` are deprecated. Each emits
 
 The builders perform the same function with additional Pydantic validation.
 
+`pyexasol.callback.get_parquet_files` moved to `pyexasol.transport.parquet.importer.get_parquet_files`. Accessing it from `pyexasol.callback` still works but emits a `PyexasolDeprecationWarning`, and it will be removed in a future release.
+
 ## Features
 
 * #394:
@@ -61,6 +63,9 @@ The builders perform the same function with additional Pydantic validation.
   * An unknown key in `import_params` / `export_params` of these methods now raises `pydantic.ValidationError` instead of `TypeError`, see Behavior change above
   * `export_parallel` no longer fails when `query_or_table` is a `(schema, table)` tuple and `query_params` is given. Like `export_to_callback`, it only formats `query_or_table` with `query_params` when it is a string
 * #484: Dropped support for Python versions < 3.11.5
+* #394:
+  * Moved `get_parquet_files` from `pyexasol/callback.py` to `pyexasol/transport/parquet/importer.py`, where `ensure_no_nested_columns` is also defined. The old import path still works but is deprecated.
+  * `import_from_parquet()` now resolves the source files and checks them for nested columns before the transport starts.
 
 ## Documentation
 

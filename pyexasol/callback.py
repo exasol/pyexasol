@@ -34,6 +34,25 @@ if TYPE_CHECKING:
     import polars
 
 
+def __getattr__(name: str):
+    # ``get_parquet_files`` moved, but was public, so keep it importable for now.
+    # Imported lazily, as the new module imports pyexasol itself.
+    if name == "get_parquet_files":
+        from warnings import warn
+
+        from pyexasol.transport.parquet.importer import get_parquet_files
+        from pyexasol.warnings import PyexasolDeprecationWarning
+
+        warn(
+            "pyexasol.callback.get_parquet_files is deprecated and will be removed "
+            "in the future. Import it from pyexasol.transport.parquet.importer instead.",
+            PyexasolDeprecationWarning,
+            stacklevel=2,
+        )
+        return get_parquet_files
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+
+
 def export_to_list(pipe, dst, **kwargs) -> list:
     """
     Basic example of how to export CSV stream into basic list of tuples

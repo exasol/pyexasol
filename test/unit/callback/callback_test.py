@@ -130,3 +130,12 @@ class TestImportFromParquetExceptions:
         pipe = BytesIO()
         with pytest.raises(ValueError, match="does not match any files"):
             import_from_parquet(pipe, "not_a_valid_path")
+
+
+def test_get_parquet_files_is_deprecated_alias(tmp_path):
+    from pyexasol import callback
+    from pyexasol.transport.parquet.importer import get_parquet_files
+    from pyexasol.warnings import PyexasolDeprecationWarning
+
+    with pytest.warns(PyexasolDeprecationWarning, match="pyexasol.transport"):
+        assert callback.get_parquet_files is get_parquet_files
