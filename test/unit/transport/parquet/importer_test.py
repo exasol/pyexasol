@@ -110,6 +110,20 @@ class TestEnsureNoNestedColumns:
 
 class TestExaParquetImporterValidation:
     @staticmethod
+    @pytest.mark.parametrize("key", ["columns", "batch_size"])
+    def test_rejects_callback_params_only_supported_by_callback_import(
+        mock_exaconnection_factory, tmp_path, key
+    ):
+        connection = mock_exaconnection_factory()
+        parquet_file = tmp_path / "a.parquet"
+        parquet_file.write_bytes(b"PAR1")
+
+        with pytest.raises(ValidationError, match=key):
+            ExaParquetImporter(connection).import_from_native_parquet(
+                [parquet_file], "tbl", callback_params={key: ["A"]}
+            )
+
+    @staticmethod
     def test_rejects_unknown_import_params(mock_exaconnection_factory, tmp_path):
         connection = mock_exaconnection_factory()
         parquet_file = tmp_path / "a.parquet"
@@ -159,7 +173,7 @@ class TestExaParquetImporter:
         http_cls.side_effect = http_threads
 
         ExaParquetImporter(connection).import_from_native_parquet(
-            files, "tbl", max_files_per_batch=len(files)
+            files, "tbl", callback_params={"max_files_per_batch": len(files)}
         )
 
         assert [c.kwargs["parquet_file"] for c in http_cls.call_args_list] == files
@@ -178,7 +192,7 @@ class TestExaParquetImporter:
         connection, http_cls, sql_cls = threads
 
         ExaParquetImporter(connection).import_from_native_parquet(
-            files, "tbl", max_files_per_batch=2
+            files, "tbl", callback_params={"max_files_per_batch": 2}
         )
 
         assert http_cls.call_count == 3
@@ -198,7 +212,7 @@ class TestExaParquetImporter:
             "pyexasol.transport.parquet.importer.ExaTunnelServer.generate_adhoc_ssl_context"
         ) as generate:
             ExaParquetImporter(connection).import_from_native_parquet(
-                files, "tbl", max_files_per_batch=2
+                files, "tbl", callback_params={"max_files_per_batch": 2}
             )
 
         generate.assert_called_once()
@@ -228,14 +242,19 @@ class TestExaParquetImporter:
         importer = ExaParquetImporter(connection)
 
         with pytest.raises(ValidationError, match="max_files_per_batch"):
-            importer.import_from_native_parquet(files, "tbl", max_files_per_batch=value)
+            importer.import_from_native_parquet(
+                files, "tbl", callback_params={"max_files_per_batch": value}
+            )
 
     @staticmethod
     def test_shares_one_builder_with_import_params(threads, files):
         connection, _, sql_cls = threads
 
         ExaParquetImporter(connection).import_from_native_parquet(
-            files, ("SCH", "tbl"), import_params={"MaxRows": 10}, max_files_per_batch=1
+            files,
+            ("SCH", "tbl"),
+            import_params={"MaxRows": 10},
+            callback_params={"max_files_per_batch": 1},
         )
 
         builders = {c.kwargs["query_builder"] for c in sql_cls.call_args_list}
@@ -253,7 +272,9 @@ class TestExaParquetImporter:
         importer = ExaParquetImporter(connection)
 
         with pytest.raises(ExaImportError):
-            importer.import_from_native_parquet(files, "tbl", max_files_per_batch=1)
+            importer.import_from_native_parquet(
+                files, "tbl", callback_params={"max_files_per_batch": 1}
+            )
 
         assert http_cls.call_count == 2  # third file is not attempted
         connection.abort_query.assert_not_called()
@@ -275,7 +296,7 @@ class TestAutocommitHandling:
         events = TestAutocommitHandling._events(connection)
 
         ExaParquetImporter(connection).import_from_native_parquet(
-            files, "tbl", max_files_per_batch=1
+            files, "tbl", callback_params={"max_files_per_batch": 1}
         )
 
         assert events.mock_calls == [
@@ -291,7 +312,7 @@ class TestAutocommitHandling:
         events = TestAutocommitHandling._events(connection)
 
         ExaParquetImporter(connection).import_from_native_parquet(
-            files, "tbl", max_files_per_batch=1
+            files, "tbl", callback_params={"max_files_per_batch": 1}
         )
 
         assert events.mock_calls == []
@@ -307,7 +328,9 @@ class TestAutocommitHandling:
         importer = ExaParquetImporter(connection)
 
         with pytest.raises(ExaImportError):
-            importer.import_from_native_parquet(files, "tbl", max_files_per_batch=1)
+            importer.import_from_native_parquet(
+                files, "tbl", callback_params={"max_files_per_batch": 1}
+            )
 
         assert events.mock_calls == [
             call.set_autocommit(False),
@@ -327,7 +350,9 @@ class TestAutocommitHandling:
         importer = ExaParquetImporter(connection)
 
         with pytest.raises(ExaImportError) as exc_info:
-            importer.import_from_native_parquet(files, "tbl", max_files_per_batch=1)
+            importer.import_from_native_parquet(
+                files, "tbl", callback_params={"max_files_per_batch": 1}
+            )
 
         assert isinstance(exc_info.value.__cause__, RuntimeError)
         connection.rollback.assert_called_once()
@@ -342,7 +367,9 @@ class TestAutocommitHandling:
         importer = ExaParquetImporter(connection)
 
         with pytest.raises(ConnectionError, match="restore"):
-            importer.import_from_native_parquet(files, "tbl", max_files_per_batch=1)
+            importer.import_from_native_parquet(
+                files, "tbl", callback_params={"max_files_per_batch": 1}
+            )
 
     @staticmethod
     def test_abort_query_error_does_not_hide_import_error(threads, files):
@@ -354,7 +381,9 @@ class TestAutocommitHandling:
         importer = ExaParquetImporter(connection)
 
         with pytest.raises(ExaImportError) as exc_info:
-            importer.import_from_native_parquet(files, "tbl", max_files_per_batch=1)
+            importer.import_from_native_parquet(
+                files, "tbl", callback_params={"max_files_per_batch": 1}
+            )
 
         assert isinstance(exc_info.value.__cause__, RuntimeError)
         assert sql_cls.return_value.join.call_count == 2
@@ -369,7 +398,9 @@ class TestAutocommitHandling:
         importer = ExaParquetImporter(connection)
 
         with pytest.raises(ExaImportError):
-            importer.import_from_native_parquet(files, "tbl", max_files_per_batch=1)
+            importer.import_from_native_parquet(
+                files, "tbl", callback_params={"max_files_per_batch": 1}
+            )
 
         connection.rollback.assert_not_called()
         connection.commit.assert_not_called()

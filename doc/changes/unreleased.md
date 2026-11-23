@@ -12,7 +12,7 @@
 Code that works today can fail after a database upgrade to 2026.1.0 if it relies on any of the following, which only the callback-based import supports:
 
 * **Implicit type conversion:** The native import does not convert between types, so the Parquet column types must match the table. For example, a Parquet `double` cannot be imported into a `DECIMAL` column. The callback-based import writes CSV text, so the database converts the values to the column types.
-* **`callback_params`:** The native import ignores them, except for `max_files_per_batch`.
+* **`callback_params`:** The native import supports only `max_files_per_batch` and raises `pydantic.ValidationError` for any other key.
 * **Atomicity:** If autocommit is on, the native import runs all batches in one transaction, so a failure rolls back every batch. The callback-based import commits as it goes.
 * **Generic `import_params`:** The native import accepts only the parameters of `pyexasol.query_builders.parquet.builders.ImportBuilder`.
 

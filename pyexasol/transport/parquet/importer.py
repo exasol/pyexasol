@@ -14,12 +14,16 @@ from pathlib import Path
 from typing import (
     TYPE_CHECKING,
     Annotated,
+    Any,
 )
 
 from pydantic import (
+    ConfigDict,
     Field,
+    TypeAdapter,
     validate_call,
 )
+from typing_extensions import TypedDict
 
 from pyexasol.exceptions import ExaNativeParquetImportError
 from pyexasol.http_transport import ExaSQLThread
@@ -154,6 +158,22 @@ def ensure_no_nested_columns(  # NOSONAR(S3776)
             )
 
 
+class NativeParquetCallbackParams(TypedDict, total=False):
+    """
+    The ``callback_params`` supported by the native Parquet import.
+
+    Other keys, e.g. ``columns``, are only supported by the callback-based import
+    and are rejected instead of being silently ignored.
+    """
+
+    __pydantic_config__ = ConfigDict(extra="forbid")  # type: ignore[misc]
+
+    max_files_per_batch: Annotated[int, Field(strict=True, ge=1)]
+
+
+_NATIVE_PARAMS_ADAPTER = TypeAdapter(NativeParquetCallbackParams)
+
+
 class ExaParquetImporter:
     """Native Parquet import for :class:`pyexasol.ExaConnection`."""
 
@@ -166,10 +186,19 @@ class ExaParquetImporter:
         parquet_files: list[Path],
         table: str | tuple[str, ...],
         import_params: dict | None = None,
-        max_files_per_batch: Annotated[int, Field(strict=True, ge=1)] = 1,
+        callback_params: dict[str, Any] | None = None,
     ):
+        """
+        Raises:
+            pydantic.ValidationError: (a ``ValueError``) if ``callback_params``
+                contains keys other than ``max_files_per_batch``, which only the
+                callback-based import supports, or an invalid value.
+        """
         if import_params is None:
             import_params = {}
+
+        native_params = _NATIVE_PARAMS_ADAPTER.validate_python(callback_params or {})
+        max_files_per_batch = native_params.get("max_files_per_batch", 1)
 
         import_builder = ParquetImportBuilder(table=table, **import_params)
         ensure_no_nested_columns(

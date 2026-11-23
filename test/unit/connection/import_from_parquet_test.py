@@ -85,7 +85,7 @@ class TestImportFromParquet:
         result = connection.import_from_parquet(source, "tbl", import_params={"b": 2})
 
         connection.native_import.assert_called_once_with(
-            parquet_files, "tbl", {"b": 2}, 1
+            parquet_files, "tbl", {"b": 2}, {}
         )
         connection.import_from_callback.assert_not_called()
         assert result is connection.native_import.return_value
@@ -113,7 +113,9 @@ class TestImportFromParquet:
 
         connection.import_from_parquet(source, "tbl", callback_params=params)
 
-        connection.native_import.assert_called_once_with(parquet_files, "tbl", None, 3)
+        connection.native_import.assert_called_once_with(
+            parquet_files, "tbl", None, {"max_files_per_batch": 3}
+        )
         assert params == {"max_files_per_batch": 3}
 
     @staticmethod

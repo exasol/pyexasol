@@ -925,8 +925,9 @@ class ExaConnection:
 
                 - Callback-based import: Dict with additional parameters for callback function
                 `parquet.ParquetFile.iter_batches <https://arrow.apache.org/docs/python/generated/pyarrow.parquet.ParquetFile.html#pyarrow.parquet.ParquetFile.iter_batches>`__
-                - Native import: only ``max_files_per_batch`` is used
-                  (default ``1``), see the note below.
+                - Native import: only ``max_files_per_batch`` is supported
+                  (default ``1``), see the note below. Any other key raises
+                  ``pydantic.ValidationError``.
             import_params:
                 Custom parameters for IMPORT query. They are the ``import_params`` of:
 
@@ -959,8 +960,6 @@ class ExaConnection:
 
         # Copy so the caller's dict is not modified.
         callback_params = dict(callback_params or {})
-        # Only used by the native import, so it must not reach the callback import.
-        max_files_per_batch = callback_params.pop("max_files_per_batch", 1)
 
         # Callback import: local parquet files are streamed to Exasol as CSV.
         if (
@@ -969,6 +968,8 @@ class ExaConnection:
                 self.exasol_db_version
             )
         ):
+            # Only used by the native import, so it must not reach the callback import.
+            callback_params.pop("max_files_per_batch", None)
             ensure_no_nested_columns(parquet_files, callback_params.get("columns"))
             return self.import_from_callback(
                 cb.import_from_parquet_files,
@@ -980,7 +981,7 @@ class ExaConnection:
 
         # Native Parquet import: Exasol reads the local parquet files directly.
         return ExaParquetImporter(self).import_from_native_parquet(
-            parquet_files, table, import_params, max_files_per_batch
+            parquet_files, table, import_params, callback_params
         )
 
     def export_to_callback(
