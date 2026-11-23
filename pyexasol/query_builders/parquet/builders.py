@@ -84,6 +84,24 @@ class ImportBuilder(BaseModel):
     parquet_skip_cols: ParquetSkipCols = Field(default=None, alias="SkipCols")
 
     @property
+    def skipped_column_indexes(self) -> frozenset[int]:
+        """
+        0-based indexes of the file columns skipped by ``SkipCols``.
+
+        Ranges (for example ``3..8``) include their end.
+        """
+        if not self.parquet_skip_cols:
+            return frozenset()
+
+        # After validation the field holds the joined string at runtime
+        column_specifications = self.parquet_skip_cols.split(",")  # type: ignore[attr-defined]
+        indexes: set[int] = set()
+        for column_specification in column_specifications:
+            start, _, end = column_specification.partition("..")
+            indexes.update(range(int(start), int(end or start) + 1))
+        return frozenset(indexes)
+
+    @property
     def connection_parameters(self) -> dict[str, int | str]:
         return self.model_dump(
             by_alias=True,

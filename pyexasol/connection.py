@@ -69,6 +69,11 @@ from .query_builders.csv.builders import (
 )
 from .script_output import ExaScriptOutputProcess
 from .statement import ExaStatement
+from .transport.parquet.importer import (
+    ExaParquetImporter,
+    ensure_no_nested_columns,
+    get_parquet_files,
+)
 from .warnings import PyexasolWarning
 
 if TYPE_CHECKING:
@@ -892,9 +897,14 @@ class ExaConnection:
         table: str | tuple[str, ...],
         callback_params: dict | None = None,
         import_params: dict | None = None,
+        native: bool = True,
     ):
         """
         Import a large amount of data from local parquet file(s).
+
+        Exasol 2026.1.0 and newer use the native Parquet import, older versions use the
+        callback-based import. Pass ``native=False`` to force the callback-based import.
+        See the note at the end for the differences.
 
         Args:
             source: Local filepath specification(s) to process. Can be one of:
@@ -911,13 +921,77 @@ class ExaConnection:
                 - ``tuple[str, ...]``: schema-qualified table identifier, such as
                   ``("SCHEMA", "TABLE")``
             callback_params:
-                Dict with additional parameters for callback function
-                `parquet.ParquetFile.iter_batches <https://arrow.apache.org/docs/python/generated/pyarrow.parquet.ParquetFile.html#pyarrow.parquet.ParquetFile.iter_batches>`__
+                Dict with additional parameters.
+
+                - Callback-based import: Dict with additional parameters for callback function
+                  `parquet.ParquetFile.iter_batches <https://arrow.apache.org/docs/python/generated/pyarrow.parquet.ParquetFile.html#pyarrow.parquet.ParquetFile.iter_batches>`__
+                - Native import: only ``max_files_per_batch`` is supported
+                  (default ``1``), see the note below. Any other key raises
+                  ``pydantic.ValidationError``.
             import_params:
-                Custom :ref:`import_params` for IMPORT query
+                Custom parameters for IMPORT query. They are the ``import_params`` of:
+
+                - Callback-based import:
+                  :class:`pyexasol.query_builders.csv.builders.ImportBuilder`
+                - Native Parquet import:
+                  :class:`pyexasol.query_builders.parquet.builders.ImportBuilder`
+            native:
+                If ``False``, always use the callback-based import. Defaults to ``True``
+                (use the native import when the database supports it).
+
+        Note:
+            The native import (Exasol 2026.1.0 and newer) differs from the
+            callback-based import in the following ways:
+
+            - **No type conversion:** The Parquet column types must match the table.
+              For example, a Parquet ``double`` cannot be imported into a ``DECIMAL``
+              column. The callback-based import sends CSV, so Exasol converts the
+              values.
+            - **Batches:** Exasol opens one connection per file, so the files are split
+              into batches of at most ``max_files_per_batch`` files (see
+              ``callback_params``). A batch is imported in parallel by one ``IMPORT``
+              statement, the batches in sequence.
+            - **Transaction:** If autocommit is on and there is more than one batch,
+              all batches run in one transaction.
+              It is committed after the last batch, or rolled back if any batch fails,
+              and autocommit is restored afterward. A single batch is one ``IMPORT``
+              statement, which is atomic anyway, so no transaction is started and
+              ``last_statement()`` still returns the ``IMPORT``.
+              If autocommit is off, nothing is committed or rolled back, so you control
+              the transaction: if a later batch fails, the earlier batches remain in it.
+            - **last_statement():** The callback-based import runs one ``IMPORT``, so
+              ``last_statement()`` gives the total ``rowcount()`` and ``execution_time``.
+              The native import only does this for a single batch. With several
+              batches, it returns the ``COMMIT`` (autocommit on, ``rowcount()`` is 0) or
+              the last batch's ``IMPORT`` (autocommit off), so do not rely on it for
+              the number of imported rows. Count the rows in the table instead.
         """
-        return self.import_from_callback(
-            cb.import_from_parquet, source, table, callback_params, import_params
+        parquet_files = get_parquet_files(source)
+
+        # Copy so the caller's dict is not modified.
+        callback_params = dict(callback_params or {})
+
+        # Callback import: local parquet files are streamed to Exasol as CSV.
+        if (
+            not native
+            or not database_versions.MIN_VERSION_FOR_NATIVE_PARQUET_IMPORT.is_supported_by(
+                self.exasol_db_version
+            )
+        ):
+            # Only used by the native import, so it must not reach the callback import.
+            callback_params.pop("max_files_per_batch", None)
+            ensure_no_nested_columns(parquet_files, callback_params.get("columns"))
+            return self.import_from_callback(
+                cb.import_from_parquet_files,
+                parquet_files,
+                table,
+                callback_params,
+                import_params,
+            )
+
+        # Native Parquet import: Exasol reads the local parquet files directly.
+        return ExaParquetImporter(self).import_from_native_parquet(
+            parquet_files, table, import_params, callback_params
         )
 
     def export_to_callback(

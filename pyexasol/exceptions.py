@@ -222,3 +222,26 @@ class ExaImportError(ExaCallbackError):
     """
 
     message = "Error in executing `import_from_callback`"
+
+
+class ExaNativeParquetImportError(ExaImportError):
+    """
+    Raised when the native Parquet import of one batch of files fails. It carries
+    the same sub-exceptions as :class:`ExaImportError`, and its message names the
+    files of the failed batch.
+
+    Attributes:
+        files: The Parquet files of the batch which failed.
+    """
+
+    def __init__(
+        self,
+        connection,
+        exceptions: tuple[Exception | KeyboardInterrupt | None, ...],
+        files,
+    ):
+        self.files = [str(file) for file in files]
+        self.message = (
+            f"Error in executing native Parquet import of {', '.join(self.files)}"
+        )
+        super().__init__(connection=connection, exceptions=exceptions)

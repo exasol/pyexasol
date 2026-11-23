@@ -33,6 +33,27 @@ def thread(server, tmp_path):
     return thread
 
 
+class TestInit:
+    @staticmethod
+    def test_passes_ssl_context_to_server(tmp_path, server):
+        ssl_context = (MagicMock(), "shared")
+
+        with patch(SERVER_CLASS, return_value=server) as server_class:
+            ExaParquetHttpThread(
+                ipaddr="127.0.0.1",
+                port=1234,
+                parquet_file=tmp_path / "f.parquet",
+                encryption=True,
+                ssl_context=ssl_context,
+            )
+
+        assert server_class.call_args.kwargs["ssl_context"] is ssl_context
+
+    @staticmethod
+    def test_ssl_context_defaults_to_none(thread):
+        assert thread.server_class.call_args.kwargs["ssl_context"] is None
+
+
 class TestRun:
     @staticmethod
     def test_serves_first_client_and_closes_server(thread, server):

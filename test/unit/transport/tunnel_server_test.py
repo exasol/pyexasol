@@ -89,6 +89,21 @@ class TestServerBind:
         assert server.socket is context.wrap_socket.return_value
         assert server.exa_address_public_key == "fingerprint"
 
+    @staticmethod
+    def test_uses_given_ssl_context_instead_of_generating_one(make_server, fake_socket):
+        context = Mock()
+        server = make_server(encryption=True, ssl_context=(context, "shared"))
+        server.socket = fake_socket
+
+        with patch.object(ExaTunnelServer, "generate_adhoc_ssl_context") as generate:
+            server.server_bind()
+
+        generate.assert_not_called()
+        context.wrap_socket.assert_called_once_with(
+            fake_socket, server_side=True, do_handshake_on_connect=False
+        )
+        assert server.exa_address_public_key == "shared"
+
 
 class TestExaAddress:
     @staticmethod

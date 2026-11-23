@@ -136,3 +136,27 @@ class TestConnectionParameters:
         assert ";MaxBatchFetchSize=100;" in query
         assert ";MaxRows=200;" in query
         assert ";SkipCols=1,3..8,11'" in query
+
+
+class TestSkippedColumnIndexes:
+    @staticmethod
+    def test_is_empty_when_skip_cols_not_set():
+        assert ImportBuilder(table="TABLE").skipped_column_indexes == frozenset()
+
+    @staticmethod
+    @pytest.mark.parametrize(
+        "skip_cols, expected",
+        [
+            pytest.param(["1"], {1}, id="single column"),
+            pytest.param(["0", "2"], {0, 2}, id="multiple columns"),
+            pytest.param(["3..5"], {3, 4, 5}, id="range includes its end"),
+            pytest.param(["4..4"], {4}, id="range of one column"),
+            pytest.param(["1", "3..5", "11"], {1, 3, 4, 5, 11}, id="mixed"),
+            pytest.param(["1", "1..3"], {1, 2, 3}, id="overlap is deduplicated"),
+        ],
+    )
+    def test_expands_columns_and_ranges(skip_cols, expected):
+        import_builder = ImportBuilder(table="TABLE", parquet_skip_cols=skip_cols)
+
+        assert import_builder.parquet_skip_cols == ",".join(skip_cols)
+        assert import_builder.skipped_column_indexes == expected
